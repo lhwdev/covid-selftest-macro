@@ -7,11 +7,6 @@
 	android:orientation="vertical"
 	app:layout_behavior="@string/appbar_scrolling_view_behavior">
 	
-	<TextView
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="자가진단" />
-	
 	<Button
 		android:id="@+id/time"
 		android:layout_width="match_parent"
@@ -19,7 +14,7 @@
 	
 	<Button
 		android:id="@+id/submit"
-		android:layout_width="wrap_content"
+		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:text="지금 자가진단 제출하기"
 		tools:ignore="HardcodedText" />

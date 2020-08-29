@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="@color/design_default_color_background"
+	tools:context=".FirstActivity"
+	tools:ignore="HardcodedText">
+	
+	<com.google.android.material.appbar.AppBarLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+	
+	<androidx.appcompat.widget.Toolbar
+		android:id="@+id/toolbar"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:background="?attr/colorPrimary"
+		android:minHeight="?attr/actionBarSize"
+		android:theme="?attr/actionBarTheme"
+		app:title="코로나19 자가진단 앱 설정" />
+	
+	</com.google.android.material.appbar.AppBarLayout>
+	
+	<LinearLayout
+		app:layout_behavior="@string/appbar_scrolling_view_behavior"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:orientation="vertical">
+		
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="vertical">
+			
+			<TextView
+				android:text="교육청 사이트 주소는 대구 외 타 시도의 경우 코로나19 자가진단 사이트에 들어갔을 때 사이트 주소에서 아래에 미리 입력되어 있는 값과 비슷하게 생기게 가져오시면 됩니다. \n아직 타 시도 교육청을 대상으로 테스트해보지는 못했습니다."
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_margin="8dp"
+				android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+				tools:ignore="RtlHardcoded" />
+			
+			<com.google.android.material.textfield.TextInputLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:hint="교육청 사이트 주소(기본값: 대구시교육청)">
+				
+				<com.google.android.material.textfield.TextInputEditText
+					android:id="@+id/input_url"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content" />
+				
+			</com.google.android.material.textfield.TextInputLayout>
+			
+		</LinearLayout>
+		
+		<Spinner
+			android:id="@+id/spinner_method"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			tools:listitem="@tools:sample/cities" />
+		
+		<FrameLayout
+			android:id="@+id/blank_method"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+			
+		</FrameLayout>
+		
+		<Button
+			android:id="@+id/button_done"
+			android:text="완료"
+			android:layout_gravity="end"
+			style="@style/Widget.AppCompat.Button.Borderless"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" />
+	
+	</LinearLayout>
+	
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

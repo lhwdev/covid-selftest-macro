@@ -3,9 +3,8 @@ package com.lhwdev.selfTestMacro
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Debug
-import android.util.Log
-import android.widget.Toast
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class AlarmReceiver : BroadcastReceiver() {
 	companion object {
@@ -14,11 +13,11 @@ class AlarmReceiver : BroadcastReceiver() {
 	}
 	
 	override fun onReceive(context: Context, intent: Intent) {
-		context.doSubmit()
+		GlobalScope.launch { // TODO: is this okay?
+			context.submitSuspend()
+		}
 		
-		val pref = context.getSharedPreferences("main", Context.MODE_PRIVATE)
-		val hour by pref.preferenceInt("hour", -1)
-		val min by pref.preferenceInt("min", 0)
-		context.scheduleNextAlarm(context.createIntent(), hour, min, true)
+		val pref = PreferenceState(context.prefMain())
+		context.scheduleNextAlarm(context.createIntent(), pref.hour, pref.min, true)
 	}
 }

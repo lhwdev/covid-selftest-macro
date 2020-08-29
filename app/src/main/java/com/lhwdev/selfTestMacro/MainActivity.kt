@@ -1,39 +1,17 @@
 package com.lhwdev.selfTestMacro
 
-import android.app.AlarmManager
 import android.app.TimePickerDialog
-import android.content.Context
-import android.content.SharedPreferences
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
-import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_main.fab
+import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.activity_main.toolbar
 import kotlinx.android.synthetic.main.content_main.submit
 import kotlinx.android.synthetic.main.content_main.time
-import org.json.JSONObject
-import java.io.DataOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.concurrent.thread
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
-
-
-fun SharedPreferences.preferenceInt(key: String, defaultValue: Int) =
-	object : ReadWriteProperty<Any?, Int> {
-		override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-			edit { putInt(key, value) }
-		}
-		
-		override fun getValue(thisRef: Any?, property: KProperty<*>): Int =
-			getInt(key, defaultValue)
-	}
+import kotlinx.coroutines.launch
 
 
 @Suppress("SpellCheckingInspection")
@@ -41,14 +19,26 @@ class MainActivity : AppCompatActivity() {
 	
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		
+		val pref = PreferenceState(prefMain())
+		preferenceState = pref
+		
+		val isFirst = pref.firstState == 0
+		if(isFirst && !intent.getBooleanExtra("doneFirst", false)) {
+//			firstState = 1
+			
+			startActivity(Intent(this, FirstActivity::class.java).also {
+				it.putExtra("first", true)
+			})
+			finish()
+			return
+		}
+		
 		setContentView(R.layout.activity_main)
 		setSupportActionBar(toolbar)
 		
-		val pref = getSharedPreferences("main", Context.MODE_PRIVATE)
-		var hour by pref.preferenceInt("hour", -1)
-		var min by pref.preferenceInt("min", 0)
+		title = "자가진단: ${pref.studentInfo}"
 		
-		val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 		val intent = createIntent()
 
 //		val serviceIntent = Intent(this, MyService::class.java)
@@ -63,46 +53,32 @@ class MainActivity : AppCompatActivity() {
 //			}
 //		}
 		
-		fab.setOnClickListener { view ->
-			Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-				.setAction("Action", null).show()
-		}
-		
 		fun updateTime() {
-			time.text = if(hour == -1) "시간 예약 안 됨" else "$hour 시 $min 분"
-			if(hour != -1) {
-				alarmManager.cancel(intent)
-				scheduleNextAlarm(intent, hour, min)
-//				val serv = service
-//				if(serv == null) {
-//					serviceIntent.putExtra("hour", hour)
-//					serviceIntent.putExtra("min", min)
-//					startService(serviceIntent)
-//					bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
-//					return
-//				}
-			}
+			time.text = if(pref.hour == -1) "시간 예약 안 됨" else "매일 자가진단: ${pref.hour}시 ${pref.min}분"
+			updateTime(intent)
 		}
 		
 		updateTime()
 		
 		time.setOnClickListener {
 			TimePickerDialog(this, { _, newHour, newMin ->
-				hour = newHour
-				min = newMin
+				pref.hour = newHour
+				pref.min = newMin
 				updateTime()
-			}, if(hour == -1) 0 else hour, min, false).show()
+			}, if(pref.hour == -1) 0 else pref.hour, pref.min, false).show()
 		}
 		
 		time.setOnLongClickListener {
-			hour = -1
+			pref.hour = -1
 			Toast.makeText(this, "자동예약 취소", Toast.LENGTH_SHORT).show()
 			true
 		}
 		
 		submit.setOnClickListener {
-			updateTime()
-			doSubmit()
+			lifecycleScope.launch {
+				updateTime()
+				submitSuspend()
+			}
 		}
 	}
 	
@@ -117,7 +93,10 @@ class MainActivity : AppCompatActivity() {
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
 		return when(item.itemId) {
-			R.id.action_settings -> true
+			R.id.action_settings -> {
+				startActivity(Intent(this, FirstActivity::class.java))
+				true
+			}
 			else -> super.onOptionsItemSelected(item)
 		}
 	}

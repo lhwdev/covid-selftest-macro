@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 		
 		val isFirst = pref.firstState == 0
 		if(isFirst && !intent.getBooleanExtra("doneFirst", false)) {
-//			firstState = 1
+			pref.firstState = 1
 			
 			startActivity(Intent(this, FirstActivity::class.java).also {
 				it.putExtra("first", true)

@@ -13,8 +13,10 @@ class AlarmReceiver : BroadcastReceiver() {
 	}
 	
 	override fun onReceive(context: Context, intent: Intent) {
+		val result = goAsync()
 		GlobalScope.launch { // TODO: is this okay?
 			context.submitSuspend()
+			result.finish()
 		}
 		
 		val pref = PreferenceState(context.prefMain())

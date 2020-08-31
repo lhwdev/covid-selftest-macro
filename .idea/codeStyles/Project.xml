@@ -24,7 +24,7 @@
         </value>
       </option>
       <option name="SPACE_BEFORE_WHEN_PARENTHESES" value="false" />
-      <option name="WRAP_EXPRESSION_BODY_FUNCTIONS" value="1" />
+      <option name="CODE_STYLE_DEFAULTS" value="KOTLIN_OFFICIAL" />
     </JetCodeStyleSettings>
     <codeStyleSettings language="CMake">
       <indentOptions>
@@ -192,6 +192,7 @@
       </arrangement>
     </codeStyleSettings>
     <codeStyleSettings language="kotlin">
+      <option name="CODE_STYLE_DEFAULTS" value="KOTLIN_OFFICIAL" />
       <option name="SPACE_BEFORE_IF_PARENTHESES" value="false" />
       <option name="SPACE_BEFORE_WHILE_PARENTHESES" value="false" />
       <option name="SPACE_BEFORE_FOR_PARENTHESES" value="false" />

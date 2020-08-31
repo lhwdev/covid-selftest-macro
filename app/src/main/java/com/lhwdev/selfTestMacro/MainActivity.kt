@@ -98,6 +98,7 @@ class MainActivity : AppCompatActivity() {
 		
 		time.setOnLongClickListener {
 			pref.hour = -1
+			updateTime()
 			Toast.makeText(this, "자동예약 취소", Toast.LENGTH_SHORT).show()
 			true
 		}
@@ -172,7 +173,7 @@ class MainActivity : AppCompatActivity() {
 				}
 				
 				setNegativeButton("취소", null)
-			}
+			}.show()
 			
 			batteryOptimizationPromptShown = true
 		}

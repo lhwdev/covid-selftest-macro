@@ -60,6 +60,7 @@ class MainActivity : AppCompatActivity() {
 		setContentView(R.layout.activity_main)
 		setSupportActionBar(toolbar)
 		
+		initializeNotificationChannel()
 		checkNotice()
 		
 		title = "자가진단: ${pref.studentInfo}"

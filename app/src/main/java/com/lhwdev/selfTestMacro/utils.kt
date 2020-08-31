@@ -254,4 +254,9 @@ suspend fun Context.submitSuspend() = withContext(Dispatchers.IO) {
 				DateFormat.getDateTimeInstance().format(Date())
 			} ${request.responseMessage}\n"
 		)
+	
+	// notification
+	withContext(Dispatchers.Main) {
+		showTestCompleteNotification()
+	}
 }

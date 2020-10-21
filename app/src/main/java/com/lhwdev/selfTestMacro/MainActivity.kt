@@ -3,17 +3,12 @@ package com.lhwdev.selfTestMacro
 import android.annotation.SuppressLint
 import android.app.TimePickerDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.text.Html
-import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
-import android.text.util.Linkify
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
@@ -48,8 +43,6 @@ class MainActivity : AppCompatActivity() {
 		
 		val isFirst = pref.firstState == 0
 		if(isFirst && !intent.getBooleanExtra("doneFirst", false)) {
-			pref.firstState = 1
-			
 			startActivity(Intent(this, FirstActivity::class.java).also {
 				it.putExtra("first", true)
 			})
@@ -57,13 +50,15 @@ class MainActivity : AppCompatActivity() {
 			return
 		}
 		
+		pref.firstState = 1
+		
 		setContentView(R.layout.activity_main)
 		setSupportActionBar(toolbar)
 		
 		initializeNotificationChannel()
 		checkNotice()
 		
-		title = "자가진단: ${pref.studentInfo}"
+		title = "자가진단: ${pref.user.userInfoToString()}"
 		
 		val intent = createIntent()
 
@@ -105,45 +100,49 @@ class MainActivity : AppCompatActivity() {
 		
 		submit.setOnClickListener {
 			lifecycleScope.launch {
-				updateTime()
 				submitSuspend()
 			}
 		}
 	}
 	
 	private fun checkNotice() = lifecycleScope.launch(Dispatchers.IO) {
-		val versions =
-			JSONObject(URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/_notice.md").readText())
-		
-		/*
+		try {
+			val versions =
+				JSONObject(URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/_notice.md").readText())
+			
+			/*
 		 * Spec:
 		 * {"$version | all": {"id": "$id", "priority": "once | every", "title": "$title", "message": "$message"}}
 		 *
 		 * Version spec: 1.0 1.3..2.1 ..1.5
 		 */
-		
-		val thisVersion = Version(BuildConfig.VERSION_NAME)
-		
-		for(key in versions.keys()) if(key == "all" || thisVersion in VersionSpec(key)) {
-			val notice = Notice(versions.getJSONObject(key))
-			val show = when(notice.priority) {
-				Notice.Priority.once -> notice.id !in preferenceState.shownNotices
-				Notice.Priority.every -> true
-			}
 			
-			if(show) withContext(Dispatchers.Main) {
-				AlertDialog.Builder(this@MainActivity).apply {
-					setTitle(notice.title)
-					val message = HtmlCompat.fromHtml(notice.message, 0)
-					setMessage(message)
-					setPositiveButton("확인", null)
-				}.show().apply {
-					findViewById<TextView>(android.R.id.message)!!.movementMethod =
-						LinkMovementMethod.getInstance()
+			val thisVersion = Version(BuildConfig.VERSION_NAME)
+			
+			for(key in versions.keys()) if(key == "all" || thisVersion in VersionSpec(key)) {
+				val notice = Notice(versions.getJSONObject(key))
+				val show = when(notice.priority) {
+					Notice.Priority.once -> notice.id !in preferenceState.shownNotices
+					Notice.Priority.every -> true
 				}
 				
-				preferenceState.shownNotices += notice.id
+				if(show) withContext(Dispatchers.Main) {
+					AlertDialog.Builder(this@MainActivity).apply {
+						setTitle(notice.title)
+						val message = HtmlCompat.fromHtml(notice.message, 0)
+						setMessage(message)
+						setPositiveButton("확인", null)
+					}.show().apply {
+						findViewById<TextView>(android.R.id.message)!!.movementMethod =
+							LinkMovementMethod.getInstance()
+					}
+					
+					preferenceState.shownNotices += notice.id
+				}
 			}
+		} catch(e: Exception) {
+			// ignore; - network error or etc
+			// notification is not that important
 		}
 	}
 	

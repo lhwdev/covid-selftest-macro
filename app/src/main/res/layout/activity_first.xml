@@ -11,73 +11,162 @@
 	<com.google.android.material.appbar.AppBarLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content">
-	
-	<androidx.appcompat.widget.Toolbar
-		android:id="@+id/toolbar"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:background="?attr/colorPrimary"
-		android:minHeight="?attr/actionBarSize"
-		android:theme="?attr/actionBarTheme"
-		app:title="코로나19 자가진단 앱 설정" />
+		
+		<androidx.appcompat.widget.Toolbar
+			android:id="@+id/toolbar"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:background="?attr/colorPrimary"
+			android:minHeight="?attr/actionBarSize"
+			android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+			app:popupTheme="@style/AppTheme.PopupOverlay"
+			app:title="코로나19 자가진단 앱 설정" />
 	
 	</com.google.android.material.appbar.AppBarLayout>
 	
 	<LinearLayout
-		app:layout_behavior="@string/appbar_scrolling_view_behavior"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:orientation="vertical">
+		android:orientation="vertical"
+		app:layout_behavior="@string/appbar_scrolling_view_behavior">
+		
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_margin="8dp"
+			android:text="참고: 다른 교육청을 대상으로 테스트해보진 못했습니다."
+			android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
 		
 		<LinearLayout
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:orientation="vertical">
+			android:orientation="vertical"
+			app:layout_behavior="@string/appbar_scrolling_view_behavior">
 			
-			<TextView
-				android:text="교육청 사이트 주소는 대구 외 타 시도의 경우 코로나19 자가진단 사이트에 들어갔을 때 사이트 주소에서 아래에 미리 입력되어 있는 값과 비슷하게 생기게 가져오시면 됩니다. \n아직 타 시도 교육청을 대상으로 테스트해보지는 못했습니다."
+			<!-- 학교 선택 -->
+			<LinearLayout
 				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
+				android:layout_height="match_parent"
 				android:layout_margin="8dp"
-				android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-				tools:ignore="RtlHardcoded" />
-			
-			<com.google.android.material.textfield.TextInputLayout
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:hint="교육청 사이트 주소(기본값: 대구시교육청)">
+				android:orientation="vertical">
 				
-				<com.google.android.material.textfield.TextInputEditText
-					android:id="@+id/input_url"
+				<TextView
 					android:layout_width="match_parent"
-					android:layout_height="wrap_content" />
+					android:layout_height="wrap_content"
+					android:layout_margin="8dp"
+					android:text="학교 선택"
+					android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+					android:textColor="?attr/colorPrimary" />
 				
-			</com.google.android.material.textfield.TextInputLayout>
+				<TextView
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_margin="8dp"
+					android:text="시/도"
+					android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+					android:textColor="?attr/colorPrimaryDark" />
+				
+				<Spinner
+					android:id="@+id/spinner_region"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_margin="8dp" />
+				
+				<TextView
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_margin="8dp"
+					android:text="학교급"
+					android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+					android:textColor="?attr/colorPrimaryDark" />
+				
+				<Spinner
+					android:id="@+id/spinner_level"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_margin="8dp" />
+				
+				<com.google.android.material.textfield.TextInputLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					app:hintAnimationEnabled="true"
+					app:hintEnabled="true">
+					
+					<com.google.android.material.textfield.TextInputEditText
+						android:id="@+id/input_schoolName"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:hint="학교명" />
+				
+				</com.google.android.material.textfield.TextInputLayout>
+				
+				<com.google.android.material.button.MaterialButton
+					android:id="@+id/button_checkSchoolInfo"
+					style="@style/Widget.MaterialComponents.Button.TextButton"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="학교 확인"
+					app:iconGravity="start" />
+			
+			</LinearLayout>
+			
+			<!-- 학생 정보 -->
+			<LinearLayout
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:layout_margin="8dp"
+				android:orientation="vertical">
+				
+				<TextView
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_margin="8dp"
+					android:text="학생 정보 입력"
+					android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+					android:textColor="?attr/colorPrimary" />
+				
+				<com.google.android.material.textfield.TextInputLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					app:hintAnimationEnabled="true"
+					app:hintEnabled="true">
+					
+					<com.google.android.material.textfield.TextInputEditText
+						android:id="@+id/input_studentName"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:hint="이름" />
+				
+				</com.google.android.material.textfield.TextInputLayout>
+				
+				<com.google.android.material.textfield.TextInputLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					app:hintAnimationEnabled="true"
+					app:hintEnabled="true"
+					app:counterEnabled="true"
+					app:counterMaxLength="6">
+					
+					<com.google.android.material.textfield.TextInputEditText
+						android:id="@+id/input_studentBirth"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:hint="생년월일(YYMMDD)" />
+				
+				</com.google.android.material.textfield.TextInputLayout>
+				
+			</LinearLayout>
 			
 		</LinearLayout>
 		
-		<Spinner
-			android:id="@+id/spinner_method"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			tools:listitem="@tools:sample/cities" />
-		
-		<FrameLayout
-			android:id="@+id/blank_method"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content">
-			
-		</FrameLayout>
-		
 		<Button
 			android:id="@+id/button_done"
-			android:text="완료"
-			android:layout_gravity="end"
-			style="@style/Widget.AppCompat.Button.Borderless"
+			style="@style/Widget.MaterialComponents.Button.TextButton"
 			android:layout_width="wrap_content"
-			android:layout_height="wrap_content" />
+			android:layout_height="wrap_content"
+			android:layout_gravity="end"
+			android:text="완료" />
 	
 	</LinearLayout>
-	
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

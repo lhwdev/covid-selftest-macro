@@ -1,26 +1,14 @@
 package com.lhwdev.selfTestMacro
 
-import android.annotation.SuppressLint
-import android.app.Dialog
-import android.content.Intent
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log
-import android.view.View
 import android.view.ViewGroup
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.textfield.TextInputEditText
 import kotlinx.android.synthetic.main.activity_first.*
 import kotlinx.coroutines.launch
-import java.io.IOException
-import java.net.URL
 
 
 class FirstActivity : AppCompatActivity() {
@@ -34,105 +22,90 @@ class FirstActivity : AppCompatActivity() {
 		
 		setSupportActionBar(toolbar)
 		
-		input_url.setText(pref.siteString ?: "https://eduro.dge.go.kr")
+		var schoolInfo: com.lhwdev.selfTestMacro.api.SchoolInfo? = null
 		
-		spinner_method.adapter = ArrayAdapter(
-			this,
-			android.R.layout.simple_list_item_1,
-			listOf("내부 인증코드(11자리 이상)", "기타")
-		)
+		spinner_region.adapter =
+			ArrayAdapter(this, android.R.layout.simple_list_item_1, sRegions.keys.toList())
+		spinner_level.adapter =
+			ArrayAdapter(this, android.R.layout.simple_list_item_1, sSchoolLevels.keys.toList())
 		
-		var result: String? = null
-		
-		spinner_method.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-			override fun onItemSelected(
-				parent: AdapterView<*>,
-				view: View,
-				position: Int,
-				id: Long
-			) {
-				blank_method.removeAllViews()
-				when(position) {
-					0 -> {
-						val edit =
-							layoutInflater.inflate(R.layout.layout_method_certcode, blank_method)
-						val editText = edit.findViewById<TextInputEditText>(R.id.input_method)
-						editText.setText(pref.cert ?: "")
-						editText.addTextChangedListener(object : TextWatcher {
-							override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
-							override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
-							
-							override fun afterTextChanged(s: Editable) {
-								val text = editText.text!!.toString()
-								result = text
-								button_done.isEnabled = text.length >= 11
-							}
-						})
-					}
-					1 -> {
-						val dialog = Dialog(this@FirstActivity)
-						val web = WebView(this@FirstActivity)
-						dialog.setContentView(web)
-						@SuppressLint("SetJavaScriptEnabled")
-						web.settings.javaScriptEnabled = true
-						web.webViewClient = object : WebViewClient() {
-							override fun onPageFinished(view: WebView, url: String) {
-								super.onPageFinished(view, url)
-								if(url.endsWith("/stv_cvd_co00_000.do")) // typed information
-									web.evaluateJavascript(
-										"""
-										$("#qstnCrtfcNoEncpt").val()
-									"""
-									) {
-										dialog.dismiss()
-										result = it.removePrefix("\"").removeSuffix("\"")
-										button_done.isEnabled = true
-									}
-							}
-						}
-						dialog.show()
-						dialog.window!!.setLayout(
-							ViewGroup.LayoutParams.MATCH_PARENT,
-							ViewGroup.LayoutParams.MATCH_PARENT
-						)
-						web.loadUrl(input_url.text!!.toString() + "/hcheck/index.jsp")
-					}
-				}
+		button_checkSchoolInfo.setOnClickListener {
+			if(spinner_region.selectedItemPosition == -1) {
+				showToast("시/도 정보를 입력해주세요")
+				return@setOnClickListener
 			}
 			
-			override fun onNothingSelected(parent: AdapterView<*>) {
+			if(spinner_level.selectedItemPosition == -1) {
+				showToast("시/도 정보를 입력해주세요")
+				return@setOnClickListener
 			}
-		}
+			
+			val schoolName = input_schoolName.text
+			if(schoolName == null || schoolName.isEmpty()) {
+				showToast("학교 이름을 입력해주세요")
+				return@setOnClickListener
+			}
+			val nameString = schoolName.toString()
+			
+			val regionCode = sRegions[spinner_region.selectedItem]!!
+			val levelCode = sSchoolLevels[spinner_level.selectedItem]!!
 		
-		button_done.setOnClickListener {
-			if(result == null) {
-				Toast.makeText(this, "학생정보를 입력해주세요.", Toast.LENGTH_SHORT).show()
-			} else lifecycleScope.launch {
-				Log.i("HOI", "cert: $result")
-				
-				val site = input_url.text!!.toString()
-				
-				val studentInfo = try {
-					checkStudentInfoSuspend(URL(site), result!!)
-				} catch(e: IOException) {
-					showToastSuspendAsync("잘못된 학생 정보입니다.")
-					Log.e("HOI", "retrieving student info returned with error", e)
+			lifecycleScope.launch {
+				val data = com.lhwdev.selfTestMacro.api.getSchoolData(regionCode = regionCode, schoolLevelCode = levelCode.toString(), name = nameString)
+				if(data.schoolList.isEmpty()) {
+					showToast("학교를 찾을 수 없습니다. 이름을 바르게 입력했는지 확인해주세요.")
 					return@launch
 				}
 				
-				pref.siteString = site
-				pref.cert = result
-				pref.studentInfo = studentInfo
-				
-				if(first) {
-					startActivity(Intent(this@FirstActivity, MainActivity::class.java).also {
-						it.putExtra("doneFirst", true)
-					})
-					finish()
+				if(data.schoolList.size == 1) {
+					val school = data.schoolList[0]
+					schoolInfo = school
+					
+					// ui interaction
+					schoolName.clear()
+					schoolName.append(school.name)
+					button_checkSchoolInfo.icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_baseline_check_24, theme)
 				}
 			}
 		}
 		
-		if(first) button_done.isEnabled = false
+		input_studentName.doAfterTextChanged {
+			input_studentName.error = null
+		}
+		
+		input_studentBirth.doAfterTextChanged {
+			input_studentBirth.error = null
+		}
+		
+		button_done.setOnClickListener onClick@ {
+			val school = schoolInfo ?: run {
+				button_checkSchoolInfo.callOnClick()
+				schoolInfo ?: return@onClick
+			}
+			
+			if(input_studentName.isEmpty()) {
+				input_studentName.requestFocus()
+				input_studentName.error = "학생 이름을 입력해주세요."
+				return@onClick
+			}
+			
+			if(input_studentBirth.isEmpty()) {
+				input_studentBirth.requestFocus()
+				input_studentBirth.error = "학생 생년월일을 입력해주세요."
+				return@onClick
+			}
+			
+			val name = input_studentName.text!!.toString()
+			val birth = input_studentBirth.text!!.toString()
+			if(birth.length != 6) {
+				input_studentBirth.requestFocus()
+				input_studentBirth.error = "생년월일을 6자리로 입력해주세요. (주민등록번호 앞 6자리, YYMMDD 형식)"
+				return@onClick
+			}
+			
+			lifecycleScope.launch {
+				com.lhwdev.selfTestMacro.api.findUser()
+			}
+		}
 	}
 }

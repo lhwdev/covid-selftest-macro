@@ -40,11 +40,11 @@ fun Context.initializeNotificationChannel() {
 	}
 }
 
-fun Context.showTestCompleteNotification() {
+fun Context.showTestCompleteNotification(time: String) {
 	val builder = NotificationCompat.Builder(this, TestCompleteNotification.id).apply {
 		setSmallIcon(R.drawable.ic_launcher_foreground)
 		setContentTitle(TestCompleteNotification.name)
-		setContentText(TestCompleteNotification.content(DateFormat.getDateTimeInstance().format(Date())))
+		setContentText(TestCompleteNotification.content(time))
 		priority = NotificationCompat.PRIORITY_DEFAULT
 	}
 	

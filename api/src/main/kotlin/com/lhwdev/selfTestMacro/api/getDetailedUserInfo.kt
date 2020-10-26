@@ -14,12 +14,18 @@ private data class GetDetailedUserInfoRequestBody(
 
 @Serializable
 data class DetailedUserInfo(
-	@SerialName("userInfo") val userName: String,
-	@SerialName("registerYmd") val lastRegisterDate: String,
-	@SerialName("registerDtm") val lastRegisterAt: String,
+	@SerialName("userName") val userName: String,
+	@SerialName("orgCode") val schoolCode: String,
+	@SerialName("orgName") val schoolName: String,
+	@SerialName("registerYmd") val lastRegisterDate: String?,
+	@SerialName("registerDtm") val lastRegisterAt: String?,
 	@SerialName("isHealthy") val isHealthy: Boolean,
 	@SerialName("deviceUuid") val deviceUuid: String?,
-)
+) {
+	fun toUserInfoString() = "$userName($schoolName)"
+	fun toLastRegisterInfoString() =
+		"최근 자가진단: ${if(lastRegisterAt == null) "미참여" else ((if(isHealthy) "정상" else "유증상") + "($lastRegisterAt)")}"
+}
 
 
 /*
@@ -46,12 +52,18 @@ data class DetailedUserInfo(
  * userPNo: "..."
  * wrongPassCnt: 0
  */
-suspend fun getDetailedUserInfo(schoolInfo: SchoolInfo, userInfo: UserInfo): DetailedUserInfo = ioTask {
-	fetch(
-		schoolInfo.requestUrl.child("getUserInfo"),
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to userInfo.token.token),
-		body = Json.encodeToString(GetDetailedUserInfoRequestBody.serializer(),
-			GetDetailedUserInfoRequestBody(schoolInfo.code, userInfo.userId))
-	).toJsonLoose()
-}
+suspend fun getDetailedUserInfo(schoolInfo: SchoolInfo, userInfo: UserInfo): DetailedUserInfo =
+	ioTask {
+		fetch(
+			schoolInfo.requestUrl.child("getUserInfo"),
+			method = HttpMethod.post,
+			headers = sDefaultFakeHeader + mapOf(
+				"Content-Type" to ContentTypes.json,
+				"Authorization" to userInfo.token.token
+			),
+			body = Json.encodeToString(
+				GetDetailedUserInfoRequestBody.serializer(),
+				GetDetailedUserInfoRequestBody(schoolInfo.code, userInfo.userId)
+			)
+		).toJsonLoose()
+	}

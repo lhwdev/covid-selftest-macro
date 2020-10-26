@@ -6,7 +6,7 @@
 	android:layout_height="match_parent"
 	android:background="@color/design_default_color_background"
 	tools:context=".FirstActivity"
-	tools:ignore="HardcodedText">
+	tools:ignore="HardcodedText, LabelFor">
 	
 	<com.google.android.material.appbar.AppBarLayout
 		android:layout_width="match_parent"
@@ -24,18 +24,16 @@
 	
 	</com.google.android.material.appbar.AppBarLayout>
 	
-	<LinearLayout
+	<ScrollView
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:orientation="vertical"
 		app:layout_behavior="@string/appbar_scrolling_view_behavior">
 		
-		<TextView
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_margin="8dp"
-			android:text="참고: 다른 교육청을 대상으로 테스트해보진 못했습니다."
-			android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+		android:padding="4dp">
 		
 		<LinearLayout
 			android:layout_width="match_parent"
@@ -50,6 +48,32 @@
 				android:layout_margin="8dp"
 				android:orientation="vertical">
 				
+				
+				<TextView
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_margin="8dp"
+					android:text="자가진단 정보 입력"
+					android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+					android:textSize="18sp"
+					android:textColor="?attr/colorPrimary" />
+				
+				<com.google.android.material.textfield.TextInputLayout
+					style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_margin="8dp">
+					
+					<AutoCompleteTextView
+						android:id="@+id/input_loginType"
+						android:hint="관련 기관"
+						android:text="학교"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:inputType="none" />
+				
+				</com.google.android.material.textfield.TextInputLayout>
+				
 				<TextView
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
@@ -58,39 +82,43 @@
 					android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
 					android:textColor="?attr/colorPrimary" />
 				
-				<TextView
+				<com.google.android.material.textfield.TextInputLayout
+					style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:layout_margin="8dp"
-					android:text="시/도"
-					android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-					android:textColor="?attr/colorPrimaryDark" />
+					android:layout_margin="8dp">
+					
+					<AutoCompleteTextView
+						android:id="@+id/input_region"
+						android:hint="시/도"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:inputType="none" />
 				
-				<Spinner
-					android:id="@+id/spinner_region"
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:layout_margin="8dp" />
+				</com.google.android.material.textfield.TextInputLayout>
 				
-				<TextView
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:layout_margin="8dp"
-					android:text="학교급"
-					android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-					android:textColor="?attr/colorPrimaryDark" />
 				
-				<Spinner
-					android:id="@+id/spinner_level"
+				<com.google.android.material.textfield.TextInputLayout
+					style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:layout_margin="8dp" />
+					android:layout_margin="8dp">
+					
+					<AutoCompleteTextView
+						android:id="@+id/input_level"
+						android:hint="학교 급"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:inputType="none" />
+				
+				</com.google.android.material.textfield.TextInputLayout>
 				
 				<com.google.android.material.textfield.TextInputLayout
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
 					app:hintAnimationEnabled="true"
-					app:hintEnabled="true">
+					app:hintEnabled="true"
+					android:layout_margin="8dp">
 					
 					<com.google.android.material.textfield.TextInputEditText
 						android:id="@+id/input_schoolName"
@@ -128,6 +156,7 @@
 				<com.google.android.material.textfield.TextInputLayout
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
+					android:layout_margin="8dp"
 					app:hintAnimationEnabled="true"
 					app:hintEnabled="true">
 					
@@ -142,10 +171,11 @@
 				<com.google.android.material.textfield.TextInputLayout
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					app:hintAnimationEnabled="true"
-					app:hintEnabled="true"
+					android:layout_margin="8dp"
 					app:counterEnabled="true"
-					app:counterMaxLength="6">
+					app:counterMaxLength="6"
+					app:hintAnimationEnabled="true"
+					app:hintEnabled="true">
 					
 					<com.google.android.material.textfield.TextInputEditText
 						android:id="@+id/input_studentBirth"
@@ -154,9 +184,9 @@
 						android:hint="생년월일(YYMMDD)" />
 				
 				</com.google.android.material.textfield.TextInputLayout>
-				
-			</LinearLayout>
 			
+			</LinearLayout>
+		
 		</LinearLayout>
 		
 		<Button
@@ -168,5 +198,7 @@
 			android:text="완료" />
 	
 	</LinearLayout>
+	
+	</ScrollView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -13,6 +13,7 @@
 		android:theme="@style/AppTheme.AppBarOverlay">
 		
 		<androidx.appcompat.widget.Toolbar
+			app:title="코로나19 자가진단"
 			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
 			android:layout_height="?attr/actionBarSize"

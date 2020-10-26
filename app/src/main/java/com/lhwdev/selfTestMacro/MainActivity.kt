@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.text.method.LinkMovementMethod
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
@@ -17,13 +18,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.lifecycleScope
-import kotlinx.android.synthetic.main.activity_main.toolbar
-import kotlinx.android.synthetic.main.content_main.submit
-import kotlinx.android.synthetic.main.content_main.time
+import com.lhwdev.selfTestMacro.api.getDetailedUserInfo
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.net.URL
 
 
@@ -58,7 +60,26 @@ class MainActivity : AppCompatActivity() {
 		initializeNotificationChannel()
 		checkNotice()
 		
-		title = "자가진단: ${pref.user.userInfoToString()}"
+		@SuppressLint("SetTextI18n")
+		suspend fun updateCurrentState() = withContext(Dispatchers.IO) {
+			val detailedUserInfo = try {
+				getDetailedUserInfo(pref.school!!, pref.user!!)
+			} catch(e: Throwable) {
+				Log.e("hOI", null, e)
+				showToastSuspendAsync("사용자 정보를 불러오지 못했습니다.")
+				return@withContext
+			}
+			
+			withContext(Dispatchers.Main) {
+				@Suppress("SetTextI18n")
+				text_currentUserState.text =
+					detailedUserInfo.toUserInfoString() + "\n" + detailedUserInfo.toLastRegisterInfoString()
+			}
+		}
+		
+		lifecycleScope.launch {
+			updateCurrentState()
+		}
 		
 		val intent = createIntent()
 
@@ -100,44 +121,58 @@ class MainActivity : AppCompatActivity() {
 		
 		submit.setOnClickListener {
 			lifecycleScope.launch {
-				submitSuspend()
+				submitSuspend(false)
+				updateCurrentState()
 			}
 		}
 	}
 	
+	@Serializable
+	data class NotificationObject(
+		val notificationVersion: Int,
+		val entries: List<NotificationEntry>
+	)
+	
+	@Serializable
+	data class NotificationEntry(
+		val id: String,
+		val version: VersionSpec?, // null to all versions
+		val priority: Priority,
+		val title: String,
+		val message: String
+	) {
+		enum class Priority { once, every }
+	}
+	
 	private fun checkNotice() = lifecycleScope.launch(Dispatchers.IO) {
 		try {
-			val versions =
-				JSONObject(URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/_notice.md").readText())
+			val content =
+				URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/_notice").readText()
 			
-			/*
-		 * Spec:
-		 * {"$version | all": {"id": "$id", "priority": "once | every", "title": "$title", "message": "$message"}}
-		 *
-		 * Version spec: 1.0 1.3..2.1 ..1.5
-		 */
+			val notificationObject = Json {
+				ignoreUnknownKeys = true /* loose */
+			}.decodeFromString(NotificationObject.serializer(), content)
 			
-			val thisVersion = Version(BuildConfig.VERSION_NAME)
+			if(notificationObject.notificationVersion != 2) {
+				// incapable of displaying this
+				return@launch
+			}
 			
-			for(key in versions.keys()) if(key == "all" || thisVersion in VersionSpec(key)) {
-				val notice = Notice(versions.getJSONObject(key))
-				val show = when(notice.priority) {
-					Notice.Priority.once -> notice.id !in preferenceState.shownNotices
-					Notice.Priority.every -> true
+			for(entry in notificationObject.entries) {
+				val show = when(entry.priority) {
+					NotificationEntry.Priority.once -> entry.id !in preferenceState.shownNotices
+					NotificationEntry.Priority.every -> true
 				}
 				
 				if(show) withContext(Dispatchers.Main) {
 					AlertDialog.Builder(this@MainActivity).apply {
-						setTitle(notice.title)
-						val message = HtmlCompat.fromHtml(notice.message, 0)
-						setMessage(message)
+						setTitle(entry.title)
+						setMessage(HtmlCompat.fromHtml(entry.message, 0))
 						setPositiveButton("확인", null)
 					}.show().apply {
 						findViewById<TextView>(android.R.id.message)!!.movementMethod =
 							LinkMovementMethod.getInstance()
 					}
-					
-					preferenceState.shownNotices += notice.id
 				}
 			}
 		} catch(e: Exception) {
@@ -161,7 +196,8 @@ class MainActivity : AppCompatActivity() {
 		
 		if(!batteryOptimizationPromptShown
 			&& android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M
-			&& !pwrm.isIgnoringBatteryOptimizations(name)) {
+			&& !pwrm.isIgnoringBatteryOptimizations(name)
+		) {
 			AlertDialog.Builder(this).apply {
 				setTitle("베터리 최적화 설정을 꺼야 알림 기능이 정상적으로 작동됩니다.")
 				setPositiveButton("설정") { _, _ ->

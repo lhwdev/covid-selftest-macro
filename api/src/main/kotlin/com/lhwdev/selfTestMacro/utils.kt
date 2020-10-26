@@ -3,6 +3,7 @@
 package com.lhwdev.selfTestMacro
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -14,12 +15,12 @@ import java.net.URLEncoder
 fun URL.child(childPath: String) = URL(this, path.removeSuffix("/") + "/" + childPath)
 
 // our project is too small to use form like 'major.minor.bugFixes'
+@Serializable
 data class Version(val major: Int, val minor: Int) : Comparable<Version> {
 	override fun compareTo(other: Version) =
 		if(major == other.major) minor - other.minor
 		else major - other.major
 }
-
 
 
 fun Version(string: String): Version {
@@ -28,6 +29,7 @@ fun Version(string: String): Version {
 	return Version(split[0], split[1])
 }
 
+@Serializable
 data class VersionSpec(val from: Version, val to: Version) {
 	operator fun contains(version: Version) = version in from..to
 }

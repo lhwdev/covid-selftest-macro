@@ -1,10 +1,6 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package com.lhwdev.selfTestMacro
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.debug.DebugProbes
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -13,13 +9,6 @@ import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLDecoder
-
-
-@Suppress("unused")
-val dummy: Unit = run {
-	DebugProbes.install()
-	DebugProbes.enableCreationStackTraces = true
-}
 
 
 enum class HttpMethod(val requestName: String) {
@@ -96,8 +85,6 @@ suspend fun DisposeScope.fetch( // for debug
 		// open
 		val connection = url.openConnection() as HttpURLConnection
 		println("\u001b[1;91m<- send HTTP \u001B[93m${HttpMethod.post}\u001b[0m: ${readableUrl(url.toString())}")
-//	println("  * called from: ")
-//	println(DebugProbes.scopeToString(this))
 		if(body != null) connection.doOutput = true
 		
 		connection.requestMethod = method.requestName

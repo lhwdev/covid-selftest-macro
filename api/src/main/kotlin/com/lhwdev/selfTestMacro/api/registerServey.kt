@@ -54,8 +54,17 @@ data class SurveyData(
 	@SerialName("upperUserNameEncpt") val userName: String
 )
 
+@Serializable
+data class SurveyResult(
+	@SerialName("registerDtm") val registerAt: String
+	// what is 'inveYmd'?
+)
 
-suspend fun registerSurvey(schoolInfo: SchoolInfo, token: UserToken, surveyData: SurveyData) = ioTask {
+suspend fun registerSurvey(
+	schoolInfo: SchoolInfo,
+	token: UserToken,
+	surveyData: SurveyData
+): SurveyResult = ioTask {
 	fetch(
 		schoolInfo.requestUrlBase.child("registerServey"),
 		method = HttpMethod.post,
@@ -64,5 +73,5 @@ suspend fun registerSurvey(schoolInfo: SchoolInfo, token: UserToken, surveyData:
 			"Authorization" to token.token
 		),
 		body = Json { encodeDefaults = true }.encodeToString(SurveyData.serializer(), surveyData)
-	).requireOk()
+	).toJsonLoose()
 }

@@ -1,4 +1,5 @@
 @file:Suppress("SpellCheckingInspection")
+@file:JvmName("AndroidSelfTestUtils")
 
 package com.lhwdev.selfTestMacro
 
@@ -7,8 +8,29 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.util.Log
+import com.lhwdev.selfTestMacro.api.SurveyData
+import com.lhwdev.selfTestMacro.api.registerSurvey
 import java.util.Calendar
 
+
+suspend fun Context.submitSuspend(notification: Boolean = true) {
+	try {
+		val user = preferenceState.user!!
+		val token = user.token
+		
+		val result = registerSurvey(
+			preferenceState.school!!,
+			token,
+			SurveyData(userToken = token.token, userName = user.name)
+		)
+		if(notification) showTestCompleteNotification(result.registerAt)
+		else {
+			showToastSuspendAsync("자가진단 제출 완료")
+		}
+	} catch(e: Throwable) {
+		showTestFailedNotification(e.stackTraceToString())
+	}
+}
 
 fun Context.updateTime(intent: PendingIntent) {
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager

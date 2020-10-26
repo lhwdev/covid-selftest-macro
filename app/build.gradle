@@ -7,22 +7,24 @@ plugins {
 }
 
 android {
-	compileSdkVersion 29
+	compileSdkVersion 30
 	buildToolsVersion "29.0.3"
 	
 	defaultConfig {
 		applicationId "com.lhwdev.selfTestMacro"
 		minSdkVersion 19
-		targetSdkVersion 29
-		versionCode 5
-		versionName "1.4"
+		targetSdkVersion 30
+		versionCode 1000
+		versionName "2.0"
+		
+		multiDexEnabled true
 		
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 	}
 	
 	buildTypes {
 		release {
-			minifyEnabled false
+			minifyEnabled true
 			proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
 		}
 	}
@@ -39,13 +41,14 @@ android {
 	
 	kotlinOptions {
 		jvmTarget = "1.8"
-		
 	}
-	
 }
+
 
 dependencies {
 	implementation project(":api")
+	
+	implementation "androidx.multidex:multidex:2.0.1"
 	
 	implementation fileTree(dir: "libs", include: ["*.jar"])
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"

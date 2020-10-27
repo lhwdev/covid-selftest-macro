@@ -92,6 +92,8 @@ class PreferenceState(val pref: SharedPreferences) {
 
 lateinit var preferenceState: PreferenceState
 
+val isPreferenceInitialized get() = ::preferenceState.isInitialized
+
 
 fun SharedPreferences.preferenceInt(key: String, defaultValue: Int) =
 	object : ReadWriteProperty<Any?, Int> {

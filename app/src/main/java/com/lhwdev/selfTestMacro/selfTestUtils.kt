@@ -29,6 +29,7 @@ suspend fun Context.submitSuspend(notification: Boolean = true) {
 		}
 	} catch(e: Throwable) {
 		showTestFailedNotification(e.stackTraceToString())
+		Log.e("hOI", null, e)
 	}
 }
 
@@ -55,8 +56,6 @@ fun Context.scheduleNextAlarm(
 			new[Calendar.SECOND] = 0
 			new[Calendar.MILLISECOND] = 0
 			if(nextDay || new <= this) new.add(Calendar.DAY_OF_YEAR, 1)
-			Log.e("HOI", "$this")
-			Log.e("HOI", "$new")
 			new.timeInMillis
 		},
 		intent

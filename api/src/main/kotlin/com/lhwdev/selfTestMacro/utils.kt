@@ -20,6 +20,8 @@ data class Version(val major: Int, val minor: Int) : Comparable<Version> {
 	override fun compareTo(other: Version) =
 		if(major == other.major) minor - other.minor
 		else major - other.major
+	
+	override fun toString() = "$major.$minor"
 }
 
 
@@ -29,10 +31,23 @@ fun Version(string: String): Version {
 	return Version(split[0], split[1])
 }
 
-@Serializable
+@Serializable(with = VersionSpecSerializer::class)
 data class VersionSpec(val from: Version, val to: Version) {
 	operator fun contains(version: Version) = version in from..to
+	
+	override fun toString() = "$from..$to"
 }
+
+object VersionSpecSerializer : KSerializer<VersionSpec> {
+	override val descriptor = PrimitiveSerialDescriptor(VersionSpec::class.java.name, PrimitiveKind.STRING)
+	
+	override fun deserialize(decoder: Decoder) = VersionSpec(decoder.decodeString())
+	
+	override fun serialize(encoder: Encoder, value: VersionSpec) {
+		encoder.encodeString(value.toString())
+	}
+}
+
 
 fun VersionSpec(string: String): VersionSpec {
 	val index = string.indexOf("..")

@@ -145,24 +145,30 @@ class MainActivity : AppCompatActivity() {
 	}
 	
 	private fun checkNotice() = lifecycleScope.launch(Dispatchers.IO) {
+		var content: String? = null
 		try {
-			val content =
-				URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/_notice").readText()
+			content =
+				URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/notice_v3.json").readText()
 			
 			val notificationObject = Json {
 				ignoreUnknownKeys = true /* loose */
 			}.decodeFromString(NotificationObject.serializer(), content)
 			
-			if(notificationObject.notificationVersion != 2) {
+			if(notificationObject.notificationVersion != 3) {
 				// incapable of displaying this
 				return@launch
 			}
 			
+			Log.d("hOI", notificationObject.toString())
+			
+			val currentVersion = Version(BuildConfig.VERSION_NAME)
+			
 			for(entry in notificationObject.entries) {
-				val show = when(entry.priority) {
+				var show = when(entry.priority) {
 					NotificationEntry.Priority.once -> entry.id !in preferenceState.shownNotices
 					NotificationEntry.Priority.every -> true
 				}
+				show = show && (entry.version?.let { currentVersion in it } ?: true)
 				
 				if(show) withContext(Dispatchers.Main) {
 					AlertDialog.Builder(this@MainActivity).apply {
@@ -180,6 +186,7 @@ class MainActivity : AppCompatActivity() {
 		} catch(e: Exception) {
 			// ignore; - network error or etc
 			// notification is not that important
+			Log.e("hOI", content, e)
 		}
 	}
 	

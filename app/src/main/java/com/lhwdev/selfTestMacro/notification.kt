@@ -57,7 +57,8 @@ fun Context.showTestFailedNotification(detailedMessage: String) {
 	val builder = NotificationCompat.Builder(this, TestCompleteNotification.id).apply {
 		setSmallIcon(R.drawable.ic_launcher_foreground)
 		setContentTitle(TestCompleteNotification.failedName)
-		setContentText(TestCompleteNotification.content(detailedMessage))
+		setContentText(detailedMessage)
+		setStyle(NotificationCompat.BigTextStyle().bigText(detailedMessage))
 		priority = NotificationCompat.PRIORITY_DEFAULT
 	}
 	

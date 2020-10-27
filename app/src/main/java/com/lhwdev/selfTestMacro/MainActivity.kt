@@ -168,7 +168,9 @@ class MainActivity : AppCompatActivity() {
 					AlertDialog.Builder(this@MainActivity).apply {
 						setTitle(entry.title)
 						setMessage(HtmlCompat.fromHtml(entry.message, 0))
-						setPositiveButton("확인", null)
+						setPositiveButton("확인") { _, _ ->
+							preferenceState.shownNotices += entry.id
+						}
 					}.show().apply {
 						findViewById<TextView>(android.R.id.message)!!.movementMethod =
 							LinkMovementMethod.getInstance()

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Filter
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
@@ -36,8 +37,24 @@ class FirstActivity : AppCompatActivity() {
 		
 		var schoolInfo: SchoolInfo? = null
 		
-		fun adapter(list: List<String>) =
-			ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
+		fun adapter(list: List<String>) = object : ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list) {
+			override fun getFilter(): Filter {
+				return DisabledFilter()
+			}
+			
+			private inner class DisabledFilter : Filter() {
+				override fun performFiltering(text: CharSequence): FilterResults {
+					val result = FilterResults()
+					result.values = list
+					result.count = list.size
+					return result
+				}
+				override fun publishResults(text: CharSequence, results: FilterResults) {
+					notifyDataSetChanged()
+				}
+			}
+		}
+//			ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
 		
 		input_loginType.setAdapter(adapter(listOf("학교")))
 		
@@ -193,9 +210,9 @@ class FirstActivity : AppCompatActivity() {
 		}
 		
 		pref.setting?.let { setting ->
-			input_loginType.setText("학교") // TODO
-			input_region.setText(sRegions.entries.first { it.value == setting.region}.key)
-			input_level.setText(sSchoolLevels.entries.first { it.value == setting.level }.key)
+			input_loginType.setText("학교", false) // TODO
+			input_region.setText(sRegions.entries.first { it.value == setting.region}.key, false)
+			input_level.setText(sSchoolLevels.entries.first { it.value == setting.level }.key, false)
 			input_schoolName.setText(setting.schoolName)
 			input_studentName.setText(setting.studentName)
 			input_studentBirth.setText(setting.studentBirth)

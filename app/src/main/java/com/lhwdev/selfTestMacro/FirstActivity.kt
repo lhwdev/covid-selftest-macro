@@ -29,9 +29,8 @@ class FirstActivity : AppCompatActivity() {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_first)
 		window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-		val pref = PreferenceState(prefMain())
+		val pref = preferenceState
 		val first = intent.hasExtra("first")
-		preferenceState = pref
 		
 		setSupportActionBar(toolbar)
 		

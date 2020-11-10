@@ -26,6 +26,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
+import java.util.WeakHashMap
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -90,9 +91,29 @@ class PreferenceState(val pref: SharedPreferences) {
 		}
 }
 
-lateinit var preferenceState: PreferenceState
 
-val isPreferenceInitialized get() = ::preferenceState.isInitialized
+
+// I knew that global things are bad in android(i waz lazy), but didn't know would be by far worst.
+// Only one line below caused TWO bugs; I WON'T do like this in the future
+//
+// but, some decent ways to do this?
+// 1. always passing it through argument: so complicated
+// 2. keeping global with the initialization of Application; here [MainApplication]
+// 3. passing via argument, but through extension receiver
+// 4. like Ambient? : unsafe(though safer in Jetpack Compose)
+// 5. ThreadLocal: what else from the original one
+
+//lateinit var preferenceState: PreferenceState
+//val isPreferenceInitialized get() = ::preferenceState.isInitialized
+
+// ok, maybe decent way; pooling from cache
+private val preferenceStateMap = WeakHashMap<Context, PreferenceState>()
+
+val Context.preferenceState: PreferenceState
+	get() = preferenceStateMap.getOrPut(applicationContext) {
+		PreferenceState(prefMain())
+	}
+
 
 
 fun SharedPreferences.preferenceInt(key: String, defaultValue: Int) =

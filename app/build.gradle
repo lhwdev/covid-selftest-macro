@@ -8,14 +8,14 @@ plugins {
 
 android {
 	compileSdkVersion 30
-	buildToolsVersion "29.0.3"
+	buildToolsVersion "30.0.2"
 	
 	defaultConfig {
 		applicationId "com.lhwdev.selfTestMacro"
 		minSdkVersion 19
 		targetSdkVersion 30
-		versionCode 1003
-		versionName "2.3"
+		versionCode 1004
+		versionName "2.4"
 		
 		multiDexEnabled true
 		

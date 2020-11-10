@@ -13,9 +13,6 @@ class AlarmReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
 		val result = goAsync()
 		
-		if(!isPreferenceInitialized)
-			preferenceState = PreferenceState(context.prefMain())
-		
 		runBlocking { // TODO: is this okay?
 			context.submitSuspend()
 			result.finish()

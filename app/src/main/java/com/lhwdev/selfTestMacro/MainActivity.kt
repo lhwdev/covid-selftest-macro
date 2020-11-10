@@ -40,8 +40,7 @@ class MainActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		
-		val pref = PreferenceState(prefMain())
-		preferenceState = pref
+		val pref = preferenceState
 		
 		val isFirst = pref.firstState == 0
 		if(isFirst && !intent.getBooleanExtra("doneFirst", false)) {

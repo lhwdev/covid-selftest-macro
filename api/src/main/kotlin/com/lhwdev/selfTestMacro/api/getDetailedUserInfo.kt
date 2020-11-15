@@ -20,7 +20,7 @@ data class DetailedUserInfo(
 	@SerialName("registerYmd") val lastRegisterDate: String?,
 	@SerialName("registerDtm") val lastRegisterAt: String?,
 	@SerialName("isHealthy") val isHealthy: Boolean,
-	@SerialName("deviceUuid") val deviceUuid: String?,
+	@SerialName("deviceUuid") val deviceUuid: String? = null,
 ) {
 	fun toUserInfoString() = "$userName($schoolName)"
 	fun toLastRegisterInfoString() =

@@ -2,6 +2,8 @@ package com.lhwdev.selfTestMacro
 
 import android.annotation.SuppressLint
 import android.app.TimePickerDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -16,6 +18,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.getSystemService
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.lifecycleScope
 import com.lhwdev.selfTestMacro.api.getDetailedUserInfo
@@ -64,7 +67,7 @@ class MainActivity : AppCompatActivity() {
 			val detailedUserInfo = try {
 				getDetailedUserInfo(pref.school!!, pref.user!!)
 			} catch(e: Throwable) {
-				Log.e("hOI", null, e)
+				onError(e, "사용자 정보 불러오기")
 				showToastSuspendAsync("사용자 정보를 불러오지 못했습니다.")
 				return@withContext
 			}
@@ -140,20 +143,20 @@ class MainActivity : AppCompatActivity() {
 		val title: String,
 		val message: String
 	) {
-		enum class Priority { once, every }
+		enum class Priority { once, everyWithDoNotShowAgain, every }
 	}
 	
 	private fun checkNotice() = lifecycleScope.launch(Dispatchers.IO) {
-		var content: String? = null
+		val content: String?
 		try {
 			content =
-				URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/notice_v3.json").readText()
+				URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/notice_v4.json").readText()
 			
 			val notificationObject = Json {
 				ignoreUnknownKeys = true /* loose */
 			}.decodeFromString(NotificationObject.serializer(), content)
 			
-			if(notificationObject.notificationVersion != 3) {
+			if(notificationObject.notificationVersion != 4) {
 				// incapable of displaying this
 				return@launch
 			}
@@ -165,6 +168,7 @@ class MainActivity : AppCompatActivity() {
 			for(entry in notificationObject.entries) {
 				var show = when(entry.priority) {
 					NotificationEntry.Priority.once -> entry.id !in preferenceState.shownNotices
+					NotificationEntry.Priority.everyWithDoNotShowAgain -> entry.id !in preferenceState.doNotShowAgainNotices
 					NotificationEntry.Priority.every -> true
 				}
 				show = show && (entry.version?.let { currentVersion in it } ?: true)
@@ -176,6 +180,11 @@ class MainActivity : AppCompatActivity() {
 						setPositiveButton("확인") { _, _ ->
 							preferenceState.shownNotices += entry.id
 						}
+						if(entry.priority == NotificationEntry.Priority.everyWithDoNotShowAgain)
+							setNegativeButton("다시 보지 않기") { _, _ ->
+								preferenceState.doNotShowAgainNotices += entry.id
+								preferenceState.shownNotices += entry.id
+							}
 					}.show().apply {
 						findViewById<TextView>(android.R.id.message)!!.movementMethod =
 							LinkMovementMethod.getInstance()
@@ -185,7 +194,8 @@ class MainActivity : AppCompatActivity() {
 		} catch(e: Exception) {
 			// ignore; - network error or etc
 			// notification is not that important
-			Log.e("hOI", content, e)
+			
+			onError(e, "알림")
 		}
 	}
 	
@@ -237,6 +247,16 @@ class MainActivity : AppCompatActivity() {
 				startActivity(Intent(this, FirstActivity::class.java))
 				true
 			}
+			R.id.debug_info -> lifecycleScope.launch {
+				val info = getLogcat()
+				AlertDialog.Builder(this@MainActivity).apply {
+					setTitle("진단정보")
+					setMessage(info)
+					setPositiveButton("복사") { _, _ ->
+						getSystemService<ClipboardManager>()!!.setPrimaryClip(ClipData.newPlainText("진단정보", info))
+					}
+				}.show()
+			}.let { true }
 			else -> super.onOptionsItemSelected(item)
 		}
 	}

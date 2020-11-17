@@ -3,22 +3,25 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
+import android.os.Build
 import android.os.Handler
 import android.util.Base64
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.core.content.getSystemService
 import com.google.android.material.snackbar.Snackbar
 import com.lhwdev.selfTestMacro.api.LoginType
 import com.lhwdev.selfTestMacro.api.SchoolInfo
 import com.lhwdev.selfTestMacro.api.UserInfo
 import com.lhwdev.selfTestMacro.api.encodeBase64
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -89,8 +92,12 @@ class PreferenceState(val pref: SharedPreferences) {
 		set(value) = pref.edit {
 			putStringSet("shownNotices", value)
 		}
+	var doNotShowAgainNotices: Set<String>
+		get() = pref.getStringSet("shownNotices", setOf())!!
+		set(value) = pref.edit {
+			putStringSet("shownNotices", value)
+		}
 }
-
 
 
 // I knew that global things are bad in android(i waz lazy), but didn't know would be by far worst.
@@ -115,7 +122,6 @@ val Context.preferenceState: PreferenceState
 	}
 
 
-
 fun SharedPreferences.preferenceInt(key: String, defaultValue: Int) =
 	object : ReadWriteProperty<Any?, Int> {
 		override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
@@ -137,7 +143,11 @@ fun SharedPreferences.preferenceString(key: String, defaultValue: String? = null
 	}
 
 @OptIn(ExperimentalSerializationApi::class)
-fun <T> SharedPreferences.preferenceSerialized(key: String, serializer: KSerializer<T>, formatter: StringFormat = Json) =
+fun <T> SharedPreferences.preferenceSerialized(
+	key: String,
+	serializer: KSerializer<T>,
+	formatter: StringFormat = Json
+) =
 	object : ReadWriteProperty<Any?, T?> {
 		var updated = false
 		var cache: T? = null

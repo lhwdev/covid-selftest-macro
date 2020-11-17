@@ -1,10 +1,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
-	tools:context="com.lhwdev.selfTestMacro.MainActivity">
+	tools:context="com.lhwdev.selfTestMacro.MainActivity"
+	tools:ignore="HardcodedText">
 	<item
 		android:id="@+id/action_settings"
-		android:orderInCategory="100"
-		android:title="@string/action_settings"
-		app:showAsAction="never" />
+		android:title="@string/action_settings" />
+	<item
+		android:id="@+id/debug_info"
+		android:title="진단정보 수집" />
+	<item
+		android:id="@+id/info"
+		android:title="정보" />
 </menu>

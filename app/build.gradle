@@ -14,8 +14,8 @@ android {
 		applicationId "com.lhwdev.selfTestMacro"
 		minSdkVersion 19
 		targetSdkVersion 30
-		versionCode 1004
-		versionName "2.4"
+		versionCode 1005
+		versionName "2.5"
 		
 		multiDexEnabled true
 		
@@ -24,7 +24,7 @@ android {
 	
 	buildTypes {
 		release {
-			minifyEnabled true
+			minifyEnabled false
 			proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
 		}
 	}

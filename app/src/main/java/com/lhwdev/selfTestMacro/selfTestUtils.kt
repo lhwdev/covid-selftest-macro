@@ -7,7 +7,6 @@ import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
-import android.util.Log
 import com.lhwdev.selfTestMacro.api.SurveyData
 import com.lhwdev.selfTestMacro.api.registerSurvey
 import java.util.Calendar
@@ -29,7 +28,7 @@ suspend fun Context.submitSuspend(notification: Boolean = true) {
 		}
 	} catch(e: Throwable) {
 		showTestFailedNotification(e.stackTraceToString())
-		Log.e("hOI", null, e)
+		onError(e, "제출 실패")
 	}
 }
 

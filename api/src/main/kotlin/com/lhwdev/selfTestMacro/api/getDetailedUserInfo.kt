@@ -17,8 +17,8 @@ data class DetailedUserInfo(
 	@SerialName("userName") val userName: String,
 	@SerialName("orgCode") val schoolCode: String,
 	@SerialName("orgName") val schoolName: String,
-	@SerialName("registerYmd") val lastRegisterDate: String?,
-	@SerialName("registerDtm") val lastRegisterAt: String?,
+	@SerialName("registerYmd") val lastRegisterDate: String? = null,
+	@SerialName("registerDtm") val lastRegisterAt: String? = null,
 	@SerialName("isHealthy") val isHealthy: Boolean,
 	@SerialName("deviceUuid") val deviceUuid: String? = null,
 ) {

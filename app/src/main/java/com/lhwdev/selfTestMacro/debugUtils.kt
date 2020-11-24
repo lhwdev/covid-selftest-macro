@@ -25,7 +25,7 @@ suspend fun Context.onError(error: Throwable, description: String = "error") {
 
 suspend fun Context.writeErrorLog(info: String) {
 	withContext(Dispatchers.IO) {
-		getExternalFilesDir(null)?.appendText(info)
+		File(getExternalFilesDir(null)!!, "error_log.txt").appendText(info)
 	}
 }
 

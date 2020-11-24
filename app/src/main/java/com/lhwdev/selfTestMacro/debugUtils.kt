@@ -24,8 +24,12 @@ suspend fun Context.onError(error: Throwable, description: String = "error") {
 }
 
 suspend fun Context.writeErrorLog(info: String) {
-	withContext(Dispatchers.IO) {
-		File(getExternalFilesDir(null)!!, "error_log.txt").appendText(info)
+  try {
+  	withContext(Dispatchers.IO) {
+  		File(getExternalFilesDir(null)!!, "error_log.txt").appendText(info)
+  	}
+	} catch(e: Throwable) {
+	  // ignore errors
 	}
 }
 

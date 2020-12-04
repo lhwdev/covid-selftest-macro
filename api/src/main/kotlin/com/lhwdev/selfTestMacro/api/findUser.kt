@@ -32,7 +32,6 @@ data class GetUserTokenRequestBody internal constructor(
 @Serializable(UserToken.Serializer::class)
 data class UserToken(val token: String) {
 	object Serializer : KSerializer<UserToken> {
-		
 		override val descriptor = PrimitiveSerialDescriptor(UserToken::class.java.name, PrimitiveKind.STRING)
 		override fun deserialize(decoder: Decoder) = UserToken(decoder.decodeString())
 		override fun serialize(encoder: Encoder, value: UserToken) {

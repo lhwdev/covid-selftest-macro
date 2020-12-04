@@ -8,14 +8,16 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import com.lhwdev.selfTestMacro.api.SurveyData
+import com.lhwdev.selfTestMacro.api.getDetailedUserInfo
 import com.lhwdev.selfTestMacro.api.registerSurvey
 import java.util.Calendar
 
 
 suspend fun Context.submitSuspend(notification: Boolean = true) {
 	try {
+		val school = preferenceState.school!!
 		val user = preferenceState.user!!
-		val token = user.token
+		val token = getDetailedUserInfo(school, user).token
 		
 		val result = registerSurvey(
 			preferenceState.school!!,

@@ -79,6 +79,8 @@ class PreferenceState(val pref: SharedPreferences) {
 		pref.edit { putInt("lastVersion", BuildConfig.VERSION_CODE) }
 	}
 	
+	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
+	
 	var firstState by pref.preferenceInt("first", 0)
 	var hour by pref.preferenceInt("hour", -1)
 	var min by pref.preferenceInt("min", 0)
@@ -130,6 +132,16 @@ fun SharedPreferences.preferenceInt(key: String, defaultValue: Int) =
 		
 		override fun getValue(thisRef: Any?, property: KProperty<*>): Int =
 			getInt(key, defaultValue)
+	}
+
+fun SharedPreferences.preferenceBoolean(key: String, defaultValue: Boolean) =
+	object : ReadWriteProperty<Any?, Boolean> {
+		override fun setValue(thisRef: Any?, property: KProperty<*>, value: Boolean) {
+			edit { putBoolean(key, value) }
+		}
+		
+		override fun getValue(thisRef: Any?, property: KProperty<*>): Boolean =
+			getBoolean(key, defaultValue)
 	}
 
 fun SharedPreferences.preferenceString(key: String, defaultValue: String? = null) =

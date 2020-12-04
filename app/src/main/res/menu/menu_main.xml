@@ -6,9 +6,6 @@
 		android:id="@+id/action_settings"
 		android:title="@string/action_settings" />
 	<item
-		android:id="@+id/debug_info"
-		android:title="진단정보 수집" />
-	<item
 		android:id="@+id/info"
 		android:title="정보" />
 </menu>

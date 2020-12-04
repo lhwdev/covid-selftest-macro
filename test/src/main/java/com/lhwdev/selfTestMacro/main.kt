@@ -11,5 +11,6 @@ suspend fun main() {
 	val school = schoolList.schoolList.single()
 	val userToken = findUser(school, GetUserTokenRequestBody(school, "이현우", "040116", LoginType.school))
 	val userInfo = getUserGroup(school, userToken).single()
-	registerSurvey(school, userToken, SurveyData(userToken = userToken.token, userName = userInfo.name))
+	val detailedInfo = getDetailedUserInfo(school, userInfo)
+	registerSurvey(school, detailedInfo.token, SurveyData(userToken = userToken.token, userName = userInfo.name))
 }

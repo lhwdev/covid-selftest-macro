@@ -3,22 +3,27 @@
 package com.lhwdev.selfTestMacro.api
 
 import com.lhwdev.selfTestMacro.*
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
 
 /*
  * deviceUuid: ""
- * rspns00: "Y"
+ * rspns00: "Y
  * rspns01: "1"
  * rspns02: "1"
  * rspns03: null
  * rspns04: null
  * rspns05: null
  * rspns06: null
- * rspns07: "0"
- * rspns08: "0"
+ * rspns07: null
+ * rspns08: null
  * rspns09: "0"
  * rspns10: null
  * rspns11: null
@@ -31,6 +36,18 @@ import kotlinx.serialization.json.Json
  */
 
 
+
+@Serializable(RegisterSurveyToken.Serializer::class)
+data class RegisterSurveyToken(val token: String) {
+	object Serializer : KSerializer<RegisterSurveyToken> {
+		override val descriptor = PrimitiveSerialDescriptor(RegisterSurveyToken::class.java.name, PrimitiveKind.STRING)
+		override fun deserialize(decoder: Decoder) = RegisterSurveyToken(decoder.decodeString())
+		override fun serialize(encoder: Encoder, value: RegisterSurveyToken) {
+			encoder.encodeString(value.token)
+		}
+	}
+}
+
 @Serializable
 data class SurveyData(
 	val deviceUuid: String = "",
@@ -41,8 +58,8 @@ data class SurveyData(
 	val rspns04: String? = null,
 	val rspns05: String? = null,
 	val rspns06: String? = null,
-	val rspns07: String = "0",
-	val rspns08: String = "0",
+	val rspns07: String? = null,
+	val rspns08: String? = null,
 	val rspns09: String = "0",
 	val rspns10: String? = null,
 	val rspns11: String? = null,
@@ -62,7 +79,7 @@ data class SurveyResult(
 
 suspend fun registerSurvey(
 	schoolInfo: SchoolInfo,
-	token: UserToken,
+	token: RegisterSurveyToken,
 	surveyData: SurveyData
 ): SurveyResult = ioTask {
 	fetch(

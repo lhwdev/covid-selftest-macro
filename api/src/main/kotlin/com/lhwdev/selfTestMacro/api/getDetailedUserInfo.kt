@@ -19,12 +19,13 @@ data class DetailedUserInfo(
 	@SerialName("orgName") val schoolName: String,
 	@SerialName("registerYmd") val lastRegisterDate: String? = null,
 	@SerialName("registerDtm") val lastRegisterAt: String? = null,
-	@SerialName("isHealthy") val isHealthy: Boolean,
+	@SerialName("isHealthy") val isHealthy: Boolean? = null,
 	@SerialName("deviceUuid") val deviceUuid: String? = null,
+	@SerialName("token") val token: RegisterSurveyToken
 ) {
 	fun toUserInfoString() = "$userName($schoolName)"
 	fun toLastRegisterInfoString() =
-		"최근 자가진단: ${if(lastRegisterAt == null) "미참여" else ((if(isHealthy) "정상" else "유증상") + "($lastRegisterAt)")}"
+		"최근 자가진단: ${if(lastRegisterAt == null) "미참여" else ((if(isHealthy == true) "정상" else "유증상") + "($lastRegisterAt)")}"
 }
 
 

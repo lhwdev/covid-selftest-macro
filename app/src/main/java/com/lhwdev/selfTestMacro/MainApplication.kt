@@ -12,7 +12,7 @@ class MainApplication : Application() {
 	override fun onCreate() {
 		super.onCreate()
 		sDummyForInitialization
-		sDebugFetch = BuildConfig.DEBUG
+		sDebugFetch = isDebugEnabled
 		
 		// debug code
 		System.setProperty(

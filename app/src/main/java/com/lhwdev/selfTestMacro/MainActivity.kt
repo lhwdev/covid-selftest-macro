@@ -2,8 +2,6 @@ package com.lhwdev.selfTestMacro
 
 import android.annotation.SuppressLint
 import android.app.TimePickerDialog
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -12,14 +10,17 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.text.method.LinkMovementMethod
 import android.util.Log
+import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.CheckBox
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.getSystemService
 import androidx.core.text.HtmlCompat
+import androidx.core.view.setPadding
 import androidx.lifecycle.lifecycleScope
 import com.lhwdev.selfTestMacro.api.getDetailedUserInfo
 import kotlinx.android.synthetic.main.activity_main.*
@@ -247,16 +248,39 @@ class MainActivity : AppCompatActivity() {
 				startActivity(Intent(this, FirstActivity::class.java))
 				true
 			}
-			R.id.debug_info -> lifecycleScope.launch {
-				val info = getLogcat()
-				AlertDialog.Builder(this@MainActivity).apply {
-					setTitle("진단정보")
-					setMessage(info)
-					setPositiveButton("복사") { _, _ ->
-						getSystemService<ClipboardManager>()!!.setPrimaryClip(ClipData.newPlainText("진단정보", info))
+			R.id.info -> {
+				val context = this
+				AlertDialog.Builder(context).apply {
+					setTitle("자가진단 매크로 ${BuildConfig.VERSION_NAME}")
+					setMessage(
+						HtmlCompat.fromHtml(
+							"이현우 개발\n<a href='https://github.com/lhwdev/covid-selftest-macro'>자가진단 앱 웹사이트</a>",
+							0
+						)
+					)
+					setPositiveButton("ㅇㅋ", null)
+					setNeutralButton("개발자 모드") { _, _ ->
+						AlertDialog.Builder(context).apply {
+							setTitle("개발자 도구")
+							val view = LinearLayout(context)
+							view.orientation = LinearLayout.VERTICAL
+							val checkbox = CheckBox(context)
+							checkbox.isChecked = isDebugEnabled
+							checkbox.setOnCheckedChangeListener { _, checked ->
+								preferenceState.isDebugEnabled = checked
+							}
+							view.addView(checkbox)
+							view.setPadding(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics).toInt())
+							setView(view)
+							setNegativeButton("닫기", null)
+						}.show()
 					}
-				}.show()
-			}.let { true }
+				}.show().apply {
+					findViewById<TextView>(android.R.id.message)!!.movementMethod =
+						LinkMovementMethod.getInstance()
+				}
+				true
+			}
 			else -> super.onOptionsItemSelected(item)
 		}
 	}

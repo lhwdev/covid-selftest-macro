@@ -12,24 +12,24 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+val Context.isDebugEnabled get() = preferenceState.isDebugEnabled
+
 
 suspend fun Context.onError(error: Throwable, description: String = "error") {
 	val info = getErrorInfo(error, description)
-	if(getExternalFilesDir(null)?.let { File(it, "debug.txt").exists() } == true) withContext(
-		Dispatchers.Main
-	) {
+	if(isDebugEnabled) withContext(Dispatchers.Main) {
 		showErrorInfo(info)
 	}
 	writeErrorLog(info)
 }
 
 suspend fun Context.writeErrorLog(info: String) {
-  try {
-  	withContext(Dispatchers.IO) {
-  		File(getExternalFilesDir(null)!!, "error_log.txt").appendText(info)
-  	}
+	try {
+		withContext(Dispatchers.IO) {
+			File(getExternalFilesDir(null)!!, "error_log.txt").appendText(info)
+		}
 	} catch(e: Throwable) {
-	  // ignore errors
+		// ignore errors
 	}
 }
 

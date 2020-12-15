@@ -12,7 +12,7 @@ import java.net.URL
 import java.net.URLEncoder
 
 
-fun URL.child(childPath: String) = URL(this, path.removeSuffix("/") + "/" + childPath)
+operator fun URL.get(childPath: String) = URL(this, path.removeSuffix("/") + "/" + childPath)
 
 // our project is too small to use form like 'major.minor.bugFixes'
 @Serializable

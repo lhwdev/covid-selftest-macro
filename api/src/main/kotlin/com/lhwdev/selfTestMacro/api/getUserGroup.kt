@@ -8,16 +8,16 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class UserInfo(
+data class UserId(
 	@SerialName("userNameEncpt") val name: String,
 	@SerialName("userPNo") val userId: String,
-	@SerialName("token") val token: UserToken
+	@SerialName("token") val token: UserIdToken
 )
 
 
-suspend fun getUserGroup(schoolInfo: SchoolInfo, token: UserToken): List<UserInfo> = ioTask {
+suspend fun getUserGroup(institute: InstituteInfo, token: UserToken): List<UserId> = ioTask {
 	fetch(
-		schoolInfo.requestUrl.child("selectUserGroup"),
+		institute.requestUrl["selectUserGroup"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to token.token),
 		body = "{}"

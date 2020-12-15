@@ -7,13 +7,13 @@ import kotlinx.serialization.json.Json
 
 
 @Serializable
-private data class GetDetailedUserInfoRequestBody(
+private data class GetUserInfoRequestBody(
 	@SerialName("orgCode") val schoolCode: String,
 	@SerialName("userPNo") val userId: String
 )
 
 @Serializable
-data class DetailedUserInfo(
+data class UserInfo(
 	@SerialName("userName") val userName: String,
 	@SerialName("orgCode") val schoolCode: String,
 	@SerialName("orgName") val schoolName: String,
@@ -53,18 +53,18 @@ data class DetailedUserInfo(
  * userPNo: "..."
  * wrongPassCnt: 0
  */
-suspend fun getDetailedUserInfo(schoolInfo: SchoolInfo, userInfo: UserInfo): DetailedUserInfo =
+suspend fun getUserInfo(institute: InstituteInfo, user: User): UserInfo =
 	ioTask {
 		fetch(
-			schoolInfo.requestUrl.child("getUserInfo"),
+			institute.requestUrl["getUserInfo"],
 			method = HttpMethod.post,
 			headers = sDefaultFakeHeader + mapOf(
 				"Content-Type" to ContentTypes.json,
-				"Authorization" to userInfo.token.token
+				"Authorization" to user.token.token
 			),
 			body = Json.encodeToString(
-				GetDetailedUserInfoRequestBody.serializer(),
-				GetDetailedUserInfoRequestBody(schoolInfo.code, userInfo.userId)
+				GetUserInfoRequestBody.serializer(),
+				GetUserInfoRequestBody(institute.code, user.id.userId)
 			)
 		).toJsonLoose()
 	}

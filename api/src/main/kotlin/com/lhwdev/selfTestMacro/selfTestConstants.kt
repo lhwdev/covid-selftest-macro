@@ -1,7 +1,9 @@
 package com.lhwdev.selfTestMacro
 
+import java.net.URL
 
-const val sCommonUrl = "https://hcs.eduro.go.kr/v2"
+
+val sCommonUrl = URL("https://hcs.eduro.go.kr/v2")
 
 val sDefaultFakeHeader = mapOf(
 	"User-Agent" to "Mozilla/5.0 (Linux; Android 7.0; SM-G892A Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.81 Mobile Safari/537.36",

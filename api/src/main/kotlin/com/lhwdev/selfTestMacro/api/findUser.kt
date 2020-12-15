@@ -20,6 +20,8 @@ import java.security.spec.RSAPublicKeySpec
 import javax.crypto.Cipher
 
 
+enum class LoginType { school, univ, office }
+
 @Serializable
 data class GetUserTokenRequestBody internal constructor(
 	@SerialName("orgCode") val schoolCode: String,
@@ -29,28 +31,28 @@ data class GetUserTokenRequestBody internal constructor(
 	@SerialName("loginType") val loginType: LoginType,
 )
 
-@Serializable(UserToken.Serializer::class)
-data class UserToken(val token: String) {
-	object Serializer : KSerializer<UserToken> {
-		override val descriptor = PrimitiveSerialDescriptor(UserToken::class.java.name, PrimitiveKind.STRING)
-		override fun deserialize(decoder: Decoder) = UserToken(decoder.decodeString())
-		override fun serialize(encoder: Encoder, value: UserToken) {
+@Serializable(UserIdToken.Serializer::class)
+data class UserIdToken(val token: String) {
+	object Serializer : KSerializer<UserIdToken> {
+		override val descriptor = PrimitiveSerialDescriptor(UserIdToken::class.java.name, PrimitiveKind.STRING)
+		override fun deserialize(decoder: Decoder) = UserIdToken(decoder.decodeString())
+		override fun serialize(encoder: Encoder, value: UserIdToken) {
 			encoder.encodeString(value.token)
 		}
 	}
 }
 
 suspend fun GetUserTokenRequestBody(
-	schoolInfo: SchoolInfo,
+	institute: InstituteInfo,
 	name: String,
 	birthday: String,
 	loginType: LoginType
 ) =
-	GetUserTokenRequestBody(schoolInfo.code, encrypt(name), encrypt(birthday), loginType = loginType)
+	GetUserTokenRequestBody(institute.code, encrypt(name), encrypt(birthday), loginType = loginType)
 
-suspend fun findUser(schoolInfo: SchoolInfo, request: GetUserTokenRequestBody) = ioTask {
+suspend fun findUser(institute: InstituteInfo, request: GetUserTokenRequestBody) = ioTask {
 	val result = fetch(
-		schoolInfo.requestUrl.child("findUser"),
+		institute.requestUrl["findUser"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json),
 		body = Json { encodeDefaults = true }.encodeToString(GetUserTokenRequestBody.serializer(), request)
@@ -59,7 +61,7 @@ suspend fun findUser(schoolInfo: SchoolInfo, request: GetUserTokenRequestBody) =
 	}.jsonObject
 	val token = result["token"] ?: throw IOException("입력하신 학생정보가 올바르지 않습니다.")
 	
-	UserToken(token.jsonPrimitive.content)
+	UserIdToken(token.jsonPrimitive.content)
 }
 
 

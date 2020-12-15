@@ -78,12 +78,12 @@ data class SurveyResult(
 )
 
 suspend fun registerSurvey(
-	schoolInfo: SchoolInfo,
+	institute: InstituteInfo,
 	token: RegisterSurveyToken,
 	surveyData: SurveyData
 ): SurveyResult = ioTask {
 	fetch(
-		schoolInfo.requestUrlBase.child("registerServey"),
+		institute.requestUrlBase["registerServey"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf(
 			"Content-Type" to ContentTypes.json,

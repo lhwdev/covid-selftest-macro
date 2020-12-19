@@ -73,7 +73,7 @@ suspend fun validatePassword(institute: InstituteInfo, userIdentifier: UserIdent
 		Json { ignoreUnknownKeys = true }.decodeFromString(PasswordWrong.serializer(), body)
 	} catch(e: Throwable) {
 		val userToken = body.removeSurrounding("\"")
-		require(body.startsWith("Bearer")) { userToken }
+		require(userToken.startsWith("Bearer")) { userToken }
 		UsersToken(userToken)
 	}
 }

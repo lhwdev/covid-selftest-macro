@@ -8,21 +8,28 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import com.lhwdev.selfTestMacro.api.SurveyData
-import com.lhwdev.selfTestMacro.api.getDetailedUserInfo
+import com.lhwdev.selfTestMacro.api.User
+import com.lhwdev.selfTestMacro.api.getUserGroup
 import com.lhwdev.selfTestMacro.api.registerSurvey
 import java.util.Calendar
 
 
+suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) list.single() else {
+	if(list.isEmpty()) showToastSuspendAsync("사용자를 찾지 못했습니다.")
+	else showToastSuspendAsync("아직 여러명의 자가진단은 지원하지 않습니다.")
+	null
+}
+
 suspend fun Context.submitSuspend(notification: Boolean = true) {
+	val institute = preferenceState.institute!!
+	val loginInfo = preferenceState.user!!
 	try {
-		val school = preferenceState.school!!
-		val user = preferenceState.user!!
-		val token = getDetailedUserInfo(school, user).token
+		val user = singleOfUserGroup(getUserGroup(institute, loginInfo.token)) ?: return
 		
 		val result = registerSurvey(
-			preferenceState.school!!,
-			token,
-			SurveyData(userToken = token.token, userName = user.name)
+			preferenceState.institute!!,
+			user,
+			SurveyData(userToken = user.token, userName = user.name)
 		)
 		if(notification) showTestCompleteNotification(result.registerAt)
 		else {

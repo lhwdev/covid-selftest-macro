@@ -3,11 +3,14 @@ package com.lhwdev.selfTestMacro
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputFilter
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Filter
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.getSystemService
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
@@ -17,16 +20,10 @@ import kotlinx.android.synthetic.main.activity_first.*
 import kotlinx.coroutines.launch
 
 
-// TODO list:
-// * use view binding
-// * use preference fragment etc.
-// * use better model, like MVVM. This page is small so whole code is not complicated, but
-//   on larger project, this imperative style lacks.
-
-
 class FirstActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		
 		setContentView(R.layout.activity_first)
 		window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 		val pref = preferenceState
@@ -34,25 +31,27 @@ class FirstActivity : AppCompatActivity() {
 		
 		setSupportActionBar(toolbar)
 		
-		var schoolInfo: SchoolInfo? = null
+		var institute: InstituteInfo? = null
 		
-		fun adapter(list: List<String>) = object : ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list) {
-			override fun getFilter(): Filter {
-				return DisabledFilter()
-			}
-			
-			private inner class DisabledFilter : Filter() {
-				override fun performFiltering(text: CharSequence): FilterResults {
-					val result = FilterResults()
-					result.values = list
-					result.count = list.size
-					return result
+		fun adapter(list: List<String>) =
+			object : ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list) {
+				override fun getFilter(): Filter {
+					return DisabledFilter()
 				}
-				override fun publishResults(text: CharSequence, results: FilterResults) {
-					notifyDataSetChanged()
+				
+				private inner class DisabledFilter : Filter() {
+					override fun performFiltering(text: CharSequence): FilterResults {
+						val result = FilterResults()
+						result.values = list
+						result.count = list.size
+						return result
+					}
+					
+					override fun publishResults(text: CharSequence, results: FilterResults) {
+						notifyDataSetChanged()
+					}
 				}
 			}
-		}
 //			ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
 		
 		input_loginType.setAdapter(adapter(listOf("학교")))
@@ -60,65 +59,65 @@ class FirstActivity : AppCompatActivity() {
 		input_region.setAdapter(adapter(sRegions.keys.toList()))
 		input_level.setAdapter(adapter(sSchoolLevels.keys.toList()))
 		
+		input_schoolName.setOnEditorActionListener { _, _, _ ->
+			button_checkSchoolInfo.performClick()
+		}
+		
 		button_checkSchoolInfo.setOnClickListener {
-//			if(input_region.) {
-//				showToast("시/도 정보를 입력해주세요")
-//				return@setOnClickListener
-//			}
-//
-//			if(spinner_level.selectedItemPosition == -1) {
-//				showToast("시/도 정보를 입력해주세요")
-//				return@setOnClickListener
-//			}
-			
 			val schoolName = input_schoolName.text
 			if(schoolName == null || schoolName.isEmpty()) {
 				showToast("학교 이름을 입력해주세요")
 				return@setOnClickListener
 			}
+			
+			currentFocus?.windowToken?.let {
+				getSystemService<InputMethodManager>()!!.hideSoftInputFromWindow(it, 0)
+			}
+			
 			val nameString = schoolName.toString()
 			
 			val regionCode = sRegions.getValue(input_region.text.toString())
 			val levelCode = sSchoolLevels.getValue(input_level.text.toString())
 			
 			lifecycleScope.launch {
-				val snackbar =
+				val snackBar =
 					Snackbar.make(button_checkSchoolInfo, "잠시만 기다려주세요", Snackbar.LENGTH_INDEFINITE)
-				snackbar.show()
+				snackBar.show()
 				
-				fun selectSchool(school: SchoolInfo) {
-					schoolInfo = school
+				fun selectInstitute(instituteInfo: InstituteInfo) {
+					institute = instituteInfo
 					
 					// ui interaction
 					schoolName.clear()
-					schoolName.append(school.name)
+					schoolName.append(instituteInfo.name)
 					button_checkSchoolInfo.icon = ResourcesCompat.getDrawable(
 						resources,
 						R.drawable.ic_baseline_check_24,
 						theme
 					)
+					
+					scrollView.smoothScrollTo(0, scrollView.height)
 				}
 				
 				val data = getSchoolData(
 					regionCode = regionCode,
 					schoolLevelCode = levelCode.toString(),
-					name = nameString,
-					loginType = LoginType.school /* TODO */
+					name = nameString
 				)
-				snackbar.dismiss()
-				if(data.schoolList.isEmpty()) {
+				snackBar.dismiss()
+				if(data.instituteList.isEmpty()) {
 					showToast("학교를 찾을 수 없습니다. 이름을 바르게 입력했는지 확인해주세요.")
 					return@launch
 				}
 				
-				if(data.schoolList.size == 1)
-					selectSchool(data.schoolList[0])
+				if(data.instituteList.size == 1)
+					selectInstitute(data.instituteList[0])
 				else AlertDialog.Builder(this@FirstActivity).apply {
 					setTitle("학교를 선택해주세요")
 					setItems(
-						data.schoolList.map { "${it.name}(${it.address})" }.toTypedArray(),
+						data.instituteList.map { "${it.name}(${it.address})" }.toTypedArray(),
 						DialogInterface.OnClickListener { _, which ->
-							selectSchool(data.schoolList[which])
+							selectInstitute(data.instituteList[which])
 						})
 				}.show()
 			}
@@ -132,10 +131,14 @@ class FirstActivity : AppCompatActivity() {
 			input_studentBirth.error = null
 		}
 		
+		input_studentBirth.setOnEditorActionListener { _, _, _ ->
+			button_done.callOnClick()
+		}
+		
 		button_done.setOnClickListener onClick@{
-			val school = schoolInfo ?: run {
+			val instituteInfo = institute ?: run {
 				button_checkSchoolInfo.callOnClick()
-				schoolInfo ?: return@onClick
+				institute ?: return@onClick
 			}
 			
 			if(input_studentName.isEmpty()) {
@@ -152,8 +155,6 @@ class FirstActivity : AppCompatActivity() {
 			
 			val name = input_studentName.text!!.toString()
 			val birth = input_studentBirth.text!!.toString()
-
-//			require(input_loginType.selectedItemPosition == 0)
 			
 			if(birth.length != 6) {
 				input_studentBirth.requestFocus()
@@ -161,35 +162,48 @@ class FirstActivity : AppCompatActivity() {
 				return@onClick
 			}
 			
-			lifecycleScope.launch {
+			lifecycleScope.launch main@{
 				// TODO: show progress
 				try {
-					val token = findUser(
-						school,
+					val userIdentifier = findUser(
+						instituteInfo,
 						GetUserTokenRequestBody(
-							schoolInfo = school,
+							institute = instituteInfo,
 							name = name,
 							birthday = birth,
 							loginType = LoginType.school /* TODO */
 						)
 					)
-					val groups = getUserGroup(school, token)
-					if(groups.isEmpty()) {
-						showToastSuspendAsync("해당 정보의 학생을 찾지 못했습니다.")
-						return@launch
-					}
-					if(groups.size != 1) {
-						showToastSuspendAsync("여러명의 자가진단은 아직 지원하지 않습니다.")
-					}
-					val userInfo = groups.single()
 					
-					pref.school = school
-					pref.user = userInfo
+					val password = promptInput { edit, _ ->
+						setTitle("비밀번호를 입력해주세요.")
+						edit.filters = arrayOf(InputFilter { source, start, end, dest, destStart, destEnd ->
+							val result = dest.replaceRange(destStart, destEnd, source.substring(start, end))
+							if(result.length > 4 || result.any { !it.isDigit() }) null
+							else source
+						})
+					} ?: return@main
+					
+					val token = catchErrorThanToast {
+						validatePassword(instituteInfo, userIdentifier, password)
+					} ?: return@main
+					
+					if(token is PasswordWrong) {
+						showToastSuspendAsync("잘못된 비밀번호입니다. 다시 시도해주세요. (${token.data.failedCount}회 틀림)")
+						return@main
+					}
+					require(token is UsersToken)
+					
+					val groups = getUserGroup(instituteInfo, token)
+					singleOfUserGroup(groups) ?: return@main // TODO: many users
+					
+					pref.institute = instituteInfo
+					pref.user = UserLoginInfo(userIdentifier, token)
 					pref.setting = UserSetting(
 						loginType = LoginType.school, // TODO
 						region = sRegions.getValue(input_region.text.toString()),
 						level = sSchoolLevels.getValue(input_level.text.toString()),
-						schoolName = school.name,
+						schoolName = instituteInfo.name,
 						studentName = name,
 						studentBirth = birth
 					)
@@ -202,6 +216,7 @@ class FirstActivity : AppCompatActivity() {
 						pref.firstState = 1
 					}
 				} catch(e: Throwable) {
+					e.printStackTrace()
 					showToastSuspendAsync("잘못된 학생 정보입니다.")
 				}
 				
@@ -210,8 +225,11 @@ class FirstActivity : AppCompatActivity() {
 		
 		pref.setting?.let { setting ->
 			input_loginType.setText("학교", false) // TODO
-			input_region.setText(sRegions.entries.first { it.value == setting.region}.key, false)
-			input_level.setText(sSchoolLevels.entries.first { it.value == setting.level }.key, false)
+			input_region.setText(sRegions.entries.first { it.value == setting.region }.key, false)
+			input_level.setText(
+				sSchoolLevels.entries.first { it.value == setting.level }.key,
+				false
+			)
 			input_schoolName.setText(setting.schoolName)
 			input_studentName.setText(setting.studentName)
 			input_studentBirth.setText(setting.studentBirth)

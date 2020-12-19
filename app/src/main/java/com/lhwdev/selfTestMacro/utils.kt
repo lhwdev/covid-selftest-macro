@@ -3,33 +3,33 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.PendingIntent
-import android.content.*
-import android.os.Build
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.res.Resources
 import android.os.Handler
 import android.util.Base64
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
-import androidx.core.content.getSystemService
+import androidx.core.view.doOnPreDraw
+import androidx.core.view.setPadding
 import com.google.android.material.snackbar.Snackbar
-import com.lhwdev.selfTestMacro.api.LoginType
-import com.lhwdev.selfTestMacro.api.SchoolInfo
-import com.lhwdev.selfTestMacro.api.UserInfo
-import com.lhwdev.selfTestMacro.api.encodeBase64
-import kotlinx.coroutines.CoroutineScope
+import com.lhwdev.selfTestMacro.api.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
-import org.json.JSONObject
 import java.util.WeakHashMap
+import kotlin.coroutines.resume
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -39,22 +39,6 @@ val sDummyForInitialization: Unit = run {
 	encodeBase64 = { Base64.encodeToString(it, Base64.NO_WRAP) }
 }
 
-
-// {"id": "$id", "priority": "once | every", "title": "$title", "message": "$message"}
-class Notice(obj: JSONObject) {
-	enum class Priority { once, every }
-	
-	val id: String = obj.getString("id")
-	
-	val priority = when(obj.getString("priority")) {
-		"once" -> Priority.once
-		"every" -> Priority.every
-		else -> error("wow")
-	}
-	
-	val title: String = obj.getString("title")
-	val message: String = obj.getString("message")
-}
 
 fun EditText.isEmpty() = text == null || text.isEmpty()
 
@@ -68,11 +52,15 @@ data class UserSetting(
 	val studentBirth: String
 )
 
+@Serializable
+data class UserLoginInfo(val identifier: UserIdentifier, val token: UsersToken)
+
 class PreferenceState(val pref: SharedPreferences) {
 	init {
 		// version migration
 		when(pref.getInt("lastVersion", -1)) {
 			in -1..999 -> pref.edit { clear() }
+			in 1000..1006 -> pref.edit { clear() }
 			BuildConfig.VERSION_CODE -> Unit // latest
 		}
 		
@@ -82,11 +70,12 @@ class PreferenceState(val pref: SharedPreferences) {
 	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
 	
 	var firstState by pref.preferenceInt("first", 0)
+	var isSchedulingEnabled by pref.preferenceBoolean("isSchedulingEnabled", false)
 	var hour by pref.preferenceInt("hour", -1)
 	var min by pref.preferenceInt("min", 0)
 	
-	var user by pref.preferenceSerialized("userInfo", UserInfo.serializer())
-	var school by pref.preferenceSerialized("schoolInfo", SchoolInfo.serializer())
+	var user by pref.preferenceSerialized("userLoginInfo", UserLoginInfo.serializer())
+	var institute by pref.preferenceSerialized("institute", InstituteInfo.serializer())
 	var setting by pref.preferenceSerialized("userSetting", UserSetting.serializer())
 	
 	var shownNotices: Set<String>
@@ -190,6 +179,8 @@ fun Context.createIntent() = PendingIntent.getBroadcast(
 	PendingIntent.FLAG_UPDATE_CURRENT
 )
 
+fun Int.toPx() = (this * Resources.getSystem().displayMetrics.density).toInt()
+
 @Suppress("NOTHING_TO_INLINE")
 inline fun Context.runOnUiThread(noinline action: () -> Unit) {
 	Handler(mainLooper).post(action)
@@ -207,3 +198,53 @@ fun Context.showToast(message: String, isLong: Boolean = false) {
 fun View.showSnackBar(message: String, duration: Int = 3000) {
 	Snackbar.make(this, message, duration).show()
 }
+
+suspend fun <R : Any> Context.promptDialog(
+	block: AlertDialog.Builder.(result: (R) -> Unit) -> Unit
+): R? = withContext(Dispatchers.Main) {
+	suspendCancellableCoroutine { cont ->
+		var invoked = false
+		fun onResult(result: R?) {
+			if(!invoked) {
+				invoked = true
+				cont.resume(result)
+			}
+		}
+		var dialog: AlertDialog? = null
+		dialog = AlertDialog.Builder(this@promptDialog).apply {
+			block {
+				onResult(it)
+				dialog?.dismiss()
+			}
+			
+			setOnDismissListener {
+				onResult(null)
+			}
+			
+			setOnCancelListener {
+				onResult(null)
+			}
+			
+		}.show()
+		cont.invokeOnCancellation { dialog.dismiss() }
+	}
+}
+
+suspend fun Context.promptInput(block: AlertDialog.Builder.(edit: EditText, okay: () -> Unit) -> Unit): String? =
+	promptDialog { onResult ->
+		val view = EditText(context)
+		val okay = { onResult(view.text.toString()) }
+		view.setPadding(16.toPx())
+		view.imeOptions = EditorInfo.IME_ACTION_DONE
+		view.setOnEditorActionListener { _, _, _ ->
+			okay()
+			true
+		}
+		view.doOnPreDraw { view.requestFocus() }
+		setView(view)
+		setPositiveButton("확인") { _, _ ->
+			okay()
+		}
+		setNegativeButton("취소", null)
+		block(view, okay)
+	}

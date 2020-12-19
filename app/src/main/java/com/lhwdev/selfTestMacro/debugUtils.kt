@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.getSystemService
 import kotlinx.coroutines.CoroutineScope
@@ -12,10 +13,25 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-val Context.isDebugEnabled get() = preferenceState.isDebugEnabled
+val Context.isDebugEnabled get() = BuildConfig.DEBUG || preferenceState.isDebugEnabled
 
 
-suspend fun Context.onError(error: Throwable, description: String = "error") {
+suspend fun Context.onErrorToast(error: Throwable, description: String = "???") {
+	showToastSuspendAsync("오류가 발생했습니다. ($description)")
+	onError(error, description)
+}
+
+suspend inline fun <R : Any> Context.catchErrorThanToast(description: String = "???", block: () -> R): R? =
+	try {
+		block()
+	} catch(e: Throwable) {
+		onErrorToast(e, description)
+		null
+	}
+
+
+suspend fun Context.onError(error: Throwable, description: String = "???") {
+	Log.e("ERROR", description, error)
 	val info = getErrorInfo(error, description)
 	if(isDebugEnabled) withContext(Dispatchers.Main) {
 		showErrorInfo(info)

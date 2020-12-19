@@ -25,6 +25,7 @@
 	</com.google.android.material.appbar.AppBarLayout>
 	
 	<ScrollView
+		android:id="@+id/scrollView"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -124,6 +125,8 @@
 						android:id="@+id/input_schoolName"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
+						android:inputType="text"
+						android:imeOptions="actionDone"
 						android:hint="학교명" />
 				
 				</com.google.android.material.textfield.TextInputLayout>
@@ -164,6 +167,9 @@
 						android:id="@+id/input_studentName"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
+						android:inputType="textPersonName"
+						android:nextFocusDown="@id/input_studentBirth"
+						android:imeOptions="actionNext"
 						android:hint="이름" />
 				
 				</com.google.android.material.textfield.TextInputLayout>
@@ -181,6 +187,8 @@
 						android:id="@+id/input_studentBirth"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
+						android:inputType="date"
+						android:imeOptions="actionDone"
 						android:hint="생년월일(YYMMDD)" />
 				
 				</com.google.android.material.textfield.TextInputLayout>

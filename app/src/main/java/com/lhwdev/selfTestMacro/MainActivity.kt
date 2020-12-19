@@ -13,16 +13,14 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.CheckBox
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.core.view.setPadding
 import androidx.lifecycle.lifecycleScope
-import com.lhwdev.selfTestMacro.api.getDetailedUserInfo
+import com.lhwdev.selfTestMacro.api.getUserGroup
+import com.lhwdev.selfTestMacro.api.getUserInfo
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.coroutines.Dispatchers
@@ -63,14 +61,19 @@ class MainActivity : AppCompatActivity() {
 		initializeNotificationChannel()
 		checkNotice()
 		
+		
 		@SuppressLint("SetTextI18n")
-		suspend fun updateCurrentState() = withContext(Dispatchers.IO) {
+		suspend fun updateCurrentState() = withContext(Dispatchers.IO) main@ {
+			val institute = pref.institute!!
+			val user = pref.user!!
+			
 			val detailedUserInfo = try {
-				getDetailedUserInfo(pref.school!!, pref.user!!)
+				val token = singleOfUserGroup(getUserGroup(institute, user.token)) ?: return@main
+				getUserInfo(institute, token)
 			} catch(e: Throwable) {
 				onError(e, "사용자 정보 불러오기")
 				showToastSuspendAsync("사용자 정보를 불러오지 못했습니다.")
-				return@withContext
+				return@main
 			}
 			
 			withContext(Dispatchers.Main) {
@@ -85,39 +88,48 @@ class MainActivity : AppCompatActivity() {
 		}
 		
 		val intent = createIntent()
-
-//		val serviceIntent = Intent(this, MyService::class.java)
-//		var service: MyService? = null
-//		val connection = object : ServiceConnection {
-//			override fun onServiceDisconnected(name: ComponentName) {
-//				service = null
-//			}
-//
-//			override fun onServiceConnected(name: ComponentName, theService: IBinder) {
-//				service = (theService as MyService.LocalBinder).service
-//			}
-//		}
 		
-		fun updateTime() {
-			time.text = if(pref.hour == -1) "시간 예약 안 됨" else "매일 자가진단: ${pref.hour}시 ${pref.min}분"
-			updateTime(intent)
+		fun update() {
+			val isSchedulingEnabled = switch_enable.isChecked
+			pref.isSchedulingEnabled = isSchedulingEnabled
+			if(isSchedulingEnabled) {
+				switch_enable.isChecked = true
+				@SuppressLint("SetTextI18n")
+				time.text = "매일 자가진단: ${pref.hour}시 ${pref.min}분"
+				updateTime(intent)
+			} else {
+				time.text = "시간 예약 안 됨"
+			}
 		}
 		
-		updateTime()
-		
-		time.setOnClickListener {
+		fun pickTime() {
 			TimePickerDialog(this, { _, newHour, newMin ->
 				checkBatteryOptimizationPermission()
 				
 				pref.hour = newHour
 				pref.min = newMin
-				updateTime()
+				update()
 			}, if(pref.hour == -1) 0 else pref.hour, pref.min, false).show()
 		}
 		
+		update()
+		
+		switch_enable.isChecked = pref.isSchedulingEnabled
+		switch_enable.setOnCheckedChangeListener { _, isChecked ->
+			if(pref.hour == -1) {
+				pickTime()
+			} else {
+				update()
+			}
+		}
+		
+		time.setOnClickListener {
+			pickTime()
+		}
+		
 		time.setOnLongClickListener {
-			pref.hour = -1
-			updateTime()
+			switch_enable.isChecked = false
+			update()
 			Toast.makeText(this, "자동예약 취소", Toast.LENGTH_SHORT).show()
 			true
 		}
@@ -270,7 +282,13 @@ class MainActivity : AppCompatActivity() {
 								preferenceState.isDebugEnabled = checked
 							}
 							view.addView(checkbox)
-							view.setPadding(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics).toInt())
+							view.setPadding(
+								TypedValue.applyDimension(
+									TypedValue.COMPLEX_UNIT_DIP,
+									8f,
+									resources.displayMetrics
+								).toInt()
+							)
 							setView(view)
 							setNegativeButton("닫기", null)
 						}.show()

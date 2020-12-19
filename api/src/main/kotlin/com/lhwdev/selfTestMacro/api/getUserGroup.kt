@@ -8,14 +8,14 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class UserId(
+data class User(
 	@SerialName("userNameEncpt") val name: String,
 	@SerialName("userPNo") val userId: String,
-	@SerialName("token") val token: UserIdToken
+	@SerialName("token") val token: UserToken
 )
 
 
-suspend fun getUserGroup(institute: InstituteInfo, token: UserToken): List<UserId> = ioTask {
+suspend fun getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = ioTask {
 	fetch(
 		institute.requestUrl["selectUserGroup"],
 		method = HttpMethod.post,

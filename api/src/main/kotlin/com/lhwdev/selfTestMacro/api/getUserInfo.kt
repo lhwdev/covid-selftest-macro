@@ -20,8 +20,7 @@ data class UserInfo(
 	@SerialName("registerYmd") val lastRegisterDate: String? = null,
 	@SerialName("registerDtm") val lastRegisterAt: String? = null,
 	@SerialName("isHealthy") val isHealthy: Boolean? = null,
-	@SerialName("deviceUuid") val deviceUuid: String? = null,
-	@SerialName("token") val token: RegisterSurveyToken
+	@SerialName("deviceUuid") val deviceUuid: String? = null
 ) {
 	fun toUserInfoString() = "$userName($schoolName)"
 	fun toLastRegisterInfoString() =
@@ -64,7 +63,7 @@ suspend fun getUserInfo(institute: InstituteInfo, user: User): UserInfo =
 			),
 			body = Json.encodeToString(
 				GetUserInfoRequestBody.serializer(),
-				GetUserInfoRequestBody(institute.code, user.id.userId)
+				GetUserInfoRequestBody(institute.code, user.userId)
 			)
 		).toJsonLoose()
 	}

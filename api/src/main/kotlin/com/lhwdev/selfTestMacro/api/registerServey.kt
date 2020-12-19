@@ -15,7 +15,7 @@ import kotlinx.serialization.json.Json
 
 /*
  * deviceUuid: ""
- * rspns00: "Y
+ * rspns00: "Y"
  * rspns01: "1"
  * rspns02: "1"
  * rspns03: null
@@ -37,12 +37,15 @@ import kotlinx.serialization.json.Json
 
 
 
-@Serializable(RegisterSurveyToken.Serializer::class)
-data class RegisterSurveyToken(val token: String) {
-	object Serializer : KSerializer<RegisterSurveyToken> {
-		override val descriptor = PrimitiveSerialDescriptor(RegisterSurveyToken::class.java.name, PrimitiveKind.STRING)
-		override fun deserialize(decoder: Decoder) = RegisterSurveyToken(decoder.decodeString())
-		override fun serialize(encoder: Encoder, value: RegisterSurveyToken) {
+/**
+ * Can be used only once.
+ */
+@Serializable(UserToken.Serializer::class)
+data class UserToken(val token: String) {
+	object Serializer : KSerializer<UserToken> {
+		override val descriptor = PrimitiveSerialDescriptor(UserToken::class.java.name, PrimitiveKind.STRING)
+		override fun deserialize(decoder: Decoder) = UserToken(decoder.decodeString())
+		override fun serialize(encoder: Encoder, value: UserToken) {
 			encoder.encodeString(value.token)
 		}
 	}
@@ -51,7 +54,7 @@ data class RegisterSurveyToken(val token: String) {
 @Serializable
 data class SurveyData(
 	val deviceUuid: String = "",
-	val rspns00: String = "Y",
+	@Serializable(with = YesNoSerializer::class) val rspns00: Boolean = true,
 	val rspns01: String = "1",
 	val rspns02: String = "1",
 	val rspns03: String? = null,
@@ -67,7 +70,7 @@ data class SurveyData(
 	val rspns13: String? = null,
 	val rspns14: String? = null,
 	val rspns15: String? = null,
-	@SerialName("upperToken") val userToken: String,
+	@SerialName("upperToken") val userToken: UserToken,
 	@SerialName("upperUserNameEncpt") val userName: String
 )
 
@@ -79,7 +82,7 @@ data class SurveyResult(
 
 suspend fun registerSurvey(
 	institute: InstituteInfo,
-	token: RegisterSurveyToken,
+	user: User,
 	surveyData: SurveyData
 ): SurveyResult = ioTask {
 	fetch(
@@ -87,7 +90,7 @@ suspend fun registerSurvey(
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf(
 			"Content-Type" to ContentTypes.json,
-			"Authorization" to token.token
+			"Authorization" to user.token.token
 		),
 		body = Json { encodeDefaults = true }.encodeToString(SurveyData.serializer(), surveyData)
 	).toJsonLoose()

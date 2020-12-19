@@ -13,7 +13,16 @@
     <JetCodeStyleSettings>
       <option name="PACKAGES_TO_USE_STAR_IMPORTS">
         <value>
-          <package name="kotlinx.android.synthetic" withSubpackages="true" static="false" />
+          <package name="kotlinx.android.synthetic" alias="false" withSubpackages="true" />
+        </value>
+      </option>
+      <option name="PACKAGES_IMPORT_LAYOUT">
+        <value>
+          <package name="" alias="false" withSubpackages="true" />
+          <package name="java" alias="false" withSubpackages="true" />
+          <package name="javax" alias="false" withSubpackages="true" />
+          <package name="kotlin" alias="false" withSubpackages="true" />
+          <package name="" alias="true" withSubpackages="true" />
         </value>
       </option>
       <option name="SPACE_BEFORE_WHEN_PARENTHESES" value="false" />
@@ -26,11 +35,6 @@
       </indentOptions>
     </codeStyleSettings>
     <codeStyleSettings language="Dart">
-      <option name="SPACE_BEFORE_IF_PARENTHESES" value="false" />
-      <option name="SPACE_BEFORE_WHILE_PARENTHESES" value="false" />
-      <option name="SPACE_BEFORE_FOR_PARENTHESES" value="false" />
-      <option name="SPACE_BEFORE_CATCH_PARENTHESES" value="false" />
-      <option name="SPACE_BEFORE_SWITCH_PARENTHESES" value="false" />
       <indentOptions>
         <option name="INDENT_SIZE" value="4" />
         <option name="TAB_SIZE" value="4" />
@@ -51,6 +55,8 @@
       </indentOptions>
     </codeStyleSettings>
     <codeStyleSettings language="JAVA">
+      <option name="LINE_COMMENT_AT_FIRST_COLUMN" value="false" />
+      <option name="LINE_COMMENT_ADD_SPACE" value="true" />
       <option name="BLANK_LINES_AROUND_CLASS" value="2" />
       <option name="SPACE_BEFORE_IF_PARENTHESES" value="false" />
       <option name="SPACE_BEFORE_WHILE_PARENTHESES" value="false" />
@@ -195,6 +201,8 @@
     </codeStyleSettings>
     <codeStyleSettings language="kotlin">
       <option name="CODE_STYLE_DEFAULTS" value="KOTLIN_OFFICIAL" />
+      <option name="LINE_COMMENT_AT_FIRST_COLUMN" value="false" />
+      <option name="LINE_COMMENT_ADD_SPACE" value="true" />
       <option name="SPACE_BEFORE_IF_PARENTHESES" value="false" />
       <option name="SPACE_BEFORE_WHILE_PARENTHESES" value="false" />
       <option name="SPACE_BEFORE_FOR_PARENTHESES" value="false" />

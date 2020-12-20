@@ -93,7 +93,6 @@ class MainActivity : AppCompatActivity() {
 			val isSchedulingEnabled = switch_enable.isChecked
 			pref.isSchedulingEnabled = isSchedulingEnabled
 			if(isSchedulingEnabled) {
-				switch_enable.isChecked = true
 				@SuppressLint("SetTextI18n")
 				time.text = "매일 자가진단: ${pref.hour}시 ${pref.min}분"
 				updateTime(intent)
@@ -112,10 +111,10 @@ class MainActivity : AppCompatActivity() {
 			}, if(pref.hour == -1) 0 else pref.hour, pref.min, false).show()
 		}
 		
+		switch_enable.isChecked = pref.isSchedulingEnabled
 		update()
 		
-		switch_enable.isChecked = pref.isSchedulingEnabled
-		switch_enable.setOnCheckedChangeListener { _, isChecked ->
+		switch_enable.setOnCheckedChangeListener { _, _ ->
 			if(pref.hour == -1) {
 				pickTime()
 			} else {

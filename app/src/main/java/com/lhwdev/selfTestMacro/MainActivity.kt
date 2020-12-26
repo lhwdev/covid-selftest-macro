@@ -95,10 +95,10 @@ class MainActivity : AppCompatActivity() {
 			if(isSchedulingEnabled) {
 				@SuppressLint("SetTextI18n")
 				time.text = "매일 자가진단: ${pref.hour}시 ${pref.min}분"
-				updateTime(intent)
 			} else {
 				time.text = "시간 예약 안 됨"
 			}
+			updateTime(intent)
 		}
 		
 		fun pickTime() {

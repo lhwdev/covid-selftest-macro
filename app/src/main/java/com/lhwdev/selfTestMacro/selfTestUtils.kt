@@ -44,7 +44,7 @@ suspend fun Context.submitSuspend(notification: Boolean = true) {
 fun Context.updateTime(intent: PendingIntent) {
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	alarmManager.cancel(intent)
-	if(preferenceState.hour != -1)
+	if(preferenceState.isSchedulingEnabled)
 		scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min)
 }
 

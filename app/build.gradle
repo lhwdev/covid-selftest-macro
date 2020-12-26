@@ -14,8 +14,8 @@ android {
 		applicationId "com.lhwdev.selfTestMacro"
 		minSdkVersion 19
 		targetSdkVersion 30
-		versionCode 1008
-		versionName "2.8"
+		versionCode 1009
+		versionName "2.9"
 		
 		multiDexEnabled true
 		

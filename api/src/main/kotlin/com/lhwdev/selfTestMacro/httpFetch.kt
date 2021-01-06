@@ -85,7 +85,7 @@ fun readableUrl(url: String): String {
 
 suspend fun DisposeScope.fetch( // for debug
 	url: URL,
-	method: HttpMethod,
+	method: HttpMethod = HttpMethod.get,
 	headers: Map<String, String> = emptyMap(),
 	body: (suspend (OutputStream) -> Unit)? = null
 ): FetchResult = withContext(Dispatchers.IO) {
@@ -179,21 +179,21 @@ suspend fun DisposeScope.fetch( // for debug
 
 suspend fun DisposeScope.fetch(
 	url: URL,
-	method: HttpMethod,
+	method: HttpMethod = HttpMethod.get,
 	headers: Map<String, String> = emptyMap(),
 	body: InputStream
 ) = fetch(url, method, headers) { body.copyTo(it) }
 
 suspend fun DisposeScope.fetch(
 	url: URL,
-	method: HttpMethod,
+	method: HttpMethod = HttpMethod.get,
 	headers: Map<String, String> = emptyMap(),
 	body: String
 ) = fetchWriter(url, method, headers) { it.write(body) }
 
 suspend inline fun DisposeScope.fetchWriter(
 	url: URL,
-	method: HttpMethod,
+	method: HttpMethod = HttpMethod.get,
 	headers: Map<String, String> = emptyMap(),
 	crossinline body: suspend (Writer) -> Unit
 ) = fetch(url, method, headers) {

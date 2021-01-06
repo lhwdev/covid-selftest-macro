@@ -60,7 +60,7 @@ fun VersionSpec(string: String): VersionSpec {
 
 object URLSerializer : KSerializer<URL> {
 	override val descriptor =
-		PrimitiveSerialDescriptor("URL", PrimitiveKind.STRING)
+		PrimitiveSerialDescriptor(URL::class.java.name, PrimitiveKind.STRING)
 	
 	override fun serialize(encoder: Encoder, value: URL) = encoder.encodeString(value.toString())
 	override fun deserialize(decoder: Decoder) = URL(decoder.decodeString())

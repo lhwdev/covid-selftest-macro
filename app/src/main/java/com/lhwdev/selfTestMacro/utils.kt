@@ -200,7 +200,7 @@ fun View.showSnackBar(message: String, duration: Int = 3000) {
 }
 
 suspend fun <R : Any> Context.promptDialog(
-	block: AlertDialog.Builder.(result: (R) -> Unit) -> Unit
+	block: AlertDialog.Builder.(onResult: (R) -> Unit) -> Unit
 ): R? = withContext(Dispatchers.Main) {
 	suspendCancellableCoroutine { cont ->
 		var invoked = false

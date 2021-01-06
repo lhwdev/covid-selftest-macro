@@ -9,13 +9,11 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.text.method.LinkMovementMethod
-import android.util.Log
 import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.core.view.setPadding
 import androidx.lifecycle.lifecycleScope
@@ -26,16 +24,13 @@ import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import java.net.URL
 
 
 const val IGNORE_BATTERY_OPTIMIZATION_REQUEST = 1001
 
 
 @Suppress("SpellCheckingInspection")
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 	
 	private var batteryOptimizationPromptShown = false
 	
@@ -141,75 +136,6 @@ class MainActivity : AppCompatActivity() {
 		}
 	}
 	
-	@Serializable
-	data class NotificationObject(
-		val notificationVersion: Int,
-		val entries: List<NotificationEntry>
-	)
-	
-	@Serializable
-	data class NotificationEntry(
-		val id: String,
-		val version: VersionSpec?, // null to all versions
-		val priority: Priority,
-		val title: String,
-		val message: String
-	) {
-		enum class Priority { once, everyWithDoNotShowAgain, every }
-	}
-	
-	private fun checkNotice() = lifecycleScope.launch(Dispatchers.IO) {
-		val content: String?
-		try {
-			content =
-				URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/notice_v4.json").readText()
-			
-			val notificationObject = Json {
-				ignoreUnknownKeys = true /* loose */
-			}.decodeFromString(NotificationObject.serializer(), content)
-			
-			if(notificationObject.notificationVersion != 4) {
-				// incapable of displaying this
-				return@launch
-			}
-			
-			Log.d("hOI", notificationObject.toString())
-			
-			val currentVersion = Version(BuildConfig.VERSION_NAME)
-			
-			for(entry in notificationObject.entries) {
-				var show = when(entry.priority) {
-					NotificationEntry.Priority.once -> entry.id !in preferenceState.shownNotices
-					NotificationEntry.Priority.everyWithDoNotShowAgain -> entry.id !in preferenceState.doNotShowAgainNotices
-					NotificationEntry.Priority.every -> true
-				}
-				show = show && (entry.version?.let { currentVersion in it } ?: true)
-				
-				if(show) withContext(Dispatchers.Main) {
-					AlertDialog.Builder(this@MainActivity).apply {
-						setTitle(entry.title)
-						setMessage(HtmlCompat.fromHtml(entry.message, 0))
-						setPositiveButton("확인") { _, _ ->
-							preferenceState.shownNotices += entry.id
-						}
-						if(entry.priority == NotificationEntry.Priority.everyWithDoNotShowAgain)
-							setNegativeButton("다시 보지 않기") { _, _ ->
-								preferenceState.doNotShowAgainNotices += entry.id
-								preferenceState.shownNotices += entry.id
-							}
-					}.show().apply {
-						findViewById<TextView>(android.R.id.message)!!.movementMethod =
-							LinkMovementMethod.getInstance()
-					}
-				}
-			}
-		} catch(e: Exception) {
-			// ignore; - network error or etc
-			// notification is not that important
-			
-			onError(e, "알림")
-		}
-	}
 	
 	/*
 	 * > Task automation app

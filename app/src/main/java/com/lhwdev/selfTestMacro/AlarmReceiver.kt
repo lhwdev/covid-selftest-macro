@@ -15,6 +15,8 @@ class AlarmReceiver : BroadcastReceiver() {
 		
 		runBlocking { // TODO: is this okay?
 			context.submitSuspend()
+			context.checkUpdate()
+			
 			result.finish()
 		}
 		

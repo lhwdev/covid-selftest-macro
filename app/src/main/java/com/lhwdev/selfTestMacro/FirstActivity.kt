@@ -234,5 +234,7 @@ class FirstActivity : AppCompatActivity() {
 			input_studentName.setText(setting.studentName)
 			input_studentBirth.setText(setting.studentBirth)
 		}
+		
+		if(first) checkNotice()
 	}
 }

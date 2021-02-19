@@ -21,7 +21,7 @@ enum class LoginType { school, univ, office }
 
 @Serializable
 data class GetUserTokenRequestBody internal constructor(
-	@SerialName("orgCode") val schoolCode: String,
+	@SerialName("orgCode") val instituteCode: String,
 	@SerialName("name") val encryptedName: String,
 	@SerialName("birthday") val encryptedBirthday: String,
 	@SerialName("stdntPNo") val pageNumber: Int? = null,
@@ -72,7 +72,7 @@ data class UserIdentifier(
 
 suspend fun findUser(institute: InstituteInfo, request: GetUserTokenRequestBody) = ioTask {
 	fetch(
-		institute.requestUrl["findUser"],
+		institute.requestUrl2["findUser"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json),
 		body = Json { encodeDefaults = true }.encodeToString(

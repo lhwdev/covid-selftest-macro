@@ -36,7 +36,6 @@ import kotlinx.serialization.json.Json
  */
 
 
-
 /**
  * Can be used only once.
  */
@@ -86,12 +85,12 @@ suspend fun registerSurvey(
 	surveyData: SurveyData
 ): SurveyResult = ioTask {
 	fetch(
-		institute.requestUrlBase["registerServey"],
+		institute.requestUrl["registerServey"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf(
 			"Content-Type" to ContentTypes.json,
 			"Authorization" to user.token.token
 		),
 		body = Json { encodeDefaults = true }.encodeToString(SurveyData.serializer(), surveyData)
-	).toJsonLoose()
+	).toJsonLoose(SurveyResult.serializer())
 }

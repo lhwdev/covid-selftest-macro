@@ -64,7 +64,7 @@ data class PasswordWrong(
 
 suspend fun validatePassword(institute: InstituteInfo, userIdentifier: UserIdentifier, password: String): PasswordResult = ioTask {
 	val body = fetch(
-		institute.requestUrl["validatePassword"],
+		institute.requestUrl2["validatePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to userIdentifier.token.token),
 		body = """{"password": "${encrypt(password)}", "deviceUuid": ""}"""

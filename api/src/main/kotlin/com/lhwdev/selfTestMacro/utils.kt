@@ -69,6 +69,8 @@ object URLSerializer : KSerializer<URL> {
 
 // a=urlencoded1&b=2&c=3...
 // this does not encode keys
+fun queryUrlParamsToString(vararg params: Pair<String, String>) = queryUrlParamsToString(mapOf(*params))
+
 fun queryUrlParamsToString(params: Map<String, String>) =
 	params.entries.joinToString(separator = "&") { (k, v) ->
 		"$k=${URLEncoder.encode(v, "UTF-8")}"

@@ -3,9 +3,7 @@ package com.lhwdev.selfTestMacro
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonBuilder
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
@@ -49,20 +47,8 @@ fun FetchResult.requireOk() {
 }
 
 
-inline fun <reified T> FetchResult.toJson(): T = Json.decodeFromString(response.reader().readText())
-inline fun <reified T> FetchResult.toJson(
-	from: Json = Json.Default,
-	noinline builderAction: JsonBuilder.() -> Unit
-): T = Json(from, builderAction).decodeFromString(response.reader().readText())
-
-fun <T> FetchResult.toJson(serializer: KSerializer<T>): T =
-	Json.decodeFromString(serializer, response.reader().readText())
-
-fun <T> FetchResult.toJson(
-	serializer: KSerializer<T>,
-	from: Json = Json.Default,
-	builderAction: JsonBuilder.() -> Unit
-): T = Json(from, builderAction).decodeFromString(serializer, response.reader().readText())
+fun <T> FetchResult.toJson(serializer: KSerializer<T>, config: Json = Json): T =
+	config.decodeFromString(serializer, response.reader().readText())
 
 fun FetchResult.toResponseString() = response.reader().readText()
 

@@ -20,11 +20,10 @@ import kotlinx.android.synthetic.main.activity_first.*
 import kotlinx.coroutines.launch
 
 
-class FirstActivity : AppCompatActivity() {
+class FirstActivity : AppCompatActivity(R.layout.activity_first) {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		
-		setContentView(R.layout.activity_first)
 		window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 		val pref = preferenceState
 		val first = intent.hasExtra("first")
@@ -52,7 +51,7 @@ class FirstActivity : AppCompatActivity() {
 					}
 				}
 			}
-//			ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
+		// ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
 		
 		input_loginType.setAdapter(adapter(listOf("학교")))
 		
@@ -177,11 +176,17 @@ class FirstActivity : AppCompatActivity() {
 					
 					val password = promptInput { edit, _ ->
 						setTitle("비밀번호를 입력해주세요.")
-						edit.filters = arrayOf(InputFilter { source, start, end, dest, destStart, destEnd ->
-							val result = dest.replaceRange(destStart, destEnd, source.substring(start, end))
-							if(result.length > 4 || result.any { !it.isDigit() }) null
-							else source
-						})
+						setMessage("공식 자가진단 앱이나 웹사이트에서 설정한 비밀번호입니다. 아직 설정하지 않았다면 공식 앱이나 사이트에서 설정해주세요.")
+						edit.filters =
+							arrayOf(InputFilter { source, start, end, dest, destStart, destEnd ->
+								val result = dest.replaceRange(
+									destStart,
+									destEnd,
+									source.substring(start, end)
+								)
+								if(result.length > 4 || result.any { !it.isDigit() }) null
+								else source
+							})
 					} ?: return@main
 					
 					val token = catchErrorThanToast {
@@ -235,6 +240,6 @@ class FirstActivity : AppCompatActivity() {
 			input_studentBirth.setText(setting.studentBirth)
 		}
 		
-		if(first) checkNotice()
+		if(first) lifecycleScope.launch { checkNotice() }
 	}
 }

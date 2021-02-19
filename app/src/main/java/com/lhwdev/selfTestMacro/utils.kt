@@ -25,7 +25,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
 import java.util.WeakHashMap
@@ -41,19 +40,6 @@ val sDummyForInitialization: Unit = run {
 
 
 fun EditText.isEmpty() = text == null || text.isEmpty()
-
-@Serializable
-data class UserSetting(
-	val loginType: LoginType,
-	val region: String,
-	val level: Int,
-	val schoolName: String,
-	val studentName: String,
-	val studentBirth: String
-)
-
-@Serializable
-data class UserLoginInfo(val identifier: UserIdentifier, val token: UsersToken)
 
 class PreferenceState(val pref: SharedPreferences) {
 	init {

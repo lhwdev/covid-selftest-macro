@@ -1,42 +1,24 @@
 package com.lhwdev.selfTestMacro
 
+import android.app.Activity
 import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
-import androidx.lifecycle.lifecycleScope
+import com.lhwdev.selfTestMacro.NotificationEntry
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.URL
 
-@Serializable
-data class NotificationObject(
-	val notificationVersion: Int,
-	val entries: List<NotificationEntry>
-)
 
-@Serializable
-data class NotificationEntry(
-	val id: String,
-	val version: VersionSpec?, // null to all versions
-	val priority: Priority,
-	val title: String,
-	val message: String
-) {
-	enum class Priority { once, everyWithDoNotShowAgain, every }
-}
-
-fun AppCompatActivity.checkNotice() = lifecycleScope.launch(Dispatchers.IO) {
+suspend fun Activity.checkNotice() = withContext(Dispatchers.IO) {
 	// also check updates
 	val update = getUpdateAvailable()
 	if(update != null) {
 		askUpdate(update, 1001)
-		return@launch
+		return@withContext
 	}
 	
 	val content: String?
@@ -50,7 +32,7 @@ fun AppCompatActivity.checkNotice() = lifecycleScope.launch(Dispatchers.IO) {
 		
 		if(notificationObject.notificationVersion != 4) {
 			// incapable of displaying this
-			return@launch
+			return@withContext
 		}
 		
 		Log.d("hOI", notificationObject.toString())

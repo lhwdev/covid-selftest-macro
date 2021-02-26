@@ -8,8 +8,9 @@
 각 토큰은 jwt 형식으로 `Bearer xxx.yyy.zzz`의 형식을 띕니다. (xxx, yyy, zzz는 Base64 인코딩됨)
 
 ## 기본 url
-공통 url: `https://hcs.eduro.go.kr`  
+공통 url: `https://hcs.eduro.go.kr`
 시도 교육청 url: `https://???hcs.eduro.go.kr`
+추가: 관리자 url: `https://???hcm.eduro.go.kr`
 
 ## 암호화
 '암호화'라 쓰인 곳: `RSA/ECB/PKCS1Padding`으로 암호화
@@ -82,7 +83,7 @@
     // "stdntPNo": <페이지 번호> // 보통 필요없음
   }
   ```
-  
+
 * 결과: json
   ```json5
   {
@@ -119,7 +120,7 @@
       }
     }
     ```
-    
+
   - 오류 코드
     - 1000: 비밀번호를 5회 틀림
     - 1001: 비밀번호가 맞지 않음
@@ -145,7 +146,7 @@
     // 그룹에 속한 다른 사용자들 ...
   ]
   ```
-  
+
 ### 자가진단 제출
 * 주소: `시도 교육청 url/registerServey` (오타가 아님) (인데 오타가 맞음)
 * 헤더:
@@ -179,7 +180,7 @@
   ```json5
   {"registerDtm":"2021-02-19 23:13:26", "inveYmd":"2021-02-19 23:13:26"} // 자가진단 제출 시기
   ```
-  
+
 
 ## 관리자용 API 목록
 선생님 등 기관의 관리자가 사용하는 api입니다.

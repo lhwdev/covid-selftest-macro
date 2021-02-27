@@ -9,7 +9,7 @@
 
 ## 기본 url
 공통 url: `https://hcs.eduro.go.kr`
-시도 교육청 url: `https://???hcs.eduro.go.kr`
+시도 교육청 url: `https://???hcs.eduro.go.kr`  
 추가: 관리자 url: `https://???hcm.eduro.go.kr`
 
 ## 암호화

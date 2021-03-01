@@ -9,7 +9,7 @@
 
 ## 기본 url
 공통 url: `https://hcs.eduro.go.kr`
-시도 교육청 url: `https://???hcs.eduro.go.kr`
+시도 교육청 url: `https://???hcs.eduro.go.kr`  
 추가: 관리자 url: `https://???hcm.eduro.go.kr`
 
 ## 암호화
@@ -98,7 +98,7 @@
 * 주소: HTTP POST, `시도 교육청 url/v2/validatePassword`
 * 헤더:
   - `Content-Type: application/json;charset=utf-8`
-  - Authorization: **<UsersIdToken>**
+  - Authorization: **UsersIdToken**
 * 입력: json
   ```json5
   {
@@ -130,7 +130,7 @@
 * 주소: HTTP POST, `시도 교육청 url/v2/selectUserGroup`
 * 헤더:
   - `Content-Type: application/json;charset=utf-8`
-  - Authorization: **<UsersToken>**
+  - Authorization: **UsersToken**
 * 입력: json `{}` (말 그대로 빈 json object)
 * 출력: json
   ```json5
@@ -151,7 +151,7 @@
 * 주소: `시도 교육청 url/registerServey` (오타가 아님) (인데 오타가 맞음)
 * 헤더:
   - `Content-Type: application/json;charset=utf-8`
-  - Authorization: **<UserToken>**
+  - Authorization: **UserToken**
 * 입력: json
   ```json5
   {
@@ -189,7 +189,7 @@
 ### 관리하는 반 목록 보기
 * 주소: `시도 교육청 url/joinClassList`
 * 헤더:
-  - Authorization: **<UserToken>**
+  - Authorization: **UserToken**
 * 출력: json
 ```json5
   {
@@ -210,7 +210,7 @@
 ### 관리하는 반의 학생 목록 보기
 * 주소: `시도 교육청 url/join`
 * 헤더:
-  - Authorization: **<UserToken>**
+  - Authorization: **UserToken**
 * 입력: json -- `/joinClassList`의 결과값인 반 목록 중 하나.. 이지만 `orgCode`, `grade`, `classNm`, `classCode`만 있어도 작동함
   ```json5
   {"orgCode":"D000000000","grade":"1","classNm":"1","classCode":"01"} // 공식 사이트에서 입력은 더 긺
@@ -243,7 +243,7 @@
 * 주소: `시도 교육청 url/joinDetail`
 * 헤더:
   - `Content-Type: application/json;charset=utf-8`
-  - Authorization: **<UserToken>**
+  - Authorization: **UserToken**
 * 입력: `/join`에서 받은 학생 정보 중 하나를 그대로 입력
 * 출력: json
   ```json5

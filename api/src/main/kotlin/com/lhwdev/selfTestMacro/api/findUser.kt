@@ -65,7 +65,8 @@ suspend fun GetUserTokenRequestBody(
 data class UserIdentifier(
 	@SerialName("userName") val mainUserName: String,
 	@SerialName("token") val token: UsersIdToken,
-	@Serializable(with = YesNoSerializer::class) @SerialName("stdntYn") val isStudent: Boolean
+	@Serializable(with = YesNoSerializer::class) @SerialName("stdntYn") val isStudent: Boolean,
+	@Serializable(with = YesNoSerializer::class) @SerialName("pInfAgrmYn") val agreement: Boolean
 )
 
 
@@ -80,6 +81,16 @@ suspend fun findUser(institute: InstituteInfo, request: GetUserTokenRequestBody)
 			request
 		)
 	).toJsonLoose(UserIdentifier.serializer())
+}
+
+// you must inform user when using this api
+suspend fun agreeAgreement(institute: InstituteInfo, token: UsersIdToken): Unit = ioTask {
+	fetch(
+		institute.requestUrl2["updatePInfAgrmYn"],
+		method = HttpMethod.post,
+		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json),
+		body = "{}"
+	)
 }
 
 

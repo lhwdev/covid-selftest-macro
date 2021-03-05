@@ -1,5 +1,6 @@
 # 코로나19 자가검진 매크로 앱
 정말 대충 만들었습니다.
+[다운로드 링크](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)
 
 ## 기능:
 * 버튼 한 개 클릭으로 자가진단

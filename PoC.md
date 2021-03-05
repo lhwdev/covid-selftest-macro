@@ -146,6 +146,45 @@
     // 그룹에 속한 다른 사용자들 ...
   ]
   ```
+### 사용자 정보 자세히 보기
+* 주소: `시도 교육청 url/getUserInfo`
+* 헤더:
+  - `Content-Type: application/json;charset=utf-8`
+  - Authorization: **UserToken**
+* 입력: json
+	```json5
+	{
+		"orgCode": "<기관 코드>",
+		"userPNo": "<사용자 id>"
+	}
+	```
+* 출력: json
+  ```json5
+  {
+	  "admnYn": "N",
+	  "atptOfcdcConctUrl": "dgehcs.eduro.go.kr",
+	  "deviceUuid": "3b...",
+	  "insttClsfCode": "5",
+	  "isHealthy": true,
+	  "lctnScCode": "03",
+	  "lockYn": "N",
+	  "mngrClassYn": "N",
+	  "mngrDeptYn": "N",
+	  "orgCode": "D????????",
+	  "orgName": "??고등학교",
+	  "pInfAgrmYn": "Y",
+	  "registerDtm": "2020-10-21 07:05:43.187088",
+	  "registerYmd": "20201021",
+	  "schulCrseScCode": "4",
+	  "stdntYn": "Y",
+	  "token": "Bearer ey.....",
+	  "upperUserName": "홍길동",
+	  "userName": "홍길동",
+	  "userNameEncpt": "홍길동",
+	  "userPNo": "...",
+	  "wrongPassCnt": 0
+  }
+  ```
 
 ### 자가진단 제출
 * 주소: `시도 교육청 url/registerServey` (오타가 아님) (인데 오타가 맞음)

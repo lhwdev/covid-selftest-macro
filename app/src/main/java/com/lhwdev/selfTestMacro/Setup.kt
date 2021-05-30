@@ -50,16 +50,22 @@ val sLoginTypes = mapOf(
 	LoginType.office to "회사"
 )
 
-private data class SetupWizardItem(val index: Int, val scrollTo: (index: Int) -> Unit)
+private data class SetupWizardItem(
+	val index: Int,
+	val count: Int,
+	val scrollTo: (index: Int) -> Unit
+)
 
 @Composable
 fun SetupWizardView(model: SetupModel) {
-	var pageIndex by mutableStateOf(0)
-	WizardPager(pageIndex = pageIndex, pagesCount = 1) { index ->
-		val item = SetupWizardItem(index) { pageIndex = it }
+	var pageIndex by remember { mutableStateOf(0) }
+	val pagesCount = 2
+	WizardPager(pageIndex = pageIndex, pagesCount = pagesCount) { index ->
+		val item = SetupWizardItem(index, pagesCount) { pageIndex = it }
 		
 		when(index) {
 			0 -> SetupWizardFirst(model, item)
+			1 -> SetupWizardSecond(model, item)
 			else -> error("unknown page")
 		}
 	}
@@ -79,16 +85,15 @@ fun WizardPager(
 		
 		var targetPage by remember(pagesCount) { mutableStateOf(pageIndex) }
 		val scrollState = remember(pagesCount) { ScrollState(pageIndex) }
-		
+		println(scrollState.value)
 		fun scrollTo(target: Int) {
 			targetPage = target
 			scope.launch {
-				scrollState.scrollTo(target)
+				scrollState.animateScrollTo(target * widthPx)
 			}
 		}
 		
 		if(pageIndex != targetPage) scrollTo(pageIndex)
-		
 		
 		Row(
 			modifier = Modifier.horizontalScroll(
@@ -112,18 +117,28 @@ private fun SetupWizardCommon(
 	content: @Composable (SetupWizardItem) -> Unit
 ) {
 	Column {
-		content(item)
+		Box(Modifier.weight(1f)) {
+			content(item)
+		}
 		
 		Row {
-			Icon(
-				painterResource(id = R.drawable.ic_arrow_left_24),
-				contentDescription = "before"
-			)
+			if(item.index != 0) IconButton(onClick = { item.scrollTo(item.index - 1) }) {
+				Icon(
+					painterResource(id = R.drawable.ic_arrow_left_24),
+					contentDescription = "before"
+				)
+			}
+			
 			Spacer(Modifier.weight(100f))
-			Icon(painterResource(
-				id = R.drawable.ic_arrow_right_24),
-				contentDescription = "next"
-			)
+			
+			if(item.index != item.count - 1) IconButton(onClick = {
+				item.scrollTo(item.index + 1)
+			}) {
+				Icon(
+					painterResource(id = R.drawable.ic_arrow_right_24),
+					contentDescription = "next"
+				)
+			}
 		}
 	}
 }
@@ -146,7 +161,7 @@ private object SetupModelPreviewProvider : PreviewParameterProvider<SetupModel> 
 
 private object SetupWizardItemProvider : PreviewParameterProvider<SetupWizardItem> {
 	override val values: Sequence<SetupWizardItem>
-		get() = listOf(SetupWizardItem(1) {}).asSequence()
+		get() = listOf(SetupWizardItem(1, 3) {}).asSequence()
 }
 
 
@@ -170,7 +185,7 @@ private fun SetupWizardFirst(
 				
 				Text("사용자 추가", style = MaterialTheme.typography.h3)
 				
-				Spacer(Modifier.weight(2f))
+				Spacer(Modifier.weight(5f))
 				
 				DropdownPicker(
 					dropdown = { onDismiss ->
@@ -187,42 +202,27 @@ private fun SetupWizardFirst(
 					Text(model.institutionType?.displayName ?: "")
 				}
 				
-				Spacer(Modifier.weight(4.5f))
+				Spacer(Modifier.weight(8f))
 			}
 		}
 	}
 }
 
 
-// @Composable
-// private fun SetupWizardSecond(model: SetupModel, item: SetupWizardItem) {
-// 	Column(modifier = Modifier.padding(12.dp)) {
-// 		val loginType = model.loginType
-// 		val commonModifier = Modifier
-// 			.fillMaxWidth()
-// 			.padding(8.dp)
-//
-// 		DropdownPicker(
-// 			dropdown = { onDismiss ->
-// 				for(type in LoginType.values()) DropdownMenuItem(onClick = {
-// 					model.loginType = type
-// 					onDismiss()
-// 				}) {
-// 					Text(sLoginTypes[type] ?: "???")
-// 				}
-// 			},
-// 			isEmpty = loginType == null,
-// 			label = { Text("학교") },
-// 			modifier = commonModifier
-// 		) {
-// 			Text(if(loginType == null) "" else sLoginTypes[loginType] ?: "???")
-// 		}
-//
-// 		TextField(
-// 			value = model.studentName,
-// 			onValueChange = { model.studentName = it },
-// 			label = { Text("이름") },
-// 			modifier = commonModifier
-// 		)
-// 	}
-// }
+@Composable
+private fun SetupWizardSecond(model: SetupModel, item: SetupWizardItem) {
+	SetupWizardCommon(item) {
+		Column(modifier = Modifier.padding(12.dp)) {
+			val commonModifier = Modifier
+				.fillMaxWidth()
+				.padding(8.dp)
+			
+			TextField(
+				value = model.studentName,
+				onValueChange = { model.studentName = it },
+				label = { Text("이름") },
+				modifier = commonModifier
+			)
+		}
+	}
+}

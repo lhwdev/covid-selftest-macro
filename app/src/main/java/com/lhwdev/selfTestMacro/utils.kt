@@ -84,7 +84,7 @@ class PreferenceState(val pref: SharedPreferences) {
 // 1. always passing it through argument: so complicated
 // 2. keeping global with the initialization of Application; here [MainApplication]
 // 3. passing via argument, but through extension receiver
-// 4. like Ambient? : unsafe(though safer in Jetpack Compose)
+// 4. like Local? : unsafe(though safer in Jetpack Compose)
 // 5. ThreadLocal: what else from the original one
 
 //lateinit var preferenceState: PreferenceState

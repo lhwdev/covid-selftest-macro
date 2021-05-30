@@ -5,7 +5,6 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:background="@color/design_default_color_background"
-	tools:context=".FirstActivity"
 	tools:ignore="HardcodedText, LabelFor">
 	
 	<com.google.android.material.appbar.AppBarLayout

@@ -7,23 +7,21 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import com.lhwdev.selfTestMacro.api.getUserGroup
 import com.lhwdev.selfTestMacro.api.getUserInfo
 
 
+@Preview
 @Composable
 fun Main() {
-	val context = AmbientActivity.current
-	val pref = AmbientPreference.current
-	val scope = rememberCoroutineScope()
+	val context = LocalActivity.current
+	val pref = LocalPreference.current
 	
-	if(pref.firstState == 0) {
-		AmbientRoute.current[0] = { Setup() }
-		return
+	LaunchedEffect(Unit) {
+		pref.firstState = 1
+		context.checkNotice()
 	}
-	
-	pref.firstState = 1
-	LaunchedEffect(null) { context.checkNotice() }
 	
 	val userInfo by lazyState {
 		val institute = pref.institute!!

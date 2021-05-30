@@ -29,9 +29,6 @@
 			</intent-filter>
 		</activity>
 		
-		<activity android:name=".FirstActivity"
-			android:theme="@style/AppTheme.Dialog" />
-		
 		<activity android:name=".UpdateActivity"
 			android:theme="@style/AppTheme.Transparent" />
 		

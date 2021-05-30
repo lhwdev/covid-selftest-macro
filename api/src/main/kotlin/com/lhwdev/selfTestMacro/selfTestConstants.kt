@@ -18,6 +18,13 @@ val sRegions = mapOf(
 
 val sSchoolLevels = mapOf("유치원" to 1, "초등학교" to 2, "중학교" to 3, "고등학교" to 4, "특수학교" to 5)
 
+enum class InstitutionType(val displayName: String) {
+	school("학교"),
+	university("대학교"),
+	academy("학원"),
+	office("회사")
+}
+
 object ContentTypes {
 	const val json = "application/json;charset=utf-8"
 }

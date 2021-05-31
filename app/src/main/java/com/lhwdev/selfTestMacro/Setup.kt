@@ -1,28 +1,35 @@
 package com.lhwdev.selfTestMacro
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.lhwdev.selfTestMacro.api.LoginType
+import androidx.compose.ui.window.Dialog
+import com.lhwdev.selfTestMacro.api.InstituteInfo
+import com.lhwdev.selfTestMacro.api.getSchoolData
 import kotlinx.coroutines.launch
 
 
 @Stable
 class SetupModel {
+	var scaffoldState = ScaffoldState(DrawerState(DrawerValue.Closed), SnackbarHostState())
 	var institutionType by mutableStateOf<InstitutionType?>(null)
 	var region by mutableStateOf<String?>(null)
 	var level by mutableStateOf<Int?>(null)
-	var schoolName by mutableStateOf("")
+	var institutionInfo by mutableStateOf<InstituteInfo?>(null)
 	var studentName by mutableStateOf("")
 	var studentBirth by mutableStateOf("")
 }
@@ -44,12 +51,6 @@ fun Setup(isFirst: Boolean = false) {
 	SetupWizardView(model)
 }
 
-val sLoginTypes = mapOf(
-	LoginType.school to "학교",
-	LoginType.univ to "대학교",
-	LoginType.office to "회사"
-)
-
 private data class SetupWizardItem(
 	val index: Int,
 	val count: Int,
@@ -60,13 +61,18 @@ private data class SetupWizardItem(
 fun SetupWizardView(model: SetupModel) {
 	var pageIndex by remember { mutableStateOf(0) }
 	val pagesCount = 2
-	WizardPager(pageIndex = pageIndex, pagesCount = pagesCount) { index ->
-		val item = SetupWizardItem(index, pagesCount) { pageIndex = it }
-		
-		when(index) {
-			0 -> SetupWizardFirst(model, item)
-			1 -> SetupWizardSecond(model, item)
-			else -> error("unknown page")
+	
+	Scaffold(
+		scaffoldState = model.scaffoldState
+	) {
+		WizardPager(pageIndex = pageIndex, pagesCount = pagesCount) { index ->
+			val item = SetupWizardItem(index, pagesCount) { pageIndex = it }
+			
+			when(index) {
+				0 -> SetupWizardFirst(model, item)
+				1 -> SetupWizardSecond(model, item)
+				else -> error("unknown page")
+			}
 		}
 	}
 }
@@ -111,6 +117,15 @@ fun WizardPager(
 }
 
 
+private fun SetupWizardItem.before() {
+	scrollTo(index - 1)
+}
+
+private fun SetupWizardItem.next() {
+	scrollTo(index + 1)
+}
+
+
 @Composable
 private fun SetupWizardCommon(
 	item: SetupWizardItem,
@@ -122,7 +137,7 @@ private fun SetupWizardCommon(
 		}
 		
 		Row {
-			if(item.index != 0) IconButton(onClick = { item.scrollTo(item.index - 1) }) {
+			if(item.index != 0) IconButton(onClick = { item.before() }) {
 				Icon(
 					painterResource(id = R.drawable.ic_arrow_left_24),
 					contentDescription = "before"
@@ -132,7 +147,7 @@ private fun SetupWizardCommon(
 			Spacer(Modifier.weight(100f))
 			
 			if(item.index != item.count - 1) IconButton(onClick = {
-				item.scrollTo(item.index + 1)
+				item.next()
 			}) {
 				Icon(
 					painterResource(id = R.drawable.ic_arrow_right_24),
@@ -153,7 +168,7 @@ private object SetupModelPreviewProvider : PreviewParameterProvider<SetupModel> 
 			institutionType = InstitutionType.school
 			region = "03"
 			level = 4
-			schoolName = "어느고등학교"
+			institutionInfo = InstituteInfo("어느고등학교", "code", "address", "...")
 			studentName = "김철수"
 			studentBirth = "121212"
 		}).asSequence()
@@ -212,17 +227,163 @@ private fun SetupWizardFirst(
 @Composable
 private fun SetupWizardSecond(model: SetupModel, item: SetupWizardItem) {
 	SetupWizardCommon(item) {
-		Column(modifier = Modifier.padding(12.dp)) {
-			val commonModifier = Modifier
-				.fillMaxWidth()
-				.padding(8.dp)
-			
-			TextField(
-				value = model.studentName,
-				onValueChange = { model.studentName = it },
-				label = { Text("이름") },
-				modifier = commonModifier
-			)
+		Scaffold(
+			topBar = {
+				TopAppBar(
+					title = { Text("${model.institutionType?.displayName ?: "기관"} 정보 입력") }
+				)
+			}
+		) { paddingValues ->
+			Column(
+				modifier = Modifier
+					.padding(12.dp)
+					.padding(paddingValues)
+			) {
+				
+				when(model.institutionType) {
+					InstitutionType.school -> {
+						SetupWizardSecondSchool(model)
+					}
+					
+					InstitutionType.academy -> {
+					
+					}
+					
+				}
+				
+			}
 		}
 	}
+}
+
+
+@Composable
+private fun MultipleInstitutionDialog(
+	institutionType: InstitutionType,
+	institutions: List<InstituteInfo>,
+	onSelect: (InstituteInfo?) -> Unit
+) {
+	Dialog(
+		onDismissRequest = { onSelect(null) }
+	) {
+		Column {
+			Text("${institutionType.displayName} 선택", style = MaterialTheme.typography.h4)
+			
+			Spacer(Modifier.height(8.dp))
+			
+			Column {
+				@OptIn(ExperimentalMaterialApi::class)
+				for(institution in institutions) ListItem(
+					modifier = Modifier
+						.clickable { onSelect(institution) }
+						.padding(vertical = 4.dp)
+				) {
+					Text(institution.name, style = MaterialTheme.typography.body1)
+				}
+			}
+			
+			Spacer(Modifier.height(8.dp))
+			
+			Row(modifier = Modifier.padding(4.dp), horizontalArrangement = Arrangement.End) {
+				TextButton(onClick = { onSelect(null) }) { Text("취소") }
+			}
+		}
+	}
+	
+}
+
+
+@Composable
+private fun SetupWizardSecondSchool(model: SetupModel) {
+	val scope = rememberCoroutineScope()
+	val route = LocalRoute.current
+	val commonModifier = Modifier
+		.fillMaxWidth()
+		.padding(8.dp)
+	
+	var schoolLevel by remember { mutableStateOf(0) }
+	var regionCode by remember { mutableStateOf("") }
+	var schoolName by remember { mutableStateOf("") }
+	
+	DropdownPicker(
+		dropdown = { onDismiss ->
+			for((code, name) in sSchoolLevels.entries) DropdownMenuItem(onClick = {
+				schoolLevel = code
+				onDismiss()
+			}) {
+				Text(name)
+			}
+		},
+		isEmpty = schoolLevel == 0,
+		label = { Text("학교 단계") },
+		modifier = commonModifier
+	) {
+		Text(sSchoolLevels[schoolLevel] ?: "")
+	}
+	
+	DropdownPicker(
+		dropdown = { onDismiss ->
+			for((code, name) in sRegions.entries) DropdownMenuItem(onClick = {
+				regionCode = code
+				onDismiss()
+			}) {
+				Text(name)
+			}
+		},
+		isEmpty = regionCode.isEmpty(),
+		label = { Text("지역") },
+		modifier = commonModifier
+	) {
+		Text(sRegions[regionCode] ?: "")
+	}
+	
+	
+	fun findSchool() = scope.launchIoTask find@{
+		val snackbarHostState = model.scaffoldState.snackbarHostState
+		
+		val schools = runCatching {
+			getSchoolData(
+				regionCode = regionCode,
+				schoolLevelCode = "$schoolLevel",
+				name = schoolName
+			).instituteList
+		}.getOrElse { exception ->
+			onError(snackbarHostState, "학교를 찾지 못했습니다.", exception)
+			return@find
+		}
+		
+		if(schools.isEmpty()) {
+			snackbarHostState.showSnackbar("학교를 찾지 못했습니다.", "확인")
+			return@find
+		}
+		
+		if(schools.size > 1) route.add @Composable {
+			MultipleInstitutionDialog(
+				institutionType = model.institutionType
+					?: InstitutionType.school, // will never null but just in case
+				institutions = schools,
+				onSelect = {
+					if(it != null) model.institutionInfo = it
+					route.removeLast()
+				}
+			)
+		}
+		else model.institutionInfo = schools[0]
+	}
+	
+	
+	TextField(
+		value = schoolName,
+		onValueChange = { schoolName = it },
+		label = { Text("학교 이름") },
+		keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+		keyboardActions = KeyboardActions { findSchool() },
+		singleLine = true,
+		trailingIcon = {
+			IconButton(onClick = { findSchool() }) {
+				Icon(painterResource(R.drawable.ic_search_24), contentDescription = "search")
+			}
+		},
+		modifier = commonModifier
+	)
 }

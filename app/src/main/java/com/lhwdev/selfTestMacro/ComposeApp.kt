@@ -6,10 +6,7 @@ import android.app.Activity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,7 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 
 val LocalActivity = compositionLocalOf<Activity> { error("not provided") }
 val LocalPreference = compositionLocalOf<PreferenceState> { error("not provided") }
-val LocalRoute = compositionLocalOf<SnapshotStateList<@Composable () -> Unit>> { error("not provided") }
+val LocalRoute =
+	compositionLocalOf<SnapshotStateList<@Composable () -> Unit>> { error("not provided") }
 
 
 @Composable
@@ -52,7 +50,11 @@ fun ComposeApp(activity: Activity) {
 				LocalPreference provides pref,
 				LocalRoute provides route
 			) {
-				route.last().invoke()
+				route.forEachIndexed { index, routeItem ->
+					key(index) {
+						routeItem() // be aware!
+					}
+				}
 			}
 		}
 	}

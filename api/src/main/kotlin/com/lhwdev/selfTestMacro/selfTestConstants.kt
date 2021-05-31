@@ -11,14 +11,14 @@ val sDefaultFakeHeader = mapOf(
 )
 
 val sRegions = mapOf(
-	"서울" to "01", "부산" to "02", "대구" to "03", "인천" to "04", "광주" to "05", "대전" to "06",
-	"울산" to "07", "세종" to "08", "경기" to "10", "강원" to "11", "충북" to "12",
-	"충남" to "13", "전북" to "14", "전남" to "15", "경북" to "16", "경남" to "17", "제주" to "18"
+	"01" to "서울", "02" to "부산", "03" to "대구", "04" to "인천", "05" to "광주", "06" to "대전",
+	"07" to "울산", "08" to "세종", "10" to "경기", "11" to "강원", "12" to "충북",
+	"13" to "충남", "14" to "전북", "15" to "전남", "16" to "경북", "17" to "경남", "18" to "제주"
 )
 
-val sSchoolLevels = mapOf("유치원" to 1, "초등학교" to 2, "중학교" to 3, "고등학교" to 4, "특수학교" to 5)
+val sSchoolLevels = mapOf(1 to "유치원", 2 to "초등학교", 3 to "중학교", 4 to "고등학교", 5 to "특수학교")
 
-enum class InstitutionType(val displayName: String) {
+enum class InstituteType(val displayName: String) {
 	school("학교"),
 	university("대학교"),
 	academy("학원"),

@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 	
 	<!-- Base application theme. -->
 	<style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
@@ -32,6 +32,7 @@
 	<style name="AppTheme.NoActionBar">
 		<item name="windowActionBar">false</item>
 		<item name="windowNoTitle">true</item>
+		<item name="android:statusBarColor" tools:targetApi="l">@color/transparent</item>
 	</style>
 	
 	<style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />

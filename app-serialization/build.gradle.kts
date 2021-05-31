@@ -32,10 +32,10 @@ dependencies {
 	
 	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 	implementation(kotlin("stdlib"))
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
 	
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.1.0")
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.0")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0")
 	testImplementation("junit:junit:4.13.1")
 	androidTestImplementation("androidx.test.ext:junit:1.1.2")
 	androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")

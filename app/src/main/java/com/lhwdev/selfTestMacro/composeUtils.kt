@@ -139,7 +139,7 @@ fun DropdownPicker(
 		DropdownMenu(
 			expanded = expanded,
 			onDismissRequest = { setExpanded(false) },
-			modifier = Modifier.fillMaxWidth()
+			modifier = Modifier.fillMaxWidth().sizeIn(maxHeight = DropdownMenuDefaultMaxHeight)
 		) {
 			dropdown()
 		}
@@ -218,3 +218,4 @@ internal fun DropdownMenuItemContent(
 
 private val DropdownMenuItemDefaultMinWidth = 112.dp
 private val DropdownMenuItemDefaultMinHeight = 48.dp
+private val DropdownMenuDefaultMaxHeight = 370.dp

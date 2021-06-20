@@ -3,7 +3,10 @@ package com.lhwdev.selfTestMacro
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Switch
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -37,7 +40,7 @@ fun Main() {
 		}
 	}
 	
-	Scaffold(
+	AutoScaffold(
 		topBar = {
 			TopAppBar(title = { Text("코로나19 자가진단 매크르") })
 		}

@@ -14,6 +14,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -150,12 +151,15 @@ internal fun TextFieldLayout(
 	content: @Composable () -> Unit
 ) {
 	Box(
-		modifier = modifier
+		modifier = Modifier
+			.clip(shape)
+			.then(modifier) // inevitable; to clip shape; if modifier = Modifier.clickable, ripple goes out of boundary
 			.defaultMinSize(
 				minWidth = TextFieldMinWidth,
 				minHeight = TextFieldMinHeight
 			)
-			.background(color = backgroundColor, shape = shape)
+			// .background(color = backgroundColor, shape = shape)
+			.background(color = backgroundColor)
 			.drawIndicatorLine(lineWidth = indicatorWidth, color = indicatorColor)
 	) {
 		IconsWithTextFieldLayout(

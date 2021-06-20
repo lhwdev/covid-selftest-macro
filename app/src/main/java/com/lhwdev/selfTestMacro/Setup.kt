@@ -20,6 +20,9 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.getSchoolData
+import com.vanpra.composematerialdialogs.Buttons
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.Title
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
@@ -44,12 +47,7 @@ class WizardIndexPreviewProvider : PreviewParameterProvider<Int> {
 fun SetupPreview(@PreviewParameter(WizardIndexPreviewProvider::class) index: Int) {
 	PreviewBase(statusBar = true) {
 		val model = SetupModel().apply {
-			// instituteType = InstituteType.school
-			// region = "03"
-			// level = 4
-			// instituteInfo = InstituteInfo("어느고등학교", "code", "address", "...")
-			// studentName = "김철수"
-			// studentBirth = "121212"
+			selectInstitute = WizardSecondModel.School()
 		}
 		
 		SetupWizardPage(model, SetupWizard(index, index, sPagesCount) {})
@@ -67,7 +65,7 @@ private data class SetupWizard(
 	val index: Int,
 	val currentIndex: Int,
 	val count: Int,
-	val scrollTo: (index: Int) -> Unit
+	val scrollTo: (index: Int) -> Unit,
 )
 
 private const val sPagesCount = 3
@@ -76,7 +74,7 @@ private const val sPagesCount = 3
 fun SetupWizardView(model: SetupModel) {
 	var pageIndex by remember { mutableStateOf(0) }
 	
-	Scaffold(
+	AutoScaffold(
 		scaffoldState = model.scaffoldState
 	) {
 		WizardPager(pageIndex = pageIndex, pagesCount = sPagesCount) { index ->
@@ -99,11 +97,13 @@ private fun SetupWizardPage(model: SetupModel, wizard: SetupWizard) {
 }
 
 
+private const val sPreloadPages = 1
+
 @Composable
 fun WizardPager(
 	pageIndex: Int,
 	pagesCount: Int,
-	content: @Composable (index: Int) -> Unit
+	content: @Composable (index: Int) -> Unit,
 ) {
 	var maxLoads by remember { mutableStateOf(1) }
 	
@@ -136,7 +136,9 @@ fun WizardPager(
 		) {
 			for(index in 0 until pagesCount) {
 				Box(Modifier.requiredWidth(width)) {
-					if(index < maxLoads) content(index)
+					if(index < maxLoads +
+						if(scrollState.isScrollInProgress) sPreloadPages else 0
+					) content(index)
 				}
 			}
 		}
@@ -158,9 +160,9 @@ private fun SetupWizardCommon(
 	wizard: SetupWizard,
 	wizardFulfilled: Boolean,
 	showNotFulfilledWarning: () -> Unit,
-	showNext: Boolean = true,
 	modifier: Modifier = Modifier,
-	content: @Composable () -> Unit
+	showNext: Boolean = true,
+	content: @Composable () -> Unit,
 ) {
 	Column(modifier = modifier) {
 		Box(Modifier.weight(1f)) {
@@ -206,60 +208,67 @@ private fun SetupWizardFirst(model: SetupModel, wizard: SetupWizard) {
 	
 	AutoSystemUi(
 		enabled = wizard.currentIndex == 0,
-		statusBar = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
-	) {
+		onScreenMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
+	) { scrims ->
 		Surface(
 			color = MaterialTheme.colors.primarySurface,
 			modifier = Modifier.fillMaxSize()
 		) {
-			SetupWizardCommon(
-				wizard,
-				showNext = model.selectInstitute != null,
-				wizardFulfilled = model.selectInstitute != null,
-				showNotFulfilledWarning = {
-					scope.launch {
-						model.scaffoldState.snackbarHostState.showSnackbar(
-							"기관 유형을 선택해주세요",
-							actionLabel = "확인"
-						)
-						
-					}
-				}
-			) {
-				Column(
-					modifier = Modifier.padding(16.dp),
-					verticalArrangement = Arrangement.Bottom,
-					horizontalAlignment = Alignment.CenterHorizontally,
+			Column {
+				SetupWizardCommon(
+					wizard,
+					showNext = model.selectInstitute != null,
+					wizardFulfilled = model.selectInstitute != null,
+					showNotFulfilledWarning = {
+						scope.launch {
+							model.scaffoldState.snackbarHostState.showSnackbar(
+								"기관 유형을 선택해주세요",
+								actionLabel = "확인"
+							)
+							
+						}
+					},
+					modifier = Modifier.weight(1f)
 				) {
-					Spacer(Modifier.weight(3f))
+					scrims.statusBar()
 					
-					Text("사용자 추가", style = MaterialTheme.typography.h3)
-					
-					Spacer(Modifier.weight(5f))
-					
-					DropdownPicker(
-						dropdown = { onDismiss ->
-							for(type in InstituteType.values()) DropdownMenuItem(onClick = {
-								model.selectInstitute = when(type) {
-									InstituteType.school -> WizardSecondModel.School()
-									InstituteType.university -> TODO()
-									InstituteType.academy -> TODO()
-									InstituteType.office -> TODO()
-								}
-								onDismiss()
-								wizard.next()
-							}) {
-								Text(type.displayName)
-							}
-						},
-						isEmpty = model.selectInstitute == null,
-						label = { Text("기관 유형") }
+					Column(
+						modifier = Modifier.padding(16.dp),
+						verticalArrangement = Arrangement.Bottom,
+						horizontalAlignment = Alignment.CenterHorizontally,
 					) {
-						Text(model.selectInstitute?.type?.displayName ?: "")
+						Spacer(Modifier.weight(3f))
+						
+						Text("사용자 추가", style = MaterialTheme.typography.h3)
+						
+						Spacer(Modifier.weight(5f))
+						
+						DropdownPicker(
+							dropdown = { onDismiss ->
+								for(type in InstituteType.values()) DropdownMenuItem(onClick = {
+									model.selectInstitute = when(type) {
+										InstituteType.school -> WizardSecondModel.School()
+										InstituteType.university -> TODO()
+										InstituteType.academy -> TODO()
+										InstituteType.office -> TODO()
+									}
+									onDismiss()
+									wizard.next()
+								}) {
+									Text(type.displayName)
+								}
+							},
+							isEmpty = model.selectInstitute == null,
+							label = { Text("기관 유형") }
+						) {
+							Text(model.selectInstitute?.type?.displayName ?: "")
+						}
+						
+						Spacer(Modifier.weight(8f))
 					}
-					
-					Spacer(Modifier.weight(8f))
 				}
+				
+				scrims.navigationBar()
 			}
 		}
 	}
@@ -270,46 +279,51 @@ private fun SetupWizardFirst(model: SetupModel, wizard: SetupWizard) {
 private fun SetupWizardSecond(
 	model: WizardSecondModel,
 	setupModel: SetupModel,
-	wizard: SetupWizard
+	wizard: SetupWizard,
 ) {
-	var notFulfilled by remember { mutableStateOf(-1) }
+	val notFulfilled = remember { mutableStateOf(-1) }
 	
 	AutoSystemUi(
 		enabled = wizard.currentIndex == 1,
-		statusBar = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
+		statusBarMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
 	) { scrims ->
-		SetupWizardCommon(
-			wizard,
-			wizardFulfilled = model.notFulfilledIndex == -1,
-			showNotFulfilledWarning = { notFulfilled = model.notFulfilledIndex }
-		) {
-			Scaffold(
-				topBar = {
-					TopAppBar(
-						title = { Text("${model.type.displayName} 정보 입력") },
-						backgroundColor = MaterialTheme.colors.surface,
-						statusBarScrim = { scrims.statusBar() }
-					)
-				},
-			) { paddingValues ->
-				Column(
-					modifier = Modifier
-						.padding(12.dp)
-						.padding(paddingValues)
-				) {
-					
-					when(model) {
-						is WizardSecondModel.School -> SetupWizardSecondSchool(
-							model,
-							setupModel,
-							notFulfilled,
-							wizard
+		Column {
+			SetupWizardCommon(
+				wizard,
+				wizardFulfilled = model.notFulfilledIndex == -1,
+				showNotFulfilledWarning = { notFulfilled.value = model.notFulfilledIndex },
+				modifier = Modifier.weight(1f)
+			) {
+				Scaffold(
+					topBar = {
+						TopAppBar(
+							title = { Text("${model.type.displayName} 정보 입력") },
+							backgroundColor = MaterialTheme.colors.surface,
+							statusBarScrim = { scrims.statusBar() }
 						)
-						null -> wizard.before()
 					}
-					
+				) { paddingValues ->
+					Column(
+						modifier = Modifier
+							.padding(12.dp)
+							.padding(paddingValues)
+					) {
+						
+						when(model) {
+							is WizardSecondModel.School -> SetupWizardSecondSchool(
+								model,
+								setupModel,
+								notFulfilled,
+								wizard
+							)
+							// null -> wizard.before()
+						}
+						
+					}
 				}
 			}
+			
+			scrims.navigationBar()
 		}
 	}
 }
@@ -319,30 +333,30 @@ private fun SetupWizardSecond(
 private fun MultipleInstituteDialog(
 	instituteType: InstituteType,
 	institutes: List<InstituteInfo>,
-	onSelect: (InstituteInfo?) -> Unit
+	onSelect: (InstituteInfo?) -> Unit,
 ) {
-	
-	AlertDialog(
-		onDismissRequest = { onSelect(null) },
-		title = { Text("${instituteType.displayName} 선택") },
-		text = {
-			Column {
-				@OptIn(ExperimentalMaterialApi::class)
-				for(institute in institutes) ListItem(
-					modifier = Modifier
-						.clickable { onSelect(institute) }
-						.padding(vertical = 4.dp)
-				) {
-					Text(institute.name, style = MaterialTheme.typography.body1)
-				}
+	MaterialDialog(onCloseRequest = { onSelect(null) }) {
+		Title { Text("${instituteType.displayName} 선택") }
+		
+		Column {
+			@OptIn(ExperimentalMaterialApi::class)
+			for(institute in institutes) ListItem(
+				modifier = Modifier
+					.clickable { onSelect(institute) }
+					.padding(vertical = 4.dp)
+			) {
+				Text(institute.name, style = MaterialTheme.typography.body1)
 			}
-		},
-		confirmButton = { TextButton(onClick = { onSelect(null) }) { Text("취소") } }
-	)
-	
+		}
+		
+		Buttons {
+			NegativeButton(onClick = { onSelect(null) }) { Text("취소") }
+		}
+	}
 }
 
 
+@Suppress("CanSealedSubClassBeObject") // model: no comparison needed
 @Stable
 sealed class WizardSecondModel {
 	abstract val type: InstituteType
@@ -359,6 +373,7 @@ sealed class WizardSecondModel {
 				schoolLevel == 0 -> 0
 				regionCode.isBlank() -> 1
 				schoolName.isBlank() -> 2
+				instituteInfo == null -> 3
 				else -> -1
 			}
 		
@@ -371,8 +386,8 @@ sealed class WizardSecondModel {
 private fun SetupWizardSecondSchool(
 	model: WizardSecondModel.School,
 	setupModel: SetupModel,
-	notFulfilled: Int,
-	wizard: SetupWizard
+	notFulfilled: MutableState<Int>,
+	wizard: SetupWizard,
 ) {
 	val scope = rememberCoroutineScope()
 	val route = LocalRoute.current
@@ -380,18 +395,18 @@ private fun SetupWizardSecondSchool(
 		.fillMaxWidth()
 		.padding(8.dp)
 	
-	
-	
 	DropdownPicker(
 		dropdown = { onDismiss ->
 			for((code, name) in sSchoolLevels.entries) DropdownMenuItem(onClick = {
 				model.schoolLevel = code
+				notFulfilled.value = -1
 				onDismiss()
 			}) {
 				Text(name)
 			}
 		},
 		isEmpty = model.schoolLevel == 0,
+		isErrorValue = notFulfilled.value == 0,
 		label = { Text("학교 단계") },
 		modifier = commonModifier
 	) {
@@ -402,12 +417,14 @@ private fun SetupWizardSecondSchool(
 		dropdown = { onDismiss ->
 			for((code, name) in sRegions.entries) DropdownMenuItem(onClick = {
 				model.regionCode = code
+				notFulfilled.value = -1
 				onDismiss()
 			}) {
 				Text(name)
 			}
 		},
 		isEmpty = model.regionCode.isEmpty(),
+		isErrorValue = notFulfilled.value == 1,
 		label = { Text("지역") },
 		modifier = commonModifier
 	) {
@@ -451,11 +468,15 @@ private fun SetupWizardSecondSchool(
 	
 	TextField(
 		value = model.schoolName,
-		onValueChange = { model.schoolName = it },
+		onValueChange = {
+			model.schoolName = it
+			notFulfilled.value = -1
+		},
 		label = { Text("학교 이름") },
 		keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
 		keyboardActions = KeyboardActions { findSchool() },
 		singleLine = true,
+		isError = notFulfilled.value == 2,
 		trailingIcon = {
 			IconButton(onClick = { findSchool() }) {
 				Icon(painterResource(R.drawable.ic_search_24), contentDescription = "search")

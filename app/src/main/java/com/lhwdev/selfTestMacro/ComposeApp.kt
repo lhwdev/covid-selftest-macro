@@ -4,7 +4,6 @@ package com.lhwdev.selfTestMacro
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -12,6 +11,7 @@ import androidx.compose.material.lightColors
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
@@ -32,19 +32,17 @@ val LocalRoute =
 val LocalPreview = staticCompositionLocalOf { false }
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ComposeApp(activity: Activity) {
 	val context = LocalContext.current
 	val pref = remember(context) { context.preferenceState }
 	val route = remember {
-		val route = SnapshotStateList<@Composable () -> Unit>()
+		val route = mutableStateListOf<@Composable () -> Unit>()
 		val initialFirst = pref.firstState == 0
 		route.add @Composable {
 			if(initialFirst) Setup()
 			else Main()
-		}
-		route.add @Composable {
-			Text("Hi!", modifier = Modifier.background(Color.Black))
 		}
 		route
 	}
@@ -67,6 +65,7 @@ fun ComposeApp(activity: Activity) {
 		) {
 			ProvideWindowInsets {
 				Box(modifier) {
+					println(route.joinToString { "$it" })
 					route.forEachIndexed { index, routeItem ->
 						key(index) {
 							routeItem() // be aware!
@@ -110,14 +109,14 @@ fun PreviewBase(statusBar: Boolean = false, content: @Composable () -> Unit) {
 				color: Color,
 				darkIcons: Boolean,
 				navigationBarContrastEnforced: Boolean,
-				transformColorForLightContent: (Color) -> Color
+				transformColorForLightContent: (Color) -> Color,
 			) {
 			}
 			
 			override fun setStatusBarColor(
 				color: Color,
 				darkIcons: Boolean,
-				transformColorForLightContent: (Color) -> Color
+				transformColorForLightContent: (Color) -> Color,
 			) {
 			}
 		}

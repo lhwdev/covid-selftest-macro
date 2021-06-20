@@ -51,6 +51,7 @@ fun TextSwitch(
 
 @Composable
 fun DropdownPicker(
+	modifier: Modifier = Modifier,
 	enabled: Boolean = true,
 	readonly: Boolean = false,
 	label: @Composable (() -> Unit)? = null,
@@ -64,7 +65,6 @@ fun DropdownPicker(
 	shape: Shape =
 		MaterialTheme.shapes.small.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
 	dropdown: @Composable ColumnScope.(onDismiss: () -> Unit) -> Unit,
-	modifier: Modifier = Modifier,
 	content: @Composable () -> Unit
 ) {
 	val (expanded, setExpanded) = remember { mutableStateOf(false) }
@@ -93,6 +93,7 @@ fun DropdownPicker(
 fun DropdownPicker(
 	expanded: Boolean,
 	setExpanded: (Boolean) -> Unit,
+	modifier: Modifier = Modifier,
 	enabled: Boolean = true,
 	readonly: Boolean = false,
 	label: @Composable (() -> Unit)? = null,
@@ -106,7 +107,6 @@ fun DropdownPicker(
 	shape: Shape =
 		MaterialTheme.shapes.small.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
 	dropdown: @Composable ColumnScope.() -> Unit,
-	modifier: Modifier = Modifier,
 	content: @Composable () -> Unit
 ) {
 	Box(modifier) {

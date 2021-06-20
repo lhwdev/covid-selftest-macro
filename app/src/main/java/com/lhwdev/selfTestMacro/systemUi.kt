@@ -1,18 +1,15 @@
 package com.lhwdev.selfTestMacro
 
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.compose.ui.unit.Dp
@@ -22,8 +19,33 @@ import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
+data class AppliedUiPaddings(
+	val statusBar: Boolean = false,
+	val navigationBar: Boolean = false,
+	val ime: Boolean = false,
+) {
+	fun merge(other: AppliedUiPaddings): AppliedUiPaddings = AppliedUiPaddings(
+		statusBar = other.statusBar || statusBar,
+		navigationBar = other.navigationBar || navigationBar,
+		ime = other.ime || ime
+	)
+}
+
+@SuppressLint("CompositionLocalNaming")
+private val sLocalAppliedUiPaddings = compositionLocalOf { AppliedUiPaddings() }
+val LocalAppliedUiPaddings: CompositionLocal<AppliedUiPaddings> = sLocalAppliedUiPaddings
+
+@Composable
+fun ProvideAppliedUiPaddings(paddings: AppliedUiPaddings, content: @Composable () -> Unit) {
+	CompositionLocalProvider(
+		sLocalAppliedUiPaddings provides LocalAppliedUiPaddings.current.merge(paddings),
+		content = content
+	)
+}
+
+
 fun Modifier.autoPadding(
-	statusBar: Boolean = true
+	statusBar: Boolean = true,
 ): Modifier = composed(inspectorInfo = debugInspectorInfo {
 	name = "autoPadding"
 	properties["statusBar"] = statusBar
@@ -60,7 +82,7 @@ sealed interface OnScreenSystemUiMode : SystemUiMode {
 
 class Scrims(
 	val statusBar: @Composable () -> Unit,
-	val navigationBar: @Composable () -> Unit
+	val navigationBar: @Composable () -> Unit,
 )
 
 private fun Color.isDarkColor(): Boolean = luminance() < 0.5f
@@ -79,37 +101,74 @@ fun PreviewSideEffect(effect: () -> Unit) {
 	else SideEffect(effect)
 }
 
+@Composable
+fun rememberUiController(): SystemUiController = if(LocalPreview.current) {
+	rememberPreviewUiController()
+} else {
+	rememberSystemUiController()
+}
+
+
+@Composable
+fun AutoSystemUi(
+	enabled: Boolean,
+	onScreenMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
+	ime: SystemUiMode? = SystemUiMode.Default,
+	content: @Composable (Scrims) -> Unit,
+) {
+	AutoSystemUi(
+		enabled = enabled,
+		statusBarMode = onScreenMode,
+		navigationBarMode = onScreenMode,
+		ime = ime,
+		content = content
+	)
+}
+
 // note that this does not clean-up
 @Composable
 fun AutoSystemUi(
 	enabled: Boolean,
-	statusBar: OnScreenSystemUiMode? = null,
-	navigationBar: OnScreenSystemUiMode? = OnScreenSystemUiMode.Opaque,
+	statusBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
+	navigationBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	ime: SystemUiMode? = SystemUiMode.Default,
-	content: @Composable (Scrims) -> Unit
+	content: @Composable (Scrims) -> Unit,
 ) {
-	val controller = if(LocalPreview.current) {
-		rememberPreviewUiController()
-	} else {
-		rememberSystemUiController()
-	}
+	val appliedUiPaddings = LocalAppliedUiPaddings.current
+	val enabledState by rememberUpdatedState(enabled)
+	
+	val statusBarState by rememberUpdatedState(
+		if(appliedUiPaddings.statusBar) null else statusBarMode
+	)
+	val navigationBarState by rememberUpdatedState(
+		if(appliedUiPaddings.navigationBar) null else navigationBarMode
+	)
+	val imeState = if(appliedUiPaddings.ime) null else ime
+	
+	val controller = rememberUiController()
 	
 	val scrims = remember {
 		Scrims(
 			statusBar = {
+				val statusBar = statusBarState
 				if(statusBar is OnScreenSystemUiMode.Immersive) {
-					Box(Modifier.background(statusBar.scrimColor).statusBarsHeight())
+					Box(Modifier
+						.background(statusBar.scrimColor)
+						.statusBarsHeight())
 					val isDark = LocalContentColor.current.isDarkColor()
-					if(enabled) PreviewSideEffect {
+					if(enabledState) PreviewSideEffect {
 						controller.statusBarDarkContentEnabled = isDark
 					}
 				}
 			},
 			navigationBar = {
+				val navigationBar = navigationBarState
 				if(navigationBar is OnScreenSystemUiMode.Immersive) {
-					Box(Modifier.background(navigationBar.scrimColor).navigationBarsHeight())
+					Box(Modifier
+						.background(navigationBar.scrimColor)
+						.navigationBarsHeight())
 					val isDark = LocalContentColor.current.isDarkColor()
-					if(enabled) PreviewSideEffect {
+					if(enabledState) PreviewSideEffect {
 						controller.navigationBarDarkContentEnabled = isDark
 					}
 				}
@@ -118,12 +177,20 @@ fun AutoSystemUi(
 	}
 	
 	var modifier: Modifier = Modifier
-	if(ime is SystemUiMode.Default) modifier = modifier.imePadding()
-	if(statusBar is OnScreenSystemUiMode.Opaque) modifier = modifier.statusBarsPadding()
-	if(navigationBar is OnScreenSystemUiMode.Opaque) modifier = modifier.navigationBarsPadding()
+	if(imeState is SystemUiMode.Default) modifier = modifier.imePadding()
+	if(statusBarMode is OnScreenSystemUiMode.Opaque) modifier = modifier.statusBarsPadding()
+	if(navigationBarMode is OnScreenSystemUiMode.Opaque) modifier = modifier.navigationBarsPadding()
 	
-	Box(modifier) {
-		content(scrims)
+	ProvideAppliedUiPaddings(
+		AppliedUiPaddings(
+			statusBar = statusBarMode != null,
+			navigationBar = navigationBarMode != null,
+			ime = ime != null
+		)
+	) {
+		Box(modifier) {
+			content(scrims)
+		}
 	}
 }
 
@@ -136,7 +203,7 @@ fun TopAppBar(
 	actions: @Composable RowScope.() -> Unit = {},
 	backgroundColor: Color = MaterialTheme.colors.primarySurface,
 	contentColor: Color = contentColorFor(backgroundColor),
-	elevation: Dp = AppBarDefaults.TopAppBarElevation
+	elevation: Dp = AppBarDefaults.TopAppBarElevation,
 ) {
 	Surface(
 		color = backgroundColor,
@@ -157,3 +224,52 @@ fun TopAppBar(
 		}
 	}
 }
+
+
+@Composable
+fun AutoScaffold(
+	modifier: Modifier = Modifier,
+	scaffoldState: ScaffoldState = rememberScaffoldState(),
+	topBar: @Composable () -> Unit = {},
+	bottomBar: @Composable () -> Unit = {},
+	snackbarHost: @Composable (SnackbarHostState) -> Unit = { SnackbarHost(it) },
+	floatingActionButton: @Composable () -> Unit = {},
+	floatingActionButtonPosition: FabPosition = FabPosition.End,
+	isFloatingActionButtonDocked: Boolean = false,
+	drawerContent: @Composable (ColumnScope.() -> Unit)? = null,
+	drawerGesturesEnabled: Boolean = true,
+	drawerShape: Shape = MaterialTheme.shapes.large,
+	drawerElevation: Dp = DrawerDefaults.Elevation,
+	drawerBackgroundColor: Color = MaterialTheme.colors.surface,
+	drawerContentColor: Color = contentColorFor(drawerBackgroundColor),
+	drawerScrimColor: Color = DrawerDefaults.scrimColor,
+	backgroundColor: Color = MaterialTheme.colors.background,
+	contentColor: Color = contentColorFor(backgroundColor),
+	content: @Composable (PaddingValues) -> Unit,
+) {
+	Scaffold(
+		modifier = modifier,
+		scaffoldState = scaffoldState,
+		topBar = topBar,
+		bottomBar = bottomBar,
+		snackbarHost = {
+			Box(Modifier.navigationBarsPadding()) {
+				snackbarHost(it)
+			}
+		},
+		floatingActionButton = floatingActionButton,
+		floatingActionButtonPosition = floatingActionButtonPosition,
+		isFloatingActionButtonDocked = isFloatingActionButtonDocked,
+		drawerContent = drawerContent,
+		drawerGesturesEnabled = drawerGesturesEnabled,
+		drawerShape = drawerShape,
+		drawerElevation = drawerElevation,
+		drawerBackgroundColor = drawerBackgroundColor,
+		drawerContentColor = drawerContentColor,
+		drawerScrimColor = drawerScrimColor,
+		backgroundColor = backgroundColor,
+		contentColor = contentColor,
+		content = content
+	)
+}
+

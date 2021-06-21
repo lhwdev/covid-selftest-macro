@@ -99,18 +99,20 @@ fun MaterialDialogScope.Input(
 	focusOnShow: Boolean = false, // should be invariant in one composition
 	input: @Composable () -> Unit
 ) {
-	if(focusOnShow) {
-		hasFocusOnShow = true
-		val focusRequester = FocusRequester()
-		
-		DisposableEffect(focusRequester) {
-			focusRequester.requestFocus()
-			onDispose { focusRequester.freeFocus() }
+	Box(Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp)) {
+		if(focusOnShow) {
+			this@Input.hasFocusOnShow = true
+			val focusRequester = FocusRequester()
+			
+			DisposableEffect(focusRequester) {
+				focusRequester.requestFocus()
+				onDispose { focusRequester.freeFocus() }
+			}
+			
+			Box(Modifier.focusRequester(focusRequester).fillMaxWidth()) { input() } // TODO
+		} else {
+			input()
 		}
-		
-		Box(Modifier.focusRequester(focusRequester)) { input() } // TODO
-	} else {
-		input()
 	}
 }
 

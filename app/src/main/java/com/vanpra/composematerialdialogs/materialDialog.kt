@@ -1,9 +1,7 @@
 package com.vanpra.composematerialdialogs
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
@@ -38,17 +36,20 @@ fun MaterialDialog(
 	elevation: Dp = 24.dp,
 	content: @Composable MaterialDialogScope.() -> Unit
 ) {
-	val scope = remember {
-		MaterialDialogScope(autoDismiss = autoDismiss, onCloseRequest = onCloseRequest)
+	val info = remember {
+		MaterialDialogInfo(autoDismiss, onCloseRequest)
 	}
+	info.autoDismiss = autoDismiss
+	info.onCloseRequest = onCloseRequest
+	
 	val focusManager = LocalFocusManager.current
 	
 	DisposableEffect(Unit) { // calling this multiple times would be poor for UX; so passing Unit
 		// previous focus out of this dialog
-		if(!scope.hasFocusOnShow) focusManager.clearFocus()
+		if(!info.hasFocusOnShow) focusManager.clearFocus()
 		
 		onDispose {
-			if(scope.hasFocusOnShow) focusManager.clearFocus()
+			if(info.hasFocusOnShow) focusManager.clearFocus()
 		}
 	}
 	
@@ -65,26 +66,34 @@ fun MaterialDialog(
 			border = border,
 			elevation = elevation
 		) {
-			content(scope)
+			Column {
+				content(MaterialDialogScope(info, this))
+			}
 		}
 	}
 }
 
 
-/**
- *  The MaterialDialog class is used to build and display a dialog using both pre-made and
- * custom views
- *
- * @param autoDismiss when true the dialog will be automatically dismissed when a positive or
- * negative button is pressed
- * @param onCloseRequest a callback for when the user tries to exit the dialog by clicking outside
- * the dialog. This callback takes the current MaterialDialog as
- * a parameter to allow for the hide method of the dialog to be called if required. By default
- * this callback hides the dialog.
- */
-class MaterialDialogScope(
-	val autoDismiss: Boolean = true,
-	val onCloseRequest: () -> Unit,
+
+internal class MaterialDialogInfo(
+	var autoDismiss: Boolean,
+	var onCloseRequest: () -> Unit
 ) {
 	var hasFocusOnShow: Boolean = false
+}
+
+/**
+ * The MaterialDialog class is used to build and display a dialog using both pre-made and
+ * custom views
+ */
+class MaterialDialogScope internal constructor(
+	private val info: MaterialDialogInfo,
+	private val columnScope: ColumnScope
+): ColumnScope by columnScope {
+	val autoDismiss: Boolean get() = info.autoDismiss
+	val onCloseRequest: () -> Unit get() = info.onCloseRequest
+	
+	var hasFocusOnShow: Boolean
+		get() = info.hasFocusOnShow
+		set(value) { info.hasFocusOnShow = value }
 }

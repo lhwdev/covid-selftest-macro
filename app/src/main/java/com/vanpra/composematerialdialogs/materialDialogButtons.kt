@@ -153,12 +153,13 @@ class MaterialDialogButtonsScope(private val scope: MaterialDialogScope) {
 	 */
 	@Composable
 	fun NegativeButton(
+		disableDismiss: Boolean = false,
 		onClick: () -> Unit = {},
 		content: @Composable () -> Unit
 	) {
 		TextButton(
 			onClick = {
-				if(scope.autoDismiss) {
+				if(scope.autoDismiss && !disableDismiss) {
 					scope.onCloseRequest()
 				}
 				onClick()

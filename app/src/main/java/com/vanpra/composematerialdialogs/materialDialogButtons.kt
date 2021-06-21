@@ -118,25 +118,16 @@ class MaterialDialogButtonsScope(private val scope: MaterialDialogScope) {
 	/**
 	 * Adds a positive button to the dialog
 	 *
-	 * @param disableDismiss when true this will stop the dialog closing when the button is pressed
-	 * even if autoDismissing is disabled
 	 * @param onClick a callback which is called when the button is pressed
 	 * @param content the content shown in the button
 	 */
 	@Composable
 	fun PositiveButton(
-		disableDismiss: Boolean = false,
-		onClick: () -> Unit = {},
+		onClick: () -> Unit = scope.onCloseRequest,
 		content: @Composable () -> Unit
 	) {
 		TextButton(
-			onClick = {
-				if(scope.autoDismiss && !disableDismiss) {
-					scope.onCloseRequest()
-				}
-				
-				onClick()
-			},
+			onClick = onClick,
 			modifier = Modifier.layoutId(MaterialDialogButtonTypes.Positive),
 			enabled = true
 		) {
@@ -153,17 +144,11 @@ class MaterialDialogButtonsScope(private val scope: MaterialDialogScope) {
 	 */
 	@Composable
 	fun NegativeButton(
-		disableDismiss: Boolean = false,
-		onClick: () -> Unit = {},
+		onClick: () -> Unit = scope.onCloseRequest,
 		content: @Composable () -> Unit
 	) {
 		TextButton(
-			onClick = {
-				if(scope.autoDismiss && !disableDismiss) {
-					scope.onCloseRequest()
-				}
-				onClick()
-			},
+			onClick = onClick,
 			modifier = Modifier.layoutId(MaterialDialogButtonTypes.Negative)
 		) {
 			content()

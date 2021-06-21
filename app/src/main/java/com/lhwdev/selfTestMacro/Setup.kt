@@ -12,9 +12,9 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -28,7 +28,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.api.*
 import com.vanpra.composematerialdialogs.*
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
@@ -78,7 +77,6 @@ fun SetupPreview(@PreviewParameter(WizardIndexPreviewProvider::class) index: Int
 @Composable
 fun Setup() {
 	val model = remember { SetupModel() }
-	val route = LocalRoute.current
 	SetupWizardView(model)
 }
 
@@ -135,7 +133,7 @@ fun WizardPager(
 ) {
 	var maxLoads by remember { mutableStateOf(1) }
 	
-	BoxWithConstraints {
+	BoxWithConstraints(Modifier.clipToBounds()) {
 		val scope = rememberCoroutineScope()
 		val width = maxWidth
 		val widthPx = with(LocalDensity.current) { width.roundToPx() }
@@ -317,37 +315,24 @@ private fun SetupWizardSecond(
 		enabled = wizard.isCurrent,
 		statusBarMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
 	) { scrims ->
-		SetupWizardCommon(
-			wizard,
-			wizardFulfilled = model.notFulfilledIndex == -1,
-			showNotFulfilledWarning = { notFulfilled.value = model.notFulfilledIndex },
-			modifier = Modifier.weight(1f)
-		) {
-			Scaffold(
-				topBar = {
-					TopAppBar(
-						title = { Text("${model.type.displayName} 정보 입력") },
-						backgroundColor = MaterialTheme.colors.surface,
-						statusBarScrim = { scrims.statusBar() }
+		Scaffold(
+			topBar = {
+				TopAppBar(
+					title = { Text("${model.type.displayName} 정보 입력") },
+					backgroundColor = MaterialTheme.colors.surface,
+					statusBarScrim = { scrims.statusBar() }
+				)
+			}
+		) { paddingValues ->
+			Column(Modifier.padding(paddingValues)) {
+				when(model) {
+					is WizardSecondModel.School -> SetupWizardSecondSchool(
+						model,
+						setupModel,
+						notFulfilled,
+						wizard
 					)
-				}
-			) { paddingValues ->
-				Column(
-					modifier = Modifier
-						.padding(12.dp)
-						.padding(paddingValues)
-				) {
-					
-					when(model) {
-						is WizardSecondModel.School -> SetupWizardSecondSchool(
-							model,
-							setupModel,
-							notFulfilled,
-							wizard
-						)
-						// null -> wizard.before()
-					}
-					
+					// null -> wizard.before()
 				}
 			}
 		}
@@ -377,7 +362,7 @@ private fun MultipleInstituteDialog(
 		}
 		
 		Buttons {
-			NegativeButton(onClick = { onSelect(null) }) { Text("취소") }
+			NegativeButton { Text("취소") }
 		}
 	}
 }
@@ -401,7 +386,6 @@ sealed class WizardSecondModel {
 				schoolLevel == 0 -> 0
 				regionCode.isBlank() -> 1
 				schoolName.isBlank() -> 2
-				instituteInfo == null -> 3
 				else -> -1
 			}
 		
@@ -411,53 +395,15 @@ sealed class WizardSecondModel {
 }
 
 @Composable
-private fun SetupWizardSecondSchool(
+private fun ColumnScope.SetupWizardSecondSchool(
 	model: WizardSecondModel.School,
 	setupModel: SetupModel,
 	notFulfilled: MutableState<Int>,
-	wizard: SetupWizard,
+	wizard: SetupWizard
 ) {
 	val scope = rememberCoroutineScope()
 	val context = LocalContext.current
 	val route = LocalRoute.current
-	val commonModifier = Modifier.fillMaxWidth().padding(8.dp)
-	
-	DropdownPicker(
-		dropdown = { onDismiss ->
-			for((code, name) in sSchoolLevels.entries) DropdownMenuItem(onClick = {
-				model.schoolLevel = code
-				notFulfilled.value = -1
-				onDismiss()
-			}) {
-				Text(name)
-			}
-		},
-		isEmpty = model.schoolLevel == 0,
-		isErrorValue = notFulfilled.value == 0,
-		label = { Text("학교 단계") },
-		modifier = commonModifier
-	) {
-		Text(sSchoolLevels[model.schoolLevel] ?: "")
-	}
-	
-	DropdownPicker(
-		dropdown = { onDismiss ->
-			for((code, name) in sRegions.entries) DropdownMenuItem(onClick = {
-				model.regionCode = code
-				notFulfilled.value = -1
-				onDismiss()
-			}) {
-				Text(name)
-			}
-		},
-		isEmpty = model.regionCode.isEmpty(),
-		isErrorValue = notFulfilled.value == 1,
-		label = { Text("지역") },
-		modifier = commonModifier
-	) {
-		Text(sRegions[model.regionCode] ?: "")
-	}
-	
 	
 	fun findSchool() = scope.launchIoTask find@{
 		val snackbarHostState = setupModel.scaffoldState.snackbarHostState
@@ -499,24 +445,74 @@ private fun SetupWizardSecondSchool(
 	}
 	
 	
-	TextField(
-		value = model.schoolName,
-		onValueChange = {
-			model.schoolName = it
-			notFulfilled.value = -1
-		},
-		label = { Text("학교 이름") },
-		keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-		keyboardActions = KeyboardActions { findSchool() },
-		singleLine = true,
-		isError = notFulfilled.value == 2,
-		trailingIcon = {
-			IconButton(onClick = { findSchool() }) {
-				Icon(painterResource(R.drawable.ic_search_24), contentDescription = "search")
+	SetupWizardCommon(
+		wizard,
+		wizardFulfilled = model.notFulfilledIndex == -1,
+		showNotFulfilledWarning = { notFulfilled.value = model.notFulfilledIndex },
+		modifier = Modifier.weight(1f)
+	) {
+		Column(modifier = Modifier.padding(12.dp)) {
+			val commonModifier = Modifier.fillMaxWidth().padding(8.dp)
+			
+			DropdownPicker(
+				dropdown = { onDismiss ->
+					for((code, name) in sSchoolLevels.entries) DropdownMenuItem(onClick = {
+						model.schoolLevel = code
+						notFulfilled.value = -1
+						onDismiss()
+					}) {
+						Text(name)
+					}
+				},
+				isEmpty = model.schoolLevel == 0,
+				isErrorValue = notFulfilled.value == 0,
+				label = { Text("학교 단계") },
+				modifier = commonModifier
+			) {
+				Text(sSchoolLevels[model.schoolLevel] ?: "")
 			}
-		},
-		modifier = commonModifier
-	)
+			
+			DropdownPicker(
+				dropdown = { onDismiss ->
+					for((code, name) in sRegions.entries) DropdownMenuItem(onClick = {
+						model.regionCode = code
+						notFulfilled.value = -1
+						onDismiss()
+					}) {
+						Text(name)
+					}
+				},
+				isEmpty = model.regionCode.isEmpty(),
+				isErrorValue = notFulfilled.value == 1,
+				label = { Text("지역") },
+				modifier = commonModifier
+			) {
+				Text(sRegions[model.regionCode] ?: "")
+			}
+			
+			TextField(
+				value = model.schoolName,
+				onValueChange = {
+					model.schoolName = it
+					notFulfilled.value = -1
+				},
+				label = { Text("학교 이름") },
+				keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+				keyboardActions = KeyboardActions { findSchool() },
+				singleLine = true,
+				isError = notFulfilled.value == 2,
+				trailingIcon = {
+					IconButton(onClick = { findSchool() }) {
+						Icon(
+							painterResource(R.drawable.ic_search_24),
+							contentDescription = "search"
+						)
+					}
+				},
+				modifier = commonModifier
+			)
+		}
+	}
 }
 
 
@@ -569,7 +565,7 @@ private suspend fun submitLogin(context: Context, model: SetupModel, route: Rout
 		MaterialDialog(onCloseRequest = { close(null) }) {
 			Title { Text("비밀번호를 입력해주세요") }
 			
-			Input(true) {
+			Input(focusOnShow = true) {
 				TextField(
 					password, setPassword,
 					modifier = Modifier.fillMaxWidth(),
@@ -589,7 +585,9 @@ private suspend fun submitLogin(context: Context, model: SetupModel, route: Rout
 				NegativeButton { Text("취소") }
 			}
 		}
-	} ?: return
+	}
+	println("password: $password")
+	password ?: return
 	
 	// validate & login with password
 	val result = try {
@@ -599,6 +597,8 @@ private suspend fun submitLogin(context: Context, model: SetupModel, route: Rout
 		model.onError(context, "로그인에 실패하였습니다.", e)
 		return
 	}
+	
+	selfLog("#4. 비밀번호 결과")
 	
 	when(result) {
 		is PasswordWrong -> showRouteUnit(route) { close ->
@@ -676,10 +676,20 @@ private fun SetupWizardThirdSchool(
 							painterResource(R.drawable.ic_school_24),
 							contentDescription = null, // not that important
 							tint = Color.Black,
-							modifier = Modifier.padding(20.dp).size(72.dp)
+							modifier = Modifier.padding(12.dp).size(72.dp)
 						)
 						
-						Text("학생", style = MaterialTheme.typography.h4)
+						Text(
+							"학생 정보 입력",
+							style = MaterialTheme.typography.h4,
+							modifier = Modifier.padding(8.dp)
+						)
+						
+						Text(
+							model.selectInstitute?.instituteInfo?.name ?: "학교",
+							style = MaterialTheme.typography.h6,
+							color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
+						)
 					}
 					
 					OutlinedTextField(

@@ -28,7 +28,6 @@ import androidx.compose.ui.window.DialogProperties
 @Composable
 fun MaterialDialog(
 	onCloseRequest: () -> Unit,
-	autoDismiss: Boolean = true,
 	properties: DialogProperties = DialogProperties(),
 	backgroundColor: Color = MaterialTheme.colors.surface,
 	shape: Shape = MaterialTheme.shapes.medium,
@@ -37,9 +36,8 @@ fun MaterialDialog(
 	content: @Composable MaterialDialogScope.() -> Unit
 ) {
 	val info = remember {
-		MaterialDialogInfo(autoDismiss, onCloseRequest)
+		MaterialDialogInfo(onCloseRequest)
 	}
-	info.autoDismiss = autoDismiss
 	info.onCloseRequest = onCloseRequest
 	
 	val focusManager = LocalFocusManager.current
@@ -76,7 +74,6 @@ fun MaterialDialog(
 
 
 internal class MaterialDialogInfo(
-	var autoDismiss: Boolean,
 	var onCloseRequest: () -> Unit
 ) {
 	var hasFocusOnShow: Boolean = false
@@ -90,7 +87,6 @@ class MaterialDialogScope internal constructor(
 	private val info: MaterialDialogInfo,
 	private val columnScope: ColumnScope
 ): ColumnScope by columnScope {
-	val autoDismiss: Boolean get() = info.autoDismiss
 	val onCloseRequest: () -> Unit get() = info.onCloseRequest
 	
 	var hasFocusOnShow: Boolean

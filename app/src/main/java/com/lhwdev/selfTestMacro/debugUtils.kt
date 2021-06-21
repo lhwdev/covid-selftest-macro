@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.material.SnackbarHostState
 import androidx.core.content.getSystemService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,6 +15,17 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 val Context.isDebugEnabled get() = BuildConfig.DEBUG || preferenceState.isDebugEnabled
+
+
+fun selfLog(message: String) {
+	Log.d("SelfTestMacro", message)
+}
+
+suspend fun Context.onError(snackbarHostState: SnackbarHostState, message: String, throwable: Throwable) {
+	Log.d("SelfTest-Macro", message, throwable)
+	snackbarHostState.showSnackbar("오류: $message", "확인")
+	onError(throwable, message)
+}
 
 
 suspend fun Context.onErrorToast(error: Throwable, description: String = "???") {

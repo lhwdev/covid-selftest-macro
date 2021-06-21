@@ -2,6 +2,7 @@ package com.lhwdev.selfTestMacro
 
 import android.annotation.SuppressLint
 import android.os.Build
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -11,12 +12,17 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.accompanist.insets.*
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 
 
 data class AppliedUiPaddings(
@@ -76,7 +82,7 @@ sealed interface SystemUiMode {
 
 sealed interface OnScreenSystemUiMode : SystemUiMode {
 	class Immersive(val scrimColor: Color = ScrimDarkColor) : OnScreenSystemUiMode
-	object Opaque : OnScreenSystemUiMode
+	class Opaque(val scrimColor: Color = Color.Black) : OnScreenSystemUiMode
 }
 
 
@@ -101,6 +107,163 @@ fun PreviewSideEffect(effect: () -> Unit) {
 	else SideEffect(effect)
 }
 
+
+@Composable
+fun isImeVisible(): State<Boolean> {
+	val view = LocalView.current
+	val state = remember { mutableStateOf(false) }
+	
+	DisposableEffect(view) {
+		ViewCompat.setOnApplyWindowInsetsListener(view.rootView) { _, insets ->
+			state.value = insets.isVisible(WindowInsetsCompat.Type.ime())
+			insets
+		}
+		
+		onDispose { ViewCompat.setOnApplyWindowInsetsListener(view, null) }
+	}
+	
+	return state
+}
+
+
+private val WindowInsets.Type.insets: Insets
+	get() = if(animationInProgress) animatedInsets else layoutInsets
+
+/**
+ * Immutable implementation of [Insets].
+ */
+@Immutable
+internal class ImmutableInsets(
+	override val left: Int = 0,
+	override val top: Int = 0,
+	override val right: Int = 0,
+	override val bottom: Int = 0,
+) : Insets
+
+fun lerp(start: Int, stop: Int, fraction: Float): Int = (start + (stop - start) * fraction).toInt()
+
+fun lerp(start: Insets, stop: Insets, fraction: Float): Insets = ImmutableInsets(
+	left = lerp(start.left, stop.left, fraction),
+	top = lerp(start.top, stop.top, fraction),
+	right = lerp(start.right, stop.right, fraction),
+	bottom = lerp(start.bottom, stop.bottom, fraction)
+)
+
+
+@Composable
+fun <T, V : AnimationVector> animateValueAsAnimatable(
+	targetValue: T,
+	typeConverter: TwoWayConverter<T, V>,
+	animationSpec: AnimationSpec<T> = remember {
+		spring(visibilityThreshold = visibilityThreshold)
+	},
+	visibilityThreshold: T? = null,
+	finishedListener: ((T) -> Unit)? = null
+): Animatable<T, V> {
+	val animatable = remember { Animatable(targetValue, typeConverter) }
+	val listener by rememberUpdatedState(finishedListener)
+	val animSpec by rememberUpdatedState(animationSpec)
+	val channel = remember { Channel<T>(Channel.CONFLATED) }
+	SideEffect {
+		channel.trySend(targetValue)
+	}
+	LaunchedEffect(channel) {
+		for(target in channel) {
+			// This additional poll is needed because when the channel suspends on receive and
+			// two values are produced before consumers' dispatcher resumes, only the first value
+			// will be received.
+			// It may not be an issue elsewhere, but in animation we want to avoid being one
+			// frame late.
+			val newTarget = channel.tryReceive().getOrNull() ?: target
+			launch {
+				if(newTarget != animatable.targetValue) {
+					animatable.animateTo(newTarget, animSpec)
+					listener?.invoke(animatable.value)
+				}
+			}
+		}
+	}
+	return animatable
+}
+
+@Composable
+fun ProvideAutoWindowInsets(
+	consumeWindowInsets: Boolean = true,
+	windowInsetsAnimationsEnabled: Boolean = true,
+	content: @Composable () -> Unit
+) {
+	val isImeVisible by isImeVisible()
+	
+	ProvideWindowInsets(
+		consumeWindowInsets = consumeWindowInsets,
+		windowInsetsAnimationsEnabled = windowInsetsAnimationsEnabled
+	) {
+		// windows inset animation
+		if(Build.VERSION.SDK_INT >= 29) {
+			var imeMaxHeight by remember { mutableStateOf(0) }
+			val insets = LocalWindowInsets.current
+			val nav = insets.navigationBars
+			val ime = insets.ime
+			
+			val lerpFraction: Float
+			val animationFraction: Float
+			
+			
+			// while ime is showing, navigation bar becomes `opaque state`, but some part of app
+			// uses immersive style so expects navigation bar padding to not exist, adding its
+			// custom padding.
+			
+			
+			// this is not quite accurate, just an effort not to be seen a lot weird.
+			// maybe a little bit better?
+			when {
+				// 1. not animating
+				!ime.animationInProgress -> {
+					lerpFraction = if(isImeVisible) 0f else 1f
+					animationFraction = 0f
+				}
+				
+				// 2. ime is dismissing
+				ime.layoutInsets.bottom == 0 -> { // already dismissed; layoutInsets foretells us
+					animationFraction = 1f - ime.animatedInsets.bottom.toFloat() / imeMaxHeight.toFloat()
+					lerpFraction = animationFraction
+				}
+				
+				// 3. ime is showing
+				else -> {
+					imeMaxHeight = ime.layoutInsets.bottom
+					animationFraction = ime.animatedInsets.bottom.toFloat() / imeMaxHeight.toFloat()
+					lerpFraction = 1f - animationFraction
+				}
+			}
+			
+			val navInsets = lerp(Insets.Empty, nav.insets, lerpFraction)
+			
+			val animationFractionState by rememberUpdatedState(animationFraction)
+			val navInsetsState by rememberUpdatedState(navInsets)
+			
+			val newInsets = remember(insets) {
+				object : WindowInsets by insets {
+					override val navigationBars: WindowInsets.Type = object : WindowInsets.Type {
+						override val isVisible: Boolean get() = nav.isVisible
+						override val layoutInsets: Insets get() = navInsetsState
+						override val animatedInsets: Insets get() = navInsetsState
+						override val animationFraction: Float get() = animationFractionState // I don't want to implement; I'm lazy
+						override val animationInProgress: Boolean get() = ime.animationInProgress
+					}
+				}
+			}
+			
+			CompositionLocalProvider(
+				LocalWindowInsets provides newInsets
+			) { content() }
+		} else {
+			content()
+		}
+	}
+}
+
+
 @Composable
 fun rememberUiController(): SystemUiController = if(LocalPreview.current) {
 	rememberPreviewUiController()
@@ -114,7 +277,7 @@ fun AutoSystemUi(
 	enabled: Boolean,
 	onScreenMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	ime: SystemUiMode? = SystemUiMode.Default,
-	content: @Composable (Scrims) -> Unit,
+	content: @Composable ColumnScope.(Scrims) -> Unit
 ) {
 	AutoSystemUi(
 		enabled = enabled,
@@ -132,10 +295,33 @@ fun AutoSystemUi(
 	statusBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	navigationBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	ime: SystemUiMode? = SystemUiMode.Default,
-	content: @Composable (Scrims) -> Unit,
+	content: @Composable ColumnScope.(Scrims) -> Unit,
 ) {
 	val appliedUiPaddings = LocalAppliedUiPaddings.current
 	val enabledState by rememberUpdatedState(enabled)
+	
+	val controller = rememberUiController()
+	
+	
+	@Composable
+	fun StatusBarScrim(color: Color) {
+		Box(Modifier.background(color).statusBarsHeight())
+		
+		val isDark = LocalContentColor.current.isDarkColor()
+		if(enabledState) PreviewSideEffect {
+			controller.statusBarDarkContentEnabled = isDark
+		}
+	}
+	
+	@Composable
+	fun NavigationBarScrim(color: Color) {
+		Box(Modifier.background(color).navigationBarsHeight())
+		
+		val isDark = LocalContentColor.current.isDarkColor()
+		if(enabledState) PreviewSideEffect {
+			controller.navigationBarDarkContentEnabled = isDark
+		}
+	}
 	
 	val statusBarState by rememberUpdatedState(
 		if(appliedUiPaddings.statusBar) null else statusBarMode
@@ -145,32 +331,19 @@ fun AutoSystemUi(
 	)
 	val imeState = if(appliedUiPaddings.ime) null else ime
 	
-	val controller = rememberUiController()
 	
 	val scrims = remember {
 		Scrims(
 			statusBar = {
 				val statusBar = statusBarState
 				if(statusBar is OnScreenSystemUiMode.Immersive) {
-					Box(Modifier
-						.background(statusBar.scrimColor)
-						.statusBarsHeight())
-					val isDark = LocalContentColor.current.isDarkColor()
-					if(enabledState) PreviewSideEffect {
-						controller.statusBarDarkContentEnabled = isDark
-					}
+					StatusBarScrim(statusBar.scrimColor)
 				}
 			},
 			navigationBar = {
 				val navigationBar = navigationBarState
 				if(navigationBar is OnScreenSystemUiMode.Immersive) {
-					Box(Modifier
-						.background(navigationBar.scrimColor)
-						.navigationBarsHeight())
-					val isDark = LocalContentColor.current.isDarkColor()
-					if(enabledState) PreviewSideEffect {
-						controller.navigationBarDarkContentEnabled = isDark
-					}
+					NavigationBarScrim(navigationBar.scrimColor)
 				}
 			}
 		)
@@ -178,8 +351,8 @@ fun AutoSystemUi(
 	
 	var modifier: Modifier = Modifier
 	if(imeState is SystemUiMode.Default) modifier = modifier.imePadding()
-	if(statusBarMode is OnScreenSystemUiMode.Opaque) modifier = modifier.statusBarsPadding()
-	if(navigationBarMode is OnScreenSystemUiMode.Opaque) modifier = modifier.navigationBarsPadding()
+	// if(statusBarMode is OnScreenSystemUiMode.Opaque) modifier = modifier.statusBarsPadding()
+	// if(navigationBarMode is OnScreenSystemUiMode.Opaque) modifier = modifier.navigationBarsPadding()
 	
 	ProvideAppliedUiPaddings(
 		AppliedUiPaddings(
@@ -188,8 +361,14 @@ fun AutoSystemUi(
 			ime = ime != null
 		)
 	) {
-		Box(modifier) {
-			content(scrims)
+		Column(modifier) {
+			if(statusBarMode is OnScreenSystemUiMode.Opaque)
+				StatusBarScrim(statusBarMode.scrimColor) // color: ???
+			
+			content(this, scrims)
+			
+			if(navigationBarMode is OnScreenSystemUiMode.Opaque)
+				NavigationBarScrim(navigationBarMode.scrimColor)
 		}
 	}
 }
@@ -253,7 +432,7 @@ fun AutoScaffold(
 		topBar = topBar,
 		bottomBar = bottomBar,
 		snackbarHost = {
-			Box(Modifier.navigationBarsPadding()) {
+			Box(Modifier.navigationBarsWithImePadding()) {
 				snackbarHost(it)
 			}
 		},

@@ -17,12 +17,14 @@ import com.lhwdev.selfTestMacro.icons.ExpandLess
 import com.lhwdev.selfTestMacro.icons.ExpandMore
 import com.lhwdev.selfTestMacro.icons.Icons
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 
 @Composable
-fun <T> lazyState(init: suspend CoroutineScope.() -> T): State<T?> {
+fun <T> lazyState(key: Any? = null, init: suspend CoroutineScope.() -> T): State<T?> {
 	val state = remember { mutableStateOf<T?>(null) }
-	LaunchedEffect(null) {
+	LaunchedEffect(key) {
 		state.value = init()
 	}
 	return state
@@ -48,6 +50,41 @@ fun TextSwitch(
 	}
 }
 
+
+suspend inline fun showRouteUnit(
+	route: Route,
+	crossinline content: @Composable (removeRoute: () -> Unit) -> Unit
+) {
+	showRoute<Unit>(route) {
+		content { it(Unit) }
+	}
+}
+
+// TODO: something like onRemoved
+suspend fun <T> showRoute(
+	route: Route,
+	content: @Composable (removeRoute: (T) -> Unit) -> Unit
+): T? {
+	lateinit var rootContent: @Composable () -> Unit
+	
+	println("showRoute")
+	val result = suspendCancellableCoroutine<T?> { cont ->
+		val removeRoute = { result: T? ->
+			route.removeLast()
+			println("showRoute remove $result!")
+			cont.resume(result)
+		}
+		
+		rootContent = {
+			content(removeRoute)
+		}
+		
+		route.add(rootContent)
+		cont.invokeOnCancellation { removeRoute(null) }
+	}
+	println("wow $result")
+	return result
+}
 
 @Composable
 fun DropdownPicker(
@@ -109,7 +146,7 @@ fun DropdownPicker(
 	dropdown: @Composable ColumnScope.() -> Unit,
 	content: @Composable () -> Unit
 ) {
-	Box(modifier) {
+	Column(modifier) {
 		TextFieldDecoration(
 			inputState = when {
 				expanded -> InputPhase.Focused
@@ -136,12 +173,14 @@ fun DropdownPicker(
 			content = content
 		)
 		
-		DropdownMenu(
-			expanded = expanded,
-			onDismissRequest = { setExpanded(false) },
-			modifier = Modifier.fillMaxWidth().sizeIn(maxHeight = DropdownMenuDefaultMaxHeight)
-		) {
-			dropdown()
+		BoxWithConstraints {
+			DropdownMenu(
+				expanded = expanded,
+				onDismissRequest = { setExpanded(false) },
+				modifier = Modifier.width(maxWidth).sizeIn(maxHeight = DropdownMenuDefaultMaxHeight)
+			) {
+				dropdown()
+			}
 		}
 	}
 }
@@ -207,7 +246,7 @@ internal fun DropdownMenuItemContent(
 	) {
 		val typography = MaterialTheme.typography
 		ProvideTextStyle(typography.subtitle1) {
-			val contentAlpha = if (enabled) ContentAlpha.high else ContentAlpha.disabled
+			val contentAlpha = if(enabled) ContentAlpha.high else ContentAlpha.disabled
 			CompositionLocalProvider(LocalContentAlpha provides contentAlpha) {
 				content()
 			}

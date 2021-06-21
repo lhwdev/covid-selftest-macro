@@ -9,7 +9,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -20,15 +19,24 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.Insets
 import com.google.accompanist.insets.LocalWindowInsets
-import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.WindowInsets
 import com.google.accompanist.systemuicontroller.SystemUiController
 
 
+typealias Route = MutableList<@Composable () -> Unit>
+
+fun Route.removeRoute(item: @Composable () -> Unit): Boolean {
+	println("removeRoute $item")
+	val index = lastIndexOf(item)
+	if(index == -1) return false
+	subList(index, size).clear()
+	println("removed ${joinToString { "$it" }}")
+	return true
+}
+
 val LocalActivity = compositionLocalOf<Activity> { error("not provided") }
 val LocalPreference = compositionLocalOf<PreferenceState> { error("not provided") }
-val LocalRoute =
-	compositionLocalOf<SnapshotStateList<@Composable () -> Unit>> { error("not provided") }
+val LocalRoute = compositionLocalOf<Route> { error("not provided") }
 val LocalPreview = staticCompositionLocalOf { false }
 
 
@@ -63,13 +71,10 @@ fun ComposeApp(activity: Activity) {
 			LocalPreference provides pref,
 			LocalRoute provides route
 		) {
-			ProvideWindowInsets {
+			ProvideAutoWindowInsets {
 				Box(modifier) {
-					println(route.joinToString { "$it" })
-					route.forEachIndexed { index, routeItem ->
-						key(index) {
-							routeItem() // be aware!
-						}
+					for((index, routeItem) in route.withIndex()) key(index) {
+						routeItem()
 					}
 				}
 			}

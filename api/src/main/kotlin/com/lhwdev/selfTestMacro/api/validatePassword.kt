@@ -22,8 +22,11 @@ sealed class PasswordResult {
 @Serializable(UsersToken.Serializer::class)
 data class UsersToken(val token: String) : PasswordResult() {
 	override val isSuccess get() = true
+	
 	object Serializer : KSerializer<UsersToken> {
-		override val descriptor = PrimitiveSerialDescriptor(UsersToken::class.java.name, PrimitiveKind.STRING)
+		override val descriptor =
+			PrimitiveSerialDescriptor(UsersToken::class.java.name, PrimitiveKind.STRING)
+		
 		override fun deserialize(decoder: Decoder) = UsersToken(decoder.decodeString())
 		override fun serialize(encoder: Encoder, value: UsersToken) {
 			encoder.encodeString(value.token)
@@ -55,18 +58,39 @@ data class PasswordWrong(
 	val errorCode: Int,
 	val data: Data
 ) : PasswordResult() {
+	val errorMessage: String?
+		get() = when(errorCode) {
+			1000 -> "비밀번호를 5회 틀리셔서 5분후 재시도 하실 수 있습니다."
+			1001 -> """
+					사용자 비밀번호가 맞지 않습니다.
+					본인이나 가족이 이미 설정한 비밀번호를 입력하여 주시기 바랍니다.
+					5회 틀리실 경우 5분후에 재시도 가능합니다.
+					현재 ${data.failedCount}회 틀리셨습니다"
+					""".trimIndent()
+			1003 -> "비밀번호가 초기화되었습니다. 다시 로그인하세요."
+			else -> null
+		}
+	
 	override val isSuccess get() = false
+	
 	@Serializable
 	data class Data(
 		@SerialName("failCnt") val failedCount: Int
 	)
 }
 
-suspend fun validatePassword(institute: InstituteInfo, userIdentifier: UserIdentifier, password: String): PasswordResult = ioTask {
+suspend fun validatePassword(
+	institute: InstituteInfo,
+	userIdentifier: UserIdentifier,
+	password: String
+): PasswordResult = ioTask {
 	val body = fetch(
 		institute.requestUrl2["validatePassword"],
 		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to userIdentifier.token.token),
+		headers = sDefaultFakeHeader + mapOf(
+			"Content-Type" to ContentTypes.json,
+			"Authorization" to userIdentifier.token.token
+		),
 		body = """{"password": "${encrypt(password)}", "deviceUuid": ""}"""
 	).toResponseString()
 	try {

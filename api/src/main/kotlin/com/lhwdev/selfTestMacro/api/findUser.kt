@@ -41,13 +41,17 @@ data class UsersIdToken(val token: String) {
 	}
 }
 
-suspend fun GetUserTokenRequestBody(
+internal suspend fun GetUserTokenRequestBody(
 	institute: InstituteInfo,
 	name: String,
 	birthday: String,
 	loginType: LoginType
-) =
-	GetUserTokenRequestBody(institute.code, encrypt(name), encrypt(birthday), loginType = loginType)
+) = GetUserTokenRequestBody(
+	instituteCode = institute.code,
+	encryptedName = encrypt(name),
+	encryptedBirthday = encrypt(birthday),
+	loginType = loginType
+)
 
 /*
  * admnYn: "N"
@@ -70,15 +74,24 @@ data class UserIdentifier(
 )
 
 
-
-suspend fun findUser(institute: InstituteInfo, request: GetUserTokenRequestBody) = ioTask {
+suspend fun findUser(
+	institute: InstituteInfo,
+	name: String,
+	birthday: String,
+	loginType: LoginType
+) = ioTask {
 	fetch(
 		institute.requestUrl2["findUser"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json),
 		body = Json { encodeDefaults = true }.encodeToString(
 			GetUserTokenRequestBody.serializer(),
-			request
+			GetUserTokenRequestBody(
+				institute = institute,
+				name = name,
+				birthday = birthday,
+				loginType = loginType
+			)
 		)
 	).toJsonLoose(UserIdentifier.serializer())
 }

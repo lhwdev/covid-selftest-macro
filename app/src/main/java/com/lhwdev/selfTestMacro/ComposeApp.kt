@@ -73,6 +73,7 @@ fun ComposeApp(activity: Activity) {
 		) {
 			ProvideAutoWindowInsets {
 				Box(modifier) {
+					println(route.joinToString { "$it" })
 					for((index, routeItem) in route.withIndex()) key(index) {
 						routeItem()
 					}

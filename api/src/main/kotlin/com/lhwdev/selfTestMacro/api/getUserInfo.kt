@@ -1,3 +1,5 @@
+@file:Suppress("SpellCheckingInspection")
+
 package com.lhwdev.selfTestMacro.api
 
 import com.lhwdev.selfTestMacro.*
@@ -17,11 +19,21 @@ data class UserInfo(
 	@SerialName("userName") val userName: String,
 	@SerialName("orgCode") val instituteCode: String,
 	@SerialName("orgName") val instituteName: String,
+	@SerialName("atptOfcdcConctUrl") val instituteRequestUrlBody: String,
+	@SerialName("lctnScCode") val instituteRegionCode: String? = null,
+	@SerialName("schulCrseScCode") val schoolLevelCode: String? = null,
 	@SerialName("registerYmd") val lastRegisterDate: String? = null,
 	@SerialName("registerDtm") val lastRegisterAt: String? = null,
 	@SerialName("isHealthy") val isHealthy: Boolean? = null,
 	@SerialName("deviceUuid") val deviceUuid: String? = null
 ) {
+	val instituteStub: InstituteInfo = InstituteInfo(
+		name = instituteName,
+		code = instituteCode,
+		address = "???",
+		requestUrlBody = instituteRequestUrlBody
+	)
+	
 	fun toUserInfoString() = "$userName($instituteName)"
 	fun toLastRegisterInfoString() =
 		"최근 자가진단: ${if(lastRegisterAt == null) "미참여" else ((if(isHealthy == true) "정상" else "유증상") + "($lastRegisterAt)")}"
@@ -32,7 +44,7 @@ data class UserInfo(
  * admnYn: "N"
  * atptOfcdcConctUrl: "dgehcs.eduro.go.kr"
  * deviceUuid: "3b..."
- * insttClsfCode: "5"
+ * insttClsfCode: "5" # 5 = school, 7 = univ
  * isHealthy: true
  * lctnScCode: "03"
  * lockYn: "N"

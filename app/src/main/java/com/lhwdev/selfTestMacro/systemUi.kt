@@ -257,7 +257,9 @@ fun ProvideAutoWindowInsets(
 			CompositionLocalProvider(
 				LocalWindowInsets provides newInsets
 			) { content() }
-		} else {
+		} else ProvideAppliedUiPaddings(
+			AppliedUiPaddings(navigationBar = isImeVisible)
+		) {
 			content()
 		}
 	}
@@ -365,7 +367,9 @@ fun AutoSystemUi(
 			if(statusBarMode is OnScreenSystemUiMode.Opaque)
 				StatusBarScrim(statusBarMode.scrimColor) // color: ???
 			
-			content(this, scrims)
+			Column(Modifier.weight(1f)) {
+				content(this, scrims)
+			}
 			
 			if(navigationBarMode is OnScreenSystemUiMode.Opaque)
 				NavigationBarScrim(navigationBarMode.scrimColor)

@@ -106,7 +106,7 @@ fun MaterialDialogScope.Input(
 			
 			DisposableEffect(focusRequester) {
 				focusRequester.requestFocus()
-				onDispose { focusRequester.freeFocus() }
+				onDispose { /*focusRequester.freeFocus()*/ }
 			}
 			
 			Box(Modifier.focusRequester(focusRequester).fillMaxWidth()) { input() } // TODO

@@ -44,10 +44,10 @@ fun MaterialDialog(
 	
 	DisposableEffect(Unit) { // calling this multiple times would be poor for UX; so passing Unit
 		// previous focus out of this dialog
-		if(!info.hasFocusOnShow) focusManager.clearFocus()
+		// if(!info.hasFocusOnShow) focusManager.clearFocus()
 		
 		onDispose {
-			if(info.hasFocusOnShow) focusManager.clearFocus()
+			// if(info.hasFocusOnShow) focusManager.clearFocus()
 		}
 	}
 	

@@ -2,9 +2,7 @@ package com.lhwdev.selfTestMacro
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,8 +10,10 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.api.*
 import com.vanpra.composematerialdialogs.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
@@ -41,6 +42,7 @@ class SetupModel {
 	var userName by mutableStateOf("")
 	var userBirth by mutableStateOf("")
 	
+	var userIdentifier by mutableStateOf<UserIdentifier?>(null)
 	var usersToken by mutableStateOf<UsersToken?>(null)
 	
 	suspend inline fun showSnackbar(
@@ -123,7 +125,7 @@ private fun SetupWizardPage(model: SetupModel, wizard: SetupWizard) {
 }
 
 
-private const val sPreloadPages = 1
+private const val sPreloadPages = 0
 
 @Composable
 fun WizardPager(
@@ -190,15 +192,18 @@ private fun SetupWizardCommon(
 	onNext: () -> Unit = { wizard.next() },
 	onBefore: () -> Unit = { wizard.before() },
 	showNext: Boolean = true,
-	content: @Composable () -> Unit,
+	content: @Composable () -> Unit
 ) {
-	Column(modifier = modifier) {
-		Box(Modifier.weight(1f)) {
+	Column(modifier) {
+		Box(Modifier.weight(1f, fill = true)) {
 			content()
 		}
 		
 		Row {
-			if(wizard.index != 0) IconButton(onClick = onBefore) {
+			IconButton(
+				onClick = onBefore,
+				modifier = if(wizard.index == 0) Modifier.alpha(0f) else Modifier
+			) {
 				Icon(
 					painterResource(id = R.drawable.ic_arrow_left_24),
 					contentDescription = "before"
@@ -243,6 +248,8 @@ private fun SetupWizardFirst(model: SetupModel, wizard: SetupWizard) {
 			enabled = wizard.isCurrent,
 			onScreenMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
 		) { scrims ->
+			scrims.statusBar()
+			
 			SetupWizardCommon(
 				wizard,
 				showNext = model.selectInstitute != null,
@@ -253,13 +260,10 @@ private fun SetupWizardFirst(model: SetupModel, wizard: SetupWizard) {
 							"기관 유형을 선택해주세요",
 							actionLabel = "확인"
 						)
-						
 					}
 				},
 				modifier = Modifier.weight(1f)
 			) {
-				scrims.statusBar()
-				
 				Column(
 					modifier = Modifier.padding(12.dp),
 					verticalArrangement = Arrangement.Bottom,
@@ -273,12 +277,18 @@ private fun SetupWizardFirst(model: SetupModel, wizard: SetupWizard) {
 					
 					DropdownPicker(
 						dropdown = { onDismiss ->
-							for(type in InstituteType.values()) DropdownMenuItem(onClick = {
-								model.selectInstitute = when(type) {
+							val institutes = /*InstituteType.values()*/
+								arrayOf(InstituteType.school) // TODO: support all types
+							for(type in institutes) DropdownMenuItem(onClick = {
+								val newSelect = when(type) {
 									InstituteType.school -> WizardSecondModel.School()
 									InstituteType.university -> TODO()
 									InstituteType.academy -> TODO()
 									InstituteType.office -> TODO()
+								}
+								val previousSelect = model.selectInstitute
+								if(previousSelect == null || previousSelect::class != newSelect::class) {
+									model.selectInstitute = newSelect
 								}
 								onDismiss()
 								wizard.next()
@@ -322,7 +332,8 @@ private fun SetupWizardSecond(
 					backgroundColor = MaterialTheme.colors.surface,
 					statusBarScrim = { scrims.statusBar() }
 				)
-			}
+			},
+			modifier = Modifier.weight(1f)
 		) { paddingValues ->
 			Column(Modifier.padding(paddingValues)) {
 				when(model) {
@@ -406,6 +417,12 @@ private fun ColumnScope.SetupWizardSecondSchool(
 	val route = LocalRoute.current
 	
 	fun findSchool() = scope.launchIoTask find@{
+		fun selectSchool(info: InstituteInfo) {
+			model.instituteInfo = info
+			model.schoolName = info.name
+			wizard.next()
+		}
+		
 		val snackbarHostState = setupModel.scaffoldState.snackbarHostState
 		
 		val schools = runCatching {
@@ -431,27 +448,24 @@ private fun ColumnScope.SetupWizardSecondSchool(
 				institutes = schools,
 				onSelect = {
 					removeRoute()
-					if(it != null) {
-						model.instituteInfo = it
-						model.schoolName = it.name
-						wizard.next()
-					}
+					if(it != null) selectSchool(it)
 				}
 			)
-		} else {
-			model.instituteInfo = schools[0]
-			wizard.next()
-		}
+		} else selectSchool(schools[0])
 	}
 	
 	
 	SetupWizardCommon(
 		wizard,
+		onNext = {
+			if(model.instituteInfo != null) wizard.next()
+			else findSchool()
+		},
 		wizardFulfilled = model.notFulfilledIndex == -1,
 		showNotFulfilledWarning = { notFulfilled.value = model.notFulfilledIndex },
 		modifier = Modifier.weight(1f)
 	) {
-		Column(modifier = Modifier.padding(12.dp)) {
+		Column(modifier = Modifier.padding(12.dp).verticalScroll(rememberScrollState())) {
 			val commonModifier = Modifier.fillMaxWidth().padding(8.dp)
 			
 			DropdownPicker(
@@ -558,6 +572,8 @@ private suspend fun submitLogin(context: Context, model: SetupModel, route: Rout
 		return
 	}
 	
+	model.userIdentifier = userId
+	
 	// ask for password
 	val password = showRoute<String?>(route) { close ->
 		val (password, setPassword) = remember { mutableStateOf("") }
@@ -588,6 +604,8 @@ private suspend fun submitLogin(context: Context, model: SetupModel, route: Rout
 	}
 	println("password: $password")
 	password ?: return
+	
+	delay(2000)
 	
 	// validate & login with password
 	val result = try {
@@ -634,10 +652,14 @@ private fun SetupWizardThirdSchool(
 	val commonModifier = Modifier.fillMaxWidth().padding(8.dp)
 	
 	var notFulfilled by remember { mutableStateOf(-1) }
+	var complete by remember { mutableStateOf(false) }
 	
 	fun submit() = scope.launch {
 		submitLogin(context, model, route)
-		if(model.usersToken != null) wizard.next()
+		if(model.usersToken != null) {
+			complete = true
+			wizard.next()
+		}
 	}
 	
 	
@@ -650,8 +672,8 @@ private fun SetupWizardThirdSchool(
 			SetupWizardCommon(
 				wizard = wizard,
 				onNext = {
-					if(model.usersToken == null) submit()
-					else wizard.next()
+					if(complete) wizard.next()
+					else submit()
 				},
 				wizardFulfilled = model.userName.isNotBlank() &&
 					model.userBirth.isNotBlank() && model.userBirth.length <= 6,
@@ -664,7 +686,7 @@ private fun SetupWizardThirdSchool(
 				},
 				modifier = Modifier.weight(1f)
 			) {
-				Column(modifier = Modifier.padding(12.dp)) {
+				Column(modifier = Modifier.padding(12.dp).verticalScroll(rememberScrollState())) {
 					val focusManager = LocalFocusManager.current
 					
 					// header
@@ -697,10 +719,11 @@ private fun SetupWizardThirdSchool(
 						onValueChange = {
 							model.userName = it
 							notFulfilled = -1
+							complete = false
 						},
 						label = { Text("사용자 이름") },
 						keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-						keyboardActions = KeyboardActions { focusManager.moveFocus(FocusDirection.Next) },
+						keyboardActions = KeyboardActions { focusManager.moveFocus(FocusDirection.Down) },
 						isError = notFulfilled == 0,
 						singleLine = true,
 						modifier = commonModifier
@@ -712,6 +735,7 @@ private fun SetupWizardThirdSchool(
 						onValueChange = {
 							model.userBirth = it
 							notFulfilled = -1
+							complete = false
 						},
 						label = { Text("생년월일(6글자)") },
 						placeholder = {
@@ -725,7 +749,7 @@ private fun SetupWizardThirdSchool(
 						isError = isBirthWrong || notFulfilled == 1,
 						keyboardActions = KeyboardActions { submit() },
 						singleLine = true,
-						modifier = commonModifier
+						modifier = commonModifier.focusTarget()
 					)
 				}
 			}
@@ -738,9 +762,14 @@ private fun SetupWizardThirdSchool(
 
 @Composable
 private fun SetupWizardForth(model: SetupModel, wizard: SetupWizard) {
-	var enabled by remember { mutableStateOf(BooleanArray(0)) }
+	val route = LocalRoute.current
+	val pref = LocalPreference.current
+	
+	val enabled = remember { mutableStateListOf<Boolean>() }
+	val detailedInfoList = remember { mutableListOf<UserInfo>() }
 	
 	val institute = model.selectInstitute?.instituteInfo ?: return
+	val userIdentifier = model.userIdentifier ?: return
 	val usersToken = model.usersToken ?: return
 	
 	val usersState by lazyState(
@@ -748,7 +777,11 @@ private fun SetupWizardForth(model: SetupModel, wizard: SetupWizard) {
 	) main@{
 		try {
 			val group = getUserGroup(institute, usersToken)
-			enabled = BooleanArray(group.size)
+			for(user in group) {
+				enabled.add(true)
+				val userInfo = getUserInfo(institute, user)
+				detailedInfoList.add(userInfo)
+			}
 			group
 		} catch(e: Throwable) {
 			wizard.before()
@@ -756,35 +789,68 @@ private fun SetupWizardForth(model: SetupModel, wizard: SetupWizard) {
 		}
 	}
 	
-	
-	AutoSystemUi(
-		enabled = wizard.isCurrent,
-		onScreenMode = OnScreenSystemUiMode.Opaque(Color.Transparent)
-	) {
-		SetupWizardCommon(
-			wizard,
-			wizardFulfilled = true,
-			showNotFulfilledWarning = {},
-			onNext = { } // complete
+	Surface(color = MaterialTheme.colors.surface) {
+		AutoSystemUi(
+			enabled = wizard.isCurrent,
+			onScreenMode = OnScreenSystemUiMode.Opaque(Color.Transparent)
 		) {
-			Column(horizontalAlignment = Alignment.CenterHorizontally) {
-				Box(Modifier.padding(32.dp, 72.dp)) {
-					Text("사용자 선택", style = MaterialTheme.typography.h3)
-				}
-				
-				val users = usersState
-				
-				when {
-					users == null ->
-						Text("잠시만 기다려주세요", style = MaterialTheme.typography.body1)
-					users.isEmpty() ->
-						Text("오류가 발생했습니다", style = MaterialTheme.typography.body1)
-					else -> SetupSelectUsers(
-						institute = institute,
-						users = users,
-						enabled = enabled,
-						setEnabled = { index, isEnabled -> enabled[index] = isEnabled }
+			SetupWizardCommon(
+				wizard,
+				wizardFulfilled = true,
+				showNotFulfilledWarning = {},
+				onNext = next@{ // complete
+					val users = usersState ?: return@next
+					val realUsers = users.filterIndexed { index, _ -> enabled[index] }
+					val realUserInfo = detailedInfoList.filterIndexed { index, _ -> enabled[index] }
+					
+					val userGroups = pref.userGroups
+					val userGroupsId = userGroups.maxId + 1
+					val userGroup = DbUserGroup(userGroupsId, userIdentifier, institute)
+					val dbUserGroups = userGroups.copy(
+						maxId = userGroupsId,
+						groups = userGroups.groups.added(userGroupsId, userGroup)
 					)
+					
+					val previousUsers = pref.users
+					var usersId = previousUsers.maxId
+					val dbUsers = realUsers.mapIndexed { index, user ->
+						DbUser(
+							++usersId,
+							user,
+							realUserInfo[index].instituteName,
+							userGroupsId
+						)
+					}
+						.associateBy { it.id }
+					
+					pref.userGroups = dbUserGroups
+					pref.users =
+						previousUsers.copy(maxId = usersId, users = previousUsers.users + dbUsers)
+					
+					route[0] = { Main() }
+				}
+			) {
+				Column(
+					horizontalAlignment = Alignment.CenterHorizontally,
+					modifier = Modifier.padding(vertical = 12.dp).fillMaxSize()
+				) {
+					Box(Modifier.padding(32.dp, 72.dp)) {
+						Text("사용자 선택", style = MaterialTheme.typography.h3)
+					}
+					
+					val users = usersState
+					
+					when {
+						users == null ->
+							Text("잠시만 기다려주세요", style = MaterialTheme.typography.body1)
+						users.isEmpty() ->
+							Text("오류가 발생했습니다", style = MaterialTheme.typography.body1)
+						else -> SetupSelectUsers(
+							users = users, userInfoList = detailedInfoList,
+							enabled = enabled,
+							setEnabled = { index, isEnabled -> enabled[index] = isEnabled }
+						)
+					}
 				}
 			}
 		}
@@ -795,19 +861,13 @@ private fun SetupWizardForth(model: SetupModel, wizard: SetupWizard) {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun SetupSelectUsers(
-	institute: InstituteInfo,
 	users: List<User>,
-	enabled: BooleanArray,
+	userInfoList: List<UserInfo>,
+	enabled: List<Boolean>,
 	setEnabled: (index: Int, isEnabled: Boolean) -> Unit
 ) {
 	for((index, user) in users.withIndex()) { // no need for key: `users` never changes
-		// val detailedInfo by lazyState {
-		// 	try {
-		// 		getUserInfo(institute, user)
-		// 	} catch(e: Throwable) {
-		// 		null
-		// 	}
-		// }
+		val info = userInfoList[index]
 		
 		ListItem(
 			icon = {
@@ -817,7 +877,10 @@ private fun SetupSelectUsers(
 				)
 			},
 			text = { Text(user.name) },
-			// secondaryText = { Text(detailedInfo?.instituteName ?: "?") }
+			secondaryText = { Text(info.instituteName) },
+			modifier = Modifier
+				.clickable { setEnabled(index, !enabled[index]) }
+				.padding(horizontal = 12.dp)
 		)
 	}
 }

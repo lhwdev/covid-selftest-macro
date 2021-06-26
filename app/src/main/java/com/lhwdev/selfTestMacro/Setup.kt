@@ -206,7 +206,7 @@ private fun SetupWizardCommon(
 			) {
 				Icon(
 					painterResource(id = R.drawable.ic_arrow_left_24),
-					contentDescription = "before"
+					contentDescription = "앞으로"
 				)
 			}
 			
@@ -225,7 +225,7 @@ private fun SetupWizardCommon(
 						id = if(wizard.index != wizard.count - 1) R.drawable.ic_arrow_right_24
 						else R.drawable.ic_check_24
 					),
-					contentDescription = "next",
+					contentDescription = "뒤로",
 					tint = if(wizardFulfilled) contentColor else contentColor.copy(alpha = 0.9f)
 				)
 			}

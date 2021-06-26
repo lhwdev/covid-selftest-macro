@@ -2,8 +2,7 @@ package com.vanpra.composematerialdialogs
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -15,6 +14,38 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+
+
+@Composable
+fun MaterialDialogBase(
+	onCloseRequest: () -> Unit,
+	properties: DialogProperties = DialogProperties(),
+	content: @Composable (MaterialDialogInfo) -> Unit
+) {
+	
+	val info = remember {
+		MaterialDialogInfo(onCloseRequest)
+	}
+	info.onCloseRequest = onCloseRequest
+	
+	val focusManager = LocalFocusManager.current
+	
+	DisposableEffect(Unit) { // calling this multiple times would be poor for UX; so passing Unit
+		// previous focus out of this dialog
+		if(!info.hasFocusOnShow) focusManager.clearFocus()
+
+		onDispose {
+			if(info.hasFocusOnShow) focusManager.clearFocus()
+		}
+	}
+	
+	ThemedDialog(
+		onCloseRequest = onCloseRequest,
+		properties = properties
+	) {
+		content(info)
+	}
+}
 
 
 /**
@@ -33,25 +64,9 @@ fun MaterialDialog(
 	shape: Shape = MaterialTheme.shapes.medium,
 	border: BorderStroke? = null,
 	elevation: Dp = 24.dp,
-	content: @Composable MaterialDialogScope.() -> Unit
+	content: @Composable FloatingMaterialDialogScope.() -> Unit
 ) {
-	val info = remember {
-		MaterialDialogInfo(onCloseRequest)
-	}
-	info.onCloseRequest = onCloseRequest
-	
-	val focusManager = LocalFocusManager.current
-	
-	DisposableEffect(Unit) { // calling this multiple times would be poor for UX; so passing Unit
-		// previous focus out of this dialog
-		// if(!info.hasFocusOnShow) focusManager.clearFocus()
-		
-		onDispose {
-			// if(info.hasFocusOnShow) focusManager.clearFocus()
-		}
-	}
-	
-	ThemedDialog(onCloseRequest = onCloseRequest, properties = properties) {
+	MaterialDialogBase(onCloseRequest = onCloseRequest, properties = properties) { info ->
 		/* Only using 40.dp padding as 8.dp is already provided */
 		Surface(
 			modifier = Modifier
@@ -65,31 +80,37 @@ fun MaterialDialog(
 			elevation = elevation
 		) {
 			Column {
-				content(MaterialDialogScope(info, this))
+				FloatingMaterialDialogScope(info, this).content()
 			}
 		}
 	}
 }
 
 
-
-internal class MaterialDialogInfo(
+class MaterialDialogInfo(
 	var onCloseRequest: () -> Unit
 ) {
 	var hasFocusOnShow: Boolean = false
 }
 
+
 /**
  * The MaterialDialog class is used to build and display a dialog using both pre-made and
  * custom views
  */
-class MaterialDialogScope internal constructor(
-	private val info: MaterialDialogInfo,
-	private val columnScope: ColumnScope
-): ColumnScope by columnScope {
+abstract class MaterialDialogScope(
+	private val info: MaterialDialogInfo
+) {
 	val onCloseRequest: () -> Unit get() = info.onCloseRequest
 	
 	var hasFocusOnShow: Boolean
 		get() = info.hasFocusOnShow
-		set(value) { info.hasFocusOnShow = value }
+		set(value) {
+			info.hasFocusOnShow = value
+		}
 }
+
+class FloatingMaterialDialogScope(
+	info: MaterialDialogInfo,
+	private val columnScope: ColumnScope
+) : MaterialDialogScope(info), ColumnScope by columnScope

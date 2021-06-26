@@ -49,7 +49,7 @@ android {
 	}
 }
 
-// io.github.vanpra.compose-material-dialogs:core:0.4.2
+
 dependencies {
 	implementation(project(":api"))
 	implementation(project(":app-serialization")) // workaround for compose + serialization

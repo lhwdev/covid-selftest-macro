@@ -537,9 +537,10 @@ fun TextFieldDecoration(
 	// Transitions from/to InputPhase.Focused are the most critical in the transition below.
 	// UnfocusedEmpty <-> UnfocusedNotEmpty are needed when a single state is used to control
 	// multiple text fields.
-	val transition = updateTransition(inputState)
+	val transition = updateTransition(inputState, label = "TextFieldDecoration")
 	val labelColor by transition.animateColor(
-		transitionSpec = { tween(durationMillis = AnimationDuration) }
+		transitionSpec = { tween(durationMillis = AnimationDuration) },
+		label = "labelColor"
 	) {
 		when(it) {
 			InputPhase.Focused -> activeColor
@@ -548,7 +549,8 @@ fun TextFieldDecoration(
 		}
 	}
 	val indicatorColor by transition.animateColor(
-		transitionSpec = { tween(durationMillis = AnimationDuration) }
+		transitionSpec = { tween(durationMillis = AnimationDuration) },
+		label = "indicatorColor"
 	) {
 		when(it) {
 			InputPhase.Focused -> activeColor
@@ -558,7 +560,8 @@ fun TextFieldDecoration(
 	}
 	
 	val labelProgress by transition.animateFloat(
-		transitionSpec = { tween(durationMillis = AnimationDuration) }
+		transitionSpec = { tween(durationMillis = AnimationDuration) },
+		label = "labelProgress"
 	) {
 		when(it) {
 			InputPhase.Focused -> 1f
@@ -568,7 +571,8 @@ fun TextFieldDecoration(
 	}
 	
 	val indicatorWidth by transition.animateDp(
-		transitionSpec = { tween(durationMillis = AnimationDuration) }
+		transitionSpec = { tween(durationMillis = AnimationDuration) },
+		label = "indicatorWidth"
 	) {
 		when(it) {
 			InputPhase.Focused -> IndicatorFocusedWidth
@@ -595,7 +599,8 @@ fun TextFieldDecoration(
 			} else {
 				spring()
 			}
-		}
+		},
+		label = "placeholderOpacity"
 	) {
 		when(it) {
 			InputPhase.Focused -> 1f

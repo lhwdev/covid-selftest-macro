@@ -90,7 +90,7 @@ fun MaterialDialogScope.Buttons(content: @Composable MaterialDialogButtonsScope.
 
 /**
  * A class used to build a buttons layout for a MaterialDialog. This should be used in conjunction
- * with the [com.vanpra.composematerialdialogs.MaterialDialogScope.Buttons] function
+ * with the [MaterialDialogScope.Buttons] function
  */
 class MaterialDialogButtonsScope(private val scope: MaterialDialogScope) {
 	/**

@@ -69,6 +69,7 @@ fun readableUrl(url: String): String {
 	} + ")"
 }
 
+@Suppress("BlockingMethodInNonBlockingContext")
 suspend fun DisposeScope.fetch( // for debug
 	url: URL,
 	method: HttpMethod = HttpMethod.get,
@@ -170,6 +171,7 @@ suspend fun DisposeScope.fetch(
 	body: InputStream
 ) = fetch(url, method, headers) { body.copyTo(it) }
 
+@Suppress("BlockingMethodInNonBlockingContext")
 suspend fun DisposeScope.fetch(
 	url: URL,
 	method: HttpMethod = HttpMethod.get,
@@ -177,6 +179,7 @@ suspend fun DisposeScope.fetch(
 	body: String
 ) = fetchWriter(url, method, headers) { it.write(body) }
 
+@Suppress("BlockingMethodInNonBlockingContext")
 suspend inline fun DisposeScope.fetchWriter(
 	url: URL,
 	method: HttpMethod = HttpMethod.get,

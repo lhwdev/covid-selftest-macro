@@ -1,14 +1,16 @@
 package com.lhwdev.selfTestMacro
 
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 
 
 const val IGNORE_BATTERY_OPTIMIZATION_REQUEST = 1001
 
 
-class MainActivity : BaseActivity() {
+class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		
@@ -19,14 +21,4 @@ class MainActivity : BaseActivity() {
 			ComposeApp(this)
 		}
 	}
-}
-
-
-interface Hi {
-	companion object : Hi
-}
-
-fun hi() {
-	var a: Hi = Hi
-	a = object : Hi {}
 }

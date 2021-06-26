@@ -9,6 +9,7 @@ import androidx.compose.material.ProvideTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -21,7 +22,7 @@ import androidx.compose.ui.unit.dp
  * @param text title text
  */
 @Composable
-fun MaterialDialogScope.Title(
+fun FloatingMaterialDialogScope.Title(
 	center: Boolean = false,
 	text: @Composable () -> Unit,
 ) {
@@ -53,7 +54,7 @@ fun MaterialDialogScope.Title(
  * @param icon optional icon displayed at the start of the title
  */
 @Composable
-fun MaterialDialogScope.IconTitle(
+fun FloatingMaterialDialogScope.IconTitle(
 	text: @Composable () -> Unit,
 	icon: @Composable () -> Unit,
 ) {
@@ -78,7 +79,7 @@ fun MaterialDialogScope.IconTitle(
  * @param content the content of the view
  */
 @Composable
-fun MaterialDialogScope.Content(content: @Composable () -> Unit) {
+fun FloatingMaterialDialogScope.Content(content: @Composable () -> Unit) {
 	CompositionLocalProvider(
 		LocalContentColor provides MaterialTheme.colors.onSurface
 	) {
@@ -91,22 +92,20 @@ fun MaterialDialogScope.Content(content: @Composable () -> Unit) {
 }
 
 
-/**
- * Adds an input field with the given parameters to the dialog.
- */
 @Composable
 fun MaterialDialogScope.Input(
+	modifier: Modifier = Modifier,
 	focusOnShow: Boolean = false, // should be invariant in one composition
 	input: @Composable () -> Unit
 ) {
-	Box(Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp)) {
+	Box(modifier) {
 		if(focusOnShow) {
-			this@Input.hasFocusOnShow = true
-			val focusRequester = FocusRequester()
+			hasFocusOnShow = true
+			val focusRequester = remember { FocusRequester() }
 			
 			DisposableEffect(focusRequester) {
 				focusRequester.requestFocus()
-				onDispose { /*focusRequester.freeFocus()*/ }
+				onDispose { /* focusRequester.freeFocus(): this causes error */ }
 			}
 			
 			Box(Modifier.focusRequester(focusRequester).fillMaxWidth()) { input() } // TODO
@@ -116,100 +115,18 @@ fun MaterialDialogScope.Input(
 	}
 }
 
-/*
 /**
- */
  * Adds an input field with the given parameters to the dialog.
- * @param label string to be shown in the input field before selection eg. Username
- * @param hint hint to be shown in the input field when it is selected but empty eg. Joe
- * @param prefill string to be input into the text field by default
- * @param waitForPositiveButton if true the [onInput] callback will only be called when the
- * positive button is pressed, otherwise it will be called when the input value is changed
- * @param visualTransformation a visual transformation of the content of the text field
- * @param keyboardOptions software keyboard options which can be used to customize parts
- * of the keyboard
- * @param errorMessage a message to be shown to the user when the input is not valid
- * @param focusRequester a [FocusRequester] which can be used to control the focus state of the
- * text field
- * @param focusOnShow if set to true this will auto focus the text field when the input
- * field is shown
- * @param isTextValid a function which is called to check if the user input is valid
- * @param onInput a function which is called with the user input. The timing of this call is
- * dictated by [waitForPositiveButton]
- *//*
-@ExperimentalComposeUiApi
+ */
 @Composable
-fun MaterialDialogScope.Input(
-	label: String,
-	hint: String = "",
-	prefill: String = "",
-	waitForPositiveButton: Boolean = true,
-	visualTransformation: VisualTransformation = VisualTransformation.None,
-	keyboardOptions: KeyboardOptions = KeyboardOptions(),
-	keyboardActions: KeyboardActions = KeyboardActions(),
-	errorMessage: String = "",
-	focusRequester: FocusRequester = FocusRequester.Default,
-	focusOnShow: Boolean = false,
-	isTextValid: (String) -> Boolean = { true },
-	onInput: (String) -> Unit = {},
+fun FloatingMaterialDialogScope.Input(
+	focusOnShow: Boolean = false, // should be invariant in one composition
+	input: @Composable () -> Unit
 ) {
-	var text by remember { mutableStateOf(prefill) }
-	val valid = remember(text) { isTextValid(text) }
-	val focusManager = LocalFocusManager.current
-	
-	val positiveEnabledIndex = addPositiveButtonEnabled(valid = valid) {
-		focusManager.clearFocus()
-	}
-	
-	DisposableEffect(valid) {
-		setPositiveEnabled(positiveEnabledIndex, valid)
-		onDispose { }
-	}
-	
-	if(waitForPositiveButton) {
-		DialogCallback { onInput(text) }
-	} else {
-		DisposableEffect(text) {
-			onInput(text)
-			onDispose { }
-		}
-	}
-	
-	Column(modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp)) {
-		TextField(
-			value = text,
-			onValueChange = {
-				text = it
-				if(!waitForPositiveButton) {
-					onInput(text)
-				}
-			},
-			label = { Text(label, color = MaterialTheme.colors.onBackground.copy(0.8f)) },
-			modifier = Modifier
-				.focusRequester(focusRequester)
-				.fillMaxWidth(),
-			placeholder = { Text(hint, color = MaterialTheme.colors.onBackground.copy(0.5f)) },
-			isError = !valid,
-			visualTransformation = visualTransformation,
-			keyboardOptions = keyboardOptions,
-			keyboardActions = keyboardActions,
-			textStyle = TextStyle(MaterialTheme.colors.onBackground, fontSize = 16.sp)
-		)
-		
-		if(!valid) {
-			Text(
-				errorMessage,
-				fontSize = 14.sp,
-				color = MaterialTheme.colors.error,
-				modifier = Modifier.align(Alignment.End)
-			)
-		}
-	}
-	
-	if(focusOnShow) {
-		DisposableEffect(Unit) {
-			focusRequester.requestFocus()
-			onDispose { }
-		}
-	}
-}*/
+	Input(
+		modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
+		focusOnShow = focusOnShow,
+		input = input
+	)
+}
+

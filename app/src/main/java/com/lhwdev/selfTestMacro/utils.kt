@@ -33,14 +33,7 @@ fun <K, V> Map<K, V>.added(key: K, value: V): Map<K, V> {
 	return newMap
 }
 
-fun EditText.isEmpty() = text == null || text.isEmpty()
-
 fun Int.toPx() = (this * Resources.getSystem().displayMetrics.density).toInt()
-
-@Suppress("NOTHING_TO_INLINE")
-inline fun Context.runOnUiThread(noinline action: () -> Unit) {
-	Handler(mainLooper).post(action)
-}
 
 suspend fun Context.showToastSuspendAsync(message: String, isLong: Boolean = false) =
 	withContext(Dispatchers.Main) {
@@ -49,10 +42,6 @@ suspend fun Context.showToastSuspendAsync(message: String, isLong: Boolean = fal
 
 fun Context.showToast(message: String, isLong: Boolean = false) {
 	Toast.makeText(this, message, if(isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
-}
-
-fun View.showSnackBar(message: String, duration: Int = 3000) {
-	Snackbar.make(this, message, duration).show()
 }
 
 suspend fun <R : Any> Context.promptDialog(
@@ -87,21 +76,3 @@ suspend fun <R : Any> Context.promptDialog(
 	}
 }
 
-suspend fun Context.promptInput(block: AlertDialog.Builder.(edit: EditText, okay: () -> Unit) -> Unit): String? =
-	promptDialog { onResult ->
-		val view = EditText(context)
-		val okay = { onResult(view.text.toString()) }
-		view.setPadding(16.toPx())
-		view.imeOptions = EditorInfo.IME_ACTION_DONE
-		view.setOnEditorActionListener { _, _, _ ->
-			okay()
-			true
-		}
-		view.doOnPreDraw { view.requestFocus() }
-		setView(view)
-		setPositiveButton("확인") { _, _ ->
-			okay()
-		}
-		setNegativeButton("취소", null)
-		block(view, okay)
-	}

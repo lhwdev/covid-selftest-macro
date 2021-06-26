@@ -7,38 +7,36 @@ import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
-import com.lhwdev.selfTestMacro.api.SurveyData
+import androidx.annotation.DrawableRes
 import com.lhwdev.selfTestMacro.api.User
-import com.lhwdev.selfTestMacro.api.getUserGroup
-import com.lhwdev.selfTestMacro.api.registerSurvey
 import java.util.Calendar
 
-
-suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) list.single() else {
-	if(list.isEmpty()) showToastSuspendAsync("사용자를 찾지 못했습니다.")
-	else showToastSuspendAsync("아직 여러명의 자가진단은 지원하지 않습니다.")
-	null
+@DrawableRes
+fun userIconFor(type: InstituteType): Int = when(type) {
+	InstituteType.school -> R.drawable.ic_school_24
+	else -> R.drawable.ic_account_circle_24 // unknown
 }
 
+
 suspend fun Context.submitSuspend(notification: Boolean = true) {
-	val institute = preferenceState.institute!!
-	val loginInfo = preferenceState.user!!
-	try {
-		val user = singleOfUserGroup(getUserGroup(institute, loginInfo.token)) ?: return
-		
-		val result = registerSurvey(
-			preferenceState.institute!!,
-			user,
-			SurveyData(userToken = user.token, userName = user.name)
-		)
-		if(notification) showTestCompleteNotification(result.registerAt)
-		else {
-			showToastSuspendAsync("자가진단 제출 완료")
-		}
-	} catch(e: Throwable) {
-		showTestFailedNotification(e.stackTraceToString())
-		onError(e, "제출 실패")
-	}
+	// val institute = preferenceState.institute!!
+	// val loginInfo = preferenceState.user!!
+	// try {
+	// 	val user = singleOfUserGroup(getUserGroup(institute, loginInfo.token)) ?: return
+	//
+	// 	val result = registerSurvey(
+	// 		preferenceState.institute!!,
+	// 		user,
+	// 		SurveyData(userToken = user.token, userName = user.name)
+	// 	)
+	// 	if(notification) showTestCompleteNotification(result.registerAt)
+	// 	else {
+	// 		showToastSuspendAsync("자가진단 제출 완료")
+	// 	}
+	// } catch(e: Throwable) {
+	// 	showTestFailedNotification(e.stackTraceToString())
+	// 	onError(e, "제출 실패")
+	// }
 }
 
 fun Context.updateTime(intent: PendingIntent) {

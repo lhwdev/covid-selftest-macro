@@ -23,6 +23,7 @@ suspend fun Activity.checkNotice() = withContext(Dispatchers.IO) {
 	
 	val content: String?
 	try {
+		@Suppress("BlockingMethodInNonBlockingContext") // withContext(Dispatchers.IO)
 		content =
 			URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/notice_v4.json").readText()
 		

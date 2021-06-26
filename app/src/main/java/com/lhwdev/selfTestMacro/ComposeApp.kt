@@ -3,6 +3,7 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.Activity
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
@@ -21,16 +22,16 @@ import com.google.accompanist.insets.Insets
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.WindowInsets
 import com.google.accompanist.systemuicontroller.SystemUiController
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlin.coroutines.CoroutineContext
 
 
 typealias Route = MutableList<@Composable () -> Unit>
 
 fun Route.removeRoute(item: @Composable () -> Unit): Boolean {
-	println("removeRoute $item")
 	val index = lastIndexOf(item)
 	if(index == -1) return false
 	subList(index, size).clear()
-	println("removed ${joinToString { "$it" }}")
 	return true
 }
 
@@ -43,6 +44,26 @@ val LocalPreview = staticCompositionLocalOf { false }
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ComposeApp(activity: Activity) {
+	val composer = currentComposer
+	
+	// inject coroutine context
+	remember {
+		val context = composer::class.java.getDeclaredField("parentContext").also {
+			it.isAccessible = true
+		}.get(composer) as Recomposer
+		
+		val contextField = Recomposer::class.java.getDeclaredField("effectCoroutineContext").also {
+			it.isAccessible = true
+		}
+		contextField.set(context, (contextField.get(context) as CoroutineContext) + CoroutineExceptionHandler { _, th ->
+			Log.e("ComposeApp", "Uncaught exception", th)
+			throw th
+		})
+		
+		
+		0
+	}
+	
 	val context = LocalContext.current
 	val pref = remember(context) { context.preferenceState }
 	val route = remember {

@@ -22,7 +22,6 @@ fun selfLog(message: String) {
 }
 
 suspend fun Context.onError(snackbarHostState: SnackbarHostState, message: String, throwable: Throwable) {
-	Log.d("SelfTest-Macro", message, throwable)
 	snackbarHostState.showSnackbar("오류: $message", "확인")
 	onError(throwable, message)
 }
@@ -32,14 +31,6 @@ suspend fun Context.onErrorToast(error: Throwable, description: String = "???") 
 	showToastSuspendAsync("오류가 발생했습니다. ($description)")
 	onError(error, description)
 }
-
-suspend inline fun <R : Any> Context.catchErrorThanToast(description: String = "???", block: () -> R): R? =
-	try {
-		block()
-	} catch(e: Throwable) {
-		onErrorToast(e, description)
-		null
-	}
 
 
 suspend fun Context.onError(error: Throwable, description: String = "???") {
@@ -91,6 +82,7 @@ private fun Context.showErrorInfo(info: String) {
 
 suspend fun getLogcat(): String = withContext(Dispatchers.IO) {
 	val command = arrayOf("logcat", "-d", "-v", "threadtime")
+	@Suppress("BlockingMethodInNonBlockingContext")
 	val process = Runtime.getRuntime().exec(command)
 	process.inputStream.reader().use { it.readText() }
 }

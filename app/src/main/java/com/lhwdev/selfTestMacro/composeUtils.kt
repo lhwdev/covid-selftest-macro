@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.icons.ExpandLess
 import com.lhwdev.selfTestMacro.icons.ExpandMore
@@ -21,33 +22,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 
+/**
+ * used for optimization
+ */
 @Composable
-fun <T> lazyState(key: Any? = null, init: suspend CoroutineScope.() -> T): State<T?> {
-	val state = remember { mutableStateOf<T?>(null) }
-	LaunchedEffect(key) {
-		state.value = init()
-	}
-	return state
-}
-
-
-@Composable
-fun TextSwitch(
-	checked: Boolean,
-	onCheckedChange: (Boolean) -> Unit,
-	text: @Composable () -> Unit,
-	switch: @Composable () -> Unit
-) {
-	Surface(
-		modifier = Modifier
-			.clickable { onCheckedChange(!checked) }
-			.fillMaxWidth()
-	) {
-		Row {
-			Box(Modifier.weight(1f)) { text() }
-			switch()
-		}
-	}
+fun EmptyRestartable(content: @Composable () -> Unit) {
+	content()
 }
 
 
@@ -67,11 +47,9 @@ suspend fun <T> showRoute(
 ): T? {
 	lateinit var rootContent: @Composable () -> Unit
 	
-	println("showRoute")
-	val result = suspendCancellableCoroutine<T?> { cont ->
+	return suspendCancellableCoroutine { cont ->
 		val removeRoute = { result: T? ->
-			route.removeLast()
-			println("showRoute remove $result!")
+			route.removeRoute(rootContent)
 			cont.resume(result)
 		}
 		
@@ -82,8 +60,6 @@ suspend fun <T> showRoute(
 		route.add(rootContent)
 		cont.invokeOnCancellation { removeRoute(null) }
 	}
-	println("wow $result")
-	return result
 }
 
 @Composable
@@ -153,15 +129,17 @@ fun DropdownPicker(
 				isEmpty -> InputPhase.UnfocusedEmpty
 				else -> InputPhase.UnfocusedNotEmpty
 			},
-			modifier = Modifier.clickable { if(!readonly) setExpanded(true) }.fillMaxWidth(),
+			modifier = Modifier
+				.clickable { if(!readonly) setExpanded(true) }
+				.fillMaxWidth(),
 			enabled = enabled,
 			label = label,
 			leadingIcon = leadingIcon,
 			trailingIcon = {
 				if(!expanded) {
-					Icon(imageVector = Icons.Filled.ExpandMore, contentDescription = "Expand")
+					Icon(imageVector = Icons.Filled.ExpandMore, contentDescription = stringResource(R.string.action_expand_more))
 				} else {
-					Icon(imageVector = Icons.Filled.ExpandLess, contentDescription = "Collapse")
+					Icon(imageVector = Icons.Filled.ExpandLess, contentDescription = stringResource(R.string.action_expand_less))
 				}
 			},
 			isErrorValue = isErrorValue,

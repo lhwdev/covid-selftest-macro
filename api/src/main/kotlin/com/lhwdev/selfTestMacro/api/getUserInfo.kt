@@ -17,14 +17,20 @@ private data class GetUserInfoRequestBody(
 @Serializable
 data class UserInfo(
 	@SerialName("userName") val userName: String,
+	
 	@SerialName("orgCode") val instituteCode: String,
 	@SerialName("orgName") val instituteName: String,
+	@SerialName("insttClsfCode") val institutionClassifierCode: String,
+	
 	@SerialName("atptOfcdcConctUrl") val instituteRequestUrlBody: String,
 	@SerialName("lctnScCode") val instituteRegionCode: String? = null,
 	@SerialName("schulCrseScCode") val schoolLevelCode: String? = null,
+	@SerialName("sigCode") val instituteSigCode: String? = null,
+	
 	@SerialName("registerYmd") val lastRegisterDate: String? = null,
 	@SerialName("registerDtm") val lastRegisterAt: String? = null,
 	@SerialName("isHealthy") val isHealthy: Boolean? = null,
+	
 	@SerialName("deviceUuid") val deviceUuid: String? = null
 ) {
 	val instituteStub: InstituteInfo = InstituteInfo(
@@ -33,6 +39,15 @@ data class UserInfo(
 		address = "???",
 		requestUrlBody = instituteRequestUrlBody
 	)
+	
+	// see getInstituteData.kt
+	val instituteType: InstituteType = when { // TODO: needs verification
+		institutionClassifierCode == "5" -> InstituteType.school
+		institutionClassifierCode == "7" -> InstituteType.university
+		instituteRegionCode != null && schoolLevelCode != null -> InstituteType.school
+		instituteRegionCode != null && instituteSigCode != null -> InstituteType.academy
+		else -> InstituteType.office
+	}
 	
 	fun toUserInfoString() = "$userName($instituteName)"
 	fun toLastRegisterInfoString() =

@@ -1,10 +1,7 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.Application
-import kotlinx.coroutines.DEBUG_PROPERTY_NAME
-import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_OFF
-import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_ON
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 
 
 @Suppress("unused")

@@ -15,7 +15,6 @@ internal fun ThemedDialog(
 ) {
 	val colors = MaterialTheme.colors
 	val typography = MaterialTheme.typography
-	
 	Dialog(onDismissRequest = onCloseRequest, properties = properties) {
 		MaterialTheme(colors = colors, typography = typography) {
 			children()

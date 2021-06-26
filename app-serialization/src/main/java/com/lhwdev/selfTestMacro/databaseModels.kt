@@ -12,23 +12,39 @@ data class DbTestGroups(
 )
 
 @Serializable
-data class DbTestGroup(
-	val users: List<Int>,
+sealed class DbTestGroup(
+	val target: DbTestTarget,
 	val schedule: DbTestSchedule,
 	val excludeWeekend: Boolean,
 	val excludeHoliday: Boolean
 )
 
 @Serializable
+sealed class DbTestTarget {
+	@Serializable
+	data class Group(val userIds: List<Int>) : DbTestTarget()
+	
+	@Serializable
+	data class Single(val userId: Int) : DbTestTarget()
+}
+
+val DbTestTarget.allUserIds: List<Int>
+	get() = when(this) {
+		is DbTestTarget.Group -> userIds
+		is DbTestTarget.Single -> listOf(userId)
+	}
+
+
+@Serializable
 sealed class DbTestSchedule {
 	@Serializable
-	object None
+	object None : DbTestSchedule()
 	
 	@Serializable
-	class Fixed(val hour: Int, val minute: Int)
+	class Fixed(val hour: Int, val minute: Int) : DbTestSchedule()
 	
 	@Serializable
-	class Random(val from: Fixed, val to: Fixed)
+	class Random(val from: Fixed, val to: Fixed) : DbTestSchedule()
 }
 
 
@@ -43,6 +59,7 @@ data class DbUser(
 	val id: Int,
 	val user: User,
 	val instituteName: String,
+	val instituteType: InstituteType,
 	val userGroupId: Int
 )
 
@@ -56,6 +73,8 @@ data class DbUserGroups(
 @Serializable
 data class DbUserGroup(
 	val id: Int,
+	val userIds: List<Int>,
 	val userIdentifier: UserIdentifier,
+	val instituteType: InstituteType,
 	val institute: InstituteInfo
 )

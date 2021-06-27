@@ -5,21 +5,25 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 import java.util.WeakHashMap
 
 
-class PreferenceState(private val pref: SharedPreferences) {
+class PreferenceState(pref: PreferenceHolder) {
 	init {
+		val p = pref.pref
 		// version migration
-		when(pref.getInt("lastVersion", -1)) {
-			in -1..999 -> pref.edit { clear() }
-			in 1000..1006 -> pref.edit { clear() }
+		when(p.getInt("lastVersion", -1)) {
+			in -1..999 -> p.edit { clear() }
+			in 1000..1006 -> p.edit { clear() }
 			BuildConfig.VERSION_CODE -> Unit // latest
 		}
 		
-		pref.edit { putInt("lastVersion", BuildConfig.VERSION_CODE) }
+		p.edit { putInt("lastVersion", BuildConfig.VERSION_CODE) }
 	}
+	
 	
 	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
 	
@@ -32,16 +36,9 @@ class PreferenceState(private val pref: SharedPreferences) {
 	
 	var headUser by pref.preferenceInt(key = "headUser", defaultValue = 0)
 	
-	var shownNotices: Set<String>
-		get() = pref.getStringSet("shownNotices", setOf())!!
-		set(value) = pref.edit {
-			putStringSet("shownNotices", value)
-		}
+	var shownNotices: Set<String> by pref.preferenceStringSet("shownNotices", emptySet())
 	var doNotShowAgainNotices: Set<String>
-		get() = pref.getStringSet("shownNotices", setOf())!!
-		set(value) = pref.edit {
-			putStringSet("shownNotices", value)
-		}
+		by pref.preferenceStringSet("doNotShowAgainNotices", emptySet())
 }
 
 
@@ -60,7 +57,7 @@ private val preferenceStateMap = WeakHashMap<Context, PreferenceState>()
 
 val Context.preferenceState: PreferenceState
 	get() = preferenceStateMap.getOrPut(applicationContext) {
-		PreferenceState(prefMain())
+		PreferenceState(PreferenceHolder(prefMain()))
 	}
 
 

@@ -31,6 +31,25 @@ fun EmptyRestartable(content: @Composable () -> Unit) {
 }
 
 
+@Suppress("NOTHING_TO_INLINE")
+@Composable
+inline fun changed(value: Any?): Boolean = currentComposer.changed(value)
+
+
+@Composable
+fun <T> lazyState(
+	defaultValue: T,
+	key: Any? = null,
+	init: suspend CoroutineScope.() -> T
+): State<T> {
+	val state = remember { mutableStateOf(defaultValue) }
+	LaunchedEffect(key) {
+		state.value = init()
+	}
+	return state
+}
+
+
 suspend inline fun showRouteUnit(
 	route: Route,
 	crossinline content: @Composable (removeRoute: () -> Unit) -> Unit
@@ -137,9 +156,15 @@ fun DropdownPicker(
 			leadingIcon = leadingIcon,
 			trailingIcon = {
 				if(!expanded) {
-					Icon(imageVector = Icons.Filled.ExpandMore, contentDescription = stringResource(R.string.action_expand_more))
+					Icon(
+						imageVector = Icons.Filled.ExpandMore,
+						contentDescription = stringResource(R.string.action_expand_more)
+					)
 				} else {
-					Icon(imageVector = Icons.Filled.ExpandLess, contentDescription = stringResource(R.string.action_expand_less))
+					Icon(
+						imageVector = Icons.Filled.ExpandLess,
+						contentDescription = stringResource(R.string.action_expand_less)
+					)
 				}
 			},
 			isErrorValue = isErrorValue,

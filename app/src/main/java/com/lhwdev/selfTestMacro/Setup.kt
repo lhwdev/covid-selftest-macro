@@ -841,13 +841,13 @@ private fun SetupWizardForth(model: SetupModel, wizard: SetupWizard) {
 					val realUsers = userList.filterIndexed { index, _ -> enabled[index] }
 					val realUserInfo = userInfoList.filterIndexed { index, _ -> enabled[index] }
 					
-					val userGroups = pref.db.userGroups
-					val userGroupsId = userGroups.maxId + 1
+					val previousUserGroups = pref.db.userGroups
+					val userGroupsId = previousUserGroups.maxId + 1
 					
 					val previousUsers = pref.db.users
-					var usersId = previousUsers.maxId
+					var usersId = previousUsers.maxId // + 1 is done in loop; `++usersId`
 					
-					val dbUsersList = realUsers.mapIndexed { index, user ->
+					val usersList = realUsers.mapIndexed { index, user ->
 						val info = realUserInfo[index]
 						DbUser(
 							++usersId,
@@ -857,24 +857,38 @@ private fun SetupWizardForth(model: SetupModel, wizard: SetupWizard) {
 							userGroupsId
 						)
 					}
-					val dbUsers = dbUsersList.associateBy { it.id }
+					val users = usersList.associateBy { it.id }
 					
 					val userGroup = DbUserGroup(
 						userGroupsId,
-						dbUsersList.map { it.id },
+						usersList.map { it.id },
 						userIdentifier,
 						selectInstitute.type,
 						institute
 					)
-					val dbUserGroups = userGroups.copy(
+					val userGroups = previousUserGroups.copy(
 						maxId = userGroupsId,
-						groups = userGroups.groups.added(userGroupsId, userGroup)
+						groups = previousUserGroups.groups.added(userGroupsId, userGroup)
 					)
 					
-					pref.db.userGroups = dbUserGroups
+					// by default, test groups are made for individual(single)
+					val previousTestGroups = pref.db.testGroups
+					val testGroups = usersList.map {
+						DbTestGroup(
+							target = DbTestTarget.Single(it.id),
+							schedule = DbTestSchedule.None,
+							excludeHoliday = false,
+							excludeWeekend = false
+						)
+					}
+					
+					pref.db.userGroups = userGroups
 					pref.db.users = previousUsers.copy(
 						maxId = usersId,
-						users = previousUsers.users + dbUsers
+						users = previousUsers.users + users
+					)
+					pref.db.testGroups = previousTestGroups.copy(
+						groups = previousTestGroups.groups + testGroups
 					)
 					
 					// go!
@@ -938,7 +952,6 @@ private fun SetupSelectUsers(
 
 
 //////////////////////////////////// Utilities /////////////////////////////////////////////////////
-
 
 
 @Composable

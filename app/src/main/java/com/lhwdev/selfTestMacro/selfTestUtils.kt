@@ -8,14 +8,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import androidx.annotation.DrawableRes
-import com.lhwdev.selfTestMacro.api.User
 import java.util.Calendar
-
-@DrawableRes
-fun userIconFor(type: InstituteType): Int = when(type) {
-	InstituteType.school -> R.drawable.ic_school_24
-	else -> R.drawable.ic_account_circle_24 // unknown
-}
 
 
 suspend fun Context.submitSuspend(notification: Boolean = true) {

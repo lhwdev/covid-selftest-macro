@@ -12,7 +12,7 @@ data class DbTestGroups(
 )
 
 @Serializable
-sealed class DbTestGroup(
+class DbTestGroup(
 	val target: DbTestTarget,
 	val schedule: DbTestSchedule,
 	val excludeWeekend: Boolean,
@@ -22,7 +22,7 @@ sealed class DbTestGroup(
 @Serializable
 sealed class DbTestTarget {
 	@Serializable
-	data class Group(val userIds: List<Int>) : DbTestTarget()
+	data class Group(val name: String, val userIds: List<Int>) : DbTestTarget()
 	
 	@Serializable
 	data class Single(val userId: Int) : DbTestTarget()

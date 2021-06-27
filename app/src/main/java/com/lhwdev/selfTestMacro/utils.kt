@@ -4,16 +4,9 @@ package com.lhwdev.selfTestMacro
 
 import android.content.Context
 import android.content.res.Resources
-import android.os.Handler
 import android.util.Base64
-import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.view.doOnPreDraw
-import androidx.core.view.setPadding
-import com.google.android.material.snackbar.Snackbar
 import com.lhwdev.selfTestMacro.api.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine

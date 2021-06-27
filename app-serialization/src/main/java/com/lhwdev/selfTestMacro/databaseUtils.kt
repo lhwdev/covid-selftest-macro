@@ -1,13 +1,45 @@
 package com.lhwdev.selfTestMacro
 
 import android.content.SharedPreferences
+import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotMutableState
 import androidx.core.content.edit
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
+
+
+inline fun <T> PreferenceHolder.preferenceState(
+	key: String,
+	crossinline read: (SharedPreferences) -> T,
+	crossinline write: (SharedPreferences, T) -> Unit
+): MutableState<T> = object : SnapshotMutableState<T> {
+	private val handle = property(key)
+	private var cache: T? by mutableStateOf(null)
+	
+	override var value: T
+		get() {
+			return if(handle.clean) {
+				@Suppress("UNCHECKED_CAST")
+				cache as T
+			} else {
+				val newValue = read(pref)
+				cache = newValue
+				handle.clean = true
+				newValue
+			}
+		}
+		set(value) {
+			cache = value
+			write(pref, value)
+			handle.clean = true // forcibly; write() would make handle.clean false
+		}
+	
+	override fun component1(): T = value
+	override fun component2(): (T) -> Unit = { value = it }
+	override val policy: SnapshotMutationPolicy<T> get() = structuralEqualityPolicy()
+}
 
 
 @PublishedApi
@@ -39,60 +71,57 @@ inline fun <T, R> List<T>.lazyMap(
 	override fun createAt(index: Int): R = block(list[index])
 }
 
-fun SharedPreferences.preferenceInt(key: String, defaultValue: Int) =
-	object : ReadWriteProperty<Any?, Int> {
-		override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-			edit { putInt(key, value) }
-		}
-		
-		override fun getValue(thisRef: Any?, property: KProperty<*>): Int =
-			getInt(key, defaultValue)
-	}
+fun PreferenceHolder.preferenceInt(
+	key: String, defaultValue: Int
+): MutableState<Int> = preferenceState(
+	key = key,
+	read = { pref -> pref.getInt(key, defaultValue) },
+	write = { pref, value -> pref.edit { putInt(key, value) } }
+)
 
-fun SharedPreferences.preferenceBoolean(key: String, defaultValue: Boolean) =
-	object : ReadWriteProperty<Any?, Boolean> {
-		override fun setValue(thisRef: Any?, property: KProperty<*>, value: Boolean) {
-			edit { putBoolean(key, value) }
-		}
-		
-		override fun getValue(thisRef: Any?, property: KProperty<*>): Boolean =
-			getBoolean(key, defaultValue)
-	}
+fun PreferenceHolder.preferenceBoolean(
+	key: String, defaultValue: Boolean
+): MutableState<Boolean> = preferenceState(
+	key = key,
+	read = { pref -> pref.getBoolean(key, defaultValue) },
+	write = { pref, value -> pref.edit { putBoolean(key, value) } }
+)
 
-fun SharedPreferences.preferenceString(key: String, defaultValue: String? = null) =
-	object : ReadWriteProperty<Any?, String?> {
-		override fun setValue(thisRef: Any?, property: KProperty<*>, value: String?) {
-			edit { putString(key, value) }
-		}
-		
-		override fun getValue(thisRef: Any?, property: KProperty<*>): String? =
-			getString(key, defaultValue)
-	}
+fun PreferenceHolder.preferenceString(
+	key: String, defaultValue: String? = null
+): MutableState<String?> = preferenceState(
+	key = key,
+	read = { pref -> pref.getString(key, defaultValue) },
+	write = { pref, value -> pref.edit { putString(key, value) } }
+)
+
+fun PreferenceHolder.preferenceStringSet(
+	key: String, defaultValue: Set<String>
+): MutableState<Set<String>> = preferenceState(
+	key = key,
+	read = { pref -> pref.getStringSet(key, defaultValue)!! },
+	write = { pref, value -> pref.edit { putStringSet(key, value) } }
+)
 
 @OptIn(ExperimentalSerializationApi::class)
-fun <T> SharedPreferences.preferenceSerialized(
+fun <T> PreferenceHolder.preferenceSerialized(
 	key: String,
 	serializer: KSerializer<T>,
 	defaultValue: T,
 	formatter: StringFormat = Json
-) = object : ReadWriteProperty<Any?, T> {
-	var updated = false
-	var cache: T = defaultValue
-	
-	override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
-		cache = value
-		updated = true
-		edit {
+): MutableState<T> = preferenceState(
+	key = key,
+	read = { pref ->
+		val string = pref.getString(key, null)
+		if(string == null) {
+			defaultValue
+		} else {
+			formatter.decodeFromString(serializer, string)
+		}
+	},
+	write = { pref, value ->
+		pref.edit {
 			putString(key, formatter.encodeToString(serializer, value))
 		}
 	}
-	
-	override fun getValue(thisRef: Any?, property: KProperty<*>): T {
-		if(!updated) {
-			val string = getString(key, null)
-			cache =
-				if(string == null) defaultValue else formatter.decodeFromString(serializer, string)
-		}
-		return cache
-	}
-}
+)

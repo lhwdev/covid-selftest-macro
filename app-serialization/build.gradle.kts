@@ -9,6 +9,13 @@ android {
 	compileSdk = 30
 	buildToolsVersion = "30.0.2"
 	
+	
+	defaultConfig {
+		minSdk = 19
+		targetSdk = 30
+	}
+	
+	
 	buildTypes {
 		named("release") {
 			isMinifyEnabled = true
@@ -33,6 +40,10 @@ dependencies {
 	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 	implementation(kotlin("stdlib"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
+	
+	
+	val compose = "1.0.0-beta09" // also kotlinCompilerExtensionVersion, app-serialization/version
+	implementation("androidx.compose.runtime:runtime:$compose")
 	
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.1")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")

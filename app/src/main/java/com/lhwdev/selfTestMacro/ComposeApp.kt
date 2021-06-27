@@ -55,10 +55,12 @@ fun ComposeApp(activity: Activity) {
 		val contextField = Recomposer::class.java.getDeclaredField("effectCoroutineContext").also {
 			it.isAccessible = true
 		}
-		contextField.set(context, (contextField.get(context) as CoroutineContext) + CoroutineExceptionHandler { _, th ->
-			Log.e("ComposeApp", "Uncaught exception", th)
-			throw th
-		})
+		contextField.set(
+			context,
+			(contextField.get(context) as CoroutineContext) + CoroutineExceptionHandler { _, th ->
+				Log.e("ComposeApp", "Uncaught exception", th)
+				throw th
+			})
 		
 		
 		0
@@ -93,6 +95,7 @@ fun ComposeApp(activity: Activity) {
 			LocalRoute provides route
 		) {
 			ProvideAutoWindowInsets {
+				@Suppress("ILLEGAL_TRY_CATCH_AROUND_COMPOSABLE")
 				Box(modifier) {
 					println(route.joinToString { "$it" })
 					for((index, routeItem) in route.withIndex()) key(index) {

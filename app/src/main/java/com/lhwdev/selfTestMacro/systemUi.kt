@@ -2,7 +2,6 @@ package com.lhwdev.selfTestMacro
 
 import android.annotation.SuppressLint
 import android.os.Build
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -19,8 +18,6 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.accompanist.insets.*
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
 
 
 data class AppliedUiPaddings(

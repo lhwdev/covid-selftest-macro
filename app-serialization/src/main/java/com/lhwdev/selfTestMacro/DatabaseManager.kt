@@ -38,19 +38,20 @@ class DatabaseManager(pref: PreferenceHolder) {
 	
 	val DbTestTarget.commonInstitute: InstituteInfo?
 		get() = when(this) {
-			is DbTestTarget.Group -> allUsers.fold<DbUser, InstituteInfo?>(null) { acc, user ->
-				acc?.takeIf { user.userGroup.institute == acc }
+			is DbTestTarget.Group -> allUsers.fold<DbUser, InstituteInfo?>(allUsers.first().institute) { acc, user ->
+				acc?.takeIf { user.institute.code == acc.code }
 			}
-			is DbTestTarget.Single -> user.userGroup.institute
+			is DbTestTarget.Single -> user.institute
 		}
 	
 	val DbTestTarget.commonInstituteType: InstituteType?
 		get() = when(this) {
-			is DbTestTarget.Group -> allUsers.fold<DbUser, InstituteType?>(null) { acc, user ->
+			is DbTestTarget.Group -> allUsers.fold<DbUser, InstituteType?>(allUsers.first().instituteType) { acc, user ->
 				acc?.takeIf { user.userGroup.instituteType == acc }
 			}
 			is DbTestTarget.Single -> user.userGroup.instituteType
 		}
 	
 	val DbUser.userGroup: DbUserGroup get() = userGroups.groups.getValue(userGroupId)
+	val DbUser.institute: InstituteInfo get() = userGroup.institute
 }

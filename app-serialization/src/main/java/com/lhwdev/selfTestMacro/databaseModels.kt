@@ -2,17 +2,18 @@ package com.lhwdev.selfTestMacro
 
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.User
-import com.lhwdev.selfTestMacro.api.UserIdentifier
+import com.lhwdev.selfTestMacro.api.UsersIdentifier
 import kotlinx.serialization.Serializable
 
 
 @Serializable
 data class DbTestGroups(
-	val groups: List<DbTestGroup> = emptyList()
+	val groups: List<DbTestGroup> = emptyList(),
+	val maxGroupGeneratedNameIndex: Int = 0
 )
 
 @Serializable
-class DbTestGroup(
+data class DbTestGroup(
 	val target: DbTestTarget,
 	val schedule: DbTestSchedule,
 	val excludeWeekend: Boolean,
@@ -74,7 +75,7 @@ data class DbUserGroups(
 data class DbUserGroup(
 	val id: Int,
 	val userIds: List<Int>,
-	val userIdentifier: UserIdentifier,
+	val usersIdentifier: UsersIdentifier,
 	val instituteType: InstituteType,
 	val institute: InstituteInfo
 )

@@ -7,7 +7,7 @@ class PreferenceHolder(val pref: SharedPreferences) {
 	private val propertyClean = mutableMapOf<String, Boolean>()
 	
 	private val listener = pref.registerOnSharedPreferenceChangeListener { _, key ->
-		propertyClean[key] = false
+		if(key != null) propertyClean[key] = false
 	}
 	
 	

@@ -1,8 +1,6 @@
 package com.lhwdev.selfTestMacro
 
-import androidx.compose.material.Colors
-import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.LocalContentColor
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -18,3 +16,12 @@ val Colors.primaryActive: Color
 val DefaultContentColor: Color
 	@Composable get() = LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
 
+
+val MediumContentColor: Color
+	@Composable get() = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
+
+
+@Suppress("ComposableNaming")
+@Composable
+fun Color(onLight: Color, onDark: Color): Color =
+	if(MaterialTheme.colors.isLight) onLight else onDark

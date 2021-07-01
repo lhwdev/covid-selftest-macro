@@ -47,7 +47,7 @@ fun ComposeApp(activity: Activity) {
 	val composer = currentComposer
 	
 	// inject coroutine context
-	remember {
+	if(BuildConfig.DEBUG) remember {
 		val context = composer::class.java.getDeclaredField("parentContext").also {
 			it.isAccessible = true
 		}.get(composer) as Recomposer
@@ -62,7 +62,6 @@ fun ComposeApp(activity: Activity) {
 				throw th
 			})
 		
-		
 		0
 	}
 	
@@ -72,7 +71,7 @@ fun ComposeApp(activity: Activity) {
 		val route = mutableStateListOf<@Composable () -> Unit>()
 		val initialFirst = pref.firstState == 0
 		route.add @Composable {
-			if(initialFirst) Setup()
+			if(initialFirst || pref.db.testGroups.groups.isEmpty()) Setup()
 			else Main()
 		}
 		route
@@ -95,11 +94,11 @@ fun ComposeApp(activity: Activity) {
 			LocalRoute provides route
 		) {
 			ProvideAutoWindowInsets {
-				@Suppress("ILLEGAL_TRY_CATCH_AROUND_COMPOSABLE")
 				Box(modifier) {
-					println(route.joinToString { "$it" })
-					for((index, routeItem) in route.withIndex()) key(index) {
-						routeItem()
+					AnimateListAsComposable(route) { index, item ->
+						EnabledRoute(enabled = index == route.lastIndex) {
+							item()
+						}
 					}
 				}
 			}
@@ -108,6 +107,13 @@ fun ComposeApp(activity: Activity) {
 		BackHandler(route.size > 1) {
 			route.removeLast()
 		}
+	}
+}
+
+@Composable
+private fun EnabledRoute(enabled: Boolean, content: @Composable () -> Unit) {
+	EnableAutoSystemUi(enabled) {
+		content()
 	}
 }
 

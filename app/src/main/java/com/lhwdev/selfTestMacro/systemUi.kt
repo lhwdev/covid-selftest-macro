@@ -92,7 +92,8 @@ fun ProvideIsImeVisible(content: @Composable () -> Unit) {
 	
 	DisposableEffect(view) {
 		ViewCompat.setOnApplyWindowInsetsListener(view.rootView) { _, insets ->
-			state = insets.isVisible(WindowInsetsCompat.Type.ime())
+			val s = insets.isVisible(WindowInsetsCompat.Type.ime())
+			state = s
 			insets
 		}
 		
@@ -157,9 +158,13 @@ fun ProvideAutoWindowInsets(
 				// uses immersive style so expects navigation bar padding to not exist, adding its
 				// custom padding.
 				
-				
 				// this is not quite accurate, just an effort not to be seen a lot weird.
 				// maybe a little bit better?
+				
+				// I don't know why, but this is needed to correctly subscribe to snapshot state
+				ime.layoutInsets.bottom
+				ime.animatedInsets.bottom
+				
 				when {
 					// 1. not animating
 					!ime.animationInProgress -> {
@@ -197,11 +202,12 @@ fun ProvideAutoWindowInsets(
 					object : WindowInsets by insets {
 						override val navigationBars: WindowInsets.Type =
 							object : WindowInsets.Type {
-								override val isVisible: Boolean get() = nav.isVisible
+								// not `nav`: to subscribe correctly?
+								override val isVisible: Boolean get() = insets.navigationBars.isVisible
 								override val layoutInsets: Insets get() = navInsetsState
 								override val animatedInsets: Insets get() = navInsetsState
-								override val animationFraction: Float get() = animationFractionState // I don't want to implement; I'm lazy
-								override val animationInProgress: Boolean get() = ime.animationInProgress
+								override val animationFraction: Float get() = animationFractionState
+								override val animationInProgress: Boolean get() = insets.ime.animationInProgress
 							}
 					}
 				}
@@ -227,9 +233,22 @@ fun rememberUiController(): SystemUiController = if(LocalPreview.current) {
 }
 
 
+private val LocalAutoSystemUiEnabled = compositionLocalOf { true }
+
+
+@Composable
+fun EnableAutoSystemUi(enabled: Boolean, content: @Composable () -> Unit) {
+	CompositionLocalProvider(
+		LocalAutoSystemUiEnabled provides (LocalAutoSystemUiEnabled.current and enabled)
+	) {
+		content()
+	}
+}
+
+
 @Composable
 fun AutoSystemUi(
-	enabled: Boolean,
+	enabled: Boolean = true,
 	onScreenMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	ime: SystemUiMode? = SystemUiMode.Default,
 	content: @Composable ColumnScope.(Scrims) -> Unit
@@ -246,14 +265,16 @@ fun AutoSystemUi(
 // note that this does not clean-up
 @Composable
 fun AutoSystemUi(
-	enabled: Boolean,
+	enabled: Boolean = true,
 	statusBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	navigationBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	ime: SystemUiMode? = SystemUiMode.Default,
 	content: @Composable ColumnScope.(Scrims) -> Unit,
 ) {
+	val realEnabled = enabled and LocalAutoSystemUiEnabled.current
+	
 	val appliedUiPaddings = LocalAppliedUiPaddings.current
-	val enabledState by rememberUpdatedState(enabled)
+	val enabledState by rememberUpdatedState(realEnabled)
 	
 	val controller = rememberUiController()
 	

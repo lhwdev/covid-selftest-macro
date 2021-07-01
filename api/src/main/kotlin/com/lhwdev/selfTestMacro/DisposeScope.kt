@@ -24,8 +24,3 @@ suspend inline fun <R> ioTask(crossinline task: suspend DisposeScope.() -> R): R
 	withContext(Dispatchers.IO) {
 		disposeScope { task() }
 	}
-
-inline fun CoroutineScope.launchIoTask(crossinline task: suspend DisposeScope.() -> Unit): Job =
-	launch(Dispatchers.IO) {
-		disposeScope { task() }
-	}

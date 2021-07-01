@@ -65,7 +65,7 @@ data class PasswordWrong(
 					사용자 비밀번호가 맞지 않습니다.
 					본인이나 가족이 이미 설정한 비밀번호를 입력하여 주시기 바랍니다.
 					5회 틀리실 경우 5분후에 재시도 가능합니다.
-					현재 ${data.failedCount}회 틀리셨습니다"
+					현재 ${data.failedCount}회 틀리셨습니다.
 					""".trimIndent()
 			1003 -> "비밀번호가 초기화되었습니다. 다시 로그인하세요."
 			else -> null
@@ -81,7 +81,7 @@ data class PasswordWrong(
 
 suspend fun validatePassword(
 	institute: InstituteInfo,
-	userIdentifier: UserIdentifier,
+	usersIdentifier: UsersIdentifier,
 	password: String
 ): PasswordResult = ioTask {
 	val body = fetch(
@@ -89,7 +89,7 @@ suspend fun validatePassword(
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf(
 			"Content-Type" to ContentTypes.json,
-			"Authorization" to userIdentifier.token.token
+			"Authorization" to usersIdentifier.token.token
 		),
 		body = """{"password": "${encrypt(password)}", "deviceUuid": ""}"""
 	).toResponseString()

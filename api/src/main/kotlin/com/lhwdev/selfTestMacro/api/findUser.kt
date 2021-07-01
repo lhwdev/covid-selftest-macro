@@ -66,7 +66,7 @@ internal suspend fun GetUserTokenRequestBody(
  */
 
 @Serializable
-data class UserIdentifier(
+data class UsersIdentifier(
 	@SerialName("userName") val mainUserName: String,
 	@SerialName("token") val token: UsersIdToken,
 	@Serializable(with = YesNoSerializer::class) @SerialName("stdntYn") val isStudent: Boolean,
@@ -93,20 +93,21 @@ suspend fun findUser(
 				loginType = loginType
 			)
 		)
-	).toJsonLoose(UserIdentifier.serializer())
+	).toJsonLoose(UsersIdentifier.serializer())
 }
 
-// you must inform user when using this api
-suspend fun agreeAgreement(institute: InstituteInfo, token: UsersIdToken): Unit = ioTask {
-	fetch(
-		institute.requestUrl2["updatePInfAgrmYn"],
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json),
-		body = "{}"
-	)
-}
+// // you must inform user when using this api
+// suspend fun agreeAgreement(institute: InstituteInfo, token: UsersIdToken): Unit = ioTask {
+// 	fetch(
+// 		institute.requestUrl2["updatePInfAgrmYn"],
+// 		method = HttpMethod.post,
+// 		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json),
+// 		body = "{}"
+// 	)
+// }
 
 
+// so platform-specific, so leave it empty
 lateinit var encodeBase64: (ByteArray) -> String
 
 

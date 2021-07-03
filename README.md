@@ -40,6 +40,6 @@
 
 
 ## 연락
-[깃허브 커뮤니티](https://github.com/lhwdev/covid-selftest-macro/discussions) (깃허브 계정 필요, New Discussion을 눌러 글을 쓸 수 있음)
-개인 이메일: lhwdev6@outlook.com (최대한 버그가 있어서 작동하던 앱이 작동하지 않게 된 경우에만 보내주세요)
+[깃허브 커뮤니티](https://github.com/lhwdev/covid-selftest-macro/discussions) (깃허브 계정 필요, New Discussion을 눌러 글을 쓸 수 있음)  
+개인 이메일: lhwdev6@outlook.com (최대한 버그가 있어서 작동하던 앱이 작동하지 않게 된 경우에만 보내주세요)  
 \+ 업데이트 공지나 버그 제보를 받게 디코 서버를 만들어볼까요.. (귀찮)

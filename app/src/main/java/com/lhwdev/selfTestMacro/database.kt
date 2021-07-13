@@ -28,9 +28,6 @@ class PreferenceState(pref: PreferenceHolder) {
 	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
 	
 	var firstState by pref.preferenceInt("first", 0)
-	var isSchedulingEnabled by pref.preferenceBoolean("isSchedulingEnabled", false)
-	var hour by pref.preferenceInt("hour", -1)
-	var min by pref.preferenceInt("min", 0)
 	
 	val db: DatabaseManager = DatabaseManager(pref)
 	

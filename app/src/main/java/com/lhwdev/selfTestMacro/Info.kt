@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 
@@ -15,12 +16,27 @@ import androidx.compose.ui.unit.dp
 fun Info(): Unit = MaterialTheme(
 	colors = MaterialTheme.colors.copy(primary = Color(0xff304ffe), onPrimary = Color.White)
 ) {
+	val route = LocalRoute.current
 	val context = LocalContext.current
 	
 	Surface(color = MaterialTheme.colors.primarySurface) {
 		AutoSystemUi(
 			onScreenMode = OnScreenSystemUiMode.Opaque(Color.Transparent)
 		) {
+			TopAppBar(
+				navigationIcon = {
+					IconButton(onClick = { route.removeLast() }) {
+						Icon(
+							painterResource(R.drawable.ic_arrow_left_24),
+							contentDescription = "back"
+						)
+					}
+				},
+				title = {},
+				backgroundColor = Color.Transparent,
+				elevation = 0.dp
+			)
+			
 			Column(modifier = Modifier.padding(24.dp).fillMaxSize()) {
 				Spacer(Modifier.weight(4f))
 				

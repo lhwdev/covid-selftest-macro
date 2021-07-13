@@ -1,7 +1,6 @@
 plugins {
 	id("com.android.library")
 	kotlin("android")
-	id("androidx.navigation.safeargs")
 	id("kotlinx-serialization")
 }
 
@@ -48,9 +47,8 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.1")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 	testImplementation("junit:junit:4.13.2")
-	androidTestImplementation("androidx.test.ext:junit:1.1.2")
-	androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
+	androidTestImplementation("androidx.test.ext:junit:1.1.3")
+	// androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
 	
-	
-	implementation("androidx.core:core-ktx:1.5.0")
+	implementation("androidx.core:core-ktx:1.6.0")
 }

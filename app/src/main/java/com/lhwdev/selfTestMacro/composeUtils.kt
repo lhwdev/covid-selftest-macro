@@ -32,6 +32,7 @@ fun <T> lazyState(
 	val state = remember { mutableStateOf(defaultValue) }
 	val allowInitState by rememberUpdatedState(allowInit)
 	LaunchedEffect(key) {
+		state.value = defaultValue
 		snapshotFlow { allowInitState }.takeWhile { !it }.collect()
 		state.value = init()
 	}
@@ -67,4 +68,21 @@ suspend fun <T> showRoute(
 		route.add(rootContent)
 		cont.invokeOnCancellation { removeRoute(null) }
 	}
+}
+
+fun showRouteAsync(
+	route: Route,
+	content: @Composable (removeRoute: () -> Unit) -> Unit
+) {
+	lateinit var rootContent: @Composable () -> Unit
+	
+	val removeRoute = {
+		route.removeRoute(rootContent)
+	}
+	
+	rootContent = {
+		content(removeRoute)
+	}
+	
+	route.add(rootContent)
 }

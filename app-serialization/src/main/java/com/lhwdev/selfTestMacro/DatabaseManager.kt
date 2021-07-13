@@ -6,17 +6,19 @@ import com.lhwdev.selfTestMacro.api.InstituteInfo
 
 
 class DatabaseManager(pref: PreferenceHolder) {
-	var testGroups by pref.preferenceSerialized(
+	var testGroups: DbTestGroups by pref.preferenceSerialized(
 		key = "testGroups",
 		serializer = DbTestGroups.serializer(),
 		defaultValue = DbTestGroups()
 	)
-	var userGroups by pref.preferenceSerialized(
+	
+	var userGroups: DbUserGroups by pref.preferenceSerialized(
 		key = "userGroups",
 		serializer = DbUserGroups.serializer(),
 		defaultValue = DbUserGroups()
 	)
-	var users by pref.preferenceSerialized(
+	
+	var users: DbUsers by pref.preferenceSerialized(
 		key = "users",
 		serializer = DbUsers.serializer(),
 		defaultValue = DbUsers()
@@ -54,4 +56,6 @@ class DatabaseManager(pref: PreferenceHolder) {
 	
 	val DbUser.userGroup: DbUserGroup get() = userGroups.groups.getValue(userGroupId)
 	val DbUser.institute: InstituteInfo get() = userGroup.institute
+	
+	val DbUserGroup.allUsers: List<DbUser> get() = userIds.map { users.users.getValue(it) }
 }

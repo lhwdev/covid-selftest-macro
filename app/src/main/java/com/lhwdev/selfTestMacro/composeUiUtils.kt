@@ -4,7 +4,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,7 +15,6 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -86,6 +84,58 @@ fun <T> AnimateListAsComposable(
 }
 
 
+/**
+ * IconButton is a clickable icon, used to represent actions. An IconButton has an overall minimum
+ * touch target size of 48 x 48dp, to meet accessibility guidelines. [content] is centered
+ * inside the IconButton.
+ *
+ * This component is typically used inside an App Bar for the navigation icon / actions. See App
+ * Bar documentation for samples of this.
+ *
+ * [content] should typically be an [Icon], using an icon from
+ * [androidx.compose.material.icons.Icons]. If using a custom icon, note that the typical size for the
+ * internal icon is 24 x 24 dp.
+ *
+ * @sample androidx.compose.material.samples.IconButtonSample
+ *
+ * @param onClick the lambda to be invoked when this icon is pressed
+ * @param modifier optional [Modifier] for this IconButton
+ * @param enabled whether or not this IconButton will handle input events and appear enabled for
+ * semantics purposes
+ * @param interactionSource the [MutableInteractionSource] representing the stream of
+ * [Interaction]s for this IconButton. You can create and pass in your own remembered
+ * [MutableInteractionSource] if you want to observe [Interaction]s and customize the
+ * appearance / behavior of this IconButton in different [Interaction]s.
+ * @param content the content (icon) to be drawn inside the IconButton. This is typically an
+ * [Icon].
+ */
+@Composable
+fun SmallIconButton(
+	onClick: () -> Unit,
+	modifier: Modifier = Modifier,
+	enabled: Boolean = true,
+	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+	content: @Composable () -> Unit
+) {
+	Box(
+		modifier = modifier
+			.clickable(
+				onClick = onClick,
+				enabled = enabled,
+				role = Role.Button,
+				interactionSource = interactionSource,
+				indication = rememberRipple(bounded = false, radius = 18.dp)
+			)
+			.then(Modifier.size(36.dp)),
+		contentAlignment = Alignment.Center
+	) {
+		val contentAlpha = if (enabled) LocalContentAlpha.current else ContentAlpha.disabled
+		CompositionLocalProvider(LocalContentAlpha provides contentAlpha, content = content)
+	}
+}
+
+
+
 @Composable
 fun TextIconButton(
 	onClick: () -> Unit,
@@ -94,50 +144,34 @@ fun TextIconButton(
 	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 	border: BorderStroke? = null,
 	colors: ButtonColors = ButtonDefaults.textButtonColors(contentColor = DefaultContentColor),
+	contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+	elevation: ButtonElevation? = null,
 	icon: @Composable (() -> Unit)? = null,
 	trailingIcon: @Composable (() -> Unit)? = null,
 	text: @Composable RowScope.() -> Unit
 ) {
-	val contentColor by colors.contentColor(enabled)
 	val shape = RoundedCornerShape(percent = 100)
-	
-	var modifier2 = modifier
-		.clip(shape)
-		.clickable(
-			onClick = onClick,
-			enabled = enabled,
-			role = Role.Button,
-			interactionSource = interactionSource,
-			indication = rememberRipple(bounded = false)
-		)
-		.then(IconButtonSizeModifier)
-		.padding(12.dp)
-		.sizeIn(minWidth = ButtonDefaults.MinWidth, minHeight = ButtonDefaults.MinHeight)
-	if(border != null) modifier2 = modifier2.border(border, shape = shape)
-	
-	Row(
-		modifier = modifier2,
-		horizontalArrangement = Arrangement.Center,
-		verticalAlignment = Alignment.CenterVertically
+	Button(
+		onClick = onClick,
+		modifier = modifier,
+		enabled = enabled,
+		interactionSource = interactionSource,
+		elevation = elevation,
+		shape = shape,
+		border = border,
+		colors = colors,
+		contentPadding = contentPadding
 	) {
-		val contentAlpha = if(enabled) LocalContentAlpha.current else ContentAlpha.disabled
-		CompositionLocalProvider(
-			LocalContentAlpha provides contentAlpha,
-			LocalContentColor provides contentColor.copy(alpha = 1f)
-		) {
-			ProvideTextStyle(MaterialTheme.typography.button) {
-				/*if(icon == null) */Spacer(Modifier.width(4.dp))
-				if(icon != null) {
-					Box(Modifier.size(18.dp)) { icon() }
-					Spacer(Modifier.width(8.dp))
-				}
-				text()
-				/*if(trailingIcon == null) */Spacer(Modifier.width(4.dp))
-				if(trailingIcon != null) {
-					Spacer(Modifier.width(8.dp))
-					Box(Modifier.size(18.dp)) { trailingIcon() }
-				}
-			}
+		if(icon == null && trailingIcon == null) Spacer(Modifier.width(4.dp))
+		if(icon != null) {
+			Box(Modifier.size(18.dp)) { icon() }
+			Spacer(Modifier.width(8.dp))
+		}
+		text()
+		if(icon == null && trailingIcon == null) Spacer(Modifier.width(4.dp))
+		if(trailingIcon != null) {
+			Spacer(Modifier.width(8.dp))
+			Box(Modifier.size(18.dp)) { trailingIcon() }
 		}
 	}
 }

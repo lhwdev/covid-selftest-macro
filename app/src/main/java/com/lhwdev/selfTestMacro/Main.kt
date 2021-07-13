@@ -17,14 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.lhwdev.selfTestMacro.api.UserInfo
-import com.lhwdev.selfTestMacro.api.getUserInfo
+import androidx.compose.ui.window.DialogProperties
 import com.lhwdev.selfTestMacro.icons.ExpandMore
 import com.lhwdev.selfTestMacro.icons.Icons
-import com.vanpra.composematerialdialogs.Buttons
-import com.vanpra.composematerialdialogs.ListContent
-import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.Title
+import com.lhwdev.selfTestMacro.model.*
+import com.vanpra.composematerialdialogs.*
 
 
 fun <T> List<T>.repeat(count: Int): List<T> {
@@ -36,10 +33,14 @@ fun <T> List<T>.repeat(count: Int): List<T> {
 }
 
 
-@OptIn(ExperimentalMaterialApi::class)
 @Preview
 @Composable
-fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
+fun Main(
+	repository: MainRepository = run {
+		val pref = LocalPreference.current
+		remember { MainRepositoryImpl(pref) }
+	}
+): Unit = Surface(color = MaterialTheme.colors.surface) {
 	// val context = LocalActivity.current
 	val route = LocalRoute.current
 	val pref = LocalPreference.current
@@ -103,6 +104,7 @@ fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
 				MainContent(
+					repository = repository,
 					group = selectedGroup,
 					showSelectingUser = { showSelect = true }
 				)
@@ -112,7 +114,9 @@ fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 		scrims.navigationBar()
 	}
 	
-	if(showSelect) MaterialDialog(onCloseRequest = { showSelect = false }) {
+	if(showSelect) MaterialDialog(
+		onCloseRequest = { showSelect = false }
+	) {
 		Scaffold(
 			topBar = {
 				Column {
@@ -150,7 +154,7 @@ fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 					},
 					modifier = Modifier.clickable {
 						showSelect = false
-						route.add { EditUsers() }
+						showRouteAsync(route) { EditUsers() }
 					}
 				) {
 					Text("편집")
@@ -189,51 +193,16 @@ private fun GroupInfo(group: DbTestGroup): GroupInfo {
 }
 
 
-@Stable
-private data class GroupInfo(
-	@DrawableRes val icon: Int,
-	val name: String,
-	val instituteName: String?,
-	val group: DbTestGroup
-) {
-	val isGroup: Boolean get() = group.target is DbTestTarget.Group
-	
-	val subtitle: String
-		get() = when {
-			instituteName == null -> "그룹"
-			isGroup -> "그룹, $instituteName"
-			else -> instituteName
-		}
-}
-
-
-sealed class Status {
-	data class Submitted(val isHealthy: Boolean, val time: String) : Status()
-	object NotSubmitted : Status()
-}
-
-fun Status(info: UserInfo): Status = when {
-	info.isHealthy != null && info.lastRegisterAt != null ->
-		Status.Submitted(info.isHealthy!!, formatRegisterTime(info.lastRegisterAt!!))
-	else -> Status.NotSubmitted
-}
-
-private fun formatRegisterTime(time: String): String = time.substring(0, time.lastIndexOf('.'))
-
-suspend fun DatabaseManager.getCurrentStatus(user: DbUser): Status {
-	return Status(getUserInfo(user.institute, user.user))
-}
-
-
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun ColumnScope.MainContent(
+	repository: MainRepository,
 	group: GroupInfo,
 	showSelectingUser: () -> Unit
 ) {
 	val pref = LocalPreference.current
 	
 	// select test group
+	// '그룹 1 (2명)'
 	TextIconButton(
 		onClick = showSelectingUser,
 		icon = { Icon(painterResource(group.icon), contentDescription = null) },
@@ -255,7 +224,10 @@ private fun ColumnScope.MainContent(
 	}
 	
 	// test group members hint
+	// '김철수'
 	if(group.isGroup) {
+		Spacer(Modifier.height(4.dp))
+		
 		val users = with(pref.db) { group.group.target.allUsers }
 			.joinToString(separator = ", ", limit = 4) { it.user.name }
 		Text(users, style = MaterialTheme.typography.body1)
@@ -263,13 +235,18 @@ private fun ColumnScope.MainContent(
 	
 	Spacer(Modifier.weight(1f))
 	
+	
+	// status
+	// '자가진단 상태'
+	//  '모두 정상'
+	//  '자세히 보기'
 	when(val target = group.group.target) {
 		is DbTestTarget.Group -> {
-			GroupStatusView(target)
+			GroupStatusView(repository, target)
 		}
 		is DbTestTarget.Single -> {
 			val state = lazyState(null) {
-				with(pref.db) { getCurrentStatus(target.user) }
+				with(pref.db) { repository.getCurrentStatus(target.user) }
 			}.value
 			
 			SingleStatusView(state)
@@ -278,6 +255,8 @@ private fun ColumnScope.MainContent(
 	
 	Spacer(Modifier.weight(2f))
 	
+	// scheduling
+	// '자가진단 예약: 꺼짐'
 	TextIconButton(
 		onClick = {},
 		icon = { Icon(painterResource(R.drawable.ic_access_alarm_24), contentDescription = null) }
@@ -307,7 +286,16 @@ private fun ColumnScope.MainContent(
 		Text(text)
 	}
 	
-	Spacer(Modifier.weight(1f))
+	Spacer(Modifier.height(16.dp))
+	
+	TextIconButton(
+		onClick = {},
+		colors = ButtonDefaults.buttonColors()
+	) {
+		Text("지금 자가진단 제출하기")
+	}
+	
+	Spacer(Modifier.weight(.5f))
 }
 
 
@@ -335,21 +323,19 @@ private fun SingleStatusView(status: Status?) {
 	}
 }
 
-private data class GroupStatus(val notSubmittedCount: Int, val suspicious: List<DbUser>)
-
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun GroupStatusView(target: DbTestTarget.Group) {
+private fun GroupStatusView(repository: MainRepository, target: DbTestTarget.Group) {
 	val pref = LocalPreference.current
 	val users = with(pref.db) { target.allUsers }
 	
 	var allStatus by remember { mutableStateOf<Map<DbUser, Status>>(emptyMap()) } // stub
 	var forceAllowInit by remember { mutableStateOf(false) }
-	val allowInit = users.size <= 5 || forceAllowInit
+	val allowInit = users.size <= /* TODO: 5 */ 0 || forceAllowInit
 	
-	val groupStatus = lazyState(null, allowInit = allowInit) {
+	var groupStatusKey by remember { mutableStateOf(0) }
+	val groupStatus = lazyState(null, key = groupStatusKey, allowInit = allowInit) {
 		val statusMap = users.map {
-			it to with(pref.db) { getCurrentStatus(it) }
+			it to repository.getCurrentStatus(it)
 		}.toMap()
 		allStatus = statusMap
 		
@@ -372,7 +358,24 @@ private fun GroupStatusView(target: DbTestTarget.Group) {
 			modifier = Modifier.clickable { forceAllowInit = true }
 		)
 	} else {
-		Text("자가진단 상태", style = MaterialTheme.typography.h6)
+		Row(verticalAlignment = Alignment.CenterVertically) {
+			Spacer(Modifier.width(44.dp))
+			
+			Text("자가진단 상태", style = MaterialTheme.typography.h6)
+			
+			Spacer(Modifier.width(8.dp))
+			
+			SmallIconButton(onClick = {
+				groupStatusKey++
+				forceAllowInit = true
+			}) {
+				Icon(
+					painterResource(R.drawable.ic_refresh_24),
+					contentDescription = "새로 고침",
+					modifier = Modifier.size(18.dp)
+				)
+			}
+		}
 		
 		Spacer(Modifier.height(16.dp))
 		
@@ -430,27 +433,43 @@ private fun GroupStatusView(target: DbTestTarget.Group) {
 						}
 					) {
 						Row {
-							Text(user.user.name)
-							Text(" (${user.instituteName})", color = MediumContentColor)
-							Text(": ")
-							
-							when(status) {
-								is Status.Submitted -> if(status.isHealthy) {
-									Text(
-										"정상", color = Color(
-											onLight = Color(0xff285db9),
-											onDark = Color(0xffadcbff)
-										)
-									)
-								} else {
-									Text(
-										"의심증상 있음", color = Color(
-											onLight = Color(0xfffd2f5f), onDark = Color(0xffffa6aa)
-										)
-									)
+							val text = buildAnnotatedString {
+								append(user.user.name)
+								append(" ")
+								withStyle(SpanStyle(color = MediumContentColor)) {
+									append("(${user.instituteName})")
 								}
-								Status.NotSubmitted -> Text("미제출", color = MediumContentColor)
+								append(": ")
+								
+								when(status) {
+									is Status.Submitted -> if(status.isHealthy) withStyle(
+										SpanStyle(
+											color = Color(
+												onLight = Color(0xff285db9),
+												onDark = Color(0xffadcbff)
+											)
+										)
+									) {
+										append("정상")
+									} else withStyle(
+										SpanStyle(
+											color = Color(
+												onLight = Color(0xfffd2f5f),
+												onDark = Color(0xffffa6aa)
+											)
+										)
+									) {
+										append("의심증상 있음")
+									}
+									
+									Status.NotSubmitted -> withStyle(SpanStyle(MediumContentColor)) {
+										append("미제출")
+									}
+								}
+								
 							}
+							
+							Text(text)
 						}
 					}
 				}
@@ -464,25 +483,21 @@ private fun GroupStatusView(target: DbTestTarget.Group) {
 }
 
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun UserListItem(group: DbTestGroup, onClick: () -> Unit) {
 	val target = group.target
 	val pref = LocalPreference.current
 	val icon = painterResource(pref.db.iconFor(target))
 	
+	val secondary =
+		if(target is DbTestTarget.Group) with(pref.db) { target.allUsers }.joinToString(
+			separator = ", ", limit = 4
+		) { it.user.name } else null
+	
 	ListItem(
-		icon = {
-			Icon(icon, contentDescription = null)
-		},
-		text = {
-			Text(with(pref.db) { target.name })
-		},
-		secondaryText = {
-			if(target is DbTestTarget.Group) with(pref.db) { target.allUsers }.joinToString(
-				separator = ", ", limit = 4
-			) { it.user.name }
-		},
+		icon = { Icon(icon, contentDescription = null) },
+		text = { Text(with(pref.db) { target.name }) },
+		secondaryText = if(secondary == null) null else ({ Text(secondary) }),
 		modifier = Modifier.clickable(onClick = onClick)
 	)
 }

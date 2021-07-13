@@ -1,19 +1,19 @@
-@file:OptIn(ExperimentalMaterialApi::class)
-
 package com.lhwdev.selfTestMacro
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.promptYesNoDialog
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -36,7 +36,7 @@ fun EditUsers() {
 					TopAppBar(
 						title = { Text("사용자 편집") },
 						actions = {
-							IconButton(onClick = { route.add { Setup() } }) {
+							IconButton(onClick = { showRouteAsync(route) { Setup() } }) {
 								Icon(
 									painterResource(R.drawable.ic_add_24),
 									contentDescription = "사용자 추가"
@@ -112,12 +112,111 @@ fun EditUsers() {
 }
 
 
+private suspend fun showDetailsFor(
+	route: Route,
+	group: DbTestGroup,
+	scope: CoroutineScope
+): Unit = showRouteUnit(route) { removeRoute ->
+	fun Modifier.clickAction(block: () -> Unit): Modifier = clickable {
+		block()
+		removeRoute()
+	}
+	
+	val target = group.target
+	val pref = LocalPreference.current
+	
+	val groupName = with(pref.db) { target.name }
+	
+	MaterialDialog(onCloseRequest = removeRoute) {
+		Scaffold(
+			topBar = {
+				Column {
+					TopAppBar(
+						title = {
+							if(target is DbTestTarget.Group) {
+								Text("$groupName (${group.target.allUserIds.size}명)")
+							} else {
+								Text(groupName)
+							}
+						},
+						backgroundColor = Color.Transparent,
+						elevation = 0.dp
+					)
+					Divider()
+				}
+			}
+		) {
+			Column {
+				// group members
+				if(target is DbTestTarget.Group) ListItem(
+					icon = {
+						Icon(
+							painterResource(R.drawable.ic_account_circle_24),
+							contentDescription = null
+						)
+					}
+				) {
+					val text = with(pref.db) { target.allUsers }.joinToString { it.user.name }
+					Text(text)
+				}
+				
+				// disband group
+				ListItem(modifier = Modifier.clickAction {
+					scope.launch {
+						var inheritSchedule by mutableStateOf(false)
+						
+						val doDisband = promptYesNoDialog(
+							route,
+							title = { Text("$groupName 그룹을 해제할까요?") },
+							content = {
+								ListItem(
+									icon = {
+										Checkbox(
+											checked = inheritSchedule,
+											onCheckedChange = null
+										)
+									},
+									text = { Text("그룹의 자가진단 예약 상태 유지") },
+									modifier = Modifier.clickable {
+										inheritSchedule = !inheritSchedule
+									}
+								)
+							}
+						)
+						
+						if(doDisband == true) {
+							pref.db.disbandGroup(group, inheritSchedule = inheritSchedule)
+						}
+					}
+				}) {
+					Text("그룹 해제")
+				}
+				
+				// remove group and group members entirely
+				ListItem(modifier = Modifier.clickAction {
+					scope.launch {
+						val doDelete = promptYesNoDialog(
+							route,
+							title = { Text("${groupName}을 삭제할까요?") }
+						)
+						
+						if(doDelete == true) pref.db.removeTestGroup(group)
+					}
+				}) { Text("그룹과 그룹원 삭제") }
+			}
+		}
+	}
+}
+
+
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
 private fun EditUsersContent(
 	selection: MutableList<DbTestGroup>
 ) {
 	val pref = LocalPreference.current
+	val route = LocalRoute.current
+	val scope = rememberCoroutineScope()
 	
 	with(pref.db) {
 		val groups = testGroups.groups
@@ -170,7 +269,9 @@ private fun EditUsersContent(
 								if(selection.isEmpty()) selection += group
 							},
 							onClick = {
-								if(selection.isNotEmpty()) {
+								if(selection.isEmpty()) scope.launch {
+									showDetailsFor(route, group, scope)
+								} else {
 									val last = group in selection
 									if(last) selection -= group
 									else selection += group

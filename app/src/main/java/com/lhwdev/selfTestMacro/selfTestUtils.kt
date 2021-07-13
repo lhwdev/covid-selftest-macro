@@ -35,8 +35,8 @@ suspend fun Context.submitSuspend(notification: Boolean = true) {
 fun Context.updateTime(intent: PendingIntent) {
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	alarmManager.cancel(intent)
-	if(preferenceState.isSchedulingEnabled)
-		scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min)
+	// if(preferenceState.isSchedulingEnabled)
+	// 	scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min)
 }
 
 @SuppressLint("NewApi")

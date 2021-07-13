@@ -5,22 +5,14 @@ package com.lhwdev.selfTestMacro
 import android.app.Activity
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
-import com.google.accompanist.insets.Insets
-import com.google.accompanist.insets.LocalWindowInsets
-import com.google.accompanist.insets.WindowInsets
 import com.google.accompanist.systemuicontroller.SystemUiController
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlin.coroutines.CoroutineContext
@@ -41,7 +33,6 @@ val LocalRoute = compositionLocalOf<Route> { error("not provided") }
 val LocalPreview = staticCompositionLocalOf { false }
 
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ComposeApp(activity: Activity) {
 	val composer = currentComposer
@@ -117,86 +108,8 @@ private fun EnabledRoute(enabled: Boolean, content: @Composable () -> Unit) {
 	}
 }
 
-private class ImmutableWindowInsetsType(
-	override val layoutInsets: Insets = Insets.Empty,
-	override val animatedInsets: Insets = Insets.Empty,
-	override val isVisible: Boolean = false,
-	override val animationInProgress: Boolean = false,
-	override val animationFraction: Float = 0f,
-) : WindowInsets.Type
-
-
 val LocalPreviewUiController =
 	staticCompositionLocalOf<SystemUiController> { error("not provided") }
-
-@Composable
-fun PreviewBase(statusBar: Boolean = false, content: @Composable () -> Unit) {
-	val density = LocalDensity.current
-	
-	val uiController = remember {
-		object : SystemUiController {
-			override var isNavigationBarContrastEnforced: Boolean = false
-			override var isNavigationBarVisible: Boolean = true
-			override var isStatusBarVisible: Boolean = true
-			override var navigationBarDarkContentEnabled: Boolean = false
-			override var statusBarDarkContentEnabled: Boolean = false
-			
-			override fun setNavigationBarColor(
-				color: Color,
-				darkIcons: Boolean,
-				navigationBarContrastEnforced: Boolean,
-				transformColorForLightContent: (Color) -> Color,
-			) {
-			}
-			
-			override fun setStatusBarColor(
-				color: Color,
-				darkIcons: Boolean,
-				transformColorForLightContent: (Color) -> Color,
-			) {
-			}
-		}
-	}
-	
-	AppTheme {
-		CompositionLocalProvider(
-			LocalPreview provides true,
-			LocalRoute provides remember { mutableStateListOf(@Composable {}) },
-			LocalWindowInsets provides remember {
-				object : WindowInsets {
-					override val ime: WindowInsets.Type = ImmutableWindowInsetsType()
-					override val navigationBars: WindowInsets.Type = ImmutableWindowInsetsType()
-					override val statusBars: WindowInsets.Type = ImmutableWindowInsetsType(
-						layoutInsets = Insets.Insets(top = with(density) { 30.dp.roundToPx() })
-					)
-					override val systemBars: WindowInsets.Type = ImmutableWindowInsetsType()
-					override val systemGestures: WindowInsets.Type = ImmutableWindowInsetsType()
-				}
-			},
-			LocalPreviewUiController provides uiController
-		) {
-			Box {
-				content()
-				
-				if(statusBar) Row(
-					Modifier
-						.fillMaxWidth()
-						.height(30.dp)
-						.padding(15.dp, 5.dp),
-					verticalAlignment = Alignment.CenterVertically
-				) {
-					val color =
-						if(uiController.statusBarDarkContentEnabled) Color.Black else Color.White
-					
-					Text("12:34", color = color)
-					Spacer(Modifier.weight(1f))
-					Text("Hello, Preview!", color = color)
-				}
-			}
-		}
-	}
-}
-
 
 @Composable
 fun AppTheme(content: @Composable () -> Unit) {

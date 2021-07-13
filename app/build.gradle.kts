@@ -1,7 +1,6 @@
 plugins {
 	id("com.android.application")
 	kotlin("android")
-	id("androidx.navigation.safeargs")
 }
 
 android {
@@ -40,7 +39,10 @@ android {
 	}
 	
 	kotlinOptions {
-		freeCompilerArgs = freeCompilerArgs + "-Xjvm-default=compatibility"
+		freeCompilerArgs = freeCompilerArgs + listOf(
+			"-Xjvm-default=compatibility",
+			"-Xopt-in=kotlin.RequiresOptIn,androidx.compose.material.ExperimentalMaterialApi,androidx.compose.ui.ExperimentalComposeUiApi"
+		)
 		jvmTarget = "1.8"
 	}
 	
@@ -61,12 +63,12 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.1")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 	
-	val compose = "1.0.0-beta09" // also kotlinCompilerExtensionVersion, app-serialization/version
+	val compose = "1.0.0-rc01" // also kotlinCompilerExtensionVersion, app-serialization/version
 	implementation("androidx.compose.ui:ui:$compose")
 	implementation("androidx.compose.ui:ui-tooling:$compose")
 	implementation("androidx.compose.foundation:foundation:$compose")
 	implementation("androidx.compose.material:material:$compose")
-	implementation("androidx.activity:activity-compose:1.3.0-beta02")
+	implementation("androidx.activity:activity-compose:1.3.0-rc01")
 	
 	val accompanist = "0.12.0"
 	implementation("com.google.accompanist:accompanist-insets:$accompanist")
@@ -74,8 +76,8 @@ dependencies {
 	implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanist")
 	
 	implementation("androidx.appcompat:appcompat:1.3.0")
-	implementation("androidx.core:core-ktx:1.5.0")
+	implementation("androidx.core:core-ktx:1.6.0")
 	testImplementation("junit:junit:4.13.2")
-	androidTestImplementation("androidx.test.ext:junit:1.1.2")
+	androidTestImplementation("androidx.test.ext:junit:1.1.3")
 	// androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
 }

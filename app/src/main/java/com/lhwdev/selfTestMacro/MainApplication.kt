@@ -17,10 +17,13 @@ class MainApplication : Application() {
 			if(BuildConfig.DEBUG) DEBUG_PROPERTY_VALUE_ON else DEBUG_PROPERTY_VALUE_OFF
 		)
 		
-		Thread.setDefaultUncaughtExceptionHandler { _, exception ->
+		val lastHandler = Thread.getDefaultUncaughtExceptionHandler()
+		
+		if(!BuildConfig.DEBUG) Thread.setDefaultUncaughtExceptionHandler { thread, exception ->
 			runBlocking {
 				writeErrorLog(getErrorInfo(exception, "defaultUncaughtExceptionHandler"))
 			}
+			lastHandler?.uncaughtException(thread, exception)
 		}
 	}
 }

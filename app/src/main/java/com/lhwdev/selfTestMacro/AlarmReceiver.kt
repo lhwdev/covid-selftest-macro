@@ -21,6 +21,6 @@ class AlarmReceiver : BroadcastReceiver() {
 		}
 		
 		val pref = PreferenceState(PreferenceHolder(context.prefMain()))
-		context.scheduleNextAlarm(context.createIntent(), pref.hour, pref.min, true)
+		// context.scheduleNextAlarm(context.createIntent(), pref.hour, pref.min, true)
 	}
 }

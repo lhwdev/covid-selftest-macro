@@ -61,6 +61,9 @@ suspend fun getErrorInfo(error: Throwable, description: String) = """
 	
 	Logcat:
 	${getLogcat()}
+	
+	------------------------------------------------------------------------------------------------
+	
 """.trimIndent()
 
 private fun Context.showErrorInfo(info: String) {

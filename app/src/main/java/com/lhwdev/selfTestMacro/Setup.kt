@@ -2,6 +2,7 @@ package com.lhwdev.selfTestMacro
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -10,7 +11,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
@@ -28,9 +28,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.api.*
 import com.vanpra.composematerialdialogs.*
@@ -38,7 +35,13 @@ import kotlinx.coroutines.*
 import kotlin.math.max
 
 
-data class SetupParameters(val targetTestGroup: DbTestGroup? = null) {
+// TODO: separate business logics from ui
+
+
+data class SetupParameters(
+	val targetTestGroup: DbTestGroup? = null,
+	val endRoute: (() -> Unit)? = null
+) {
 	companion object {
 		val Default = SetupParameters()
 	}
@@ -46,7 +49,7 @@ data class SetupParameters(val targetTestGroup: DbTestGroup? = null) {
 
 
 @Stable
-private class SetupModel {
+internal class SetupModel {
 	var scaffoldState = ScaffoldState(DrawerState(DrawerValue.Closed), SnackbarHostState())
 	
 	var instituteInfo by mutableStateOf<InstitutionInfoModel?>(null)
@@ -68,36 +71,14 @@ private class SetupModel {
 }
 
 @Immutable
-private data class WizardUser(val user: User, val info: UserInfo, val master: MasterUser)
+internal data class WizardUser(val user: User, val info: UserInfo, val master: MasterUser)
 
 @Immutable
-private data class MasterUser(
+internal data class MasterUser(
 	val identifier: UsersIdentifier,
 	val instituteInfo: InstituteInfo,
 	val instituteType: InstituteType
 )
-
-
-class WizardIndexPreviewProvider : PreviewParameterProvider<Int> {
-	override val values: Sequence<Int>
-		get() = (0 until sPagesCount).asSequence()
-	override val count: Int get() = values.count()
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "setup wizard")
-@Composable
-fun SetupPreview(@PreviewParameter(WizardIndexPreviewProvider::class) index: Int) {
-	PreviewBase(statusBar = true) {
-		val model = remember {
-			SetupModel().apply {
-				instituteInfo = InstitutionInfoModel.School()
-			}
-		}
-		val parameters = SetupParameters.Default
-		
-		SetupWizardPage(model, parameters, SetupWizard(index, index, sPagesCount) {})
-	}
-}
 
 
 @Composable
@@ -108,16 +89,16 @@ fun Setup(parameters: SetupParameters = SetupParameters.Default) {
 	}
 }
 
-private data class SetupWizard(
+internal data class SetupWizard(
 	val index: Int,
 	val currentIndex: Int,
 	val count: Int,
-	val scrollTo: (index: Int) -> Unit,
+	val scrollTo: (index: Int) -> Unit
 )
 
 private val SetupWizard.isCurrent get() = currentIndex == index
 
-private const val sPagesCount = 4
+internal const val sSetupPagesCount = 4
 
 @Composable
 private fun SetupWizardView(model: SetupModel, parameters: SetupParameters) {
@@ -127,7 +108,7 @@ private fun SetupWizardView(model: SetupModel, parameters: SetupParameters) {
 		scaffoldState = model.scaffoldState
 	) {
 		WizardPager(pageIndex = pageIndex) { index ->
-			val wizard = SetupWizard(index, pageIndex, sPagesCount) {
+			val wizard = SetupWizard(index, pageIndex, sSetupPagesCount) {
 				pageIndex = it
 			}
 			SetupWizardPage(model, parameters, wizard)
@@ -140,7 +121,8 @@ private fun SetupWizardView(model: SetupModel, parameters: SetupParameters) {
 }
 
 @Composable
-private fun SetupWizardPage(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
+@VisibleForTesting
+internal fun SetupWizardPage(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
 	when(wizard.index) {
 		0 -> WizardSelectType(model, wizard)
 		1 -> WizardInstitutionInfo(model.instituteInfo ?: return, model, wizard)
@@ -169,7 +151,7 @@ private fun WizardPager(
 		val scrollState = remember { ScrollState(pageIndex) }
 		
 		fun scrollTo(target: Int) {
-			if(target !in 0 until sPagesCount) return
+			if(target !in 0 until sSetupPagesCount) return
 			targetPage = target
 			scope.launch {
 				scrollState.animateScrollTo(target * widthPx)
@@ -187,7 +169,7 @@ private fun WizardPager(
 				enabled = false
 			)
 		) {
-			for(index in 0 until sPagesCount) {
+			for(index in 0 until sSetupPagesCount) {
 				Box(Modifier.requiredWidth(width)) {
 					if(index < maxLoads +
 						if(scrollState.isScrollInProgress) sPreloadPages else 0
@@ -400,7 +382,6 @@ private fun MultipleInstituteDialog(
 		Title { Text("${instituteType.displayName} 선택") }
 		
 		Column {
-			@OptIn(ExperimentalMaterialApi::class)
 			for(institute in institutes) ListItem(
 				modifier = Modifier.clickable { onSelect(institute) }
 			) {
@@ -419,7 +400,7 @@ private fun MultipleInstituteDialog(
 
 @Suppress("CanSealedSubClassBeObject") // model: no comparison needed
 @Stable
-private sealed class InstitutionInfoModel {
+internal sealed class InstitutionInfoModel {
 	abstract val type: InstituteType
 	abstract val notFulfilledIndex: Int
 	abstract val institute: InstituteInfo?
@@ -705,7 +686,6 @@ private suspend fun submitLogin(context: Context, model: SetupModel, route: Rout
 	return false
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun WizardStudentInfo(
 	model: SetupModel,
@@ -929,28 +909,6 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 						newUserGroups += dbGroup
 					}
 					
-					val previousTestGroups = pref.db.testGroups
-					var maxGroupGeneratedNameIndex = previousTestGroups.maxGroupGeneratedNameIndex
-					
-					// testGroup
-					val testTargets = if(isAllGrouped) listOf(
-						DbTestTarget.Group(
-							"그룹 ${++maxGroupGeneratedNameIndex}",
-							newUsers.map { it.id }
-						)
-					) else newUsers.map {
-						DbTestTarget.Single(it.id)
-					}
-					
-					val newTestGroups = testTargets.map { target ->
-						DbTestGroup(
-							target = target,
-							schedule = DbTestSchedule.None,
-							excludeHoliday = false,
-							excludeWeekend = false
-						)
-					}
-					
 					
 					// go!
 					
@@ -962,17 +920,58 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 						groups = previousUserGroups.groups + newUserGroups.associateBy { it.id }
 					)
 					
-					pref.db.testGroups = previousTestGroups.copy(
-						groups = previousTestGroups.groups + newTestGroups
-					)
-					
-					if(pref.firstState == 0) {
-						pref.firstState = 1
-						route.clear()
-						route += { Main() }
+					val targetTestGroup = parameters.targetTestGroup
+					if(targetTestGroup == null) {
+						// add new group
+						val previousTestGroups = pref.db.testGroups
+						var maxGroupGeneratedNameIndex =
+							previousTestGroups.maxGroupGeneratedNameIndex
+						
+						// testGroup
+						val testTargets = if(isAllGrouped) listOf(
+							DbTestTarget.Group(
+								"그룹 ${++maxGroupGeneratedNameIndex}",
+								newUsers.map { it.id }
+							)
+						) else newUsers.map {
+							DbTestTarget.Single(it.id)
+						}
+						
+						val newTestGroups = testTargets.map { target ->
+							DbTestGroup(target = target)
+						}
+						
+						pref.db.testGroups = previousTestGroups.copy(
+							groups = previousTestGroups.groups + newTestGroups
+						)
 					} else {
-						route.removeLastOrNull()
-						Unit
+						// add to existing group
+						val testGroups = pref.db.testGroups.groups.toMutableList()
+						
+						val targetIndex = testGroups.indexOf(targetTestGroup)
+						if(targetIndex == -1) error("what the..?") // what the error
+						
+						val testTarget = targetTestGroup.target as DbTestTarget.Group
+						val added = testTarget.copy(
+							userIds = testTarget.userIds + newUsers.map { it.id }
+						)
+						
+						testGroups[targetIndex] = targetTestGroup.copy(target = added)
+						pref.db.testGroups = pref.db.testGroups.copy(groups = testGroups)
+					}
+					
+					when {
+						parameters.endRoute != null -> parameters.endRoute.invoke()
+						
+						pref.firstState == 0 -> {
+							pref.firstState = 1
+							route.clear()
+							route += { Main() }
+						}
+						else -> {
+							route.removeLastOrNull()
+							Unit // without this, route.removeLastOrNull() causes Type inference failed. Expected type mismatch: inferred type is @Composable() (() -> Unit)? but Any? was expected
+						}
 					}
 				}
 			) {
@@ -985,7 +984,7 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 					}
 					
 					WizardSelectUsersContent(
-						model = model, wizard = wizard,
+						model = model, parameters = parameters, wizard = wizard,
 						userList = userList,
 						enabled = enabled,
 						setEnabled = { index, isEnabled -> enabled[index] = isEnabled },
@@ -999,10 +998,10 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 }
 
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun ColumnScope.WizardSelectUsersContent(
 	model: SetupModel,
+	parameters: SetupParameters,
 	wizard: SetupWizard,
 	userList: List<WizardUser>,
 	enabled: List<Boolean>,
@@ -1054,7 +1053,7 @@ private fun ColumnScope.WizardSelectUsersContent(
 	
 	Spacer(Modifier.weight(1f))
 	
-	if(userList.size > 1) Box(
+	if(userList.size > 1 && parameters.targetTestGroup == null) Box(
 		contentAlignment = Alignment.Center,
 		modifier = Modifier.fillMaxWidth()
 	) {

@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -34,6 +33,7 @@ import kotlin.math.max
 fun <T> AnimateListAsComposable(
 	list: List<T>,
 	key: (T) -> Any? = { it },
+	animation: @Composable (item: T, fraction: () -> Float, content: @Composable () -> Unit) -> Unit,
 	content: @Composable (index: Int, T) -> Unit
 ) {
 	val scope = rememberCoroutineScope()
@@ -44,9 +44,10 @@ fun <T> AnimateListAsComposable(
 		}
 	}
 	
-	fun removeAt(index: Int) { // is this safe if another item is removed during animation?
+	fun removeAt(index: Int) {
 		scope.launch {
-			animatables[index].animateTo(0f)
+			val animatable = animatables.getOrNull(index) ?: return@launch // kinda guard; NPE used to happened here
+			animatable.animateTo(2f)
 			backing.removeAt(index)
 			animatables.removeAt(index)
 		}
@@ -78,8 +79,7 @@ fun <T> AnimateListAsComposable(
 	
 	for((index, item) in backing.withIndex()) key(key(item)) {
 		val animatable = animatables[index]
-		val modifier = Modifier.graphicsLayer { alpha = animatable.value }
-		Box(modifier) { content(index, item) }
+		animation(item, { animatable.value }) { content(index, item) }
 	}
 }
 
@@ -95,8 +95,6 @@ fun <T> AnimateListAsComposable(
  * [content] should typically be an [Icon], using an icon from
  * [androidx.compose.material.icons.Icons]. If using a custom icon, note that the typical size for the
  * internal icon is 24 x 24 dp.
- *
- * @sample androidx.compose.material.samples.IconButtonSample
  *
  * @param onClick the lambda to be invoked when this icon is pressed
  * @param modifier optional [Modifier] for this IconButton
@@ -129,15 +127,14 @@ fun SmallIconButton(
 			.then(Modifier.size(36.dp)),
 		contentAlignment = Alignment.Center
 	) {
-		val contentAlpha = if (enabled) LocalContentAlpha.current else ContentAlpha.disabled
+		val contentAlpha = if(enabled) LocalContentAlpha.current else ContentAlpha.disabled
 		CompositionLocalProvider(LocalContentAlpha provides contentAlpha, content = content)
 	}
 }
 
 
-
 @Composable
-fun TextIconButton(
+fun RoundButton(
 	onClick: () -> Unit,
 	modifier: Modifier = Modifier,
 	enabled: Boolean = true,

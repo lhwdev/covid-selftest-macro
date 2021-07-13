@@ -220,7 +220,7 @@ private fun WizardCommon(
 			Spacer(Modifier.weight(100f))
 			
 			
-			if(showNext) TextIconButton(
+			if(showNext) RoundButton(
 				onClick = {
 					if(wizardFulfilled) onNext() else showNotFulfilledWarning()
 				},
@@ -433,7 +433,7 @@ private fun ColumnScope.WizardSchoolInfo(
 ) {
 	val scope = rememberCoroutineScope()
 	val context = LocalContext.current
-	val route = LocalRoute.current
+	val navigator = currentNavigator
 	
 	var complete by remember { mutableStateOf(false) }
 	
@@ -464,7 +464,7 @@ private fun ColumnScope.WizardSchoolInfo(
 			return@find
 		}
 		
-		if(schools.size > 1) showRouteUnit(route) { removeRoute ->
+		if(schools.size > 1) navigator.showRouteUnit { removeRoute ->
 			MultipleInstituteDialog(
 				instituteType = InstituteType.school,
 				institutes = schools,
@@ -566,7 +566,7 @@ private fun WizardUserInfo(model: SetupModel, wizard: SetupWizard) {
 }
 
 
-private suspend fun submitLogin(context: Context, model: SetupModel, route: Route): Boolean {
+private suspend fun submitLogin(context: Context, model: SetupModel, navigator: Navigator): Boolean {
 	val name = model.userName
 	val birth = model.userBirth
 	val instituteInfo = model.instituteInfo ?: return false
@@ -587,7 +587,7 @@ private suspend fun submitLogin(context: Context, model: SetupModel, route: Rout
 	// user agreement
 	if(!userId.agreement) {
 		selfLog("약관 동의 필요!")
-		showRouteUnit(route) { close ->
+		navigator.showRouteUnit { close ->
 			MaterialDialog(onCloseRequest = close) {
 				Title { Text("알림") }
 				Content { Text("공식 자가진단 사이트나 앱에서 로그인한 후 약관에 동의해 주세요.") }
@@ -600,7 +600,7 @@ private suspend fun submitLogin(context: Context, model: SetupModel, route: Rout
 	}
 	
 	// ask for password
-	val password = showRoute<String?>(route) { close ->
+	val password = navigator.showRoute<String?> { close ->
 		val (password, setPassword) = remember { mutableStateOf("") }
 		
 		MaterialDialog(onCloseRequest = { close(null) }) {
@@ -641,7 +641,7 @@ private suspend fun submitLogin(context: Context, model: SetupModel, route: Rout
 	selfLog("#4. 비밀번호 결과")
 	
 	when(result) {
-		is PasswordWrong -> showRouteUnit(route) { close ->
+		is PasswordWrong -> navigator.showRouteUnit { close ->
 			MaterialDialog(onCloseRequest = close) {
 				Title { Text("로그인 실패") }
 				Content {
@@ -698,7 +698,7 @@ private fun WizardStudentInfo(
 ) {
 	val scope = rememberCoroutineScope()
 	val context = LocalContext.current
-	val route = LocalRoute.current
+	val navigator = currentNavigator
 	
 	val colors = MaterialTheme.colors
 	val commonModifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -710,7 +710,7 @@ private fun WizardStudentInfo(
 	if(model.userName.isBlank()) complete = false
 	
 	fun submit() = scope.launch {
-		val success = submitLogin(context, model, route)
+		val success = submitLogin(context, model, navigator)
 		if(success) {
 			complete = true
 			wizard.next()
@@ -831,7 +831,7 @@ private fun WizardStudentInfo(
 
 @Composable
 private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
-	val route = LocalRoute.current
+	val navigator = currentNavigator
 	val pref = LocalPreference.current
 	val scope = rememberCoroutineScope()
 	
@@ -963,14 +963,13 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 					when {
 						parameters.endRoute != null -> parameters.endRoute.invoke()
 						
-						pref.firstState == 0 -> {
+						pref.firstState == 0 || pref.db.testGroups.groups.isEmpty() -> {
 							pref.firstState = 1
-							route.clear()
-							route += { Main() }
+							navigator.clearRoute()
+							navigator.pushRoute { Main() }
 						}
 						else -> {
-							route.removeLastOrNull()
-							Unit // without this, route.removeLastOrNull() causes Type inference failed. Expected type mismatch: inferred type is @Composable() (() -> Unit)? but Any? was expected
+							navigator.popRoute()
 						}
 					}
 				}

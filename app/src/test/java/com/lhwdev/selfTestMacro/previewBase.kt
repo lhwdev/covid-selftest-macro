@@ -49,7 +49,7 @@ fun PreviewBase(statusBar: Boolean = false, content: @Composable () -> Unit) {
 	AppTheme {
 		CompositionLocalProvider(
 			LocalPreview provides true,
-			LocalRoute provides remember { mutableStateListOf(@Composable {}) },
+			LocalNavigator provides remember { mutableStateListOf(@Composable {}) },
 			LocalWindowInsets provides remember {
 				object : WindowInsets {
 					override val ime: WindowInsets.Type = ImmutableWindowInsetsType()

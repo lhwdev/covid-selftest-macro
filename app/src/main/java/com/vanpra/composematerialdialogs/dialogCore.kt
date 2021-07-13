@@ -16,6 +16,25 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 
+
+@Composable
+private fun FloatingMaterialDialogScope.BaseTitle(
+	modifier: Modifier,
+	content: @Composable () -> Unit
+) {
+	ProvideTextStyle(MaterialTheme.typography.h6) {
+		Box(
+			modifier
+				.fillMaxWidth()
+				.padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 12.dp)
+				.wrapContentHeight(Alignment.CenterVertically)
+		) {
+			content()
+		}
+	}
+}
+
+
 /**
  * Adds a title with the given text to the dialog
  * @param center text is aligned to center when true
@@ -26,51 +45,31 @@ fun FloatingMaterialDialogScope.Title(
 	center: Boolean = false,
 	text: @Composable () -> Unit,
 ) {
-	CompositionLocalProvider(
-		LocalContentColor provides MaterialTheme.colors.onSurface
-	) {
-		ProvideTextStyle(MaterialTheme.typography.h6) {
-			Box(
-				Modifier
-					.fillMaxWidth()
-					.padding(start = 24.dp, end = 24.dp)
-					.height(64.dp)
-					.wrapContentHeight(Alignment.CenterVertically)
-					.wrapContentWidth(
-						if(center) {
-							Alignment.CenterHorizontally
-						} else {
-							Alignment.Start
-						}
-					)
-			) { text() }
-		}
-	}
+	BaseTitle(
+		Modifier.wrapContentWidth(
+			if(center) {
+				Alignment.CenterHorizontally
+			} else {
+				Alignment.Start
+			}
+		)
+	) { text() }
 }
 
 /**
  *  Adds a title with the given text and icon to the dialog
- * @param text title text from a string literal
  * @param icon optional icon displayed at the start of the title
+ * @param text title text from a string literal
  */
 @Composable
 fun FloatingMaterialDialogScope.IconTitle(
-	text: @Composable () -> Unit,
 	icon: @Composable () -> Unit,
+	text: @Composable () -> Unit
 ) {
-	Row(
-		modifier = Modifier
-			.padding(start = 24.dp, end = 24.dp)
-			.height(64.dp),
-		verticalAlignment = Alignment.CenterVertically
-	) {
+	BaseTitle(Modifier) {
 		icon()
 		Spacer(Modifier.width(14.dp))
-		CompositionLocalProvider(
-			LocalContentColor provides MaterialTheme.colors.onSurface
-		) {
-			ProvideTextStyle(MaterialTheme.typography.h6) { text() }
-		}
+		ProvideTextStyle(MaterialTheme.typography.h6) { text() }
 	}
 }
 
@@ -95,10 +94,11 @@ fun FloatingMaterialDialogScope.Content(content: @Composable () -> Unit) {
 @Composable
 fun MaterialDialogScope.Input(
 	modifier: Modifier = Modifier,
+	contentPadding: PaddingValues = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
 	focusOnShow: Boolean = false, // should be invariant in one composition
 	input: @Composable () -> Unit
 ) {
-	Box(modifier) {
+	Box(modifier.padding(contentPadding)) {
 		if(focusOnShow) {
 			hasFocusOnShow = true
 			val focusRequester = remember { FocusRequester() }
@@ -108,25 +108,10 @@ fun MaterialDialogScope.Input(
 				onDispose { /* focusRequester.freeFocus(): this causes error */ }
 			}
 			
-			Box(Modifier.focusRequester(focusRequester).fillMaxWidth()) { input() } // TODO
+			Box(Modifier.focusRequester(focusRequester).fillMaxWidth()) { input() }
 		} else {
 			input()
 		}
 	}
-}
-
-/**
- * Adds an input field with the given parameters to the dialog.
- */
-@Composable
-fun FloatingMaterialDialogScope.Input(
-	focusOnShow: Boolean = false, // should be invariant in one composition
-	input: @Composable () -> Unit
-) {
-	Input(
-		modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
-		focusOnShow = focusOnShow,
-		input = input
-	)
 }
 

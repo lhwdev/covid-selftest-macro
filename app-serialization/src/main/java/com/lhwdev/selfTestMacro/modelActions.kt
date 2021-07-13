@@ -7,13 +7,20 @@ fun DatabaseManager.removeTestGroup(group: DbTestGroup) {
 	testGroups = testGroups.copy(groups = testGroups.groups - group)
 }
 
+fun DatabaseManager.removeTestGroups(groups: List<DbTestGroup>) {
+	removeUsers(groups.flatMap { it.target.allUserIds })
+	
+	testGroups = testGroups.copy(groups = testGroups.groups - groups)
+}
+
 
 fun DatabaseManager.removeUsers(userIdsToRemove: List<Int>) {
+	// clear user groups
+	val userGroupsToModify = userIdsToRemove.map { users.users.getValue(it).userGroup.id }.toSet()
+	
 	// clear users
 	users = users.copy(users = users.users.filterNot { (id, _) -> id in userIdsToRemove })
 	
-	// clear user groups
-	val userGroupsToModify = userIdsToRemove.map { users.users.getValue(it).userGroup.id }.toSet()
 	val newGroups = userGroups.groups.mapNotNull { (id, group) ->
 		if(id in userGroupsToModify) {
 			if(group.userIds.containsAll(userIdsToRemove)) null

@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 fun Info(): Unit = MaterialTheme(
 	colors = MaterialTheme.colors.copy(primary = Color(0xff304ffe), onPrimary = Color.White)
 ) {
-	val route = LocalRoute.current
+	val navigator = currentNavigator
 	val context = LocalContext.current
 	
 	Surface(color = MaterialTheme.colors.primarySurface) {
@@ -25,7 +25,7 @@ fun Info(): Unit = MaterialTheme(
 		) {
 			TopAppBar(
 				navigationIcon = {
-					IconButton(onClick = { route.removeLast() }) {
+					IconButton(onClick = { navigator.popRoute() }) {
 						Icon(
 							painterResource(R.drawable.ic_arrow_left_24),
 							contentDescription = "back"
@@ -52,13 +52,15 @@ fun Info(): Unit = MaterialTheme(
 				Row {
 					Text("개발자: ")
 					Text(
-						"lhwdev",
+						"lhwdev(이현우)",
 						style = LocalTextStyle.current.copy(textDecoration = TextDecoration.Underline),
 						modifier = Modifier.clickable {
 							context.openWebsite("https://github.com/lhwdev")
 						}
 					)
 				}
+				
+				Text("도움을 준 사람: 이승수")
 				
 				Text(
 					"공식 웹사이트",

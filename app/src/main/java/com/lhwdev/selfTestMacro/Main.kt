@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import com.lhwdev.selfTestMacro.icons.ExpandMore
 import com.lhwdev.selfTestMacro.icons.Icons
 import com.lhwdev.selfTestMacro.model.*
@@ -41,32 +40,7 @@ fun Main(
 		remember { MainRepositoryImpl(pref) }
 	}
 ): Unit = Surface(color = MaterialTheme.colors.surface) {
-	// val context = LocalActivity.current
-	val route = LocalRoute.current
-	val pref = LocalPreference.current
-	
-	val users = pref.db.users.users
-	
-	if(users.isEmpty()) {
-		route[0] = { Setup() }
-		return@Surface
-	}
-	
-	val groups = pref.db.testGroups.groups
-	
-	
-	var selectedTestGroup by remember {
-		mutableStateOf(groups.getOrElse(pref.headUser) { groups.first() })
-	}
-	val selectedGroup = GroupInfo(selectedTestGroup)
-	
-	
-	if(changed(groups)) {
-		if(selectedTestGroup !in groups) selectedTestGroup = groups.first()
-	}
-	
-	var showSelect by remember { mutableStateOf(false) }
-	
+	val navigator = currentNavigator
 	
 	AutoSystemUi(enabled = true) { scrims ->
 		Scaffold(
@@ -88,7 +62,7 @@ fun Main(
 						) {
 							DropdownMenuItem(onClick = {
 								showMoreActions = false
-								route.add { Info() }
+								navigator.pushRoute { Info() }
 							}) {
 								Text("정보")
 							}
@@ -103,17 +77,182 @@ fun Main(
 				modifier = Modifier.padding(paddingValue).padding(vertical = 24.dp).fillMaxSize(),
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
-				MainContent(
-					repository = repository,
-					group = selectedGroup,
-					showSelectingUser = { showSelect = true }
-				)
+				MainContent(repository)
 			}
 		}
 		
 		scrims.navigationBar()
 	}
 	
+}
+
+
+@DrawableRes
+fun DatabaseManager.iconFor(group: DbTestTarget): Int = when(group) {
+	is DbTestTarget.Group -> R.drawable.ic_group_24
+	is DbTestTarget.Single -> when(group.user.instituteType) {
+		InstituteType.school -> R.drawable.ic_school_24
+		InstituteType.university -> TODO()
+		InstituteType.academy -> TODO()
+		InstituteType.office -> TODO()
+	}
+}
+
+
+@Suppress("ComposableNaming") // factory
+@Composable
+private fun GroupInfo(group: DbTestGroup): GroupInfo {
+	val pref = LocalPreference.current
+	
+	return remember(group) {
+		GroupInfo(
+			icon = pref.db.iconFor(group.target),
+			name = with(pref.db) { group.target.name },
+			instituteName = with(pref.db) { group.target.commonInstitute?.name },
+			group = group
+		)
+	}
+}
+
+
+@Composable
+private fun ColumnScope.MainContent(repository: MainRepository) {
+	val pref = LocalPreference.current
+	val navigator = currentNavigator
+	
+	val users = pref.db.users.users
+	val groups = pref.db.testGroups.groups
+	
+	if(users.isEmpty() || groups.isEmpty()) {
+		Column(
+			verticalArrangement = Arrangement.Center,
+			horizontalAlignment = Alignment.CenterHorizontally
+		) {
+			Text("등록된 사용자가 없습니다.", style = MaterialTheme.typography.h4)
+			Spacer(Modifier.height(16.dp))
+			RoundButton(
+				onClick = {
+					navigator.showRouteAsync { Setup() }
+				},
+				icon = { Icon(painterResource(R.drawable.ic_add_24), contentDescription = null) }
+			) {
+				Text("사용자 추가")
+			}
+		}
+		return
+	}
+	
+	var selectedTestGroup by remember {
+		mutableStateOf(groups.getOrElse(pref.headUser) { groups.first() })
+	}
+	val selectedGroup = GroupInfo(selectedTestGroup)
+	
+	
+	if(changed(groups)) {
+		if(selectedTestGroup !in groups) selectedTestGroup = groups.first()
+	}
+	
+	var showSelect by remember { mutableStateOf(false) }
+	
+	
+	// select test group
+	// '그룹 1 (2명)'
+	RoundButton(
+		onClick = { showSelect = true },
+		icon = { Icon(painterResource(selectedGroup.icon), contentDescription = null) },
+		trailingIcon = { Icon(imageVector = Icons.Filled.ExpandMore, contentDescription = "더보기") }
+	) {
+		Text(selectedGroup.name)
+		
+		Spacer(Modifier.width(4.dp))
+		
+		val subText = buildString {
+			if(selectedGroup.instituteName != null) {
+				append(selectedGroup.instituteName)
+				if(selectedGroup.isGroup) append(", ")
+			}
+			
+			if(selectedGroup.isGroup) append("${selectedGroup.group.target.allUserIds.size}명")
+		}
+		Text("($subText)", color = LocalContentColor.current.copy(ContentAlpha.medium))
+	}
+	
+	// test group members hint
+	// '김철수'
+	if(selectedGroup.isGroup) {
+		Spacer(Modifier.height(4.dp))
+		
+		val usersText = with(pref.db) { selectedGroup.group.target.allUsers }
+			.joinToString(separator = ", ", limit = 4) { it.user.name }
+		Text(usersText, style = MaterialTheme.typography.body1)
+	}
+	
+	Spacer(Modifier.weight(1f))
+	
+	
+	// status
+	// '자가진단 상태'
+	//  '모두 정상'
+	//  '자세히 보기'
+	when(val target = selectedGroup.group.target) {
+		is DbTestTarget.Group -> {
+			GroupStatusView(repository, target)
+		}
+		is DbTestTarget.Single -> {
+			val state = lazyState(null) {
+				with(pref.db) { repository.getCurrentStatus(target.user) }
+			}.value
+			
+			SingleStatusView(state)
+		}
+	}
+	
+	Spacer(Modifier.weight(2f))
+	
+	// scheduling
+	// '자가진단 예약: 꺼짐'
+	RoundButton(
+		onClick = {},
+		icon = { Icon(painterResource(R.drawable.ic_access_alarm_24), contentDescription = null) }
+	) {
+		val text = buildAnnotatedString {
+			withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("자가진단 예약") }
+			append(": ")
+			
+			fun fixed(fixed: DbTestSchedule.Fixed) {
+				append("${fixed.hour}시 ${fixed.minute}분")
+			}
+			
+			when(val schedule = selectedGroup.group.schedule) {
+				DbTestSchedule.None -> append("꺼짐")
+				is DbTestSchedule.Fixed -> {
+					append("매일 ")
+					fixed(schedule)
+				}
+				is DbTestSchedule.Random -> {
+					fixed(schedule.from)
+					append("~")
+					fixed(schedule.to)
+				}
+			}
+		}
+		
+		Text(text)
+	}
+	
+	Spacer(Modifier.height(16.dp))
+	
+	RoundButton(
+		onClick = {},
+		colors = ButtonDefaults.buttonColors()
+	) {
+		Text("지금 자가진단 제출하기")
+	}
+	
+	Spacer(Modifier.weight(.5f))
+	
+	
+	/// Dialogs
 	if(showSelect) MaterialDialog(
 		onCloseRequest = { showSelect = false }
 	) {
@@ -154,7 +293,7 @@ fun Main(
 					},
 					modifier = Modifier.clickable {
 						showSelect = false
-						showRouteAsync(route) { EditUsers() }
+						navigator.showRouteAsync { EditUsers() }
 					}
 				) {
 					Text("편집")
@@ -162,140 +301,7 @@ fun Main(
 			}
 		}
 	}
-}
-
-
-@DrawableRes
-fun DatabaseManager.iconFor(group: DbTestTarget): Int = when(group) {
-	is DbTestTarget.Group -> R.drawable.ic_group_24
-	is DbTestTarget.Single -> when(group.user.instituteType) {
-		InstituteType.school -> R.drawable.ic_school_24
-		InstituteType.university -> TODO()
-		InstituteType.academy -> TODO()
-		InstituteType.office -> TODO()
-	}
-}
-
-
-@Suppress("ComposableNaming") // factory
-@Composable
-private fun GroupInfo(group: DbTestGroup): GroupInfo {
-	val pref = LocalPreference.current
 	
-	return remember(group) {
-		GroupInfo(
-			icon = pref.db.iconFor(group.target),
-			name = with(pref.db) { group.target.name },
-			instituteName = with(pref.db) { group.target.commonInstitute?.name },
-			group = group
-		)
-	}
-}
-
-
-@Composable
-private fun ColumnScope.MainContent(
-	repository: MainRepository,
-	group: GroupInfo,
-	showSelectingUser: () -> Unit
-) {
-	val pref = LocalPreference.current
-	
-	// select test group
-	// '그룹 1 (2명)'
-	TextIconButton(
-		onClick = showSelectingUser,
-		icon = { Icon(painterResource(group.icon), contentDescription = null) },
-		trailingIcon = { Icon(imageVector = Icons.Filled.ExpandMore, contentDescription = "더보기") }
-	) {
-		Text(group.name)
-		
-		Spacer(Modifier.width(4.dp))
-		
-		val subText = buildString {
-			if(group.instituteName != null) {
-				append(group.instituteName)
-				if(group.isGroup) append(", ")
-			}
-			
-			if(group.isGroup) append("${group.group.target.allUserIds.size}명")
-		}
-		Text("($subText)", color = LocalContentColor.current.copy(ContentAlpha.medium))
-	}
-	
-	// test group members hint
-	// '김철수'
-	if(group.isGroup) {
-		Spacer(Modifier.height(4.dp))
-		
-		val users = with(pref.db) { group.group.target.allUsers }
-			.joinToString(separator = ", ", limit = 4) { it.user.name }
-		Text(users, style = MaterialTheme.typography.body1)
-	}
-	
-	Spacer(Modifier.weight(1f))
-	
-	
-	// status
-	// '자가진단 상태'
-	//  '모두 정상'
-	//  '자세히 보기'
-	when(val target = group.group.target) {
-		is DbTestTarget.Group -> {
-			GroupStatusView(repository, target)
-		}
-		is DbTestTarget.Single -> {
-			val state = lazyState(null) {
-				with(pref.db) { repository.getCurrentStatus(target.user) }
-			}.value
-			
-			SingleStatusView(state)
-		}
-	}
-	
-	Spacer(Modifier.weight(2f))
-	
-	// scheduling
-	// '자가진단 예약: 꺼짐'
-	TextIconButton(
-		onClick = {},
-		icon = { Icon(painterResource(R.drawable.ic_access_alarm_24), contentDescription = null) }
-	) {
-		val text = buildAnnotatedString {
-			withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("자가진단 예약") }
-			append(": ")
-			
-			fun fixed(fixed: DbTestSchedule.Fixed) {
-				append("${fixed.hour}시 ${fixed.minute}분")
-			}
-			
-			when(val schedule = group.group.schedule) {
-				DbTestSchedule.None -> append("꺼짐")
-				is DbTestSchedule.Fixed -> {
-					append("매일 ")
-					fixed(schedule)
-				}
-				is DbTestSchedule.Random -> {
-					fixed(schedule.from)
-					append("~")
-					fixed(schedule.to)
-				}
-			}
-		}
-		
-		Text(text)
-	}
-	
-	Spacer(Modifier.height(16.dp))
-	
-	TextIconButton(
-		onClick = {},
-		colors = ButtonDefaults.buttonColors()
-	) {
-		Text("지금 자가진단 제출하기")
-	}
-	
-	Spacer(Modifier.weight(.5f))
 }
 
 

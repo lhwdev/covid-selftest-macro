@@ -79,7 +79,7 @@ class MainRepositoryImpl(
 				if(target is DbTestTarget.Group) "모두 자가진단을 완료했습니다." else "자가진단을 완료했습니다.",
 				actionLabel = "확인"
 			)
-		} else showRouteUnit(model.route) { removeRoute ->
+		} else model.navigator.showRouteUnit { removeRoute ->
 			MaterialDialog(onCloseRequest = removeRoute) {
 				Title { Text("자가진단 실패") }
 				
@@ -96,7 +96,7 @@ class MainRepositoryImpl(
 						
 						is SubmitResult.Failed -> ListItem(
 							modifier = Modifier.clickable {
-								showRouteAsync(model.route) { removeRoute ->
+								model.navigator.showRouteAsync { removeRoute ->
 									MaterialDialog(onCloseRequest = removeRoute) {
 										Title { Text("${resultItem.target.user.name} (${resultItem.target.instituteName}): ${resultItem.message}") }
 										

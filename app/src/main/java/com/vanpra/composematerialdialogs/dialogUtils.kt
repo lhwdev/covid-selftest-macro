@@ -6,25 +6,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.lhwdev.selfTestMacro.Route
+import com.lhwdev.selfTestMacro.Navigator
 import com.lhwdev.selfTestMacro.showRoute
 
 
 suspend fun promptYesNoDialog(
-	route: Route,
+	navigator: Navigator,
 	title: @Composable () -> Unit,
-	content: @Composable (() -> Unit)? = null,
+	content: @Composable (FloatingMaterialDialogScope.() -> Unit)? = null,
 	yesButton: @Composable () -> Unit = { Text("확인") },
 	noButton: @Composable () -> Unit = { Text("취소") },
 	properties: DialogProperties = FloatingDialogProperties
-): Boolean? = showRoute(route) { removeRoute ->
+): Boolean? = navigator.showRoute { removeRoute ->
 	MaterialDialog(onCloseRequest = { removeRoute(null) }, properties = properties) {
 		Title { title() }
 		
-		if(content != null) Content { content() }
+		if(content != null) content()
 		
 		Buttons {
-			PositiveButton(content = yesButton)
+			PositiveButton(onClick = { removeRoute(true) }, content = yesButton)
 			NegativeButton(content = noButton)
 		}
 	}

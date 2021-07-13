@@ -12,7 +12,7 @@ import com.lhwdev.selfTestMacro.api.SurveyData
 
 
 @Immutable
-data class MainModel(val route: Route, val scaffoldState: ScaffoldState) {
+data class MainModel(val navigator: Navigator, val scaffoldState: ScaffoldState) {
 	suspend fun showSnackbar(
 		message: String,
 		actionLabel: String? = null,

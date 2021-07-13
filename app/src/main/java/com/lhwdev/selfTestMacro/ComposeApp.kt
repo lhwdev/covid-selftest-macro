@@ -3,78 +3,34 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.Activity
-import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.systemuicontroller.SystemUiController
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlin.coroutines.CoroutineContext
 
-
-typealias Route = MutableList<@Composable () -> Unit>
-
-fun Route.removeRoute(item: @Composable () -> Unit): Boolean {
-	val index = lastIndexOf(item)
-	if(index == -1) return false
-	subList(index, size).clear()
-	return true
-}
 
 val LocalActivity = compositionLocalOf<Activity> { error("not provided") }
 val LocalPreference = compositionLocalOf<PreferenceState> { error("not provided") }
-val LocalRoute = compositionLocalOf<Route> { error("not provided") }
 val LocalPreview = staticCompositionLocalOf { false }
 
 
 @Composable
 fun ComposeApp(activity: Activity) {
-	val composer = currentComposer
-	
-	// inject coroutine context
-	if(BuildConfig.DEBUG) remember {
-		val context = composer::class.java.getDeclaredField("parentContext").also {
-			it.isAccessible = true
-		}.get(composer) as Recomposer
-		
-		val contextField = Recomposer::class.java.getDeclaredField("effectCoroutineContext").also {
-			it.isAccessible = true
-		}
-		contextField.set(
-			context,
-			(contextField.get(context) as CoroutineContext) + CoroutineExceptionHandler { _, th ->
-				Log.e("ComposeApp", "Uncaught exception", th)
-				throw th
-			})
-		
-		0
-	}
-	
 	val context = LocalContext.current
 	val pref = remember(context) { context.preferenceState }
-	val route = remember {
-		val route = mutableStateListOf<@Composable () -> Unit>()
+	val navigator = remember {
+		val navigator = NavigatorImpl()
+		
 		val initialFirst = pref.firstState == 0
-		route.add @Composable {
+		navigator.pushRoute {
 			if(initialFirst || pref.db.testGroups.groups.isEmpty()) Setup()
 			else Main()
 		}
-		route
-	}
-	
-	val modifier = Modifier.onPreviewKeyEvent { event ->
-		val back = event.key == Key.Back && event.type == KeyEventType.KeyDown
-		
-		if(back && route.size > 1) {
-			route.removeAt(route.lastIndex)
-			true
-		} else false
+		navigator
 	}
 	
 	
@@ -82,21 +38,27 @@ fun ComposeApp(activity: Activity) {
 		CompositionLocalProvider(
 			LocalActivity provides activity,
 			LocalPreference provides pref,
-			LocalRoute provides route
+			LocalNavigator provides navigator
 		) {
 			ProvideAutoWindowInsets {
-				Box(modifier) {
-					AnimateListAsComposable(route) { index, item ->
-						EnabledRoute(enabled = index == route.lastIndex) {
-							item()
+				BoxWithConstraints {
+					AnimateListAsComposable(
+						navigator.routes,
+						animation = { route, fraction, content ->
+							val transition = (route as? RouteTransition) ?: DefaultRouteTransition
+							transition.OnTransition(fraction, content)
+						}
+					) { index, route ->
+						EnabledRoute(enabled = index == navigator.routes.lastIndex) {
+							RouteContent(route)
 						}
 					}
 				}
 			}
 		}
 		
-		BackHandler(route.size > 1) {
-			route.removeLast()
+		BackHandler(navigator.size > 1) {
+			navigator.popLastRoute()
 		}
 	}
 }

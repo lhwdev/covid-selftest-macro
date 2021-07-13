@@ -79,47 +79,45 @@ class MainRepositoryImpl(
 				if(target is DbTestTarget.Group) "모두 자가진단을 완료했습니다." else "자가진단을 완료했습니다.",
 				actionLabel = "확인"
 			)
-		} else model.navigator.showRouteUnit { removeRoute ->
-			MaterialDialog(onCloseRequest = removeRoute) {
-				Title { Text("자가진단 실패") }
-				
-				ListContent {
-					for(resultItem in result) when(resultItem) {
-						is SubmitResult.Success -> ListItem {
-							Text(
-								"${resultItem.target.user.name}: 성공", color = Color(
-									onLight = Color(0xf4259644),
-									onDark = Color(0xff99ffa0)
-								)
+		} else model.navigator.showDialogUnit {
+			Title { Text("자가진단 실패") }
+			
+			ListContent {
+				for(resultItem in result) when(resultItem) {
+					is SubmitResult.Success -> ListItem {
+						Text(
+							"${resultItem.target.user.name}: 성공", color = Color(
+								onLight = Color(0xf4259644),
+								onDark = Color(0xff99ffa0)
 							)
-						}
-						
-						is SubmitResult.Failed -> ListItem(
-							modifier = Modifier.clickable {
-								model.navigator.showRouteAsync { removeRoute ->
-									MaterialDialog(onCloseRequest = removeRoute) {
-										Title { Text("${resultItem.target.user.name} (${resultItem.target.instituteName}): ${resultItem.message}") }
-										
-										Content {
-											val stackTrace = remember(resultItem.error) {
-												resultItem.error.stackTraceToString()
-											}
-											Text(stackTrace)
-										}
+						)
+					}
+					
+					is SubmitResult.Failed -> ListItem(
+						modifier = Modifier.clickable {
+							model.navigator.showDialogAsync {
+								Title { Text("${resultItem.target.user.name} (${resultItem.target.instituteName}): ${resultItem.message}") }
+								
+								Content {
+									val stackTrace = remember(resultItem.error) {
+										resultItem.error.stackTraceToString()
 									}
+									Text(stackTrace)
 								}
 							}
-						) {
-							Text("${resultItem.target.user.name}: 실패", color = Color(
+						}
+					) {
+						Text(
+							"${resultItem.target.user.name}: 실패", color = Color(
 								onLight = Color(0xffff1122),
 								onDark = Color(0xffff9099)
-							))
-						}
+							)
+						)
 					}
 				}
-				
-				Buttons { PositiveButton { Text("확인") } }
 			}
+			
+			Buttons { PositiveButton { Text("확인") } }
 		}
 		return result
 	}

@@ -566,7 +566,11 @@ private fun WizardUserInfo(model: SetupModel, wizard: SetupWizard) {
 }
 
 
-private suspend fun submitLogin(context: Context, model: SetupModel, navigator: Navigator): Boolean {
+private suspend fun submitLogin(
+	context: Context,
+	model: SetupModel,
+	navigator: Navigator
+): Boolean {
 	val name = model.userName
 	val birth = model.userBirth
 	val instituteInfo = model.instituteInfo ?: return false
@@ -587,44 +591,40 @@ private suspend fun submitLogin(context: Context, model: SetupModel, navigator: 
 	// user agreement
 	if(!userId.agreement) {
 		selfLog("약관 동의 필요!")
-		navigator.showRouteUnit { close ->
-			MaterialDialog(onCloseRequest = close) {
-				Title { Text("알림") }
-				Content { Text("공식 자가진단 사이트나 앱에서 로그인한 후 약관에 동의해 주세요.") }
-				Buttons {
-					PositiveButton { Text("확인") }
-				}
+		navigator.showDialogUnit { close ->
+			Title { Text("알림") }
+			Content { Text("공식 자가진단 사이트나 앱에서 로그인한 후 약관에 동의해 주세요.") }
+			Buttons {
+				PositiveButton { Text("확인") }
 			}
 		}
 		return false
 	}
 	
 	// ask for password
-	val password = navigator.showRoute<String?> { close ->
+	val password = navigator.showDialog<String?> { close ->
 		val (password, setPassword) = remember { mutableStateOf("") }
 		
-		MaterialDialog(onCloseRequest = { close(null) }) {
-			Title { Text("비밀번호를 입력해주세요") }
-			
-			Input(focusOnShow = true) {
-				TextField(
-					password, setPassword,
-					modifier = Modifier.fillMaxWidth(),
-					label = { Text("비밀번호") },
-					isError = password.length > 4,
-					keyboardOptions = KeyboardOptions(
-						keyboardType = KeyboardType.NumberPassword,
-						imeAction = ImeAction.Done
-					),
-					visualTransformation = PasswordVisualTransformation(),
-					keyboardActions = KeyboardActions { close(password) }
-				)
-			}
-			
-			Buttons {
-				PositiveButton(onClick = { close(password) }) { Text("확인") }
-				NegativeButton { Text("취소") }
-			}
+		Title { Text("비밀번호를 입력해주세요") }
+		
+		Input(focusOnShow = true) {
+			TextField(
+				password, setPassword,
+				modifier = Modifier.fillMaxWidth(),
+				label = { Text("비밀번호") },
+				isError = password.length > 4,
+				keyboardOptions = KeyboardOptions(
+					keyboardType = KeyboardType.NumberPassword,
+					imeAction = ImeAction.Done
+				),
+				visualTransformation = PasswordVisualTransformation(),
+				keyboardActions = KeyboardActions { close(password) }
+			)
+		}
+		
+		Buttons {
+			PositiveButton(onClick = { close(password) }) { Text("확인") }
+			NegativeButton { Text("취소") }
 		}
 	}
 	password ?: return false
@@ -641,17 +641,15 @@ private suspend fun submitLogin(context: Context, model: SetupModel, navigator: 
 	selfLog("#4. 비밀번호 결과")
 	
 	when(result) {
-		is PasswordWrong -> navigator.showRouteUnit { close ->
-			MaterialDialog(onCloseRequest = close) {
-				Title { Text("로그인 실패") }
-				Content {
-					Text(
-						result.errorMessage ?: "로그인에 실패하였습니다. (에러코드 ${result.errorCode}"
-					)
-				}
-				Buttons {
-					PositiveButton { Text("확인") }
-				}
+		is PasswordWrong -> navigator.showDialogUnit { close ->
+			Title { Text("로그인 실패") }
+			Content {
+				Text(
+					result.errorMessage ?: "로그인에 실패하였습니다. (에러코드 ${result.errorCode}"
+				)
+			}
+			Buttons {
+				PositiveButton { Text("확인") }
 			}
 		}
 		is UsersToken -> {

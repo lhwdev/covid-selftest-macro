@@ -50,3 +50,21 @@ fun DatabaseManager.disbandGroup(group: DbTestGroup, inheritSchedule: Boolean) {
 	// do not need to touch userGroups and users, so does not use removeTestGroup
 	testGroups = testGroups.copy(groups = testGroups.groups - group + newTestGroups)
 }
+
+fun DatabaseManager.moveToGroup(
+	target: List<Pair<Int, DbTestGroup>>,
+	toGroup: DbTestGroup
+): DbTestGroup {
+	check(target.all { it.second.target is DbTestTarget.Single })
+	check(toGroup.target is DbTestTarget.Group)
+	
+	val newGroup = toGroup.copy(
+		target = toGroup.target.copy(userIds = toGroup.target.userIds + target.map { it.first })
+	)
+	
+	testGroups = testGroups.copy(
+		groups = testGroups.groups - target.map { it.second } - toGroup + newGroup
+	)
+	
+	return newGroup
+}

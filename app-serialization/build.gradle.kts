@@ -41,7 +41,7 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
 	
 	
-	val compose = "1.0.0-beta09" // also kotlinCompilerExtensionVersion, app-serialization/version
+	val compose = "1.0.0-rc02" // also kotlinCompilerExtensionVersion, app-serialization/version
 	implementation("androidx.compose.runtime:runtime:$compose")
 	
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.1")

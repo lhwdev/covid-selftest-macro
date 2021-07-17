@@ -11,6 +11,26 @@ import androidx.annotation.DrawableRes
 import java.util.Calendar
 
 
+fun DbTestGroup.scheduleInfo(): String = buildString {
+	fun fixed(fixed: DbTestSchedule.Fixed) {
+		append("${fixed.hour}시 ${fixed.minute}분")
+	}
+	
+	when(val schedule = schedule) {
+		DbTestSchedule.None -> append("꺼짐")
+		is DbTestSchedule.Fixed -> {
+			append("매일 ")
+			fixed(schedule)
+		}
+		is DbTestSchedule.Random -> {
+			fixed(schedule.from)
+			append("~")
+			fixed(schedule.to)
+		}
+	}
+}
+
+
 suspend fun Context.submitSuspend(notification: Boolean = true) {
 	// val institute = preferenceState.institute!!
 	// val loginInfo = preferenceState.user!!

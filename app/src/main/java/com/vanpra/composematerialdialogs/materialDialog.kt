@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
@@ -78,7 +79,7 @@ abstract class MaterialDialogScope(
 }
 
 
-val FloatingDialogProperties = DialogProperties(usePlatformDefaultWidth = true)
+val FloatingDialogProperties = DialogProperties(usePlatformDefaultWidth = false)
 
 
 /**
@@ -104,20 +105,25 @@ fun MaterialDialog(
 		properties = properties
 	) { info ->
 		/* Only using 40.dp padding as 8.dp is already provided */
-		Surface(
-			modifier = Modifier
-				// .padding(vertical = 40.dp)
-				.sizeIn(maxWidth = 560.dp, maxHeight = 560.dp)
-				.fillMaxWidth()
-				.clipToBounds(),
-			shape = shape,
-			color = backgroundColor,
-			border = border,
-			elevation = elevation
-		) {
-			ProvideAppliedUiPaddings(AppliedUiPaddings(statusBar = true, navigationBar = true)) {
-				Column {
-					FloatingMaterialDialogScope(info, this).content()
+		Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+			Surface(
+				modifier = Modifier
+					.fillMaxWidth(fraction = .77f)
+					.sizeIn(maxHeight = 480.dp),
+				shape = shape,
+				color = backgroundColor,
+				border = border,
+				elevation = elevation
+			) {
+				ProvideAppliedUiPaddings(
+					AppliedUiPaddings(
+						statusBar = true,
+						navigationBar = true
+					)
+				) {
+					Column {
+						FloatingMaterialDialogScope(info, this).content()
+					}
 				}
 			}
 		}

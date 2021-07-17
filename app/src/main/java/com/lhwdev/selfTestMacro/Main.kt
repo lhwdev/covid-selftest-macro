@@ -23,15 +23,6 @@ import com.lhwdev.selfTestMacro.model.*
 import com.vanpra.composematerialdialogs.*
 
 
-fun <T> List<T>.repeat(count: Int): List<T> {
-	val list = ArrayList<T>(size * count)
-	repeat(count) {
-		list.addAll(this)
-	}
-	return list
-}
-
-
 @Preview
 @Composable
 fun Main(
@@ -74,7 +65,10 @@ fun Main(
 			modifier = Modifier.weight(1f)
 		) { paddingValue ->
 			Column(
-				modifier = Modifier.padding(paddingValue).padding(vertical = 24.dp).fillMaxSize(),
+				modifier = Modifier
+					.padding(paddingValue)
+					.padding(vertical = 28.dp)
+					.fillMaxSize(),
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
 				MainContent(repository)
@@ -126,10 +120,11 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 	if(users.isEmpty() || groups.isEmpty()) {
 		Column(
 			verticalArrangement = Arrangement.Center,
-			horizontalAlignment = Alignment.CenterHorizontally
+			horizontalAlignment = Alignment.CenterHorizontally,
+			modifier = Modifier.fillMaxSize()
 		) {
 			Text("등록된 사용자가 없습니다.", style = MaterialTheme.typography.h4)
-			Spacer(Modifier.height(16.dp))
+			Spacer(Modifier.height(32.dp))
 			RoundButton(
 				onClick = {
 					navigator.showRouteAsync { Setup() }
@@ -155,12 +150,19 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 	var showSelect by remember { mutableStateOf(false) }
 	
 	
+	/// head
+	
 	// select test group
 	// '그룹 1 (2명)'
 	RoundButton(
 		onClick = { showSelect = true },
 		icon = { Icon(painterResource(selectedGroup.icon), contentDescription = null) },
-		trailingIcon = { Icon(imageVector = Icons.Filled.ExpandMore, contentDescription = "더보기") }
+		trailingIcon = {
+			Icon(
+				imageVector = Icons.Filled.ExpandMore,
+				contentDescription = "더보기"
+			)
+		}
 	) {
 		Text(selectedGroup.name)
 		
@@ -190,6 +192,8 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 	Spacer(Modifier.weight(1f))
 	
 	
+	/// center
+	
 	// status
 	// '자가진단 상태'
 	//  '모두 정상'
@@ -199,42 +203,32 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 			GroupStatusView(repository, target)
 		}
 		is DbTestTarget.Single -> {
-			val state = lazyState(null) {
-				with(pref.db) { repository.getCurrentStatus(target.user) }
-			}.value
-			
-			SingleStatusView(state)
+			SingleStatusView(repository, target)
 		}
 	}
 	
+	
 	Spacer(Modifier.weight(2f))
+	
+	/// below
 	
 	// scheduling
 	// '자가진단 예약: 꺼짐'
 	RoundButton(
-		onClick = {},
-		icon = { Icon(painterResource(R.drawable.ic_access_alarm_24), contentDescription = null) }
+		onClick = {
+			navigator.showScheduleSelfTest(selectedGroup)
+		},
+		icon = {
+			Icon(
+				painterResource(R.drawable.ic_access_alarm_24),
+				contentDescription = null
+			)
+		}
 	) {
 		val text = buildAnnotatedString {
 			withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("자가진단 예약") }
 			append(": ")
-			
-			fun fixed(fixed: DbTestSchedule.Fixed) {
-				append("${fixed.hour}시 ${fixed.minute}분")
-			}
-			
-			when(val schedule = selectedGroup.group.schedule) {
-				DbTestSchedule.None -> append("꺼짐")
-				is DbTestSchedule.Fixed -> {
-					append("매일 ")
-					fixed(schedule)
-				}
-				is DbTestSchedule.Random -> {
-					fixed(schedule.from)
-					append("~")
-					fixed(schedule.to)
-				}
-			}
+			append(selectedGroup.group.scheduleInfo())
 		}
 		
 		Text(text)
@@ -249,7 +243,7 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 		Text("지금 자가진단 제출하기")
 	}
 	
-	Spacer(Modifier.weight(.5f))
+	Spacer(Modifier.height(36.dp))
 	
 	
 	/// Dialogs
@@ -277,7 +271,11 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 			}
 		) {
 			Column {
-				Column(modifier = Modifier.verticalScroll(rememberScrollState()).weight(1f)) {
+				Column(
+					modifier = Modifier
+						.verticalScroll(rememberScrollState())
+						.weight(1f)
+				) {
 					for(group in groups) UserListItem(
 						group = group,
 						onClick = {
@@ -305,10 +303,33 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 }
 
 
+@Suppress("unused")
 @Composable
-private fun SingleStatusView(status: Status?) {
-	Text("자가진단 상태", style = MaterialTheme.typography.subtitle1)
+private fun ColumnScope.SingleStatusView(repository: MainRepository, target: DbTestTarget.Single) {
+	val pref = LocalPreference.current
 	
+	var statusKey by remember { mutableStateOf(0) }
+	val status = lazyState(null, key = statusKey) {
+		with(pref.db) { repository.getCurrentStatus(target.user) }
+	}.value
+	
+	Row(verticalAlignment = Alignment.CenterVertically) {
+		Spacer(Modifier.width(44.dp))
+		
+		Text("자가진단 상태", style = MaterialTheme.typography.h6)
+		
+		Spacer(Modifier.width(8.dp))
+		
+		SmallIconButton(onClick = {
+			statusKey++
+		}) {
+			Icon(
+				painterResource(R.drawable.ic_refresh_24),
+				contentDescription = "새로 고침",
+				modifier = Modifier.size(18.dp)
+			)
+		}
+	}
 	Spacer(Modifier.height(16.dp))
 	
 	when(status) {
@@ -329,14 +350,15 @@ private fun SingleStatusView(status: Status?) {
 	}
 }
 
+@Suppress("unused")
 @Composable
-private fun GroupStatusView(repository: MainRepository, target: DbTestTarget.Group) {
+private fun ColumnScope.GroupStatusView(repository: MainRepository, target: DbTestTarget.Group) {
 	val pref = LocalPreference.current
 	val users = with(pref.db) { target.allUsers }
 	
 	var allStatus by remember { mutableStateOf<Map<DbUser, Status>>(emptyMap()) } // stub
 	var forceAllowInit by remember { mutableStateOf(false) }
-	val allowInit = users.size <= /* TODO: 5 */ 0 || forceAllowInit
+	val allowInit = users.size <= 4 || forceAllowInit
 	
 	var groupStatusKey by remember { mutableStateOf(0) }
 	val groupStatus = lazyState(null, key = groupStatusKey, allowInit = allowInit) {
@@ -506,5 +528,70 @@ fun UserListItem(group: DbTestGroup, onClick: () -> Unit) {
 		secondaryText = if(secondary == null) null else ({ Text(secondary) }),
 		modifier = Modifier.clickable(onClick = onClick)
 	)
+}
+
+
+private enum class ScheduleType { none, fixed, random }
+
+
+/// Scheduling
+
+private fun Navigator.showScheduleSelfTest(info: GroupInfo): Unit = showDialogAsync { removeRoute ->
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				navigationIcon = {
+					IconButton(onClick = removeRoute) {
+						Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")
+					}
+				},
+				title = { Text("자가진단 예약") },
+				backgroundColor = Color.Transparent,
+				elevation = 0.dp
+			)
+		},
+		modifier = Modifier.wrapContentHeight()
+	) {
+		val pref = LocalPreference.current
+		val group = info.group
+		val target = group.target
+		
+		Column {
+			ListItem(
+				icon = { Icon(painterResource(pref.db.iconFor(target)), contentDescription = null) }
+			) {
+				val text = with(pref.db) {
+					when(target) {
+						is DbTestTarget.Group -> "${target.name} (${target.userIds.size})"
+						is DbTestTarget.Single -> target.name
+					}
+				}
+				Text(text)
+			}
+			
+			Spacer(Modifier.height(4.dp))
+			
+			var type by remember {
+				mutableStateOf(
+					when(group.schedule) {
+						DbTestSchedule.None -> ScheduleType.none
+						is DbTestSchedule.Fixed -> ScheduleType.fixed
+						is DbTestSchedule.Random -> ScheduleType.random
+					}
+				)
+			}
+			
+			@Composable
+			fun TypeCheckbox(targetType: ScheduleType) {
+				RadioButton(selected = type == targetType, onClick = null)
+			}
+			
+			
+			/// none
+			ListItem(icon = { TypeCheckbox(ScheduleType.none) }) {
+				Text("꺼짐")
+			}
+		}
+	}
 }
 

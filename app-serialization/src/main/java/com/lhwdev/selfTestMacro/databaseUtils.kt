@@ -47,7 +47,7 @@ internal val sNone = Any()
 
 // not thread-safe; if you want, use Collections.synchronizedList
 abstract class LazyListBase<E>(final override val size: Int) : AbstractList<E>() {
-	val cache = MutableList<Any?>(size) { null }
+	val cache = MutableList<Any?>(size) { sNone }
 	
 	protected abstract fun createAt(index: Int): E
 	

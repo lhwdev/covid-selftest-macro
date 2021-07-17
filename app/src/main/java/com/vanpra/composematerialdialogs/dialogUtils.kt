@@ -16,8 +16,8 @@ import com.lhwdev.selfTestMacro.showRouteAsync
 
 suspend fun <T> Navigator.showDialog(
 	properties: DialogProperties = FloatingDialogProperties,
-	routeFactory: (content: @Composable () -> Unit) -> Route = { Route(it) },
-	content: @Composable FloatingMaterialDialogScope.(removeRoute: (T) -> Unit) -> Unit
+	routeFactory: (content: @Composable () -> Unit) -> Route = { Route(false, it) },
+	content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
 ): T? = showRoute(routeFactory = routeFactory) { removeRoute ->
 	MaterialDialog(
 		onCloseRequest = { removeRoute(null) },
@@ -27,16 +27,16 @@ suspend fun <T> Navigator.showDialog(
 
 suspend inline fun Navigator.showDialogUnit(
 	properties: DialogProperties = FloatingDialogProperties,
-	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { Route(it) },
-	noinline content: @Composable (FloatingMaterialDialogScope.(removeRoute: () -> Unit) -> Unit)
+	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { Route(false, it) },
+	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showDialog<Unit>(properties, routeFactory) { content { it(Unit) } }
 }
 
 inline fun Navigator.showDialogAsync(
 	properties: DialogProperties = FloatingDialogProperties,
-	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { Route(it) },
-	noinline content: @Composable (FloatingMaterialDialogScope.(removeRoute: () -> Unit) -> Unit)
+	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { Route(false, it) },
+	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showRouteAsync(routeFactory) { removeRoute ->
 		MaterialDialog(

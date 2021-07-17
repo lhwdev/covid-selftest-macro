@@ -25,14 +25,13 @@ fun ComposeApp(activity: Activity) {
 	val navigator = remember {
 		val navigator = NavigatorImpl()
 		
-		val initialFirst = pref.firstState == 0
-		navigator.pushRoute {
-			if(initialFirst || pref.db.testGroups.groups.isEmpty()) Setup()
-			else Main()
-		}
+		val initialFirst = pref.isFirstTime
+		
+		if(initialFirst || pref.db.testGroups.groups.isEmpty()) navigator.pushRoute { Setup() }
+		else navigator.pushRoute { Main() }
+		
 		navigator
 	}
-	
 	
 	AppTheme {
 		CompositionLocalProvider(
@@ -44,6 +43,7 @@ fun ComposeApp(activity: Activity) {
 				BoxWithConstraints {
 					AnimateListAsComposable(
 						navigator.routes,
+						isOpaque = { it.isOpaque },
 						animation = { route, fraction, content ->
 							val transition = (route as? RouteTransition) ?: DefaultRouteTransition
 							transition.OnTransition(fraction, content)

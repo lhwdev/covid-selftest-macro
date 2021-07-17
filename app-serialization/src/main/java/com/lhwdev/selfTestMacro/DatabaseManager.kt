@@ -24,7 +24,12 @@ class DatabaseManager(pref: PreferenceHolder) {
 		defaultValue = DbUsers()
 	)
 	
-	val DbTestTarget.Group.allUsers: List<DbUser> get() = userIds.map { users.users.getValue(it) }
+	val DbTestTarget.Group.allUsers: List<DbUser> get() = object : LazyListBase<DbUser>(userIds.size) {
+		override fun createAt(index: Int): DbUser = users.users.getValue(userIds[index])
+		override fun contains(element: DbUser): Boolean = element.id in userIds
+		
+	}
+	
 	val DbTestTarget.Single.user: DbUser get() = users.users.getValue(userId)
 	val DbTestTarget.allUsers: List<DbUser>
 		get() = when(this) {

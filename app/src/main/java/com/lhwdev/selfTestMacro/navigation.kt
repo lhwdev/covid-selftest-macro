@@ -14,7 +14,7 @@ import kotlin.math.abs
 val LocalNavigator = compositionLocalOf<Navigator> { error("not provided") }
 val LocalCurrentNavigator = compositionLocalOf<CurrentNavigator> { error("not provided") }
 
-val currentNavigator: CurrentNavigator
+inline val currentNavigator: CurrentNavigator
 	@Composable get() = LocalCurrentNavigator.current
 
 
@@ -25,7 +25,7 @@ interface Navigator {
 	
 	fun pushRoute(route: Route)
 	
-	fun popLastRoute()
+	fun popLastRoute(): Boolean
 	fun removeRoute(route: Route): Boolean
 	fun clearRoute()
 	
@@ -44,9 +44,10 @@ class NavigatorImpl : Navigator {
 		if(route is RouteObserver) route.onRouteAdded(this)
 	}
 	
-	override fun popLastRoute() {
-		val route = list.removeLast()
+	override fun popLastRoute(): Boolean {
+		val route = list.removeLastOrNull() ?: return false
 		if(route is RouteObserver) route.onRouteRemoved(this)
+		return true
 	}
 	
 	override fun removeRoute(route: Route): Boolean {
@@ -78,6 +79,8 @@ class NavigatorImpl : Navigator {
 class CurrentNavigator(private val navigator: Navigator, val currentRoute: Route) :
 	Navigator by navigator {
 	
+	val isRoot: Boolean get() = routes.firstOrNull() == currentRoute
+	
 	fun popRoute(): Boolean {
 		return removeRoute(currentRoute)
 	}
@@ -94,6 +97,7 @@ class CurrentNavigator(private val navigator: Navigator, val currentRoute: Route
 
 interface Route {
 	val content: @Composable () -> Unit
+	val isOpaque: Boolean
 }
 
 @Composable
@@ -125,12 +129,16 @@ val DefaultRouteTransition: RouteTransition = object : RouteTransition {
 }
 
 
-fun Route(content: @Composable () -> Unit): Route = object : Route {
+fun Route(isOpaque: Boolean = true, content: @Composable () -> Unit): Route = object : Route {
 	override val content: @Composable () -> Unit = content
+	override val isOpaque: Boolean = isOpaque
 }
 
-fun DialogRoute(content: @Composable () -> Unit): Route = object : Route, RouteTransition {
+fun DialogRoute(
+	isOpaque: Boolean = false, content: @Composable () -> Unit
+): Route = object : Route, RouteTransition {
 	override val content: @Composable () -> Unit get() = content
+	override val isOpaque: Boolean = isOpaque
 	
 	@Composable
 	override fun OnTransition(fraction: () -> Float, content: @Composable () -> Unit) {
@@ -138,29 +146,37 @@ fun DialogRoute(content: @Composable () -> Unit): Route = object : Route, RouteT
 	}
 }
 
-inline fun Navigator.pushRoute(noinline content: @Composable () -> Unit) {
-	pushRoute(Route(content))
+inline fun Navigator.pushRoute(isOpaque: Boolean = true, noinline content: @Composable () -> Unit) {
+	pushRoute(Route(isOpaque, content))
 }
 
-inline fun Navigator.replaceLastRoute(noinline content: @Composable () -> Unit) {
-	replaceLastRoute(Route(content))
+inline fun Navigator.replaceLastRoute(
+	isOpaque: Boolean = true,
+	noinline content: @Composable () -> Unit
+) {
+	replaceLastRoute(Route(isOpaque, content))
 }
 
-inline fun CurrentNavigator.replaceRoute(noinline content: @Composable () -> Unit) {
-	replaceRoute(Route(content))
+inline fun CurrentNavigator.replaceRoute(
+	isOpaque: Boolean = true,
+	noinline content: @Composable () -> Unit
+) {
+	replaceRoute(Route(isOpaque, content))
 }
 
 
 suspend inline fun Navigator.showRouteUnit(
+	isOpaque: Boolean = true,
 	crossinline content: @Composable (removeRoute: () -> Unit) -> Unit
 ) {
-	showRoute<Unit> {
+	showRoute<Unit>(isOpaque) {
 		content { it(Unit) }
 	}
 }
 
+
 suspend fun <T> Navigator.showRoute(
-	routeFactory: (content: @Composable () -> Unit) -> Route = { Route(it) },
+	routeFactory: (content: @Composable () -> Unit) -> Route,
 	content: @Composable (removeRoute: (T) -> Unit) -> Unit
 ): T {
 	lateinit var route: Route
@@ -180,8 +196,13 @@ suspend fun <T> Navigator.showRoute(
 	}
 }
 
+suspend inline fun <T> Navigator.showRoute(
+	isOpaque: Boolean = true,
+	noinline content: @Composable (removeRoute: (T) -> Unit) -> Unit
+): T = showRoute(routeFactory = { Route(isOpaque, it) }, content = content)
+
 fun Navigator.showRouteAsync(
-	routeFactory: (content: @Composable () -> Unit) -> Route = { Route(it) },
+	routeFactory: (content: @Composable () -> Unit) -> Route,
 	content: @Composable (removeRoute: () -> Unit) -> Unit
 ) {
 	lateinit var route: Route
@@ -195,4 +216,11 @@ fun Navigator.showRouteAsync(
 	}
 	
 	pushRoute(route)
+}
+
+inline fun Navigator.showRouteAsync(
+	isOpaque: Boolean = true,
+	noinline content: @Composable (removeRoute: () -> Unit) -> Unit
+) {
+	showRouteAsync(routeFactory = { Route(isOpaque, it) }, content = content)
 }

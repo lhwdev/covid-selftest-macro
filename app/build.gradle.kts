@@ -47,7 +47,7 @@ android {
 	}
 	
 	composeOptions {
-		kotlinCompilerExtensionVersion = "1.0.0-beta09"
+		kotlinCompilerExtensionVersion = "1.0.0-rc02"
 	}
 }
 
@@ -63,12 +63,13 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.1")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 	
-	val compose = "1.0.0-rc01" // also kotlinCompilerExtensionVersion, app-serialization/version
+	val compose = "1.0.0-rc02" // also kotlinCompilerExtensionVersion, app-serialization/version
 	implementation("androidx.compose.ui:ui:$compose")
 	implementation("androidx.compose.ui:ui-tooling:$compose")
 	implementation("androidx.compose.foundation:foundation:$compose")
+	// implementation("androidx.compose.animation:animation-graphics:$compose")
 	implementation("androidx.compose.material:material:$compose")
-	implementation("androidx.activity:activity-compose:1.3.0-rc01")
+	implementation("androidx.activity:activity-compose:1.3.0-rc02")
 	
 	val accompanist = "0.12.0"
 	implementation("com.google.accompanist:accompanist-insets:$accompanist")

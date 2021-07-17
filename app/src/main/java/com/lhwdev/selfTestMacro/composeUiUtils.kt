@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -33,6 +34,7 @@ import kotlin.math.max
 fun <T> AnimateListAsComposable(
 	list: List<T>,
 	key: (T) -> Any? = { it },
+	isOpaque: (T) -> Boolean = { true },
 	animation: @Composable (item: T, fraction: () -> Float, content: @Composable () -> Unit) -> Unit,
 	content: @Composable (index: Int, T) -> Unit
 ) {
@@ -45,18 +47,20 @@ fun <T> AnimateListAsComposable(
 	}
 	
 	fun removeAt(index: Int) {
+		val animatable = animatables.getOrNull(index) ?: return
+		val backingToRemove = backing[index] // as index may get different after the animation
+		
 		scope.launch {
-			val animatable = animatables.getOrNull(index) ?: return@launch // kinda guard; NPE used to happened here
 			animatable.animateTo(2f)
-			backing.removeAt(index)
-			animatables.removeAt(index)
+			animatables -= animatable
+			backing -= backingToRemove
 		}
 	}
 	
 	fun add(index: Int, value: T) {
 		val animatable = Animatable(0f)
-		backing.add(index, value)
 		animatables.add(index, animatable)
+		backing.add(index, value)
 		scope.launch { animatable.animateTo(1f) }
 	}
 	
@@ -76,10 +80,24 @@ fun <T> AnimateListAsComposable(
 		}
 	}
 	
+	val lastOpaqueIndex by derivedStateOf {
+		backing.indices.indexOfLast { index ->
+			val animatable = animatables[index]
+			val transparent = animatable.targetValue == 0f || // not initialized
+				animatable.isRunning || // animating
+				!isOpaque(backing[index]) // inherently transparent like dialog
+			!transparent
+		}.coerceAtLeast(0)
+	}
 	
 	for((index, item) in backing.withIndex()) key(key(item)) {
 		val animatable = animatables[index]
-		animation(item, { animatable.value }) { content(index, item) }
+		
+		Box(Modifier.graphicsLayer {
+			alpha = if(index >= lastOpaqueIndex) 1f else 0f
+		}) {
+			animation(item, { animatable.value }) { content(index, item) }
+		}
 	}
 }
 
@@ -172,11 +190,6 @@ fun RoundButton(
 		}
 	}
 }
-
-
-// per-component definitions of this size.
-// Diameter of the IconButton, to allow for correct minimum touch target size for accessibility
-private val IconButtonSizeModifier = Modifier.height(48.dp)
 
 
 @Composable

@@ -39,6 +39,14 @@ fun EditUsers() {
 			Scaffold(
 				topBar = {
 					TopAppBar(
+						navigationIcon = if(navigator.isRoot) null else ({
+							IconButton(onClick = { navigator.popRoute() }) {
+								Icon(
+									painterResource(R.drawable.ic_arrow_back_24),
+									contentDescription = "뒤로 가기"
+								)
+							}
+						}),
 						title = { Text("사용자 편집") },
 						actions = {
 							var showAddDialog by remember { mutableStateOf(false) }
@@ -101,7 +109,7 @@ fun EditUsers() {
 										contentDescription = "더브기"
 									)
 								}
-								1
+								
 								DropdownMenu(
 									expanded = moreActions,
 									onDismissRequest = { moreActions = false }
@@ -200,62 +208,120 @@ private suspend fun showDetailsFor(
 			}
 		}
 	) {
-		Column {
-			// group members
-			if(target is DbTestTarget.Group) ListItem(
-				icon = {
-					Icon(
-						painterResource(R.drawable.ic_account_circle_24),
-						contentDescription = null
-					)
-				},
-				secondaryText = { Text("TODO: wow") }
-			) {
-				val text = with(pref.db) { target.allUsers }.joinToString { it.user.name }
-				Text(text)
-			}
-			
-			// disband group
-			ListItem(modifier = Modifier.clickAction {
-				scope.launch {
-					var inheritSchedule by mutableStateOf(false)
-					
-					val doDisband = navigator.promptYesNoDialog(
-						title = { Text("${groupName}을 해제할까요?") },
-						content = {
-							ListItem(
-								icon = {
-									Checkbox(
-										checked = inheritSchedule,
-										onCheckedChange = null
-									)
-								},
-								text = { Text("그룹의 자가진단 예약 상태 유지") },
-								modifier = Modifier.clickable {
-									inheritSchedule = !inheritSchedule
-								}
-							)
-						}
-					)
-					
-					if(doDisband == true) {
-						pref.db.disbandGroup(group, inheritSchedule = inheritSchedule)
+		when(target) {
+			is DbTestTarget.Single -> Column {
+				ListItem(
+					icon = {
+						Icon(
+							painterResource(R.drawable.ic_account_circle_24),
+							contentDescription = null
+						)
+					},
+					text = { Text(with(pref.db) { target.user.instituteName }) },
+					secondaryText = { Text("자가진단 예약: ${group.scheduleInfo()}") }
+				)
+				
+				ListItem(modifier = Modifier.clickAction {
+					scope.launch {
+						val doDelete = navigator.promptYesNoDialog(
+							title = { Text("${with(pref.db) { target.name }}을(를) 삭제할까요?") }
+						)
+						
+						if(doDelete == true) pref.db.removeTestGroup(group)
 					}
+				}) { Text("사용자 삭제") }
+				val list = pref.db.testGroups.groups.filter {
+					it.target is DbTestTarget.Group
 				}
-			}) {
-				Text("그룹 해제")
+				
+				if(list.isNotEmpty()) ListItem(modifier = Modifier.clickAction {
+					scope.launch {
+						val moveTarget = navigator.showDialog<DbTestGroup> { removeRoute ->
+							Title { Text("이동할 그룹 선택") }
+							ListContent {
+								Column {
+									for(item in list) {
+										val itemTarget = item.target as DbTestTarget.Group
+										ListItem(
+											text = { Text(itemTarget.name) },
+											secondaryText = { Text(with(pref.db) { itemTarget.allUsers.joinToString { it.user.name } }) },
+											modifier = Modifier.clickable {
+												removeRoute(item)
+											}
+										)
+									}
+								}
+							}
+							Buttons {
+								NegativeButton { Text("취소") }
+							}
+						}
+						
+						if(moveTarget != null) pref.db.moveToGroup(
+							target = listOf(target.userId to group),
+							toGroup = moveTarget
+						)
+					}
+				}) { Text("그룹 이동") }
+			}
+			is DbTestTarget.Group -> Column {
+				// group members
+				ListItem(
+					icon = {
+						Icon(
+							painterResource(R.drawable.ic_account_circle_24),
+							contentDescription = null
+						)
+					},
+					secondaryText = { Text("자가진단 예약: ${group.scheduleInfo()}") }
+				) {
+					val text = with(pref.db) { target.allUsers }.joinToString { it.user.name }
+					Text(text)
+				}
+				
+				// disband group
+				ListItem(modifier = Modifier.clickAction {
+					scope.launch {
+						var inheritSchedule by mutableStateOf(false)
+						
+						val doDisband = navigator.promptYesNoDialog(
+							title = { Text("${groupName}을(를) 해제할까요?") },
+							content = {
+								ListItem(
+									icon = {
+										Checkbox(
+											checked = inheritSchedule,
+											onCheckedChange = null
+										)
+									},
+									text = { Text("그룹의 자가진단 예약 상태 유지") },
+									modifier = Modifier.clickable {
+										inheritSchedule = !inheritSchedule
+									}
+								)
+							}
+						)
+						
+						if(doDisband == true) {
+							pref.db.disbandGroup(group, inheritSchedule = inheritSchedule)
+						}
+					}
+				}) {
+					Text("그룹 해제")
+				}
+				
+				// remove group and group members entirely
+				ListItem(modifier = Modifier.clickAction {
+					scope.launch {
+						val doDelete = navigator.promptYesNoDialog(
+							title = { Text("${groupName}을(를) 삭제할까요?") }
+						)
+						
+						if(doDelete == true) pref.db.removeTestGroup(group)
+					}
+				}) { Text("그룹과 그룹원 삭제") }
 			}
 			
-			// remove group and group members entirely
-			ListItem(modifier = Modifier.clickAction {
-				scope.launch {
-					val doDelete = navigator.promptYesNoDialog(
-						title = { Text("${groupName}을 삭제할까요?") }
-					)
-					
-					if(doDelete == true) pref.db.removeTestGroup(group)
-				}
-			}) { Text("그룹과 그룹원 삭제") }
 		}
 	}
 }
@@ -335,7 +401,7 @@ private fun EditUsersContent(
 			}
 			
 			ListItem(
-				icon = {},
+				icon = { Icon(painterResource(R.drawable.ic_add_24), contentDescription = null) },
 				modifier = Modifier.clickable { navigator.showRouteAsync { Setup() } }
 			) {
 				Text("사용자 추가")
@@ -348,35 +414,86 @@ private fun EditUsersContent(
 @Composable
 fun NewGroup(): Unit = MaterialDialog(onCloseRequest = currentNavigator.onPopRoute) {
 	val navigator = currentNavigator
-	val scope = rememberCoroutineScope()
+	val pref = LocalPreference.current
 	
-	fun selectGroupMember() = scope.launch {
-		val member = navigator.showDialog<List<DbTestGroup>> {
-		
+	val users = remember {
+		pref.db.testGroups.groups.filter { it.target is DbTestTarget.Single }
+	}
+	
+	val selection = remember {
+		mutableStateListOf<Boolean>().also {
+			it += List(users.size) { false }
 		}
 	}
 	
-	Title { Text("그룹 만들기") }
-	Content {
-		var groupName by remember { mutableStateOf("") }
-		val focusManager = LocalFocusManager.current
-		
-		Input(focusOnShow = true) {
-			TextField(
-				value = groupName,
-				onValueChange = { groupName = it },
-				label = { Text("그룹 이름") },
-				keyboardOptions = KeyboardOptions(
-					keyboardType = KeyboardType.Text,
-					imeAction = ImeAction.Next
-				),
-				keyboardActions = KeyboardActions { focusManager.moveFocus(FocusDirection.Down) },
-				modifier = Modifier.fillMaxWidth()
-			)
-			
-			TextButton(onClick = { selectGroupMember() }) {
-			
+	fun selectGroupMember() = navigator.showDialogAsync {
+		Title { Text("사용자 추가") }
+		ListContent {
+			Column {
+				for((index, user) in users.withIndex()) ListItem(
+					icon = {
+						Checkbox(
+							checked = selection[index],
+							onCheckedChange = null
+						)
+					},
+					modifier = Modifier.clickable { selection[index] = !selection[index] }
+				) {
+					Text(with(pref.db) { (user.target as DbTestTarget.Single).user.user.name })
+				}
 			}
 		}
+		
+		Buttons {
+			PositiveButton { Text("확인") }
+		}
+	}
+	
+	
+	var groupName by remember { mutableStateOf("") }
+	
+	Title { Text("그룹 만들기") }
+	Content {
+		Column {
+			val focusManager = LocalFocusManager.current
+			
+			this@MaterialDialog.Input(focusOnShow = true, contentPadding = PaddingValues()) {
+				TextField(
+					value = groupName,
+					onValueChange = { groupName = it },
+					label = { Text("그룹 이름") },
+					keyboardOptions = KeyboardOptions(
+						keyboardType = KeyboardType.Text,
+						imeAction = ImeAction.Next
+					),
+					keyboardActions = KeyboardActions { focusManager.moveFocus(FocusDirection.Down) },
+					modifier = Modifier.fillMaxWidth()
+				)
+			}
+			
+			Spacer(Modifier.height(8.dp))
+			
+			TextButton(onClick = { selectGroupMember() }) { Text("사용자 선택") }
+			
+			// TODO: select schedule here
+		}
+	}
+	
+	Buttons {
+		PositiveButton(onClick = {
+			val realUsers = users.filterIndexed { index, _ -> selection[index] }
+			
+			val group = DbTestGroup(
+				target = DbTestTarget.Group(name = groupName, userIds = emptyList())
+			)
+			
+			// whether `group` is present in db.testGroups does not matter
+			// this automatically adds `group`
+			pref.db.moveToGroup(
+				target = realUsers.map { (it.target as DbTestTarget.Single).userId to it },
+				toGroup = group
+			)
+		}) { Text("확인") }
+		NegativeButton { Text("취소") }
 	}
 }

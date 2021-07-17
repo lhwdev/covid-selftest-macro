@@ -35,9 +35,6 @@ import kotlinx.coroutines.*
 import kotlin.math.max
 
 
-// TODO: separate business logics from ui
-
-
 data class SetupParameters(
 	val targetTestGroup: DbTestGroup? = null,
 	val endRoute: (() -> Unit)? = null
@@ -240,7 +237,7 @@ private fun WizardCommon(
 				
 				val text = when {
 					wizard.index != wizard.count - 1 -> "다음"
-					pref.firstState == 0 -> "완료"
+					pref.isFirstTime -> "완료"
 					else -> "추가"
 				}
 				
@@ -373,25 +370,23 @@ private fun WizardInstitutionInfo(
 
 
 @Composable
-private fun MultipleInstituteDialog(
+private fun FloatingMaterialDialogScope.MultipleInstituteDialog(
 	instituteType: InstituteType,
 	institutes: List<InstituteInfo>,
 	onSelect: (InstituteInfo?) -> Unit,
 ) {
-	MaterialDialog(onCloseRequest = { onSelect(null) }) {
-		Title { Text("${instituteType.displayName} 선택") }
-		
-		Column {
-			for(institute in institutes) ListItem(
-				modifier = Modifier.clickable { onSelect(institute) }
-			) {
-				Text(institute.name, style = MaterialTheme.typography.body1)
-			}
+	Title { Text("${instituteType.displayName} 선택") }
+	
+	Column {
+		for(institute in institutes) ListItem(
+			modifier = Modifier.clickable { onSelect(institute) }
+		) {
+			Text(institute.name, style = MaterialTheme.typography.body1)
 		}
-		
-		Buttons {
-			NegativeButton { Text("취소") }
-		}
+	}
+	
+	Buttons {
+		NegativeButton { Text("취소") }
 	}
 }
 
@@ -464,7 +459,7 @@ private fun ColumnScope.WizardSchoolInfo(
 			return@find
 		}
 		
-		if(schools.size > 1) navigator.showRouteUnit { removeRoute ->
+		if(schools.size > 1) navigator.showDialogUnit { removeRoute ->
 			MultipleInstituteDialog(
 				instituteType = InstituteType.school,
 				institutes = schools,
@@ -591,7 +586,7 @@ private suspend fun submitLogin(
 	// user agreement
 	if(!userId.agreement) {
 		selfLog("약관 동의 필요!")
-		navigator.showDialogUnit { close ->
+		navigator.showDialogUnit {
 			Title { Text("알림") }
 			Content { Text("공식 자가진단 사이트나 앱에서 로그인한 후 약관에 동의해 주세요.") }
 			Buttons {
@@ -641,7 +636,7 @@ private suspend fun submitLogin(
 	selfLog("#4. 비밀번호 결과")
 	
 	when(result) {
-		is PasswordWrong -> navigator.showDialogUnit { close ->
+		is PasswordWrong -> navigator.showDialogUnit {
 			Title { Text("로그인 실패") }
 			Content {
 				Text(
@@ -861,7 +856,7 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 		) {
 			WizardCommon(
 				wizard,
-				wizardFulfilled = if(pref.firstState == 0) enabled.count { it } > 0 else true,
+				wizardFulfilled = if(pref.isFirstTime) enabled.count { it } > 0 else true,
 				showNotFulfilledWarning = {
 					scope.launch {
 						model.showSnackbar("사용자를 최소 한 명 선택해주세요")
@@ -918,10 +913,12 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 						groups = previousUserGroups.groups + newUserGroups.associateBy { it.id }
 					)
 					
+					val previousTestGroups = pref.db.testGroups
 					val targetTestGroup = parameters.targetTestGroup
+					val hadAnyTestGroups = previousTestGroups.groups.isNotEmpty()
+					
 					if(targetTestGroup == null) {
 						// add new group
-						val previousTestGroups = pref.db.testGroups
 						var maxGroupGeneratedNameIndex =
 							previousTestGroups.maxGroupGeneratedNameIndex
 						
@@ -961,8 +958,8 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 					when {
 						parameters.endRoute != null -> parameters.endRoute.invoke()
 						
-						pref.firstState == 0 || pref.db.testGroups.groups.isEmpty() -> {
-							pref.firstState = 1
+						navigator.routes.size == 1 -> {
+							pref.isFirstTime = false
 							navigator.clearRoute()
 							navigator.pushRoute { Main() }
 						}

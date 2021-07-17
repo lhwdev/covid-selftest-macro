@@ -27,7 +27,7 @@ class PreferenceState(pref: PreferenceHolder) {
 	
 	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
 	
-	var firstState by pref.preferenceInt("first", 0)
+	var isFirstTime by pref.preferenceBoolean("first", true)
 	
 	val db: DatabaseManager = DatabaseManager(pref)
 	

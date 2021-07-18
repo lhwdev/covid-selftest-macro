@@ -428,7 +428,7 @@ private fun ColumnScope.WizardSchoolInfo(
 ) {
 	val scope = rememberCoroutineScope()
 	val context = LocalContext.current
-	val navigator = currentNavigator
+	val navigator = LocalNavigator
 	
 	var complete by remember { mutableStateOf(false) }
 	
@@ -691,7 +691,7 @@ private fun WizardStudentInfo(
 ) {
 	val scope = rememberCoroutineScope()
 	val context = LocalContext.current
-	val navigator = currentNavigator
+	val navigator = LocalNavigator
 	
 	val colors = MaterialTheme.colors
 	val commonModifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -824,7 +824,7 @@ private fun WizardStudentInfo(
 
 @Composable
 private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
-	val navigator = currentNavigator
+	val navigator = LocalNavigator
 	val pref = LocalPreference.current
 	val scope = rememberCoroutineScope()
 	

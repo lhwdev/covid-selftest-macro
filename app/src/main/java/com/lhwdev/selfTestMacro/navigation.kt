@@ -11,11 +11,14 @@ import kotlin.coroutines.resume
 import kotlin.math.abs
 
 
-val LocalNavigator = compositionLocalOf<Navigator> { error("not provided") }
-val LocalCurrentNavigator = compositionLocalOf<CurrentNavigator> { error("not provided") }
+val LocalGlobalNavigator = compositionLocalOf<Navigator> { error("not provided") }
 
-inline val currentNavigator: CurrentNavigator
-	@Composable get() = LocalCurrentNavigator.current
+@Suppress("CompositionLocalNaming")
+@PublishedApi
+internal val sLocalCurrentNavigator = compositionLocalOf<CurrentNavigator> { error("not provided") }
+
+inline val LocalNavigator: CurrentNavigator
+	@Composable get() = sLocalCurrentNavigator.current
 
 
 interface Navigator {
@@ -102,9 +105,9 @@ interface Route {
 
 @Composable
 fun RouteContent(route: Route) {
-	val navigator = LocalNavigator.current
+	val navigator = LocalGlobalNavigator.current
 	val currentNav = remember(navigator, route) { CurrentNavigator(navigator, route) }
-	CompositionLocalProvider(LocalCurrentNavigator provides currentNav) {
+	CompositionLocalProvider(sLocalCurrentNavigator provides currentNav) {
 		route.content()
 	}
 }

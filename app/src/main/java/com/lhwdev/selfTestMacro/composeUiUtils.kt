@@ -1,8 +1,7 @@
 package com.lhwdev.selfTestMacro
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.Interaction
@@ -15,11 +14,15 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.icons.ExpandLess
 import com.lhwdev.selfTestMacro.icons.ExpandMore
@@ -97,6 +100,35 @@ fun <T> AnimateListAsComposable(
 			alpha = if(index >= lastOpaqueIndex) 1f else 0f
 		}) {
 			animation(item, { animatable.value }) { content(index, item) }
+		}
+	}
+}
+
+
+@Composable
+fun AnimateHeight(
+	visible: Boolean,
+	modifier: Modifier = Modifier,
+	animationSpec: AnimationSpec<Dp> = spring(),
+	content: @Composable () -> Unit
+) {
+	BoxWithConstraints {
+		val density = LocalDensity.current
+		val height by animateDpAsState(
+			if(visible) maxHeight else 0.dp,
+			animationSpec = animationSpec
+		)
+		
+		Layout(
+			content = content,
+			modifier = modifier.clipToBounds()
+		) { measurables, constraints ->
+			val measurable = measurables.single()
+			val placeable = measurable.measure(constraints)
+			
+			layout(constraints.maxWidth, with(density) { height.roundToPx() }) {
+				placeable.place(0, 0)
+			}
 		}
 	}
 }
@@ -259,7 +291,7 @@ fun DropdownPicker(
 				isEmpty -> InputPhase.UnfocusedEmpty
 				else -> InputPhase.UnfocusedNotEmpty
 			},
-			modifier = Modifier
+			innerModifier = Modifier
 				.clickable { if(!readonly) setExpanded(true) }
 				.fillMaxWidth(),
 			enabled = enabled,
@@ -291,7 +323,9 @@ fun DropdownPicker(
 			DropdownMenu(
 				expanded = expanded,
 				onDismissRequest = { setExpanded(false) },
-				modifier = Modifier.width(maxWidth).sizeIn(maxHeight = DropdownMenuDefaultMaxHeight)
+				modifier = Modifier
+					.width(maxWidth)
+					.sizeIn(maxHeight = DropdownMenuDefaultMaxHeight)
 			) {
 				dropdown()
 			}

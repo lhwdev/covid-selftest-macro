@@ -27,7 +27,7 @@ internal enum class MaterialDialogButtonTypes {
  * See [MaterialDialogButtonsScope] for more information about the content
  */
 @Composable
-fun FloatingMaterialDialogScope.Buttons(content: @Composable MaterialDialogButtonsScope.() -> Unit) {
+fun MaterialDialogScope.Buttons(content: @Composable MaterialDialogButtonsScope.() -> Unit) {
 	val interButtonPadding = with(LocalDensity.current) { 12.dp.toPx().toInt() }
 	val defaultBoxHeight = with(LocalDensity.current) { 36.dp.toPx().toInt() }
 	val accessibilityPadding = with(LocalDensity.current) { 12.dp.toPx().toInt() }

@@ -48,6 +48,7 @@ enum class InputPhase {
 fun TextFieldDecoration(
 	inputState: InputPhase,
 	modifier: Modifier = Modifier,
+	innerModifier: Modifier = Modifier,
 	enabled: Boolean = true,
 	label: @Composable (() -> Unit)? = null,
 	leadingIcon: @Composable (() -> Unit)? = null,
@@ -116,6 +117,7 @@ fun TextFieldDecoration(
 		
 		TextFieldLayout(
 			modifier = modifier,
+			innerModifier = innerModifier,
 			decoratedPlaceholder = null,
 			decoratedLabel = decoratedLabel,
 			leading = leadingIcon,
@@ -136,7 +138,8 @@ fun TextFieldDecoration(
 
 @Composable
 internal fun TextFieldLayout(
-	modifier: Modifier,
+	modifier: Modifier = Modifier,
+	innerModifier: Modifier,
 	decoratedPlaceholder: @Composable ((Modifier) -> Unit)?,
 	decoratedLabel: @Composable (() -> Unit)?,
 	leading: @Composable (() -> Unit)?,
@@ -151,9 +154,9 @@ internal fun TextFieldLayout(
 	content: @Composable () -> Unit
 ) {
 	Box(
-		modifier = Modifier
+		modifier = modifier
 			.clip(shape)
-			.then(modifier) // inevitable; to clip shape; if modifier = Modifier.clickable, ripple goes out of boundary
+			.then(innerModifier) // inevitable; to clip shape; if modifier = Modifier.clickable, ripple goes out of boundary
 			.defaultMinSize(
 				minWidth = TextFieldMinWidth,
 				minHeight = TextFieldMinHeight

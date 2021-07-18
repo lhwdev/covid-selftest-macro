@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun EditUsers() {
-	val navigator = currentNavigator
+	val navigator = LocalNavigator
 	val pref = LocalPreference.current
 	val scope = rememberCoroutineScope()
 	val selection = remember { mutableStateListOf<DbTestGroup>() }
@@ -333,7 +333,7 @@ private fun EditUsersContent(
 	selection: MutableList<DbTestGroup>
 ) {
 	val pref = LocalPreference.current
-	val navigator = currentNavigator
+	val navigator = LocalNavigator
 	val scope = rememberCoroutineScope()
 	
 	with(pref.db) {
@@ -412,8 +412,8 @@ private fun EditUsersContent(
 
 
 @Composable
-fun NewGroup(): Unit = MaterialDialog(onCloseRequest = currentNavigator.onPopRoute) {
-	val navigator = currentNavigator
+fun NewGroup(): Unit = MaterialDialog(onCloseRequest = LocalNavigator.onPopRoute) {
+	val navigator = LocalNavigator
 	val pref = LocalPreference.current
 	
 	val users = remember {

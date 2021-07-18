@@ -37,7 +37,7 @@ fun ComposeApp(activity: Activity) {
 		CompositionLocalProvider(
 			LocalActivity provides activity,
 			LocalPreference provides pref,
-			LocalNavigator provides navigator
+			LocalGlobalNavigator provides navigator
 		) {
 			ProvideAutoWindowInsets {
 				BoxWithConstraints {

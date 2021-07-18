@@ -31,7 +31,7 @@ fun Main(
 		remember { MainRepositoryImpl(pref) }
 	}
 ): Unit = Surface(color = MaterialTheme.colors.surface) {
-	val navigator = currentNavigator
+	val navigator = LocalNavigator
 	
 	AutoSystemUi(enabled = true) { scrims ->
 		Scaffold(
@@ -112,7 +112,7 @@ private fun GroupInfo(group: DbTestGroup): GroupInfo {
 @Composable
 private fun ColumnScope.MainContent(repository: MainRepository) {
 	val pref = LocalPreference.current
-	val navigator = currentNavigator
+	val navigator = LocalNavigator
 	
 	val users = pref.db.users.users
 	val groups = pref.db.testGroups.groups
@@ -223,6 +223,9 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 				painterResource(R.drawable.ic_access_alarm_24),
 				contentDescription = null
 			)
+		},
+		trailingIcon = {
+			Icon(Icons.Filled.ExpandMore, contentDescription = null)
 		}
 	) {
 		val text = buildAnnotatedString {
@@ -553,10 +556,20 @@ private fun Navigator.showScheduleSelfTest(info: GroupInfo): Unit = showDialogAs
 		modifier = Modifier.wrapContentHeight()
 	) {
 		val pref = LocalPreference.current
+		val navigator = LocalNavigator
 		val group = info.group
 		val target = group.target
 		
 		Column {
+			@Composable
+			fun Header(text: String) {
+				Text(
+					text = text,
+					style = MaterialTheme.typography.body1,
+					modifier = Modifier.padding(vertical = 10.dp, horizontal = 22.dp)
+				)
+			}
+			
 			ListItem(
 				icon = { Icon(painterResource(pref.db.iconFor(target)), contentDescription = null) }
 			) {
@@ -569,7 +582,9 @@ private fun Navigator.showScheduleSelfTest(info: GroupInfo): Unit = showDialogAs
 				Text(text)
 			}
 			
-			Spacer(Modifier.height(4.dp))
+			Spacer(Modifier.height(10.dp))
+			
+			Header("자가진단 예약")
 			
 			var type by remember {
 				mutableStateOf(
@@ -582,15 +597,51 @@ private fun Navigator.showScheduleSelfTest(info: GroupInfo): Unit = showDialogAs
 			}
 			
 			@Composable
-			fun TypeCheckbox(targetType: ScheduleType) {
-				RadioButton(selected = type == targetType, onClick = null)
+			fun ScheduleTypeHead(targetType: ScheduleType, text: String) {
+				ListItem(
+					icon = { RadioButton(selected = type == targetType, onClick = null) },
+					modifier = Modifier.clickable { type = targetType }
+				) {
+					Text(text)
+				}
 			}
 			
 			
 			/// none
-			ListItem(icon = { TypeCheckbox(ScheduleType.none) }) {
-				Text("꺼짐")
+			ScheduleTypeHead(ScheduleType.none, "꺼짐")
+			
+			
+			/// fixed
+			ScheduleTypeHead(ScheduleType.fixed, "매일 특정 시간")
+			
+			var hour by remember { mutableStateOf(-1) }
+			var minute by remember { mutableStateOf(0) }
+			
+			AnimateHeight(
+				visible = type == ScheduleType.fixed,
+				modifier = Modifier.padding(horizontal = 8.dp)
+			) {
+				TextFieldDecoration(
+					label = { Text("시간 설정") },
+					inputState = if(hour == -1) InputPhase.UnfocusedEmpty else InputPhase.UnfocusedNotEmpty,
+					modifier = Modifier.padding(8.dp),
+					innerModifier = Modifier.clickable {
+					
+					}
+				) {
+					if(hour != -1) {
+						val text = buildAnnotatedString {
+							append("$hour")
+							withStyle(SpanStyle(color = MediumContentColor)) { append(":") }
+							append("$minute")
+						}
+						Text(text)
+					}
+				}
 			}
+			
+			
+			/// random
 		}
 	}
 }

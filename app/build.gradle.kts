@@ -29,6 +29,10 @@ android {
 		}
 	}
 	
+	compileOptions {
+		isCoreLibraryDesugaringEnabled = true
+	}
+	
 	buildFeatures {
 		compose = true
 	}
@@ -55,6 +59,8 @@ android {
 dependencies {
 	implementation(project(":api"))
 	implementation(project(":app-serialization")) // workaround for compose + serialization
+	
+	coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
 	
 	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 	implementation(kotlin("stdlib"))

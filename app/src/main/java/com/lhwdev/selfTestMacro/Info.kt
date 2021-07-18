@@ -20,7 +20,7 @@ import com.vanpra.composematerialdialogs.showDialogAsync
 fun Info(): Unit = MaterialTheme(
 	colors = MaterialTheme.colors.copy(primary = Color(0xff304ffe), onPrimary = Color.White)
 ) {
-	val navigator = currentNavigator
+	val navigator = LocalNavigator
 	val pref = LocalPreference.current
 	val context = LocalContext.current
 	

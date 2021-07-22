@@ -1,26 +1,26 @@
 package com.vanpra.composematerialdialogs
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.view.WindowCompat
 import com.lhwdev.selfTestMacro.AppliedUiPaddings
+import com.lhwdev.selfTestMacro.AutoSystemUi
 import com.lhwdev.selfTestMacro.ProvideAppliedUiPaddings
+import com.lhwdev.selfTestMacro.SystemUiMode
 
 
 @Composable
@@ -80,6 +80,7 @@ abstract class MaterialDialogScope(
 
 
 val FloatingDialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+val FloatingDialogMaxHeight = 480.dp
 
 
 /**
@@ -93,8 +94,10 @@ val FloatingDialogProperties = DialogProperties(usePlatformDefaultWidth = false)
 @Composable
 fun MaterialDialog(
 	onCloseRequest: () -> Unit,
+	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	backgroundColor: Color = MaterialTheme.colors.surface,
+	maxHeight: Dp = FloatingDialogMaxHeight,
 	shape: Shape = MaterialTheme.shapes.medium,
 	border: BorderStroke? = null,
 	elevation: Dp = 24.dp,
@@ -105,24 +108,42 @@ fun MaterialDialog(
 		properties = properties
 	) { info ->
 		/* Only using 40.dp padding as 8.dp is already provided */
-		Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-			Surface(
-				modifier = Modifier
-					.fillMaxWidth(fraction = .77f)
-					.sizeIn(maxHeight = 480.dp),
-				shape = shape,
-				color = backgroundColor,
-				border = border,
-				elevation = elevation
+		AutoSystemUi(
+			onScreenMode = null,
+			ime = SystemUiMode.Default
+		) {
+			Box(
+				Modifier
+					.fillMaxSize(fraction = 1f - .03f) // some guard; shadow gets clipped as this dialog cannot be drawn behind app bar
+					.pointerInput(Unit) {
+						if(properties.dismissOnClickOutside) detectTapGestures(
+							onPress = { onCloseRequest() }
+						)
+					},
+				contentAlignment = Alignment.Center
 			) {
-				ProvideAppliedUiPaddings(
-					AppliedUiPaddings(
-						statusBar = true,
-						navigationBar = true
-					)
+				Surface(
+					modifier = modifier
+						.fillMaxWidth(fraction = .81f)
+						.sizeIn(maxHeight = maxHeight)
+						.pointerInput(Unit) {
+							// override dismissOnClickOutside
+							if(properties.dismissOnClickOutside) detectTapGestures()
+						},
+					shape = shape,
+					color = backgroundColor,
+					border = border,
+					elevation = elevation
 				) {
-					Column {
-						FloatingMaterialDialogScope(info, this).content()
+					ProvideAppliedUiPaddings(
+						AppliedUiPaddings(
+							statusBar = true,
+							navigationBar = true
+						)
+					) {
+						Column {
+							FloatingMaterialDialogScope(info, this).content()
+						}
 					}
 				}
 			}

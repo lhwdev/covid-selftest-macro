@@ -14,8 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +31,11 @@ fun EditUsers() {
 	val pref = LocalPreference.current
 	val scope = rememberCoroutineScope()
 	val selection = remember { mutableStateListOf<DbTestGroup>() }
+	
+	val groups = pref.db.testGroups.groups
+	if(!groups.containsAll(selection)) {
+		val filtered = selection.filter { it in groups }
+	}
 	
 	BackHandler(enabled = selection.isNotEmpty()) {
 		selection.clear()
@@ -71,7 +78,7 @@ fun EditUsers() {
 								
 								DropdownMenuItem(onClick = {
 									showAddDialog = false
-									navigator.showRouteAsync { NewGroup() }
+									navigator.showDialogAsync { NewGroup() }
 								}) {
 									Text("그룹 만들기")
 								}
@@ -115,10 +122,16 @@ fun EditUsers() {
 									onDismissRequest = { moreActions = false }
 								) {
 									DropdownMenuItem(onClick = clickAction {
-										pref.db.testGroups.groups.forEach {
+										groups.forEach {
 											if(it !in selection) selection += it
 										}
 									}) { Text("모두 선택") }
+									
+									DropdownMenuItem(onClick = clickAction {
+										navigator.showDialogAsync {
+											NewGroup(initialSelection = selection)
+										}
+									}) { Text("그룹 만들기") }
 									
 									DropdownMenuItem(onClick = clickAction {
 										scope.launch {
@@ -140,7 +153,7 @@ fun EditUsers() {
 											if(answer == true) {
 												pref.db.removeTestGroups(selection)
 												selection.clear()
-												if(pref.db.testGroups.groups.isEmpty()) {
+												if(groups.isEmpty()) {
 													navigator.popRoute()
 												}
 											}
@@ -173,8 +186,8 @@ private suspend fun showDetailsFor(
 	scope: CoroutineScope
 ): Unit = navigator.showDialogUnit { removeRoute ->
 	fun Modifier.clickAction(block: () -> Unit): Modifier = clickable {
-		block()
 		removeRoute()
+		block()
 	}
 	
 	val target = group.target
@@ -257,7 +270,7 @@ private suspend fun showDetailsFor(
 							}
 						}
 						
-						if(moveTarget != null) pref.db.moveToGroup(
+						if(moveTarget != null) pref.db.moveToTestGroup(
 							target = listOf(target.userId to group),
 							toGroup = moveTarget
 						)
@@ -269,7 +282,7 @@ private suspend fun showDetailsFor(
 				ListItem(
 					icon = {
 						Icon(
-							painterResource(R.drawable.ic_account_circle_24),
+							painterResource(R.drawable.ic_group_24),
 							contentDescription = null
 						)
 					},
@@ -277,6 +290,42 @@ private suspend fun showDetailsFor(
 				) {
 					val text = with(pref.db) { target.allUsers }.joinToString { it.user.name }
 					Text(text)
+				}
+				
+				// rename
+				ListItem(modifier = Modifier.clickAction {
+					navigator.showDialogAsync { removeRoute ->
+						var name by remember {
+							mutableStateOf(
+								TextFieldValue(
+									text = groupName,
+									selection = TextRange(0, groupName.length)
+								)
+							)
+						}
+						
+						fun done() {
+							pref.db.renameTestGroup(group, name.text)
+							removeRoute()
+						}
+						
+						Title { Text("그룹 이름 바꾸기") }
+						
+						Input(focusOnShow = true) {
+							TextField(
+								name, onValueChange = { name = it },
+								keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+								keyboardActions = KeyboardActions { done() }
+							)
+						}
+						
+						Buttons {
+							PositiveButton(onClick = { done() }) { Text("변경") }
+							NegativeButton { Text("취소") }
+						}
+					}
+				}) {
+					Text("그룹 이름 바꾸기")
 				}
 				
 				// disband group
@@ -412,7 +461,7 @@ private fun EditUsersContent(
 
 
 @Composable
-fun NewGroup(): Unit = MaterialDialog(onCloseRequest = LocalNavigator.onPopRoute) {
+fun FloatingMaterialDialogScope.NewGroup(initialSelection: List<DbTestGroup> = emptyList()) {
 	val navigator = LocalNavigator
 	val pref = LocalPreference.current
 	
@@ -422,7 +471,7 @@ fun NewGroup(): Unit = MaterialDialog(onCloseRequest = LocalNavigator.onPopRoute
 	
 	val selection = remember {
 		mutableStateListOf<Boolean>().also {
-			it += List(users.size) { false }
+			it += List(users.size) { index -> users[index] in initialSelection }
 		}
 	}
 	
@@ -457,7 +506,7 @@ fun NewGroup(): Unit = MaterialDialog(onCloseRequest = LocalNavigator.onPopRoute
 		Column {
 			val focusManager = LocalFocusManager.current
 			
-			this@MaterialDialog.Input(focusOnShow = true, contentPadding = PaddingValues()) {
+			this@NewGroup.Input(focusOnShow = true, contentPadding = PaddingValues()) {
 				TextField(
 					value = groupName,
 					onValueChange = { groupName = it },
@@ -474,6 +523,11 @@ fun NewGroup(): Unit = MaterialDialog(onCloseRequest = LocalNavigator.onPopRoute
 			Spacer(Modifier.height(8.dp))
 			
 			TextButton(onClick = { selectGroupMember() }) { Text("사용자 선택") }
+			Text(
+				users.filterIndexed { index, _ -> selection[index] }
+					.joinToString { with(pref.db) { it.target.name } },
+				modifier = Modifier.padding(8.dp)
+			)
 			
 			// TODO: select schedule here
 		}
@@ -489,10 +543,11 @@ fun NewGroup(): Unit = MaterialDialog(onCloseRequest = LocalNavigator.onPopRoute
 			
 			// whether `group` is present in db.testGroups does not matter
 			// this automatically adds `group`
-			pref.db.moveToGroup(
+			pref.db.moveToTestGroup(
 				target = realUsers.map { (it.target as DbTestTarget.Single).userId to it },
 				toGroup = group
 			)
+			navigator.popRoute()
 		}) { Text("확인") }
 		NegativeButton { Text("취소") }
 	}

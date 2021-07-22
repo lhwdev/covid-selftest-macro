@@ -33,7 +33,7 @@ data class AppliedUiPaddings(
 }
 
 @SuppressLint("CompositionLocalNaming")
-private val sLocalAppliedUiPaddings = compositionLocalOf { AppliedUiPaddings() }
+val sLocalAppliedUiPaddings = compositionLocalOf { AppliedUiPaddings() }
 val LocalAppliedUiPaddings: CompositionLocal<AppliedUiPaddings> = sLocalAppliedUiPaddings
 
 @Composable
@@ -269,11 +269,11 @@ fun AutoSystemUi(
 	statusBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	navigationBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	ime: SystemUiMode? = SystemUiMode.Default,
+	appliedUiPaddings: AppliedUiPaddings = LocalAppliedUiPaddings.current,
 	content: @Composable ColumnScope.(Scrims) -> Unit,
 ) {
 	val realEnabled = enabled and LocalAutoSystemUiEnabled.current
 	
-	val appliedUiPaddings = LocalAppliedUiPaddings.current
 	val enabledState by rememberUpdatedState(realEnabled)
 	
 	val controller = rememberUiController()
@@ -281,7 +281,11 @@ fun AutoSystemUi(
 	
 	@Composable
 	fun StatusBarScrim(color: Color) {
-		Box(Modifier.statusBarsHeight().fillMaxWidth().background(color))
+		Box(
+			Modifier
+				.statusBarsHeight()
+				.fillMaxWidth()
+				.background(color))
 		
 		val isDark = LocalContentColor.current.isDarkColor()
 		if(enabledState) PreviewSideEffect {
@@ -291,7 +295,11 @@ fun AutoSystemUi(
 	
 	@Composable
 	fun NavigationBarScrim(color: Color) {
-		Box(Modifier.navigationBarsHeight().fillMaxWidth().background(color))
+		Box(
+			Modifier
+				.navigationBarsHeight()
+				.fillMaxWidth()
+				.background(color))
 		
 		val isDark = LocalContentColor.current.isDarkColor()
 		if(enabledState) PreviewSideEffect {

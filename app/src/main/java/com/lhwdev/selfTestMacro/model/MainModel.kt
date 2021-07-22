@@ -59,9 +59,11 @@ internal data class GroupInfo(
 		}
 }
 
+@Immutable
 sealed class Status {
 	data class Submitted(val isHealthy: Boolean, val time: String) : Status()
 	object NotSubmitted : Status()
 }
 
+@Immutable
 internal data class GroupStatus(val notSubmittedCount: Int, val suspicious: List<DbUser>)

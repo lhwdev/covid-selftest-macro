@@ -5,7 +5,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.*
@@ -62,7 +61,6 @@ fun TextFieldDecoration(
 		MaterialTheme.shapes.small.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
 	content: @Composable () -> Unit
 ) {
-	@Suppress("UNUSED_ANONYMOUS_PARAMETER")
 	TextFieldDecoration(
 		inputState = inputState,
 		showLabel = label != null,
@@ -163,7 +161,9 @@ internal fun TextFieldLayout(
 			)
 			// .background(color = backgroundColor, shape = shape)
 			.background(color = backgroundColor)
-			.drawIndicatorLine(lineWidth = indicatorWidth, color = indicatorColor)
+			.drawIndicatorLine(lineWidth = indicatorWidth, color = indicatorColor),
+		contentAlignment = Alignment.CenterStart,
+		propagateMinConstraints = true
 	) {
 		IconsWithTextFieldLayout(
 			textField = content,
@@ -196,7 +196,6 @@ private fun IconsWithTextFieldLayout(
 	animationProgress: Float
 ) {
 	Layout(
-		modifier = Modifier.fillMaxWidth(),
 		content = {
 			if(leading != null) {
 				Box(
@@ -523,7 +522,7 @@ const val ContainerAlpha = 0.12f
 
 
 @Composable
-fun TextFieldDecoration(
+private fun TextFieldDecoration(
 	inputState: InputPhase,
 	showLabel: Boolean,
 	activeColor: Color,

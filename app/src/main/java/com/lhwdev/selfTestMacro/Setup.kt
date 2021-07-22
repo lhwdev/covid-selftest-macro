@@ -31,10 +31,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.api.*
 import com.vanpra.composematerialdialogs.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.launch
 import kotlin.math.max
 
 
+@Immutable
 data class SetupParameters(
 	val targetTestGroup: DbTestGroup? = null,
 	val endRoute: (() -> Unit)? = null
@@ -86,6 +87,7 @@ fun Setup(parameters: SetupParameters = SetupParameters.Default) {
 	}
 }
 
+@Immutable
 internal data class SetupWizard(
 	val index: Int,
 	val currentIndex: Int,
@@ -482,8 +484,12 @@ private fun ColumnScope.WizardSchoolInfo(
 		showNotFulfilledWarning = { notFulfilled.value = model.notFulfilledIndex },
 		modifier = Modifier.weight(1f)
 	) {
-		Column(modifier = Modifier.padding(12.dp).verticalScroll(rememberScrollState())) {
-			val commonModifier = Modifier.fillMaxWidth().padding(8.dp)
+		Column(modifier = Modifier
+			.padding(12.dp)
+			.verticalScroll(rememberScrollState())) {
+			val commonModifier = Modifier
+				.fillMaxWidth()
+				.padding(8.dp)
 			
 			DropdownPicker(
 				dropdown = { onDismiss ->
@@ -694,7 +700,9 @@ private fun WizardStudentInfo(
 	val navigator = LocalNavigator
 	
 	val colors = MaterialTheme.colors
-	val commonModifier = Modifier.fillMaxWidth().padding(8.dp)
+	val commonModifier = Modifier
+		.fillMaxWidth()
+		.padding(8.dp)
 	
 	var notFulfilled by remember { mutableStateOf(-1) }
 	var complete by remember { mutableStateOf(false) }
@@ -746,19 +754,25 @@ private fun WizardStudentInfo(
 				},
 				modifier = Modifier.weight(1f)
 			) {
-				Column(modifier = Modifier.padding(12.dp).verticalScroll(rememberScrollState())) {
+				Column(modifier = Modifier
+					.padding(12.dp)
+					.verticalScroll(rememberScrollState())) {
 					val focusManager = LocalFocusManager.current
 					
 					// header
 					Column(
-						modifier = Modifier.padding(28.dp).fillMaxWidth(),
+						modifier = Modifier
+							.padding(28.dp)
+							.fillMaxWidth(),
 						horizontalAlignment = Alignment.CenterHorizontally
 					) {
 						Icon(
 							painterResource(R.drawable.ic_school_24),
 							contentDescription = null, // not that important
 							tint = Color.Black,
-							modifier = Modifier.padding(12.dp).size(72.dp)
+							modifier = Modifier
+								.padding(12.dp)
+								.size(72.dp)
 						)
 						
 						Text(
@@ -903,14 +917,14 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 					}
 					
 					
-					// go!
-					
 					pref.db.users = previousUsers.copy(
-						users = previousUsers.users + newUsers.associateBy { it.id }
+						users = previousUsers.users + newUsers.associateBy { it.id },
+						maxId = userId
 					)
 					
 					pref.db.userGroups = previousUserGroups.copy(
-						groups = previousUserGroups.groups + newUserGroups.associateBy { it.id }
+						groups = previousUserGroups.groups + newUserGroups.associateBy { it.id },
+						maxId = userGroupId
 					)
 					
 					val previousTestGroups = pref.db.testGroups
@@ -937,7 +951,8 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 						}
 						
 						pref.db.testGroups = previousTestGroups.copy(
-							groups = previousTestGroups.groups + newTestGroups
+							groups = previousTestGroups.groups + newTestGroups,
+							maxGroupGeneratedNameIndex = maxGroupGeneratedNameIndex
 						)
 					} else {
 						// add to existing group
@@ -971,7 +986,9 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 			) {
 				Column(
 					horizontalAlignment = Alignment.CenterHorizontally,
-					modifier = Modifier.padding(vertical = 12.dp).fillMaxSize()
+					modifier = Modifier
+						.padding(vertical = 12.dp)
+						.fillMaxSize()
 				) {
 					Box(Modifier.padding(32.dp, 72.dp)) {
 						Text("사용자 선택", style = MaterialTheme.typography.h3)
@@ -1063,11 +1080,13 @@ private fun ColumnScope.WizardSelectUsersContent(
 			Text(
 				"한 그룹으로 묶기",
 				style = MaterialTheme.typography.body1,
-				modifier = Modifier.clickable(
-					interactionSource = interactionSource,
-					indication = null,
-					onClick = { setIsAllGrouped(!isAllGrouped) }
-				).padding(8.dp)
+				modifier = Modifier
+					.clickable(
+						interactionSource = interactionSource,
+						indication = null,
+						onClick = { setIsAllGrouped(!isAllGrouped) }
+					)
+					.padding(8.dp)
 			)
 		}
 	}

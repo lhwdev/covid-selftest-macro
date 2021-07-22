@@ -5,7 +5,9 @@ package com.vanpra.composematerialdialogs
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lhwdev.selfTestMacro.Navigator
@@ -15,33 +17,48 @@ import com.lhwdev.selfTestMacro.showRouteAsync
 
 
 suspend fun <T> Navigator.showDialog(
+	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
+	maxHeight: Dp = FloatingDialogMaxHeight,
 	routeFactory: (content: @Composable () -> Unit) -> Route = { Route(false, it) },
 	content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
 ): T? = showRoute(routeFactory = routeFactory) { removeRoute ->
 	MaterialDialog(
 		onCloseRequest = { removeRoute(null) },
-		properties = properties
+		modifier = modifier,
+		properties = properties,
+		maxHeight = maxHeight
 	) { content(removeRoute) }
 }
 
 suspend inline fun Navigator.showDialogUnit(
+	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
+	maxHeight: Dp = FloatingDialogMaxHeight,
 	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { Route(false, it) },
 	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
-	showDialog<Unit>(properties, routeFactory) { content { it(Unit) } }
+	showDialog<Unit>(
+		modifier = modifier,
+		properties = properties,
+		maxHeight = maxHeight,
+		routeFactory = routeFactory
+	) { content { it(Unit) } }
 }
 
 inline fun Navigator.showDialogAsync(
+	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
+	maxHeight: Dp = FloatingDialogMaxHeight,
 	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { Route(false, it) },
 	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showRouteAsync(routeFactory) { removeRoute ->
 		MaterialDialog(
 			onCloseRequest = removeRoute,
-			properties = properties
+			modifier = modifier,
+			properties = properties,
+			maxHeight = maxHeight
 		) { content(removeRoute) }
 	}
 }

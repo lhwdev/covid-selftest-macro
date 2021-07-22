@@ -15,17 +15,9 @@
 		<item name="android:backgroundDimEnabled">false</item>
 	</style>
 	
-	<style name="FullScreenDialogWindowTheme" parent="@style/Theme.AppCompat.Light.DialogWhenLarge">
-		<item name="android:windowClipToOutline">false</item>
-		<item name="android:windowNoTitle">true</item>
-		<item name="android:windowBackground">@android:color/transparent</item>
-		<item name="android:windowIsFloating">true</item>
-		
-		<item name="windowActionBar">false</item>
-		<item name="windowNoTitle">true</item>
-		<item name="android:statusBarColor" tools:targetApi="l">@color/transparent</item>
-		<item name="android:navigationBarColor" tools:targetApi="l">@color/transparent</item>
-		<item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
+	<style name="AppTheme.Dialog" parent="Theme.AppCompat.Light.Dialog">
+		<item name="colorPrimary">#ff6200ee</item>
+		<item name="colorAccent">#ff03dac5</item>
 	</style>
 
 </resources>

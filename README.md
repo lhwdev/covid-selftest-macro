@@ -3,7 +3,7 @@
 **이 앱을 사용하여 생기는 모든 문제의 책임은 이 앱의 사용자인 여러분에게 있습니다.**
 건강상태가 좋지 않다면 매크로 예약을 취소해두고 공식 사이트나 앱에서 자가진단을 하시길 바랍니다.
 
-[**앱 다운로드 링크**](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)  
+### [**📎 앱 다운로드 링크**](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)  
 이 앱을 공유할 때는 위 링크보다 이 사이트의 주소를 공유해주세요. (위의 링크는 바뀔 수도)
 
 오류가 생기면 보통 몇 시간 안에 패치합니다.  

@@ -45,7 +45,12 @@ android {
 	kotlinOptions {
 		freeCompilerArgs = freeCompilerArgs + listOf(
 			"-Xjvm-default=compatibility",
-			"-Xopt-in=kotlin.RequiresOptIn,androidx.compose.material.ExperimentalMaterialApi,androidx.compose.ui.ExperimentalComposeUiApi"
+			"-Xopt-in=" + listOf(
+				"kotlin.RequiresOptIn",
+				"androidx.compose.material.ExperimentalMaterialApi",
+				"androidx.compose.ui.ExperimentalComposeUiApi",
+				"androidx.compose.animation.ExperimentalAnimationApi"
+			).joinToString(separator = ",")
 		)
 		jvmTarget = "1.8"
 	}

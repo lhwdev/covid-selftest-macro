@@ -1,5 +1,6 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.ui
 
+import android.annotation.SuppressLint
 import android.app.TimePickerDialog
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
@@ -20,10 +21,23 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.lhwdev.selfTestMacro.*
+import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.icons.ExpandMore
 import com.lhwdev.selfTestMacro.icons.Icons
-import com.lhwdev.selfTestMacro.model.*
+import com.lhwdev.selfTestMacro.repository.*
 import com.vanpra.composematerialdialogs.*
+import kotlinx.coroutines.launch
+
+
+@Immutable
+data class MainModel(val navigator: Navigator, val scaffoldState: ScaffoldState) {
+	suspend fun showSnackbar(
+		message: String,
+		actionLabel: String? = null,
+		duration: SnackbarDuration = SnackbarDuration.Short
+	): SnackbarResult = scaffoldState.snackbarHostState.showSnackbar(message, actionLabel, duration)
+}
 
 
 @Preview
@@ -96,6 +110,7 @@ fun DatabaseManager.iconFor(group: DbTestTarget): Int = when(group) {
 }
 
 
+@SuppressLint("ComposableNaming") // factory
 @Composable
 private fun GroupInfo(group: DbTestGroup): GroupInfo {
 	val pref = LocalPreference.current
@@ -218,7 +233,7 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 	// '자가진단 예약: 꺼짐'
 	RoundButton(
 		onClick = {
-			navigator.showScheduleSelfTest(selectedGroup)
+			navigator.showScheduleSelfTest(repository, selectedGroup)
 		},
 		icon = {
 			Icon(
@@ -541,11 +556,15 @@ private enum class ScheduleType { none, fixed, random }
 
 /// Scheduling
 
-private fun Navigator.showScheduleSelfTest(info: GroupInfo): Unit = showDialogAsync(
+private fun Navigator.showScheduleSelfTest(
+	repository: MainRepository,
+	info: GroupInfo
+): Unit = showDialogAsync(
 	maxHeight = Dp.Unspecified
 ) { removeRoute ->
 	val pref = LocalPreference.current
 	val context = LocalContext.current
+	val scope = rememberCoroutineScope()
 	
 	val group = info.group
 	val target = group.target
@@ -747,8 +766,11 @@ private fun Navigator.showScheduleSelfTest(info: GroupInfo): Unit = showDialogAs
 					)
 				}
 			}
-			pref.db.updateSchedule(group, schedule)
-			removeRoute()
+			scope.launch {
+				repository.scheduleSelfTest(group, schedule)
+				
+				removeRoute()
+			}
 		}) { Text("확인") }
 		NegativeButton { Text("취소") }
 	}

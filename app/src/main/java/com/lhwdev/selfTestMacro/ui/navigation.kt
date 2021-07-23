@@ -1,14 +1,19 @@
 @file:Suppress("NOTHING_TO_INLINE")
 
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.ui
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
-import kotlin.math.abs
 
 
 val LocalGlobalNavigator = compositionLocalOf<Navigator> { error("not provided") }
@@ -119,15 +124,84 @@ interface RouteObserver {
 
 interface RouteTransition {
 	@Composable
-	fun OnTransition(fraction: () -> Float, content: @Composable () -> Unit)
+	fun Transition(
+		visibleState: VisibilityAnimationState,
+		onAnimationEnd: () -> Unit,
+		content: @Composable () -> Unit
+	)
 }
 
-val DefaultRouteTransition: RouteTransition = object : RouteTransition {
+@Composable
+fun OnTransitionEndObserver(transition: Transition<*>, onAnimationEnd: () -> Unit) {
+	LaunchedEffect(transition) {
+		snapshotFlow { transition.currentState }
+			.collect {
+				onAnimationEnd()
+			}
+	}
+}
+
+// note: this does not support snapping externally
+@Composable
+fun updateRouteTransition(visibleState: VisibilityAnimationState): Transition<Boolean> {
+	val transitionState = remember {
+		MutableTransitionState(initialState = visibleState == VisibilityAnimationState.visible)
+	}
+	transitionState.targetState = visibleState.targetState
+	
+	return updateTransition(transitionState, label = "updateRouteTransition")
+}
+
+val DefaultOpaqueRouteTransition: RouteTransition = object : RouteTransition {
 	@Composable
-	override fun OnTransition(fraction: () -> Float, content: @Composable () -> Unit) {
-		Box(Modifier.graphicsLayer { alpha = 1 - abs(1 - fraction()) }) {
-			content()
+	override fun Transition(
+		visibleState: VisibilityAnimationState,
+		onAnimationEnd: () -> Unit,
+		content: @Composable () -> Unit
+	) {
+		println(visibleState)
+		Text("HO $visibleState")
+		val transition = updateRouteTransition(visibleState)
+		
+		OnTransitionEndObserver(transition, onAnimationEnd)
+		
+		val scrimTransparency = transition.animateFloat(label = "ScrimTransparency",
+			transitionSpec = { tween(30000) }) {
+			if(it) 1f else 0f
 		}
+		
+		Box {
+			Box(
+				Modifier
+					.matchParentSize()
+					.graphicsLayer { alpha = scrimTransparency.value }
+					.background(Color.Black.copy(alpha = 0.5f))
+			)
+			transition.AnimatedVisibility(
+				visible = { it },
+				enter = slideInHorizontally(initialOffsetX = { it }, tween(30000)),
+				exit = slideOutHorizontally(targetOffsetX = { it }, tween(30000)),
+			) { content() }
+		}
+	}
+}
+
+val DefaultTransparentRouteTransition: RouteTransition = object : RouteTransition {
+	@Composable
+	override fun Transition(
+		visibleState: VisibilityAnimationState,
+		onAnimationEnd: () -> Unit,
+		content: @Composable () -> Unit
+	) {
+		val transition = updateRouteTransition(visibleState)
+		
+		OnTransitionEndObserver(transition, onAnimationEnd)
+		
+		transition.AnimatedVisibility(
+			visible = { it },
+			enter = fadeIn(),
+			exit = fadeOut()
+		) { content() }
 	}
 }
 
@@ -144,8 +218,15 @@ fun DialogRoute(
 	override val isOpaque: Boolean = isOpaque
 	
 	@Composable
-	override fun OnTransition(fraction: () -> Float, content: @Composable () -> Unit) {
+	override fun Transition(
+		visibleState: VisibilityAnimationState,
+		onAnimationEnd: () -> Unit,
+		content: @Composable () -> Unit
+	) {
 		content()
+		if(changed(visibleState)) {
+			onAnimationEnd()
+		}
 	}
 }
 

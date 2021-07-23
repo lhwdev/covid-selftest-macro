@@ -1,10 +1,10 @@
 package com.lhwdev.selfTestMacro
 
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
+import com.lhwdev.selfTestMacro.ui.ComposeApp
 
 
 const val IGNORE_BATTERY_OPTIMIZATION_REQUEST = 1001

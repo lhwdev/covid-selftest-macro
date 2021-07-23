@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.ui
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*

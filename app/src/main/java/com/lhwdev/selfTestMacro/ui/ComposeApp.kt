@@ -1,16 +1,19 @@
 @file:JvmName("AppKt")
 
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.ui
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.systemuicontroller.SystemUiController
+import com.lhwdev.selfTestMacro.PreferenceState
+import com.lhwdev.selfTestMacro.preferenceState
+import com.lhwdev.selfTestMacro.repository.SelfTestSchedulerImpl
+import kotlinx.coroutines.flow.collect
 
 
 val LocalActivity = compositionLocalOf<Activity> { error("not provided") }
@@ -32,6 +35,15 @@ fun ComposeApp(activity: Activity) {
 		
 		navigator
 	}
+	val scheduler = remember { SelfTestSchedulerImpl(pref.db) }
+	
+	LaunchedEffect(pref) {
+		snapshotFlow {
+			pref.db.testGroups
+		}.collect {
+			scheduler.onScheduleUpdated(pref.db, context)
+		}
+	}
 	
 	AppTheme {
 		CompositionLocalProvider(
@@ -40,18 +52,24 @@ fun ComposeApp(activity: Activity) {
 			LocalGlobalNavigator provides navigator
 		) {
 			ProvideAutoWindowInsets {
-				BoxWithConstraints {
-					AnimateListAsComposable(
-						navigator.routes,
-						isOpaque = { it.isOpaque },
-						animation = { route, fraction, content ->
-							val transition = (route as? RouteTransition) ?: DefaultRouteTransition
-							transition.OnTransition(fraction, content)
+				AnimateListAsComposable(
+					navigator.routes,
+					isOpaque = { it.isOpaque },
+					animation = { route, visible, onAnimationEnd, content ->
+						val transition = route as? RouteTransition ?: if(route.isOpaque) {
+							DefaultOpaqueRouteTransition
+						} else {
+							DefaultTransparentRouteTransition
 						}
-					) { index, route ->
-						EnabledRoute(enabled = index == navigator.routes.lastIndex) {
-							RouteContent(route)
-						}
+						transition.Transition(
+							visibleState = visible,
+							onAnimationEnd = onAnimationEnd,
+							content = content
+						)
+					}
+				) { index, route ->
+					EnabledRoute(enabled = index == navigator.routes.lastIndex) {
+						RouteContent(route)
 					}
 				}
 			}

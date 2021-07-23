@@ -1,24 +1,13 @@
-package com.lhwdev.selfTestMacro.model
+package com.lhwdev.selfTestMacro.repository
 
 import android.content.Context
 import androidx.annotation.DrawableRes
-import androidx.compose.material.ScaffoldState
-import androidx.compose.material.SnackbarDuration
-import androidx.compose.material.SnackbarResult
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.lhwdev.selfTestMacro.*
 import com.lhwdev.selfTestMacro.api.SurveyData
+import com.lhwdev.selfTestMacro.ui.MainModel
 
-
-@Immutable
-data class MainModel(val navigator: Navigator, val scaffoldState: ScaffoldState) {
-	suspend fun showSnackbar(
-		message: String,
-		actionLabel: String? = null,
-		duration: SnackbarDuration = SnackbarDuration.Short
-	): SnackbarResult = scaffoldState.snackbarHostState.showSnackbar(message, actionLabel, duration)
-}
 
 @Immutable
 sealed class SubmitResult(val target: DbUser) {
@@ -38,7 +27,7 @@ interface MainRepository {
 		surveyData: SurveyData
 	): List<SubmitResult>
 	
-	suspend fun scheduleSelfTest(group: DbTestGroup)
+	suspend fun scheduleSelfTest(group: DbTestGroup, newSchedule: DbTestSchedule)
 }
 
 

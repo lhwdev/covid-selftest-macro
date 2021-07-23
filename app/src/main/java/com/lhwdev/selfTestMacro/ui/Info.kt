@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +11,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.lhwdev.selfTestMacro.BuildConfig
+import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.isDebugEnabled
+import com.lhwdev.selfTestMacro.openWebsite
 import com.vanpra.composematerialdialogs.ListContent
 import com.vanpra.composematerialdialogs.Title
 import com.vanpra.composematerialdialogs.showDialogAsync

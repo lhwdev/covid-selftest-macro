@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro.model
+package com.lhwdev.selfTestMacro.repository
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -86,7 +86,8 @@ class MainRepositoryImpl(
 				for(resultItem in result) when(resultItem) {
 					is SubmitResult.Success -> ListItem {
 						Text(
-							"${resultItem.target.user.name}: 성공", color = Color(
+							"${resultItem.target.user.name}: 성공",
+							color = com.lhwdev.selfTestMacro.ui.Color(
 								onLight = Color(0xf4259644),
 								onDark = Color(0xff99ffa0)
 							)
@@ -108,7 +109,8 @@ class MainRepositoryImpl(
 						}
 					) {
 						Text(
-							"${resultItem.target.user.name}: 실패", color = Color(
+							"${resultItem.target.user.name}: 실패",
+							color = com.lhwdev.selfTestMacro.ui.Color(
 								onLight = Color(0xffff1122),
 								onDark = Color(0xffff9099)
 							)
@@ -122,8 +124,8 @@ class MainRepositoryImpl(
 		return result
 	}
 	
-	override suspend fun scheduleSelfTest(group: DbTestGroup) {
-		TODO("Not yet implemented")
+	override suspend fun scheduleSelfTest(group: DbTestGroup, newSchedule: DbTestSchedule) {
+		pref.db.updateSchedule(group, newSchedule)
 	}
 }
 

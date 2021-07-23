@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.ui
 
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable

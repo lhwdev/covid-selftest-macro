@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
@@ -19,6 +19,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.lhwdev.selfTestMacro.*
+import com.lhwdev.selfTestMacro.R
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

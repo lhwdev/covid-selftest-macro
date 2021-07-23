@@ -1,9 +1,8 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.ui
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -33,6 +32,17 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 
 
+enum class VisibilityAnimationState(
+	val fromState: Boolean,
+	val targetState: Boolean,
+	val animating: Boolean
+) {
+	enter(fromState = false, targetState = true, animating = true),
+	visible(fromState = true, targetState = true, animating = false),
+	exit(fromState = true, targetState = false, animating = true)
+}
+
+
 // do not supports inserting middle of the list
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -40,33 +50,30 @@ fun <T> AnimateListAsComposable(
 	list: List<T>,
 	key: (T) -> Any? = { it },
 	isOpaque: (T) -> Boolean = { true },
-	animation: @Composable (item: T, fraction: () -> Float, content: @Composable () -> Unit) -> Unit,
+	animation: @Composable (
+		item: T,
+		state: VisibilityAnimationState,
+		onAnimationEnd: () -> Unit,
+		content: @Composable () -> Unit
+	) -> Unit,
 	content: @Composable (index: Int, T) -> Unit
 ) {
 	val scope = rememberCoroutineScope()
 	val backing = remember { mutableStateListOf<T>().also { it += list } }
-	val animatables = remember {
-		mutableStateListOf<Animatable<Float, AnimationVector1D>>().also {
-			it += List(list.size) { Animatable(1f) }
+	val animationStates = remember {
+		mutableStateListOf<VisibilityAnimationState>().also {
+			it += List(list.size) { VisibilityAnimationState.visible }
 		}
 	}
 	
 	fun removeAt(index: Int) {
-		val animatable = animatables.getOrNull(index) ?: return
-		val backingToRemove = backing[index] // as index may get different after the animation
-		
-		scope.launch {
-			animatable.animateTo(2f)
-			animatables -= animatable
-			backing -= backingToRemove
-		}
+		val backingToRemove = backing[index]
+		animationStates[index] = VisibilityAnimationState.exit
 	}
 	
 	fun add(index: Int, value: T) {
-		val animatable = Animatable(0f)
-		animatables.add(index, animatable)
 		backing.add(index, value)
-		scope.launch { animatable.animateTo(1f) }
+		animationStates.add(index, VisibilityAnimationState.enter)
 	}
 	
 	if(list != backing) for(i in 0 until max(list.size, backing.size)) {
@@ -85,29 +92,36 @@ fun <T> AnimateListAsComposable(
 		}
 	}
 	
-	val lastOpaqueIndex by derivedStateOf {
-		backing.indices.indexOfLast { index ->
-			val animatable = animatables[index]
-			val transparent = animatable.targetValue == 0f || // not initialized
-				animatable.isRunning || // animating
-				!isOpaque(backing[index]) // inherently transparent like dialog
-			!transparent
-		}.coerceAtLeast(0)
-	}
+	val lastOpaqueIndex = backing.indices.indexOfLast { index ->
+		val state = animationStates[index]
+		val transparent = state == VisibilityAnimationState.enter ||
+			state == VisibilityAnimationState.exit ||
+			!isOpaque(backing[index]) // inherently transparent like dialog
+		!transparent
+	}.coerceAtLeast(0)
 	
 	for((index, item) in backing.withIndex()) key(key(item)) {
-		val animatable = animatables[index]
+		val state = animationStates[index]
 		
 		Box(Modifier.graphicsLayer {
 			alpha = if(index >= lastOpaqueIndex) 1f else 0f
 		}) {
-			animation(item, { animatable.value }) { content(index, item) }
+			animation(
+				item, state,
+				{
+					val newIndex = animationStates.indexOf(state)
+					if(newIndex == -1) return@animation
+					when(state) {
+						VisibilityAnimationState.enter ->
+							animationStates[newIndex] = VisibilityAnimationState.visible
+						VisibilityAnimationState.visible -> Unit // no-op
+						VisibilityAnimationState.exit ->
+							animationStates.removeAt(newIndex)
+					}
+				}
+			) { content(index, item) }
 		}
 	}
-}
-
-fun Colors.applyTo() {
-
 }
 
 

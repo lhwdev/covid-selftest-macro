@@ -10,17 +10,14 @@ import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.lhwdev.selfTestMacro.Navigator
-import com.lhwdev.selfTestMacro.Route
-import com.lhwdev.selfTestMacro.showRoute
-import com.lhwdev.selfTestMacro.showRouteAsync
+import com.lhwdev.selfTestMacro.ui.*
 
 
 suspend fun <T> Navigator.showDialog(
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	maxHeight: Dp = FloatingDialogMaxHeight,
-	routeFactory: (content: @Composable () -> Unit) -> Route = { Route(false, it) },
+	routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
 	content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
 ): T? = showRoute(routeFactory = routeFactory) { removeRoute ->
 	MaterialDialog(
@@ -35,7 +32,7 @@ suspend inline fun Navigator.showDialogUnit(
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	maxHeight: Dp = FloatingDialogMaxHeight,
-	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { Route(false, it) },
+	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
 	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showDialog<Unit>(
@@ -50,7 +47,7 @@ inline fun Navigator.showDialogAsync(
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	maxHeight: Dp = FloatingDialogMaxHeight,
-	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { Route(false, it) },
+	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
 	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showRouteAsync(routeFactory) { removeRoute ->

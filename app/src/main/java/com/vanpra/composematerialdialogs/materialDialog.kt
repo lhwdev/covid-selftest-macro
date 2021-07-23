@@ -17,10 +17,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import com.lhwdev.selfTestMacro.AppliedUiPaddings
-import com.lhwdev.selfTestMacro.AutoSystemUi
-import com.lhwdev.selfTestMacro.ProvideAppliedUiPaddings
-import com.lhwdev.selfTestMacro.SystemUiMode
+import com.lhwdev.selfTestMacro.ui.AppliedUiPaddings
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.ProvideAppliedUiPaddings
+import com.lhwdev.selfTestMacro.ui.SystemUiMode
 
 
 @Composable

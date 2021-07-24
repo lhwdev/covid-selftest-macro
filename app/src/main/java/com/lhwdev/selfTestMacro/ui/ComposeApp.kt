@@ -27,16 +27,16 @@ fun ComposeApp(activity: Activity) {
 	val pref = remember(context) { context.preferenceState }
 	val navigator = remember {
 		val navigator = NavigatorImpl()
-
+		
 		val initialFirst = pref.isFirstTime
-
-		if (initialFirst || pref.db.testGroups.groups.isEmpty()) navigator.pushRoute { Setup() }
+		
+		if(initialFirst || pref.db.testGroups.groups.isEmpty()) navigator.pushRoute { Setup() }
 		else navigator.pushRoute { Main() }
-
+		
 		navigator
 	}
 	val scheduler = remember { SelfTestSchedulerImpl(context.applicationContext, pref.db) }
-
+	
 	LaunchedEffect(pref) {
 		snapshotFlow {
 			pref.db.testGroups
@@ -44,7 +44,7 @@ fun ComposeApp(activity: Activity) {
 			scheduler.onScheduleUpdated(pref.db)
 		}
 	}
-
+	
 	AppTheme {
 		CompositionLocalProvider(
 			LocalActivity provides activity,

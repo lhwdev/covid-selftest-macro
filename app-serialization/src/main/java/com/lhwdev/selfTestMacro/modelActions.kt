@@ -1,6 +1,13 @@
 package com.lhwdev.selfTestMacro
 
 
+fun List<Int>.nextId(): Int {
+	for(i in 0..Int.MAX_VALUE) {
+		if(i !in this) return i
+	}
+	return -1
+}
+
 fun DatabaseManager.removeTestGroup(group: DbTestGroup) {
 	removeUsers(group.target.allUserIds)
 	
@@ -37,14 +44,18 @@ fun DatabaseManager.disbandGroup(group: DbTestGroup, inheritSchedule: Boolean) {
 	if(group.target !is DbTestTarget.Group) return
 	
 	val users = group.target.allUsers
+	val ids = testGroups.groups.map { it.id }.toMutableList()
 	val newTestGroups = users.map {
+		val id = ids.nextId()
+		ids += id
 		val target = DbTestTarget.Single(it.id)
 		if(inheritSchedule) DbTestGroup(
+			id = id,
 			target = target,
 			schedule = group.schedule,
 			excludeHoliday = group.excludeHoliday,
 			excludeWeekend = group.excludeWeekend
-		) else DbTestGroup(target = target)
+		) else DbTestGroup(id = id, target = target)
 	}
 	
 	// do not need to touch userGroups and users, so does not use removeTestGroup

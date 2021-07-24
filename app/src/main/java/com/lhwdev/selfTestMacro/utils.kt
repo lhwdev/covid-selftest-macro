@@ -7,7 +7,7 @@ import android.content.res.Resources
 import android.util.Base64
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import com.lhwdev.selfTestMacro.api.*
+import com.lhwdev.selfTestMacro.api.encodeBase64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext

@@ -6,7 +6,6 @@ import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.text.HtmlCompat
-import com.lhwdev.selfTestMacro.NotificationEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json

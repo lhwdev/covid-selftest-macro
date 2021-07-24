@@ -14,6 +14,7 @@ data class DbTestGroups(
 
 @Serializable
 data class DbTestGroup(
+	val id: Int,
 	val target: DbTestTarget,
 	val schedule: DbTestSchedule = DbTestSchedule.None,
 	val excludeWeekend: Boolean = false,

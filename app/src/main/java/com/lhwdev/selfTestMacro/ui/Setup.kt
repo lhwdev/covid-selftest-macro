@@ -487,9 +487,11 @@ private fun ColumnScope.WizardSchoolInfo(
 		showNotFulfilledWarning = { notFulfilled.value = model.notFulfilledIndex },
 		modifier = Modifier.weight(1f)
 	) {
-		Column(modifier = Modifier
-			.padding(12.dp)
-			.verticalScroll(rememberScrollState())) {
+		Column(
+			modifier = Modifier
+				.padding(12.dp)
+				.verticalScroll(rememberScrollState())
+		) {
 			val commonModifier = Modifier
 				.fillMaxWidth()
 				.padding(8.dp)
@@ -757,9 +759,11 @@ private fun WizardStudentInfo(
 				},
 				modifier = Modifier.weight(1f)
 			) {
-				Column(modifier = Modifier
-					.padding(12.dp)
-					.verticalScroll(rememberScrollState())) {
+				Column(
+					modifier = Modifier
+						.padding(12.dp)
+						.verticalScroll(rememberScrollState())
+				) {
 					val focusManager = LocalFocusManager.current
 					
 					// header
@@ -949,8 +953,11 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 							DbTestTarget.Single(it.id)
 						}
 						
+						val ids = previousTestGroups.groups.map { it.id }.toMutableList()
 						val newTestGroups = testTargets.map { target ->
-							DbTestGroup(target = target)
+							val id = ids.nextId()
+							ids += id
+							DbTestGroup(id = id, target = target)
 						}
 						
 						pref.db.testGroups = previousTestGroups.copy(

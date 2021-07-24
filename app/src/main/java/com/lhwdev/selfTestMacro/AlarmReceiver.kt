@@ -6,10 +6,6 @@ import android.content.Intent
 import kotlinx.coroutines.runBlocking
 
 class AlarmReceiver : BroadcastReceiver() {
-	companion object {
-		const val REQUEST_CODE = 0
-	}
-	
 	override fun onReceive(context: Context, intent: Intent) {
 		val result = goAsync()
 		

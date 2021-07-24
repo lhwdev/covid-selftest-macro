@@ -94,7 +94,12 @@ fun FloatingMaterialDialogScope.Content(content: @Composable () -> Unit) {
 @Composable
 fun MaterialDialogScope.Input(
 	modifier: Modifier = Modifier,
-	contentPadding: PaddingValues = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
+	contentPadding: PaddingValues = PaddingValues(
+		start = 24.dp,
+		end = 24.dp,
+		top = 8.dp,
+		bottom = 8.dp
+	),
 	focusOnShow: Boolean = false, // should be invariant in one composition
 	input: @Composable () -> Unit
 ) {
@@ -108,7 +113,11 @@ fun MaterialDialogScope.Input(
 				onDispose { /* focusRequester.freeFocus(): this causes error */ }
 			}
 			
-			Box(Modifier.focusRequester(focusRequester).fillMaxWidth()) { input() }
+			Box(
+				Modifier
+					.focusRequester(focusRequester)
+					.fillMaxWidth()
+			) { input() }
 		} else {
 			input()
 		}

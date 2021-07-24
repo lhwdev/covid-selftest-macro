@@ -285,7 +285,8 @@ fun AutoSystemUi(
 			Modifier
 				.statusBarsHeight()
 				.fillMaxWidth()
-				.background(color))
+				.background(color)
+		)
 		
 		val isDark = LocalContentColor.current.isDarkColor()
 		if(enabledState) PreviewSideEffect {
@@ -299,7 +300,8 @@ fun AutoSystemUi(
 			Modifier
 				.navigationBarsHeight()
 				.fillMaxWidth()
-				.background(color))
+				.background(color)
+		)
 		
 		val isDark = LocalContentColor.current.isDarkColor()
 		if(enabledState) PreviewSideEffect {

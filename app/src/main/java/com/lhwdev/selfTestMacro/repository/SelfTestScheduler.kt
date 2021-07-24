@@ -4,5 +4,5 @@ import com.lhwdev.selfTestMacro.DatabaseManager
 
 
 interface SelfTestScheduler {
-    fun onScheduleUpdated(database: DatabaseManager)
+	fun onScheduleUpdated(database: DatabaseManager)
 }

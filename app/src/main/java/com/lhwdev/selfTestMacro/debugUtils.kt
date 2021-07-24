@@ -21,7 +21,11 @@ fun selfLog(message: String) {
 	Log.d("SelfTestMacro", message)
 }
 
-suspend fun Context.onError(snackbarHostState: SnackbarHostState, message: String, throwable: Throwable) {
+suspend fun Context.onError(
+	snackbarHostState: SnackbarHostState,
+	message: String,
+	throwable: Throwable
+) {
 	snackbarHostState.showSnackbar("오류: $message", "확인")
 	onError(throwable, message)
 }
@@ -85,6 +89,7 @@ private fun Context.showErrorInfo(info: String) {
 
 suspend fun getLogcat(): String = withContext(Dispatchers.IO) {
 	val command = arrayOf("logcat", "-d", "-v", "threadtime")
+	
 	@Suppress("BlockingMethodInNonBlockingContext")
 	val process = Runtime.getRuntime().exec(command)
 	process.inputStream.reader().use { it.readText() }

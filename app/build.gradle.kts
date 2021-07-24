@@ -6,14 +6,14 @@ plugins {
 android {
 	compileSdk = 31
 	buildToolsVersion = "30.0.3"
-
+	
 	defaultConfig {
 		applicationId = "com.lhwdev.selfTestMacro"
 		minSdk = 21
 		targetSdk = 30
 		versionCode = 2000
 		versionName = "3.0"
-
+		
 		// multiDexEnabled = true
 		
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

@@ -62,15 +62,18 @@ data class PasswordWrong(
 	)
 }
 
-suspend fun validatePassword(institute: InstituteInfo, userIdentifier: UserIdentifier, password: String): PasswordResult = ioTask {
+private val json = Json { ignoreUnknownKeys = true }
+
+
+suspend fun validatePassword(institute: InstituteInfo, userIdentifier: UserIdentifier, password: String): PasswordResult {
 	val body = fetch(
 		institute.requestUrl["validatePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to userIdentifier.token.token),
 		body = """{"password": "${encrypt(password)}", "deviceUuid": ""}"""
-	).toResponseString()
-	try {
-		Json { ignoreUnknownKeys = true }.decodeFromString(PasswordWrong.serializer(), body)
+	).value
+	return try {
+		json.decodeFromString(PasswordWrong.serializer(), body)
 	} catch(e: Throwable) {
 		val userToken = body.removeSurrounding("\"")
 		require(userToken.startsWith("Bearer")) { userToken }

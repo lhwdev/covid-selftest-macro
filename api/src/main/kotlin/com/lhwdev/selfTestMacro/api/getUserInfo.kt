@@ -52,18 +52,15 @@ data class UserInfo(
  * userPNo: "..."
  * wrongPassCnt: 0
  */
-suspend fun getUserInfo(institute: InstituteInfo, user: User): UserInfo =
-	ioTask {
-		fetch(
-			institute.requestUrl["getUserInfo"],
-			method = HttpMethod.post,
-			headers = sDefaultFakeHeader + mapOf(
-				"Content-Type" to ContentTypes.json,
-				"Authorization" to user.token.token
-			),
-			body = Json.encodeToString(
-				GetUserInfoRequestBody.serializer(),
-				GetUserInfoRequestBody(institute.code, user.userId)
-			)
-		).toJsonLoose()
-	}
+suspend fun getUserInfo(institute: InstituteInfo, user: User): UserInfo = fetch(
+	institute.requestUrl["getUserInfo"],
+	method = HttpMethod.post,
+	headers = sDefaultFakeHeader + mapOf(
+		"Content-Type" to ContentTypes.json,
+		"Authorization" to user.token.token
+	),
+	body = Json.encodeToString(
+		GetUserInfoRequestBody.serializer(),
+		GetUserInfoRequestBody(institute.code, user.userId)
+	)
+).toJsonLoose(UserInfo.serializer())

@@ -10,7 +10,6 @@ import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
 
 
 /*
@@ -84,14 +83,12 @@ suspend fun registerSurvey(
 	institute: InstituteInfo,
 	user: User,
 	surveyData: SurveyData
-): SurveyResult = ioTask {
-	fetch(
-		institute.requestUrlBase["registerServey"],
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf(
-			"Content-Type" to ContentTypes.json,
-			"Authorization" to user.token.token
-		),
-		body = Json { encodeDefaults = true }.encodeToString(SurveyData.serializer(), surveyData)
-	).toJsonLoose()
-}
+): SurveyResult = fetch(
+	institute.requestUrlBase["registerServey"],
+	method = HttpMethod.post,
+	headers = sDefaultFakeHeader + mapOf(
+		"Content-Type" to ContentTypes.json,
+		"Authorization" to user.token.token
+	),
+	body = JsonEncodeDefaults.encodeToString(SurveyData.serializer(), surveyData)
+).toJsonLoose(SurveyResult.serializer())

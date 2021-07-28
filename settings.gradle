@@ -1,2 +1,2 @@
 rootProject.name='SelfTest-Macro'
-include ':app', ':api', ':test'
+include ':app', ':api-base', ':api', ':transkey', ':test'

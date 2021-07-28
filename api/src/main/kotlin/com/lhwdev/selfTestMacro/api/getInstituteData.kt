@@ -28,58 +28,64 @@ suspend fun getSchoolData(
 	regionCode: String,
 	schoolLevelCode: String,
 	name: String
-) = ioTask {
-	val params = queryUrlParamsToString(mapOf(
-		"lctnScCode" to regionCode,
-		"schulCrseScCode" to schoolLevelCode,
-		"orgName" to name,
-		"loginType" to "school"
-	))
+): InstituteInfoResponse {
+	val params = queryUrlParamsToString(
+		mapOf(
+			"lctnScCode" to regionCode,
+			"schulCrseScCode" to schoolLevelCode,
+			"orgName" to name,
+			"loginType" to "school"
+		)
+	)
 	
-	fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose<InstituteInfoResponse>()
+	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
+		.toJsonLoose(InstituteInfoResponse.serializer())
 }
 
 // 대학: orgName=...&loginType=univ
 suspend fun getUniversityData(
 	name: String
-) = ioTask {
-	val params = queryUrlParamsToString(mapOf(
-		"orgName" to name,
-		"loginType" to "univ"
-	))
+): InstituteInfoResponse {
+	val params = queryUrlParamsToString(
+		mapOf("orgName" to name, "loginType" to "univ")
+	)
 	
-	fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose<InstituteInfoResponse>()
+	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
+		.toJsonLoose(InstituteInfoResponse.serializer())
 }
 
 // 교육행정기관: orgName=...&loginType=office
 suspend fun getOfficeData(
 	name: String
-) = ioTask {
-	val params = queryUrlParamsToString(mapOf(
-		"orgName" to name,
-		"loginType" to "office"
-	))
+): InstituteInfoResponse {
+	val params = queryUrlParamsToString(
+		mapOf(
+			"orgName" to name,
+			"loginType" to "office"
+		)
+	)
 	
-	fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose<InstituteInfoResponse>()
+	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
+		.toJsonLoose(InstituteInfoResponse.serializer())
 }
+
 // 학원: lctnScCode=..&sigCode=....&orgName=...&isAcademySearch=true&loginType=office
 suspend fun getAcademyData(
 	regionCode: String,
 	sigCode: String,
 	name: String
-) = ioTask {
-	val params = queryUrlParamsToString(mapOf(
-		"lctnScCode" to regionCode,
-		"sigCode" to sigCode,
-		"orgName" to name,
-		"loginType" to "office",
-		"isAcademySearch" to "true"
-	))
+): InstituteInfoResponse {
+	val params = queryUrlParamsToString(
+		mapOf(
+			"lctnScCode" to regionCode,
+			"sigCode" to sigCode,
+			"orgName" to name,
+			"loginType" to "office",
+			"isAcademySearch" to "true"
+		)
+	)
 	
-	fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose<InstituteInfoResponse>()
+	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
+		.toJsonLoose(InstituteInfoResponse.serializer())
 }
 

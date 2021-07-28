@@ -5,6 +5,7 @@ package com.lhwdev.selfTestMacro.api
 import com.lhwdev.selfTestMacro.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
 
 
 @Serializable
@@ -15,11 +16,9 @@ data class User(
 )
 
 
-suspend fun getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = ioTask {
-	fetch(
-		institute.requestUrl["selectUserGroup"],
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to token.token),
-		body = "{}"
-	).toJsonLoose()
-}
+suspend fun getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = fetch(
+	institute.requestUrl["selectUserGroup"],
+	method = HttpMethod.post,
+	headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to token.token),
+	body = "{}"
+).toJsonLoose(ListSerializer(User.serializer()))

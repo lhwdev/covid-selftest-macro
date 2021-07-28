@@ -34,12 +34,6 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 
-val sDummyForInitialization: Unit = run {
-	// NO_WRAP: this is where I was confused for a few days
-	encodeBase64 = { Base64.encodeToString(it, Base64.NO_WRAP) }
-}
-
-
 fun EditText.isEmpty() = text == null || text.isEmpty()
 
 @Serializable

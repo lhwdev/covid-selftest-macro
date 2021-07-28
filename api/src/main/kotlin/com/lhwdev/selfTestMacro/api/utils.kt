@@ -5,6 +5,11 @@ import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+
+
+val JsonEncodeDefaults = Json { encodeDefaults = true }
+val JsonLoose = Json { ignoreUnknownKeys = true }
 
 
 object YesNoSerializer : KSerializer<Boolean> {

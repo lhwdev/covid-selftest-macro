@@ -1,0 +1,3 @@
+[submodule "transkey"]
+	path = transkey
+	url = https://github.com/lhwdev/covid-selftest-macro-transkey

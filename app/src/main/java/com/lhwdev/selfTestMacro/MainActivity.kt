@@ -36,11 +36,12 @@ const val IGNORE_BATTERY_OPTIMIZATION_REQUEST = 1001
 
 @Suppress("SpellCheckingInspection")
 class MainActivity : AppCompatActivity() {
-	
 	private var batteryOptimizationPromptShown = false
 	
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		
+		val session = selfTestSession(this)
 		
 		val pref = preferenceState
 		
@@ -65,11 +66,13 @@ class MainActivity : AppCompatActivity() {
 		@SuppressLint("SetTextI18n")
 		suspend fun updateCurrentState() = withContext(Dispatchers.IO) main@ {
 			val institute = pref.institute!!
-			val user = pref.user!!
+			val user = pref.user!! // note: may change
 			
 			val detailedUserInfo = try {
-				val token = singleOfUserGroup(getUserGroup(institute, user.token)) ?: return@main
-				getUserInfo(institute, token)
+				val token = user.ensureTokenValid(session, institute, { pref.user = it }) { token ->
+					singleOfUserGroup(session.getUserGroup(institute, token)) ?: return@main
+				}
+				session.getUserInfo(institute, token)
 			} catch(e: Throwable) {
 				onError(e, "사용자 정보 불러오기")
 				showToastSuspendAsync("사용자 정보를 불러오지 못했습니다.")
@@ -135,7 +138,7 @@ class MainActivity : AppCompatActivity() {
 		
 		submit.setOnClickListener {
 			lifecycleScope.launch {
-				submitSuspend(false)
+				submitSuspend(session, false)
 				updateCurrentState()
 			}
 		}

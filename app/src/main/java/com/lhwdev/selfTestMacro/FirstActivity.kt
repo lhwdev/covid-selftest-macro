@@ -5,8 +5,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.InputFilter
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.Filter
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +25,8 @@ import kotlinx.coroutines.launch
 class FirstActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		
+		val session = selfTestSession(this)
 		
 		setContentView(R.layout.activity_first)
 		window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -99,11 +103,14 @@ class FirstActivity : AppCompatActivity() {
 					scrollView.smoothScrollTo(0, scrollView.height)
 				}
 				
-				val data = getSchoolData(
-					regionCode = regionCode,
-					schoolLevelCode = levelCode.toString(),
-					name = nameString
-				)
+				val data = tryAtMost(maxTrial = 3) {
+					session.getSchoolData(
+						regionCode = regionCode,
+						schoolLevelCode = levelCode.toString(),
+						name = nameString
+					)
+				}
+				
 				snackBar.dismiss()
 				if(data.instituteList.isEmpty()) {
 					showToast("학교를 찾을 수 없습니다. 이름을 바르게 입력했는지 확인해주세요.")
@@ -165,7 +172,7 @@ class FirstActivity : AppCompatActivity() {
 			lifecycleScope.launch main@{
 				// TODO: show progress
 				try {
-					val userIdentifier = findUser(
+					val userIdentifier = session.findUser(
 						instituteInfo,
 						GetUserTokenRequestBody(
 							institute = instituteInfo,
@@ -177,6 +184,7 @@ class FirstActivity : AppCompatActivity() {
 					
 					val password = promptInput { edit, _ ->
 						setTitle("비밀번호를 입력해주세요.")
+						edit.inputType = EditorInfo.TYPE_CLASS_NUMBER
 						edit.filters = arrayOf(InputFilter { source, start, end, dest, destStart, destEnd ->
 							val result = dest.replaceRange(destStart, destEnd, source.substring(start, end))
 							if(result.length > 4 || result.any { !it.isDigit() }) null
@@ -185,20 +193,24 @@ class FirstActivity : AppCompatActivity() {
 					} ?: return@main
 					
 					val token = catchErrorThanToast {
-						validatePassword(instituteInfo, userIdentifier, password)
+						tryAtMost(maxTrial = 3) {
+							session.validatePassword(instituteInfo, userIdentifier, password)
+						}
 					} ?: return@main
 					
 					if(token is PasswordWrong) {
-						showToastSuspendAsync("잘못된 비밀번호입니다. 다시 시도해주세요. (${token.data.failedCount}회 틀림)")
+						showToastSuspendAsync(token.toString())
 						return@main
 					}
 					require(token is UsersToken)
 					
-					val groups = getUserGroup(instituteInfo, token)
+					val groups = tryAtMost(maxTrial = 3) {
+						session.getUserGroup(instituteInfo, token)
+					}
 					singleOfUserGroup(groups) ?: return@main // TODO: many users
 					
 					pref.institute = instituteInfo
-					pref.user = UserLoginInfo(userIdentifier, token)
+					pref.user = UserLoginInfo(userIdentifier, password, token)
 					pref.setting = UserSetting(
 						loginType = LoginType.school, // TODO
 						region = sRegions.getValue(input_region.text.toString()),

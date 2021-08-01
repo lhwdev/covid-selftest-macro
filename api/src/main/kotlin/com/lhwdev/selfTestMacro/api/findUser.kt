@@ -70,7 +70,7 @@ data class UserIdentifier(
 )
 
 
-suspend fun findUser(institute: InstituteInfo, request: GetUserTokenRequestBody): UserIdentifier = fetch(
+suspend fun Session.findUser(institute: InstituteInfo, request: GetUserTokenRequestBody): UserIdentifier = fetch(
 	institute.requestUrl["findUser"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json),

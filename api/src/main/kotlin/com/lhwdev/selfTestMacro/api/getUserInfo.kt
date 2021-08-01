@@ -52,7 +52,7 @@ data class UserInfo(
  * userPNo: "..."
  * wrongPassCnt: 0
  */
-suspend fun getUserInfo(institute: InstituteInfo, user: User): UserInfo = fetch(
+suspend fun Session.getUserInfo(institute: InstituteInfo, user: User): UserInfo = fetch(
 	institute.requestUrl["getUserInfo"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(

@@ -24,7 +24,7 @@ data class InstituteInfo(
 
 
 // 학교: lctnScCode=03&schulCrseScCode=4&orgName=...&loginType=school
-suspend fun getSchoolData(
+suspend fun Session.getSchoolData(
 	regionCode: String,
 	schoolLevelCode: String,
 	name: String
@@ -43,7 +43,7 @@ suspend fun getSchoolData(
 }
 
 // 대학: orgName=...&loginType=univ
-suspend fun getUniversityData(
+suspend fun Session.getUniversityData(
 	name: String
 ): InstituteInfoResponse {
 	val params = queryUrlParamsToString(
@@ -55,7 +55,7 @@ suspend fun getUniversityData(
 }
 
 // 교육행정기관: orgName=...&loginType=office
-suspend fun getOfficeData(
+suspend fun Session.getOfficeData(
 	name: String
 ): InstituteInfoResponse {
 	val params = queryUrlParamsToString(
@@ -70,7 +70,7 @@ suspend fun getOfficeData(
 }
 
 // 학원: lctnScCode=..&sigCode=....&orgName=...&isAcademySearch=true&loginType=office
-suspend fun getAcademyData(
+suspend fun Session.getAcademyData(
 	regionCode: String,
 	sigCode: String,
 	name: String

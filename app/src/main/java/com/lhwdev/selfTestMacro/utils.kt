@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.os.Handler
-import android.util.Base64
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -34,6 +33,12 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 
+@Suppress("unused")
+private val dummyForInit = run {
+	// if(BuildConfig.DEBUG) sDebugFetch = true
+}
+
+
 fun EditText.isEmpty() = text == null || text.isEmpty()
 
 @Serializable
@@ -46,8 +51,41 @@ data class UserSetting(
 	val studentBirth: String
 )
 
+inline fun <R> tryAtMost(maxTrial: Int, onError: (th: Throwable) -> Unit = {}, block: () -> R): R {
+	var trialCount = 0
+	while(true) {
+		try {
+			return block()
+		} catch(th: Throwable) {
+			trialCount++
+			if(trialCount >= maxTrial) throw th
+			onError(th)
+		}
+	}
+}
+
 @Serializable
-data class UserLoginInfo(val identifier: UserIdentifier, val token: UsersToken)
+data class UserLoginInfo(val identifier: UserIdentifier, val password: String, val unstableToken: UsersToken) {
+	suspend inline fun <R> ensureTokenValid(
+		session: Session,
+		instituteInfo: InstituteInfo,
+		onUpdate: (info: UserLoginInfo) -> Unit,
+		block: (token: UsersToken) -> R
+	): R {
+		return tryAtMost(
+			maxTrial = 3,
+			onError = { th ->
+				// try once more with refresh token
+				val result = session.validatePassword(instituteInfo, identifier, password)
+				val unstableToken = result as? UsersToken ?: throw IllegalStateException("로그인 실패: $result", th)
+				onUpdate(copy(unstableToken = unstableToken))
+			},
+			block = {
+				block(unstableToken)
+			}
+		)
+	}
+}
 
 class PreferenceState(val pref: SharedPreferences) {
 	init {
@@ -55,6 +93,7 @@ class PreferenceState(val pref: SharedPreferences) {
 		when(pref.getInt("lastVersion", -1)) {
 			in -1..999 -> pref.edit { clear() }
 			in 1000..1006 -> pref.edit { clear() }
+			in 1007..1009 -> pref.edit { clear() }
 			BuildConfig.VERSION_CODE -> Unit // latest
 		}
 		
@@ -204,6 +243,7 @@ suspend fun <R : Any> Context.promptDialog(
 				cont.resume(result)
 			}
 		}
+		
 		var dialog: AlertDialog? = null
 		dialog = AlertDialog.Builder(this@promptDialog).apply {
 			block {
@@ -242,3 +282,5 @@ suspend fun Context.promptInput(block: AlertDialog.Builder.(edit: EditText, okay
 		setNegativeButton("취소", null)
 		block(view, okay)
 	}
+
+

@@ -3,7 +3,7 @@ package com.lhwdev.selfTestMacro
 import java.net.*
 
 
-private val sCookieThreadLocal = ThreadLocal<CookieHandler>()
+private val sCookieThreadLocal = ThreadLocal<CookieHandler?>()
 
 
 object ThreadLocalCookieManager : CookieHandler() {
@@ -17,9 +17,11 @@ object ThreadLocalCookieManager : CookieHandler() {
 	}
 }
 
-fun setThreadLocalCookieHandler(handler: CookieHandler) {
+fun setThreadLocalCookieHandler(handler: CookieHandler?) {
 	sCookieThreadLocal.set(handler)
 }
+
+val threadLocalCookieHandler: CookieHandler? get() = sCookieThreadLocal.get()
 
 
 @Suppress("unused")

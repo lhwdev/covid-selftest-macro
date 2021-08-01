@@ -1,6 +1,7 @@
 package com.lhwdev.selfTestMacro.api
 
 import com.lhwdev.selfTestMacro.*
+import com.lhwdev.selfTestMacro.transkey.Transkey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -9,6 +10,11 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import java.net.URL
+import kotlin.random.Random
+
+
+val transkeyUrl: URL = URL("https://hcs.eduro.go.kr/transkeyServlet")
 
 
 /*
@@ -22,6 +28,7 @@ sealed class PasswordResult {
 @Serializable(UsersToken.Serializer::class)
 data class UsersToken(val token: String) : PasswordResult() {
 	override val isSuccess get() = true
+	
 	object Serializer : KSerializer<UsersToken> {
 		override val descriptor = PrimitiveSerialDescriptor(UsersToken::class.java.name, PrimitiveKind.STRING)
 		override fun deserialize(decoder: Decoder) = UsersToken(decoder.decodeString())
@@ -56,6 +63,14 @@ data class PasswordWrong(
 	val data: Data
 ) : PasswordResult() {
 	override val isSuccess get() = false
+	
+	override fun toString(): String = when(errorCode) {
+		1000 -> "비밀본호를 5회 틀리셔서 5분 후 재시도하실 수 있습니다."
+		1001 -> "비밀번호가 맞지 않습니다. 현재 ${data.failedCount}회 실패하셨습니다."
+		1003 -> "비밀번호가 초기화되었습니다. 다시 로그인하세요."
+		else -> "알 수 없는 오류: 에러코드 $errorCode (틀린 횟수: ${data.failedCount})"
+	}
+	
 	@Serializable
 	data class Data(
 		@SerialName("failCnt") val failedCount: Int
@@ -65,18 +80,69 @@ data class PasswordWrong(
 private val json = Json { ignoreUnknownKeys = true }
 
 
-suspend fun validatePassword(institute: InstituteInfo, userIdentifier: UserIdentifier, password: String): PasswordResult {
-	val body = fetch(
+suspend fun Session.validatePassword(
+	institute: InstituteInfo,
+	userIdentifier: UserIdentifier,
+	password: String
+): PasswordResult {
+	val transkey = Transkey(this, transkeyUrl, Random)
+	
+	val keyPad = transkey.newKeypad(
+		keyType = "number",
+		name = "password",
+		inputName = "password",
+		fieldType = "password"
+	)
+	
+	val encrypted = keyPad.encryptPassword(password)
+	
+	val hm = transkey.hmacDigest(encrypted.toByteArray())
+	
+	val raonPassword = jsonString {
+		"raon" jsonArray {
+			addJsonObject {
+				"id" set "password"
+				"enc" set encrypted
+				"hmac" set hm
+				"keyboardType" set "number"
+				"keyIndex" set keyPad.keyIndex
+				"fieldType" set "password"
+				"seedKey" set transkey.crypto.encryptedKey
+				"initTime" set transkey.initTime
+				"ExE2E" set "false"
+			}
+		}
+	}
+	
+	val result = fetch(
 		institute.requestUrl["validatePassword"],
 		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to userIdentifier.token.token),
-		body = """{"password": "${encrypt(password)}", "deviceUuid": ""}"""
-	).value
-	return try {
-		json.decodeFromString(PasswordWrong.serializer(), body)
+		headers = sDefaultFakeHeader + mapOf(
+			"Authorization" to userIdentifier.token.token,
+			"Accept" to "application/json, text/plain, */*"
+		),
+		body = HttpBodies.jsonObject {
+			"password" set raonPassword
+			"deviceUuid" set ""
+			"makeSession" set true
+		}
+	).getText()
+	
+	fun parseResultToken(): UsersToken {
+		val userToken = result.removeSurrounding("\"")
+		require(userToken.startsWith("Bearer")) { "Malformed users token $userToken" }
+		return UsersToken(userToken)
+	}
+	
+	if(result.startsWith('\"')) return try {
+		parseResultToken()
 	} catch(e: Throwable) {
-		val userToken = body.removeSurrounding("\"")
-		require(userToken.startsWith("Bearer")) { userToken }
-		UsersToken(userToken)
+		json.decodeFromString(PasswordWrong.serializer(), result)
+	}
+	
+	return try {
+		json.decodeFromString(PasswordWrong.serializer(), result)
+	} catch(e: Throwable) {
+		parseResultToken()
 	}
 }

@@ -70,7 +70,7 @@ data class SurveyData(
 	val rspns14: String? = null,
 	val rspns15: String? = null,
 	@SerialName("upperToken") val userToken: UserToken,
-	@SerialName("upperUserNameEncpt") val userName: String
+	@SerialName("upperUserNameEncpt") val upperUserName: String
 )
 
 @Serializable
@@ -79,7 +79,7 @@ data class SurveyResult(
 	// what is 'inveYmd'?
 )
 
-suspend fun registerSurvey(
+suspend fun Session.registerSurvey(
 	institute: InstituteInfo,
 	user: User,
 	surveyData: SurveyData

@@ -16,7 +16,7 @@ data class User(
 )
 
 
-suspend fun getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = fetch(
+suspend fun Session.getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = fetch(
 	institute.requestUrl["selectUserGroup"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to token.token),

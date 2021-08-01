@@ -12,9 +12,10 @@ class AlarmReceiver : BroadcastReceiver() {
 	
 	override fun onReceive(context: Context, intent: Intent) {
 		val result = goAsync()
+		val session = selfTestSession(context)
 		
 		runBlocking { // TODO: is this okay?
-			context.submitSuspend()
+			context.submitSuspend(session)
 			result.finish()
 		}
 		

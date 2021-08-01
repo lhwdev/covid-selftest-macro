@@ -11,7 +11,24 @@ import com.lhwdev.selfTestMacro.api.SurveyData
 import com.lhwdev.selfTestMacro.api.User
 import com.lhwdev.selfTestMacro.api.getUserGroup
 import com.lhwdev.selfTestMacro.api.registerSurvey
+import java.net.CookieManager
+import java.net.CookiePolicy
 import java.util.Calendar
+
+
+fun selfTestSession(context: Context): Session {
+	return Session(
+		CookieManager(
+			PersistentCookieStore(
+				context.getSharedPreferences(
+					"cookie-persistent",
+					Context.MODE_PRIVATE
+				)
+			),
+			CookiePolicy.ACCEPT_ALL
+		)
+	)
+}
 
 
 suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) list.single() else {
@@ -20,20 +37,29 @@ suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) lis
 	null
 }
 
-suspend fun Context.submitSuspend(notification: Boolean = true) {
-	val institute = preferenceState.institute!!
-	val loginInfo = preferenceState.user!!
+suspend fun Context.submitSuspend(session: Session, notification: Boolean = true) {
 	try {
-		val user = singleOfUserGroup(getUserGroup(institute, loginInfo.token)) ?: return
-		
-		val result = registerSurvey(
-			preferenceState.institute!!,
-			user,
-			SurveyData(userToken = user.token, userName = user.name)
-		)
-		if(notification) showTestCompleteNotification(result.registerAt)
-		else {
-			showToastSuspendAsync("자가진단 제출 완료")
+		tryAtMost(maxTrial = 3) {
+			val institute = preferenceState.institute!!
+			val loginInfo = preferenceState.user!! // note: `preferenceStte.user` may change after val user = ...
+			
+			val user = loginInfo.ensureTokenValid(
+				session, institute,
+				onUpdate = { preferenceState.user = it }
+			) { token ->
+				singleOfUserGroup(session.getUserGroup(institute, token)) ?: return
+			}
+			
+			val result = session.registerSurvey(
+				preferenceState.institute!!,
+				user,
+				SurveyData(userToken = user.token, upperUserName = user.name)
+			)
+			println("selfTestMacro: submitSuspend=success")
+			if(notification) showTestCompleteNotification(result.registerAt)
+			else {
+				showToastSuspendAsync("자가진단 제출 완료")
+			}
 		}
 	} catch(e: Throwable) {
 		showTestFailedNotification(e.stackTraceToString())

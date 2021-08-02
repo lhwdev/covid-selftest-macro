@@ -6,11 +6,6 @@ import java.net.URL
 
 val sCommonUrl = URL("https://hcs.eduro.go.kr/v2")
 
-val sDefaultFakeHeader = mapOf(
-	"User-Agent" to "Mozilla/5.0 (Linux; Android 7.0; SM-G892A Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.81 Mobile Safari/537.36",
-	"X-Requested-With" to "XMLHttpRequest",
-)
-
 val sRegions = mapOf(
 	"01" to "서울", "02" to "부산", "03" to "대구", "04" to "인천", "05" to "광주", "06" to "대전",
 	"07" to "울산", "08" to "세종", "10" to "경기", "11" to "강원", "12" to "충북",

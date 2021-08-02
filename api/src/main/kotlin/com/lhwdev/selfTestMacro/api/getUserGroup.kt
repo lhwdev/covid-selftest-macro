@@ -16,11 +16,9 @@ data class User(
 )
 
 
-suspend fun getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = ioTask {
-	fetch(
+suspend fun Session.getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = fetch(
 		institute.requestUrl2["selectUserGroup"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to token.token),
 		body = "{}"
 	).toJsonLoose(ListSerializer(User.serializer()))
-}

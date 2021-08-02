@@ -1,6 +1,7 @@
 package com.lhwdev.selfTestMacro.api
 
 import com.lhwdev.selfTestMacro.*
+import com.lhwdev.selfTestMacro.transkey.Transkey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -9,6 +10,11 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import java.net.URL
+import kotlin.random.Random
+
+
+val transkeyUrl: URL = URL("https://hcs.eduro.go.kr/transkeyServlet")
 
 
 /*
@@ -73,31 +79,80 @@ data class PasswordWrong(
 	
 	override val isSuccess get() = false
 	
+	override fun toString(): String = errorMessage ?: "알 수 없는 오류: 에러코드 $errorCode (틀린 횟수: ${data.failedCount})"
+	
 	@Serializable
 	data class Data(
 		@SerialName("failCnt") val failedCount: Int
 	)
 }
 
-suspend fun validatePassword(
+private val json = Json { ignoreUnknownKeys = true }
+
+
+suspend fun Session.validatePassword(
 	institute: InstituteInfo,
 	usersIdentifier: UsersIdentifier,
 	password: String
-): PasswordResult = ioTask {
-	val body = fetch(
-		institute.requestUrl2["validatePassword"],
+): PasswordResult {
+	val transkey = Transkey(this, transkeyUrl, Random)
+	
+	val keyPad = transkey.newKeypad(
+		keyType = "number",
+		name = "password",
+		inputName = "password",
+		fieldType = "password"
+	)
+	
+	val encrypted = keyPad.encryptPassword(password)
+	
+	val hm = transkey.hmacDigest(encrypted.toByteArray())
+	
+	val raonPassword = jsonString {
+		"raon" jsonArray {
+			addJsonObject {
+				"id" set "password"
+				"enc" set encrypted
+				"hmac" set hm
+				"keyboardType" set "number"
+				"keyIndex" set keyPad.keyIndex
+				"fieldType" set "password"
+				"seedKey" set transkey.crypto.encryptedKey
+				"initTime" set transkey.initTime
+				"ExE2E" set "false"
+			}
+		}
+	}
+	
+	val result = fetch(
+		institute.requestUrl["validatePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf(
-			"Content-Type" to ContentTypes.json,
-			"Authorization" to usersIdentifier.token.token
+			"Authorization" to usersIdentifier.token.token,
+			"Accept" to "application/json, text/plain, */*"
 		),
-		body = """{"password": "${encrypt(password)}", "deviceUuid": ""}"""
-	).toResponseString()
-	try {
-		Json { ignoreUnknownKeys = true }.decodeFromString(PasswordWrong.serializer(), body)
+		body = HttpBodies.jsonObject {
+			"password" set raonPassword
+			"deviceUuid" set ""
+			"makeSession" set true
+		}
+	).getText()
+	
+	fun parseResultToken(): UsersToken {
+		val userToken = result.removeSurrounding("\"")
+		require(userToken.startsWith("Bearer")) { "Malformed users token $userToken" }
+		return UsersToken(userToken)
+	}
+	
+	if(result.startsWith('\"')) return try {
+		parseResultToken()
 	} catch(e: Throwable) {
-		val userToken = body.removeSurrounding("\"")
-		require(userToken.startsWith("Bearer")) { userToken }
-		UsersToken(userToken)
+		json.decodeFromString(PasswordWrong.serializer(), result)
+	}
+	
+	return try {
+		json.decodeFromString(PasswordWrong.serializer(), result)
+	} catch(e: Throwable) {
+		parseResultToken()
 	}
 }

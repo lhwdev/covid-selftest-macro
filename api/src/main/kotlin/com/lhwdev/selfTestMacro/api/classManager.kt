@@ -46,13 +46,11 @@ data class ClassInfo(
 	@SerialName("classCode") val classCode: String
 )
 
-suspend fun getClassList(institute: InstituteInfo, manager: User) = ioTask {
-	fetch(
-		institute.requestUrl["joinClassList"],
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Authorization" to manager.token.token)
-	).toJsonLoose(ClassList.serializer())
-}
+suspend fun getClassList(institute: InstituteInfo, manager: User): ClassList = fetch(
+	institute.requestUrl["joinClassList"],
+	method = HttpMethod.post,
+	headers = sDefaultFakeHeader + mapOf("Authorization" to manager.token.token)
+).toJsonLoose(ClassList.serializer())
 
 
 /**

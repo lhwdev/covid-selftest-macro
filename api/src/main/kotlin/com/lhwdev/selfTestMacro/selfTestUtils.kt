@@ -2,11 +2,8 @@
 
 package com.lhwdev.selfTestMacro
 
+import com.lhwdev.selfTestMacro.api.JsonLoose
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
 
 
-val jsonLooseConfig = Json { ignoreUnknownKeys = true }
-
-
-fun <T> FetchResult.toJsonLoose(serializer: KSerializer<T>) = toJson(serializer, jsonLooseConfig)
+suspend fun <T> FetchResult.toJsonLoose(serializer: KSerializer<T>) = toJson(serializer, JsonLoose)

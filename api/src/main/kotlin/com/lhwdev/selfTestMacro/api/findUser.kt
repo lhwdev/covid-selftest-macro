@@ -3,6 +3,8 @@
 package com.lhwdev.selfTestMacro.api
 
 import com.lhwdev.selfTestMacro.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,7 +12,6 @@ import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
 import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.spec.RSAPublicKeySpec
@@ -74,27 +75,25 @@ data class UsersIdentifier(
 )
 
 
-suspend fun findUser(
+suspend fun Session.findUser(
 	institute: InstituteInfo,
 	name: String,
 	birthday: String,
 	loginType: LoginType
-) = ioTask {
-	fetch(
-		institute.requestUrl2["findUser"],
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json),
-		body = Json { encodeDefaults = true }.encodeToString(
-			GetUserTokenRequestBody.serializer(),
-			GetUserTokenRequestBody(
-				institute = institute,
-				name = name,
-				birthday = birthday,
-				loginType = loginType
-			)
+): UsersIdentifier = fetch(
+	institute.requestUrl2["findUser"],
+	method = HttpMethod.post,
+	headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json),
+	body = Json { encodeDefaults = true }.encodeToString(
+		GetUserTokenRequestBody.serializer(),
+		GetUserTokenRequestBody(
+			institute = institute,
+			name = name,
+			birthday = birthday,
+			loginType = loginType
 		)
-	).toJsonLoose(UsersIdentifier.serializer())
-}
+	)
+).toJsonLoose(UsersIdentifier.serializer())
 
 // // you must inform user when using this api
 // suspend fun agreeAgreement(institute: InstituteInfo, token: UsersIdToken): Unit = ioTask {
@@ -107,11 +106,7 @@ suspend fun findUser(
 // }
 
 
-// so platform-specific, so leave it empty
-lateinit var encodeBase64: (ByteArray) -> String
-
-
-suspend fun encrypt(string: String): String = ioTask {
+suspend fun encrypt(string: String): String = withContext(Dispatchers.IO) {
 	val key = RSAPublicKeySpec(
 		BigInteger("30718937712611605689191751047964347711554702318809238360089112453166217803395521606458190795722565177328746277011809492198037993902927400109154434682159584719442248913593972742086295960255192532052628569970645316811605886842040898815578676961759671712587342568414746446165948582657737331468733813122567503321355924190641302039446055143553127897636698729043365414410208454947672037202818029336707554263659582522814775377559532575089915217472518288660143323212695978110773753720635850393399040827859210693969622113812618481428838504301698541638186158736040620420633114291426890790215359085924554848097772407366395041461"),
 		BigInteger("65537")

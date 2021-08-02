@@ -4,21 +4,32 @@ package com.lhwdev.selfTestMacro
 
 import android.content.Context
 import android.content.res.Resources
-import android.util.Base64
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import com.lhwdev.selfTestMacro.api.encodeBase64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 
-val sDummyForInitialization: Unit = run {
-	// NO_WRAP: this is where I was confused for a few days
-	encodeBase64 = { Base64.encodeToString(it, Base64.NO_WRAP) }
+@Suppress("unused")
+private val dummyForInit = run {
+	// if(BuildConfig.DEBUG) sDebugFetch = true
 }
 
+
+inline fun <R> tryAtMost(maxTrial: Int, onError: (th: Throwable) -> Unit = {}, block: () -> R): R {
+	var trialCount = 0
+	while(true) {
+		try {
+			return block()
+		} catch(th: Throwable) {
+			trialCount++
+			if(trialCount >= maxTrial) throw th
+			onError(th)
+		}
+	}
+}
 
 fun <K, V> Map<K, V>.added(key: K, value: V): Map<K, V> {
 	val newMap = toMutableMap()

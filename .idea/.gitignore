@@ -1,0 +1,11 @@
+# Default ignored files
+**
+!copyright/
+!copyright/profiles_settings.xml
+!copyright/Copyright.xml
+!/codeStyles
+!/codeStyles/Project.xml
+!/inspectionProfiles
+!/inspectionProfiles/profiles_settings.xml
+!/inspectionProfiles/Project_Default.xml
+!/vcs.xml

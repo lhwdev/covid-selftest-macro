@@ -70,7 +70,7 @@ data class SurveyData(
 	val rspns14: String? = null,
 	val rspns15: String? = null,
 	@SerialName("upperToken") val userToken: UserToken,
-	@SerialName("upperUserNameEncpt") val userName: String
+	@SerialName("upperUserNameEncpt") val upperUserName: String
 )
 
 @Serializable
@@ -79,18 +79,16 @@ data class SurveyResult(
 	// what is 'inveYmd'?
 )
 
-suspend fun registerSurvey(
+suspend fun Session.registerSurvey(
 	institute: InstituteInfo,
 	user: User,
 	surveyData: SurveyData
-): SurveyResult = ioTask {
-	fetch(
-		institute.requestUrl["registerServey"],
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf(
-			"Content-Type" to ContentTypes.json,
-			"Authorization" to user.token.token
-		),
-		body = Json { encodeDefaults = true }.encodeToString(SurveyData.serializer(), surveyData)
-	).toJsonLoose(SurveyResult.serializer())
-}
+): SurveyResult = fetch(
+	institute.requestUrl["registerServey"],
+	method = HttpMethod.post,
+	headers = sDefaultFakeHeader + mapOf(
+		"Content-Type" to ContentTypes.json,
+		"Authorization" to user.token.token
+	),
+	body = JsonEncodeDefaults.encodeToString(SurveyData.serializer(), surveyData)
+).toJsonLoose(SurveyResult.serializer())

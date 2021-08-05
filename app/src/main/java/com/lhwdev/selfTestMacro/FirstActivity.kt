@@ -210,7 +210,7 @@ class FirstActivity : AppCompatActivity() {
 					singleOfUserGroup(groups) ?: return@main // TODO: many users
 					
 					pref.institute = instituteInfo
-					pref.user = UserLoginInfo(userIdentifier, password, token)
+					pref.user = UserLoginInfo(userIdentifier, instituteInfo, birth, LoginType.school, password/*, token*/)
 					pref.setting = UserSetting(
 						loginType = LoginType.school, // TODO
 						region = sRegions.getValue(input_region.text.toString()),

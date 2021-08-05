@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="1.8">
-      <module name="SelfTest-Macro.api.main" target="11" />
-      <module name="SelfTest-Macro.api.test" target="11" />
-      <module name="SelfTest-Macro.transkey.main" target="11" />
-      <module name="SelfTest-Macro.transkey.test" target="11" />
-    </bytecodeTargetLevel>
+    <bytecodeTargetLevel target="1.8" />
   </component>
 </project>

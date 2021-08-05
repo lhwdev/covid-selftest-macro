@@ -19,8 +19,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.core.view.setPadding
 import androidx.lifecycle.lifecycleScope
+import com.lhwdev.selfTestMacro.api.UsersToken
 import com.lhwdev.selfTestMacro.api.getUserGroup
 import com.lhwdev.selfTestMacro.api.getUserInfo
+import com.lhwdev.selfTestMacro.api.validatePassword
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.coroutines.Dispatchers
@@ -69,10 +71,10 @@ class MainActivity : AppCompatActivity() {
 			val user = pref.user!! // note: may change
 			
 			val detailedUserInfo = try {
-				val token = user.ensureTokenValid(session, institute, { pref.user = it }) { token ->
-					singleOfUserGroup(session.getUserGroup(institute, token)) ?: return@main
-				}
-				session.getUserInfo(institute, token)
+				val usersIdentifier = user.findUser(session)
+				val usersToken = session.validatePassword(institute, usersIdentifier, user.password) as UsersToken
+				val users = session.getUserGroup(institute, usersToken)
+				session.getUserInfo(institute, singleOfUserGroup(users)!!)
 			} catch(e: Throwable) {
 				onError(e, "사용자 정보 불러오기")
 				showToastSuspendAsync("사용자 정보를 불러오지 못했습니다.")

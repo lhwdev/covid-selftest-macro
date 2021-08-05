@@ -44,12 +44,12 @@ class PersistentCookieStore(private val sharedPreferences: SharedPreferences) : 
 	private fun loadAllFromPersistence() {
 		allCookies = HashMap()
 		
-		val allPairs: Map<String, *> = sharedPreferences.all
-		for(entry: Map.Entry<String, *> in allPairs.entries) {
-			val uriAndName = entry.key.split(SP_KEY_DELIMITER).toTypedArray()
+		val allPairs = sharedPreferences.all
+		for((key, value) in allPairs.entries) {
+			val uriAndName = key.split(SP_KEY_DELIMITER).toTypedArray()
 			try {
 				val uri = URI(uriAndName[0])
-				val encodedCookie = entry.value as String
+				val encodedCookie = value as String
 				val cookie = Json.decodeFromString(SerializableHttpCookie.serializer(), encodedCookie).cookie
 				var targetCookies = allCookies[uri]
 				if(targetCookies == null) {
@@ -117,9 +117,9 @@ class PersistentCookieStore(private val sharedPreferences: SharedPreferences) : 
 		// Check it there are expired cookies and remove them
 		if(targetCookies.isNotEmpty()) {
 			val cookiesToRemoveFromPersistence = mutableListOf<HttpCookie>()
-			val it: MutableIterator<HttpCookie> = targetCookies.iterator()
+			val it = targetCookies.iterator()
 			while(it.hasNext()) {
-				val currentCookie: HttpCookie = it.next()
+				val currentCookie = it.next()
 				if(currentCookie.hasExpired()) {
 					cookiesToRemoveFromPersistence.add(currentCookie)
 					it.remove()
@@ -173,8 +173,8 @@ class PersistentCookieStore(private val sharedPreferences: SharedPreferences) : 
 	}
 	
 	private fun removeFromPersistence(uri: URI, cookiesToRemove: List<HttpCookie>) {
-		val editor: SharedPreferences.Editor = sharedPreferences.edit()
-		for(cookieToRemove: HttpCookie in cookiesToRemove) {
+		val editor = sharedPreferences.edit()
+		for(cookieToRemove in cookiesToRemove) {
 			editor.remove(uri.toString() + SP_KEY_DELIMITER + cookieToRemove.name)
 		}
 		editor.apply()
@@ -185,7 +185,7 @@ class PersistentCookieStore(private val sharedPreferences: SharedPreferences) : 
 	
 	@Synchronized
 	override fun remove(uri: URI, cookie: HttpCookie): Boolean {
-		val targetCookies: MutableSet<HttpCookie>? = allCookies[uri]
+		val targetCookies = allCookies[uri]
 		val cookieRemoved = targetCookies != null && targetCookies.remove(cookie)
 		if(cookieRemoved) {
 			removeFromPersistence(uri, cookie)
@@ -194,7 +194,7 @@ class PersistentCookieStore(private val sharedPreferences: SharedPreferences) : 
 	}
 	
 	private fun removeFromPersistence(uri: URI, cookieToRemove: HttpCookie) {
-		val editor: SharedPreferences.Editor = sharedPreferences.edit()
+		val editor = sharedPreferences.edit()
 		editor.remove(
 			(uri.toString() + SP_KEY_DELIMITER + cookieToRemove.name)
 		)

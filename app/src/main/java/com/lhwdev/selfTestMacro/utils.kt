@@ -33,11 +33,6 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 
-@Suppress("unused")
-private val dummyForInit = run {
-	// if(BuildConfig.DEBUG) sDebugFetch = true
-}
-
 
 fun EditText.isEmpty() = text == null || text.isEmpty()
 
@@ -65,24 +60,49 @@ inline fun <R> tryAtMost(maxTrial: Int, onError: (th: Throwable) -> Unit = {}, b
 }
 
 @Serializable
-data class UserLoginInfo(val identifier: UserIdentifier, val password: String, val unstableToken: UsersToken) {
-	suspend inline fun <R> ensureTokenValid(
-		session: Session,
-		instituteInfo: InstituteInfo,
-		onUpdate: (info: UserLoginInfo) -> Unit,
-		block: (token: UsersToken) -> R
-	): R {
-		return tryAtMost(
-			maxTrial = 3,
-			onError = { th ->
-				// try once more with refresh token
-				val result = session.validatePassword(instituteInfo, identifier, password)
-				val unstableToken = result as? UsersToken ?: throw IllegalStateException("로그인 실패: $result", th)
-				onUpdate(copy(unstableToken = unstableToken))
-			},
-			block = {
-				block(unstableToken)
-			}
+data class UserLoginInfo(
+	val identifier: UserIdentifier,
+	val institute: InstituteInfo,
+	val birthday: String,
+	val loginType: LoginType,
+	val password: String,
+	/*val unstableToken: UsersToken*/
+) {
+	// suspend inline fun <R> ensureTokenValid(
+	// 	session: Session,
+	// 	instituteInfo: InstituteInfo,
+	// 	onUpdate: (info: UserLoginInfo) -> Unit,
+	// 	block: (token: UsersToken) -> R
+	// ): R {
+	// 	return tryAtMost(
+	// 		maxTrial = 3,
+	// 		onError = { th ->
+	// 			// try once more with refresh token
+	// 			println("==== 재시도: ensureTokenValid ====")
+	// 			val identifier = try {
+	// 				session.findUser(instituteInfo, GetUserTokenRequestBody(
+	// 					instituteInfo, identifier.mainUserName, birthday, loginType
+	// 				))
+	// 			} catch(th: Throwable) {
+	// 				identifier
+	// 			}
+	//
+	// 			val result = tryAtMost(3) {
+	// 				session.validatePassword(instituteInfo, identifier, password)
+	// 			}
+	// 			val unstableToken = result as? UsersToken ?: throw IllegalStateException("로그인 실패: $result", th)
+	// 			onUpdate(copy(identifier = identifier, unstableToken = unstableToken))
+	// 		},
+	// 		block = {
+	// 			block(unstableToken)
+	// 		}
+	// 	)
+	// }
+	
+	suspend fun findUser(session: Session): UserIdentifier {
+		return session.findUser(
+			institute,
+			GetUserTokenRequestBody(institute, identifier.mainUserName, birthday, loginType)
 		)
 	}
 }
@@ -92,8 +112,7 @@ class PreferenceState(val pref: SharedPreferences) {
 		// version migration
 		when(pref.getInt("lastVersion", -1)) {
 			in -1..999 -> pref.edit { clear() }
-			in 1000..1006 -> pref.edit { clear() }
-			in 1007..1009 -> pref.edit { clear() }
+			in 1000..1010 -> pref.edit { clear() }
 			BuildConfig.VERSION_CODE -> Unit // latest
 		}
 		
@@ -107,9 +126,12 @@ class PreferenceState(val pref: SharedPreferences) {
 	var hour by pref.preferenceInt("hour", -1)
 	var min by pref.preferenceInt("min", 0)
 	
-	var user by pref.preferenceSerialized("userLoginInfo", UserLoginInfo.serializer())
-	var institute by pref.preferenceSerialized("institute", InstituteInfo.serializer())
-	var setting by pref.preferenceSerialized("userSetting", UserSetting.serializer())
+	var user: UserLoginInfo?
+		by pref.preferenceSerialized("userLoginInfo", UserLoginInfo.serializer())
+	var institute: InstituteInfo?
+		by pref.preferenceSerialized("institute", InstituteInfo.serializer())
+	var setting: UserSetting?
+		by pref.preferenceSerialized("userSetting", UserSetting.serializer())
 	
 	var shownNotices: Set<String>
 		get() = pref.getStringSet("shownNotices", setOf())!!
@@ -181,28 +203,27 @@ fun <T> SharedPreferences.preferenceSerialized(
 	key: String,
 	serializer: KSerializer<T>,
 	formatter: StringFormat = Json
-) =
-	object : ReadWriteProperty<Any?, T?> {
-		var updated = false
-		var cache: T? = null
-		
-		override fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) {
-			cache = value
-			updated = true
-			edit {
-				if(value == null) remove(key)
-				else putString(key, formatter.encodeToString(serializer, value))
-			}
-		}
-		
-		override fun getValue(thisRef: Any?, property: KProperty<*>): T? {
-			if(!updated) {
-				val string = getString(key, null)
-				cache = if(string == null) null else formatter.decodeFromString(serializer, string)
-			}
-			return cache
+) = object : ReadWriteProperty<Any?, T?> {
+	var updated = false
+	var cache: T? = null
+	
+	override fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) {
+		cache = value
+		updated = true
+		edit {
+			if(value == null) remove(key)
+			else putString(key, formatter.encodeToString(serializer, value))
 		}
 	}
+	
+	override fun getValue(thisRef: Any?, property: KProperty<*>): T? {
+		if(!updated) {
+			val string = getString(key, null)
+			cache = if(string == null) null else formatter.decodeFromString(serializer, string)
+		}
+		return cache
+	}
+}
 
 fun Context.prefMain() = getSharedPreferences("main", AppCompatActivity.MODE_PRIVATE)
 

@@ -218,7 +218,7 @@
     "rspns14": null,
     "rspns15": null,
     "upperToken": "<UserToken>",
-    "upperUserNameEncpt": "홍길동" // 사용자 이름
+    "upperUserNameEncpt": "홍길동" // 제출한 사람 이름. 공식 사이트에서는 다른 사람이 대신 제출한 경우 그 이름이 들어가나, 실제로는 아무 이름이나 넣어도 됨
   }
   ```
 * 출력: json

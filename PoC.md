@@ -2,6 +2,9 @@
 코틀린 기반 구현체는 api 폴더에서 찾아볼 수 있습니다. 단 파일의 이름을 이해하기 쉽도록 바꾸어서
 실제 api의 주소와 다를 수 있습니다.
 
+교육청의 가상 보안키보드 패치 이후 추가된 transkey 관련 PoC는 이곳에 없습니다.
+쓸 시간도 없고, 보안상의 이유로 공개하지 않습니다.
+
 ## 토큰
 여기서는 토큰을 세가지 종류, UsersIdToken, UsersToken, UserToken으로 구분하도록 하겠습니다.
 이름 그대로 'users-'로 시작하는 토큰은 사용자 그룹에 대한 토큰입니다.
@@ -99,10 +102,13 @@
 * 헤더:
   - `Content-Type: application/json;charset=utf-8`
   - Authorization: **UsersIdToken**
+  - 쿠키: `WAF`가 있어야 작동함 (hcs 사이트에 있는 것들 중 아무거나 호출해도 `Set-Cookie`를
+    반환하기 때문에 문제없음)
 * 입력: json
   ```json5
   {
-    "password": "<비밀번호/암호화>",
+    "password": "<transkey>", // transkey의 결과.
+    "makeSession": true,
     "deviceUuid": "<기기 uuid>" // 공식 앱 사용시에 들어감, ""로 비워둬도 됨
   }
   ```

@@ -9,22 +9,22 @@ import java.net.URL
 
 
 @Serializable
-data class InstituteInfoResponse(@SerialName("schulList") val instituteList: List<InstituteInfo>)
+public data class InstituteInfoResponse(@SerialName("schulList") val instituteList: List<InstituteInfo>)
 
 @Serializable
-data class InstituteInfo(
+public data class InstituteInfo(
 	@SerialName("kraOrgNm") val name: String,
 	@SerialName("orgCode") val code: String,
 	@SerialName("addres") val address: String,
 	@SerialName("atptOfcdcConctUrl") val requestUrlBody: String
 ) {
-	val requestUrl2 get() = URL("https://$requestUrlBody/v2")
-	val requestUrl get() = URL("https://$requestUrlBody")
+	val requestUrl2: URL get() = URL("https://$requestUrlBody/v2")
+	val requestUrl: URL get() = URL("https://$requestUrlBody")
 }
 
 
 // 학교: lctnScCode=03&schulCrseScCode=4&orgName=...&loginType=school
-suspend fun Session.getSchoolData(
+public suspend fun Session.getSchoolData(
 	regionCode: String,
 	schoolLevelCode: String,
 	name: String
@@ -41,7 +41,7 @@ suspend fun Session.getSchoolData(
 }
 
 // 대학: orgName=...&loginType=univ
-suspend fun Session.getUniversityData(
+public suspend fun Session.getUniversityData(
 	name: String
 ): InstituteInfoResponse {
 	val params = queryUrlParamsToString(
@@ -54,7 +54,7 @@ suspend fun Session.getUniversityData(
 }
 
 // 교육행정기관: orgName=...&loginType=office
-suspend fun Session.getOfficeData(
+public suspend fun Session.getOfficeData(
 	name: String
 ): InstituteInfoResponse {
 	val params = queryUrlParamsToString(
@@ -85,13 +85,13 @@ suspend fun Session.getOfficeData(
  * ]
  */
 @Serializable
-data class SigCode(
+public data class SigCode(
 	@SerialName("cdcValueNm") val name: String,
 	@SerialName("cdcValueAbrvNm") val nameAbbreviation: String,
 	@SerialName("upperCdcValue") val sigCode: String
 )
 
-suspend fun Session.getAvailableSigCodes(
+public suspend fun Session.getAvailableSigCodes(
 	regionCode: String
 ): SigCode {
 	val params = queryUrlParamsToString(
@@ -104,7 +104,7 @@ suspend fun Session.getAvailableSigCodes(
 }
 
 // 학원: lctnScCode=..&sigCode=....&orgName=...&isAcademySearch=true&loginType=office
-suspend fun Session.getAcademyData(
+public suspend fun Session.getAcademyData(
 	regionCode: String,
 	sigCode: String,
 	name: String

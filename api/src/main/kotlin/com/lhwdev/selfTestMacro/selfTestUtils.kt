@@ -6,4 +6,4 @@ import com.lhwdev.selfTestMacro.api.JsonLoose
 import kotlinx.serialization.KSerializer
 
 
-suspend fun <T> FetchResult.toJsonLoose(serializer: KSerializer<T>) = toJson(serializer, JsonLoose)
+public suspend fun <T> FetchResult.toJsonLoose(serializer: KSerializer<T>): T = toJson(serializer, JsonLoose)

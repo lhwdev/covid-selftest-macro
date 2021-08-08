@@ -9,16 +9,16 @@ import kotlinx.serialization.builtins.ListSerializer
 
 
 @Serializable
-data class User(
+public data class User(
 	@SerialName("userNameEncpt") val name: String,
 	@SerialName("userPNo") val userCode: String,
 	@SerialName("token") val token: UserToken
 )
 
 
-suspend fun Session.getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = fetch(
+public suspend fun Session.getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = fetch(
 		institute.requestUrl2["selectUserGroup"],
 		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to token.token),
-		body = "{}"
+		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
+		body = HttpBodies.jsonObject {}
 	).toJsonLoose(ListSerializer(User.serializer()))

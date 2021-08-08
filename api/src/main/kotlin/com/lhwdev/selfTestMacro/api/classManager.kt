@@ -36,17 +36,17 @@ import kotlinx.serialization.json.Json
  * ```
  */
 @Serializable
-data class ClassList(val classList: List<ClassInfo>)
+public data class ClassList(val classList: List<ClassInfo>)
 
 @Serializable
-data class ClassInfo(
+public data class ClassInfo(
 	@SerialName("orgCode") val instituteCode: String,
 	@Serializable(IntAsStringSerializer::class) val grade: Int,
 	@SerialName("classNm") @Serializable(IntAsStringSerializer::class) val classNumber: Int,
 	@SerialName("classCode") val classCode: String
 )
 
-suspend fun getClassList(institute: InstituteInfo, manager: User): ClassList = fetch(
+public suspend fun getClassList(institute: InstituteInfo, manager: User): ClassList = fetch(
 	institute.requestUrl["joinClassList"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to manager.token.token)
@@ -85,10 +85,10 @@ suspend fun getClassList(institute: InstituteInfo, manager: User): ClassList = f
  * ```
  */
 @Serializable
-data class ClassSurveyStatus(val joinList: List<ClassSurveyStudentStatus>)
+public data class ClassSurveyStatus(val joinList: List<ClassSurveyStudentStatus>)
 
 @Serializable
-data class ClassSurveyStudentStatus(
+public data class ClassSurveyStudentStatus(
 	val name: String,
 	@Serializable(IntAsStringSerializer::class) val grade: Int,
 	@SerialName("classCode") val classCode: String,
@@ -98,19 +98,16 @@ data class ClassSurveyStudentStatus(
 	@SerialName("deviceUuidYn") @Serializable(YesNoSerializer::class) val installedOfficalApp: Boolean
 )
 
-suspend fun getClassSurveyStatus(
+public suspend fun getClassSurveyStatus(
 	institute: InstituteInfo, manager: User, classInfo: ClassInfo
-) = ioTask {
-	fetch(
-		institute.requestUrl["join"],
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf(
-			"Authorization" to manager.token.token,
-			"Content-Type" to ContentTypes.json
-		),
-		body = Json.encodeToString(ClassInfo.serializer(), classInfo)
-	).toJsonLoose(ClassSurveyStatus.serializer())
-}
+): ClassSurveyStatus = fetch(
+	institute.requestUrl["join"],
+	method = HttpMethod.post,
+	headers = sDefaultFakeHeader + mapOf(
+		"Authorization" to manager.token.token
+	),
+	body = HttpBodies.json(ClassInfo.serializer(), classInfo)
+).toJsonLoose(ClassSurveyStatus.serializer())
 
 
 /**
@@ -128,7 +125,7 @@ suspend fun getClassSurveyStatus(
  * }
  */
 @Serializable
-data class ClassSurveyStudentStatusDetail(
+public data class ClassSurveyStudentStatusDetail(
 	@Serializable(IntAsStringSerializer::class) val grade: Int,
 	val classCode: String,
 	val name: String,
@@ -137,16 +134,13 @@ data class ClassSurveyStudentStatusDetail(
 	@SerialName("mobnuEncpt") val phoneNumber: String
 )
 
-suspend fun getStudentSurveyStatusDetail(
+public suspend fun getStudentSurveyStatusDetail(
 	institute: InstituteInfo, manager: User, student: ClassSurveyStudentStatus
-) = ioTask {
-	fetch(
-		institute.requestUrl["joinDetail"],
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf(
-			"Authorization" to manager.token.token,
-			"Content-Type" to ContentTypes.json
-		),
-		body = Json.encodeToString(ClassSurveyStudentStatus.serializer(), student)
-	).toJsonLoose(ClassSurveyStudentStatusDetail.serializer())
-}
+): ClassSurveyStudentStatusDetail = fetch(
+	institute.requestUrl["joinDetail"],
+	method = HttpMethod.post,
+	headers = sDefaultFakeHeader + mapOf(
+		"Authorization" to manager.token.token
+	),
+	body = HttpBodies.json(ClassSurveyStudentStatus.serializer(), student)
+).toJsonLoose(ClassSurveyStudentStatusDetail.serializer())

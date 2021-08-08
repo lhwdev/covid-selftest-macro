@@ -2,11 +2,14 @@ package com.lhwdev.selfTestMacro.api
 
 import com.lhwdev.selfTestMacro.*
 import com.lhwdev.selfTestMacro.transkey.Transkey
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
@@ -14,26 +17,26 @@ import java.net.URL
 import kotlin.random.Random
 
 
-val transkeyUrl: URL = URL("https://hcs.eduro.go.kr/transkeyServlet")
+public val transkeyUrl: URL = URL("https://hcs.eduro.go.kr/transkeyServlet")
 
 
 /*
  * usersId token --(validatePassword)--> users token(temporary) --(selectUserGroup)--> user token
  */
 
-sealed class PasswordResult {
-	abstract val isSuccess: Boolean
+public sealed class PasswordResult {
+	public abstract val isSuccess: Boolean
 }
 
 @Serializable(UsersToken.Serializer::class)
-data class UsersToken(val token: String) : PasswordResult() {
-	override val isSuccess get() = true
+public data class UsersToken(val token: String) : PasswordResult() {
+	override val isSuccess: Boolean get() = true
 	
-	object Serializer : KSerializer<UsersToken> {
-		override val descriptor =
+	public object Serializer : KSerializer<UsersToken> {
+		override val descriptor: SerialDescriptor =
 			PrimitiveSerialDescriptor(UsersToken::class.java.name, PrimitiveKind.STRING)
 		
-		override fun deserialize(decoder: Decoder) = UsersToken(decoder.decodeString())
+		override fun deserialize(decoder: Decoder): UsersToken = UsersToken(decoder.decodeString())
 		override fun serialize(encoder: Encoder, value: UsersToken) {
 			encoder.encodeString(value.token)
 		}
@@ -58,7 +61,7 @@ data class UsersToken(val token: String) : PasswordResult() {
  *     alert("비밀번호가 초기화 되었습니다.\n다시 로그인하세요")
  */
 @Serializable
-data class PasswordWrong(
+public data class PasswordWrong(
 	val isError: Boolean,
 	val statusCode: Int,
 	val errorCode: Int,
@@ -77,12 +80,12 @@ data class PasswordWrong(
 			else -> null
 		}
 	
-	override val isSuccess get() = false
+	override val isSuccess: Boolean get() = false
 	
 	override fun toString(): String = errorMessage ?: "알 수 없는 오류: 에러코드 $errorCode (틀린 횟수: ${data.failedCount})"
 	
 	@Serializable
-	data class Data(
+	public data class Data(
 		@SerialName("failCnt") val failedCount: Int
 	)
 }
@@ -90,12 +93,12 @@ data class PasswordWrong(
 private val json = Json { ignoreUnknownKeys = true }
 
 
-suspend fun Session.validatePassword(
+public suspend fun Session.validatePassword(
 	institute: InstituteInfo,
 	usersIdentifier: UsersIdentifier,
 	password: String
-): PasswordResult {
-	val transkey = Transkey(this, transkeyUrl, Random)
+): PasswordResult = withContext(Dispatchers.IO) main@ {
+	val transkey = Transkey(this@validatePassword, transkeyUrl, Random)
 	
 	val keyPad = transkey.newKeypad(
 		keyType = "number",
@@ -125,7 +128,7 @@ suspend fun Session.validatePassword(
 	}
 	
 	val result = fetch(
-		institute.requestUrl["validatePassword"],
+		institute.requestUrl2["validatePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf(
 			"Authorization" to usersIdentifier.token.token,
@@ -144,15 +147,17 @@ suspend fun Session.validatePassword(
 		return UsersToken(userToken)
 	}
 	
-	if(result.startsWith('\"')) return try {
-		parseResultToken()
-	} catch(e: Throwable) {
-		json.decodeFromString(PasswordWrong.serializer(), result)
-	}
-	
-	return try {
-		json.decodeFromString(PasswordWrong.serializer(), result)
-	} catch(e: Throwable) {
-		parseResultToken()
+	if(result.startsWith('\"')) {
+		try {
+			parseResultToken()
+		} catch(e: Throwable) {
+			json.decodeFromString(PasswordWrong.serializer(), result)
+		}
+	} else {
+		try {
+			json.decodeFromString(PasswordWrong.serializer(), result)
+		} catch(e: Throwable) {
+			parseResultToken()
+		}
 	}
 }

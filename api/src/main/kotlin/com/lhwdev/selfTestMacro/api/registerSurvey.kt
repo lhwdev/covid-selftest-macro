@@ -8,9 +8,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
 
 
 /*
@@ -40,10 +40,10 @@ import kotlinx.serialization.json.Json
  * Can be used only once.
  */
 @Serializable(UserToken.Serializer::class)
-data class UserToken(val token: String) {
-	object Serializer : KSerializer<UserToken> {
-		override val descriptor = PrimitiveSerialDescriptor(UserToken::class.java.name, PrimitiveKind.STRING)
-		override fun deserialize(decoder: Decoder) = UserToken(decoder.decodeString())
+public data class UserToken(val token: String) {
+	public object Serializer : KSerializer<UserToken> {
+		override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(UserToken::class.java.name, PrimitiveKind.STRING)
+		override fun deserialize(decoder: Decoder): UserToken = UserToken(decoder.decodeString())
 		override fun serialize(encoder: Encoder, value: UserToken) {
 			encoder.encodeString(value.token)
 		}
@@ -51,7 +51,7 @@ data class UserToken(val token: String) {
 }
 
 @Serializable
-data class SurveyData(
+public data class SurveyData(
 	val deviceUuid: String = "",
 	@Serializable(with = YesNoSerializer::class) val rspns00: Boolean = true,
 	val rspns01: String = "1",
@@ -74,12 +74,12 @@ data class SurveyData(
 )
 
 @Serializable
-data class SurveyResult(
+public data class SurveyResult(
 	@SerialName("registerDtm") val registerAt: String
 	// what is 'inveYmd'?
 )
 
-suspend fun Session.registerSurvey(
+public suspend fun Session.registerSurvey(
 	institute: InstituteInfo,
 	user: User,
 	surveyData: SurveyData
@@ -87,8 +87,7 @@ suspend fun Session.registerSurvey(
 	institute.requestUrl["registerServey"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
-		"Content-Type" to ContentTypes.json,
 		"Authorization" to user.token.token
 	),
-	body = JsonEncodeDefaults.encodeToString(SurveyData.serializer(), surveyData)
+	body = HttpBodies.json(SurveyData.serializer(), surveyData, json = JsonEncodeDefaults)
 ).toJsonLoose(SurveyResult.serializer())

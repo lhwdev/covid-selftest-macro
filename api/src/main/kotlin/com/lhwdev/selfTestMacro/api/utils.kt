@@ -3,30 +3,31 @@ package com.lhwdev.selfTestMacro.api
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
 
-val JsonEncodeDefaults = Json { encodeDefaults = true }
-val JsonLoose = Json { ignoreUnknownKeys = true }
+internal val JsonEncodeDefaults = Json { encodeDefaults = true }
+internal val JsonLoose = Json { ignoreUnknownKeys = true }
 
 
-object YesNoSerializer : KSerializer<Boolean> {
-	override val descriptor =
+public object YesNoSerializer : KSerializer<Boolean> {
+	override val descriptor: SerialDescriptor =
 		PrimitiveSerialDescriptor("com.lhwdev.selfTestMacro.api.yesno", PrimitiveKind.STRING)
 	
-	override fun deserialize(decoder: Decoder) = decoder.decodeString() == "Y"
+	override fun deserialize(decoder: Decoder): Boolean = decoder.decodeString() == "Y"
 	override fun serialize(encoder: Encoder, value: Boolean) {
 		encoder.encodeString(if(value) "Y" else "N")
 	}
 }
 
-object IntAsStringSerializer : KSerializer<Int> {
-	override val descriptor =
+public object IntAsStringSerializer : KSerializer<Int> {
+	override val descriptor: SerialDescriptor =
 		PrimitiveSerialDescriptor(IntAsStringSerializer::class.java.name, PrimitiveKind.STRING)
 	
-	override fun deserialize(decoder: Decoder) = decoder.decodeString().toInt()
+	override fun deserialize(decoder: Decoder): Int = decoder.decodeString().toInt()
 	
 	override fun serialize(encoder: Encoder, value: Int) {
 		encoder.encodeString(value.toString())

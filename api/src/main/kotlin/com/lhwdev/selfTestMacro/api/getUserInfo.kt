@@ -5,7 +5,6 @@ package com.lhwdev.selfTestMacro.api
 import com.lhwdev.selfTestMacro.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 
 @Serializable
@@ -15,7 +14,7 @@ private data class GetUserInfoRequestBody(
 )
 
 @Serializable
-data class UserInfo(
+public data class UserInfo(
 	@SerialName("userName") val userName: String,
 	
 	@SerialName("orgCode") val instituteCode: String,
@@ -33,7 +32,7 @@ data class UserInfo(
 	
 	@SerialName("deviceUuid") val deviceUuid: String? = null
 ) {
-	val instituteStub: InstituteInfo = InstituteInfo(
+	public val instituteStub: InstituteInfo = InstituteInfo(
 		name = instituteName,
 		code = instituteCode,
 		address = "???",
@@ -41,7 +40,7 @@ data class UserInfo(
 	)
 	
 	// see getInstituteData.kt
-	val instituteType: InstituteType = when { // TODO: needs verification
+	public val instituteType: InstituteType = when { // TODO: needs verification
 		institutionClassifierCode == "5" -> InstituteType.school
 		institutionClassifierCode == "7" -> InstituteType.university
 		instituteRegionCode != null && schoolLevelCode != null -> InstituteType.school
@@ -49,8 +48,8 @@ data class UserInfo(
 		else -> InstituteType.office
 	}
 	
-	fun toUserInfoString() = "$userName($instituteName)"
-	fun toLastRegisterInfoString() =
+	public fun toUserInfoString(): String = "$userName($instituteName)"
+	public fun toLastRegisterInfoString(): String =
 		"최근 자가진단: ${if(lastRegisterAt == null) "미참여" else ((if(isHealthy == true) "정상" else "유증상") + "($lastRegisterAt)")}"
 }
 
@@ -79,14 +78,13 @@ data class UserInfo(
  * userPNo: "..."
  * wrongPassCnt: 0
  */
-suspend fun Session.getUserInfo(institute: InstituteInfo, user: User): UserInfo = fetch(
+public suspend fun Session.getUserInfo(institute: InstituteInfo, user: User): UserInfo = fetch(
 	institute.requestUrl2["getUserInfo"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
-		"Content-Type" to ContentTypes.json,
 		"Authorization" to user.token.token
 	),
-	body = Json.encodeToString(
+	body = HttpBodies.json(
 		GetUserInfoRequestBody.serializer(),
 		GetUserInfoRequestBody(institute.code, user.userCode)
 	)

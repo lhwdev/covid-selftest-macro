@@ -9,6 +9,7 @@ import android.app.PendingIntent
 import android.content.Context
 import com.lhwdev.selfTestMacro.api.*
 import net.gotev.cookiestore.InMemoryCookieStore
+import com.lhwdev.selfTestMacro.api.User
 import java.net.CookieManager
 import java.net.CookiePolicy
 import java.util.Calendar
@@ -100,26 +101,4 @@ fun Context.updateTime(intent: PendingIntent) {
 	alarmManager.cancel(intent)
 	// if(preferenceState.isSchedulingEnabled)
 	// 	scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min)
-}
-
-@SuppressLint("NewApi")
-fun Context.scheduleNextAlarm(
-	intent: PendingIntent,
-	hour: Int,
-	min: Int,
-	nextDay: Boolean = false
-) {
-	(getSystemService(Context.ALARM_SERVICE) as AlarmManager).setExact(
-		AlarmManager.RTC_WAKEUP,
-		Calendar.getInstance().run {
-			val new = clone() as Calendar
-			new[Calendar.HOUR_OF_DAY] = hour
-			new[Calendar.MINUTE] = min
-			new[Calendar.SECOND] = 0
-			new[Calendar.MILLISECOND] = 0
-			if(nextDay || new <= this) new.add(Calendar.DAY_OF_YEAR, 1)
-			new.timeInMillis
-		},
-		intent
-	)
 }

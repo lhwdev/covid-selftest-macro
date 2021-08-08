@@ -159,8 +159,6 @@ val DefaultOpaqueRouteTransition: RouteTransition = object : RouteTransition {
 		onAnimationEnd: () -> Unit,
 		content: @Composable () -> Unit
 	) {
-		println(visibleState)
-		Text("HO $visibleState")
 		val transition = updateRouteTransition(visibleState)
 		
 		OnTransitionEndObserver(transition, onAnimationEnd)
@@ -175,7 +173,6 @@ val DefaultOpaqueRouteTransition: RouteTransition = object : RouteTransition {
 				Modifier
 					.matchParentSize()
 					.graphicsLayer { alpha = scrimTransparency.value }
-					.background(Color.Black.copy(alpha = 0.5f))
 			)
 			transition.AnimatedVisibility(
 				visible = { it },

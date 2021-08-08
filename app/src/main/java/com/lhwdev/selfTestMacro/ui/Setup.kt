@@ -3,6 +3,7 @@ package com.lhwdev.selfTestMacro.ui
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.annotation.VisibleForTesting
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -30,11 +32,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import com.lhwdev.selfTestMacro.*
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.*
+import com.lhwdev.selfTestMacro.repository.MainRepositoryImpl
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
+import kotlin.math.PI
 import kotlin.math.max
 
 
@@ -51,6 +56,8 @@ data class SetupParameters(
 
 @Stable
 internal class SetupModel {
+	val session = Session()
+	
 	var scaffoldState = ScaffoldState(DrawerState(DrawerValue.Closed), SnackbarHostState())
 	
 	var instituteInfo by mutableStateOf<InstitutionInfoModel?>(null)
@@ -104,6 +111,7 @@ internal const val sSetupPagesCount = 4
 
 @Composable
 private fun SetupWizardView(model: SetupModel, parameters: SetupParameters) {
+	sDebugFetch = true
 	var pageIndex by remember { mutableStateOf(0) }
 	
 	AutoScaffold(
@@ -449,7 +457,7 @@ private fun ColumnScope.WizardSchoolInfo(
 		
 		val schools = runCatching {
 			selfLog("#1. 학교 정보 찾기")
-			getSchoolData(
+			setupModel.session.getSchoolData(
 				regionCode = model.regionCode,
 				schoolLevelCode = "${model.schoolLevel}",
 				name = model.schoolName
@@ -584,7 +592,7 @@ private suspend fun submitLogin(
 	
 	val userId = try {
 		selfLog("#2. 사용자 찾기")
-		findUser(
+		model.session.findUser(
 			institute = institute,
 			name = name, birthday = birth,
 			loginType = instituteInfo.type.loginType
@@ -616,7 +624,6 @@ private suspend fun submitLogin(
 		Input(focusOnShow = true) {
 			TextField(
 				password, setPassword,
-				modifier = Modifier.fillMaxWidth(),
 				label = { Text("비밀번호") },
 				isError = password.length > 4,
 				keyboardOptions = KeyboardOptions(
@@ -638,7 +645,7 @@ private suspend fun submitLogin(
 	// validate & login with password
 	val result = try {
 		selfLog("#3. 비밀번호 확인")
-		validatePassword(institute, userId, password)
+		model.session.validatePassword(institute, userId, password)
 	} catch(e: Throwable) {
 		model.onError(context, "로그인에 실패하였습니다.", e)
 		return false
@@ -660,11 +667,11 @@ private suspend fun submitLogin(
 		}
 		is UsersToken -> {
 			try {
-				val userList = getUserGroup(institute, result)
+				val userList = model.session.getUserGroup(institute, result)
 				val list = userList.map {
 					WizardUser(
 						user = it,
-						info = getUserInfo(institute, it),
+						info = model.session.getUserInfo(institute, it),
 						master = MasterUser(
 							identifier = userId,
 							instituteInfo = institute,
@@ -877,7 +884,7 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 		) {
 			WizardCommon(
 				wizard,
-				wizardFulfilled = if(pref.isFirstTime) enabled.count { it } > 0 else true,
+				wizardFulfilled = if(pref.isFirstTime) enabled.isNotEmpty() else true,
 				showNotFulfilledWarning = {
 					scope.launch {
 						model.showSnackbar("사용자를 최소 한 명 선택해주세요")
@@ -953,9 +960,9 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 							DbTestTarget.Single(it.id)
 						}
 						
-						val ids = previousTestGroups.groups.map { it.id }.toMutableList()
+						val ids = previousTestGroups.ids
 						val newTestGroups = testTargets.map { target ->
-							val id = ids.nextId()
+							val id = ids.nextTestGroupId()
 							ids += id
 							DbTestGroup(id = id, target = target)
 						}
@@ -986,7 +993,8 @@ private fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wi
 						navigator.routes.size == 1 -> {
 							pref.isFirstTime = false
 							navigator.clearRoute()
-							navigator.pushRoute { Main() }
+							val repository = MainRepositoryImpl(pref, model.session)
+							navigator.pushRoute { Main(repository) }
 						}
 						else -> {
 							navigator.popRoute()

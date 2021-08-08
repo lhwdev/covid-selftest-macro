@@ -18,7 +18,7 @@ sealed class SubmitResult(val target: DbUser) {
 
 @Immutable
 interface MainRepository {
-	suspend fun getCurrentStatus(user: DbUser): Status
+	suspend fun getCurrentStatus(user: DbUser): Status?
 	
 	suspend fun Context.submitSelfTestNow(
 		manager: DatabaseManager,

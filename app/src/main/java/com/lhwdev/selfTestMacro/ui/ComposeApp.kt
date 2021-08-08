@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.lhwdev.selfTestMacro.PreferenceState
 import com.lhwdev.selfTestMacro.preferenceState
-import com.lhwdev.selfTestMacro.repository.SelfTestSchedulerImpl
+import com.lhwdev.selfTestMacro.repository.SelfTestManagerImpl
 import kotlinx.coroutines.flow.collect
 
 
@@ -35,7 +35,7 @@ fun ComposeApp(activity: Activity) {
 		
 		navigator
 	}
-	val scheduler = remember { SelfTestSchedulerImpl(context.applicationContext, pref.db) }
+	val scheduler = remember { SelfTestManagerImpl(context.applicationContext, pref.db) }
 	
 	LaunchedEffect(pref) {
 		snapshotFlow {
@@ -95,8 +95,8 @@ val LocalPreviewUiController =
 fun AppTheme(content: @Composable () -> Unit) {
 	MaterialTheme(
 		colors = lightColors(
-			primary = Color(0xff6200ee),
-			primaryVariant = Color(0xff3700b3),
+			primary = Color(0xff2962ff),
+			primaryVariant = Color(0xff5000b3),
 			onPrimary = Color(0xffffffff),
 			secondary = Color(0xff03dac5),
 			secondaryVariant = Color(0xff04bfad)

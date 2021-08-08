@@ -77,8 +77,7 @@ fun PreviewStubState(statusBar: Boolean = false, content: @Composable () -> Unit
 				val testGroupA = DbTestGroup(
 					target = DbTestTarget.Group(name = "그룹 1", userIds = listOf(0, 1)),
 					schedule = DbTestSchedule.None,
-					excludeWeekend = true,
-					excludeHoliday = true
+					excludeWeekend = true
 				)
 				
 				db.users = DbUsers(

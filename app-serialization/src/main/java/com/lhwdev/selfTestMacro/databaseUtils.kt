@@ -9,36 +9,47 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
 
-
 inline fun <T> PreferenceHolder.preferenceState(
 	key: String,
 	crossinline read: (SharedPreferences) -> T,
 	crossinline write: (SharedPreferences, T) -> Unit
 ): MutableState<T> = object : SnapshotMutableState<T> {
 	private val handle = property(key)
-	private var cache: T? by mutableStateOf(null)
+	private var cache = mutableStateOf<T?>(null) as SnapshotMutableState<T?>
 	
 	override var value: T
 		get() {
 			return if(handle.clean) {
 				@Suppress("UNCHECKED_CAST")
-				cache as T
+				cache.value as T
 			} else {
 				val newValue = read(pref)
-				cache = newValue
+				cache.value = newValue
 				handle.clean = true
 				newValue
 			}
 		}
 		set(value) {
-			cache = value
-			write(pref, value)
-			handle.clean = true // forcibly; write() would make handle.clean false
+			cache.value = value
+			val current = currentTransaction
+			if(current == null) {
+				write(pref, value)
+				handle.clean = true // forcibly; write() would make handle.clean false
+			} else {
+				current[this] = {
+					write(pref, value)
+					handle.clean = true // forcibly; write() would make handle.clean false
+				}
+				handle.clean = true
+			}
 		}
 	
 	override fun component1(): T = value
 	override fun component2(): (T) -> Unit = { value = it }
-	override val policy: SnapshotMutationPolicy<T> get() = structuralEqualityPolicy()
+	
+	override val policy: SnapshotMutationPolicy<T>
+		@Suppress("UNCHECKED_CAST")
+		get() = cache.policy as SnapshotMutationPolicy<T>
 }
 
 
@@ -47,7 +58,7 @@ internal val sNone = Any()
 
 // not thread-safe; if you want, use Collections.synchronizedList
 abstract class LazyListBase<E>(final override val size: Int) : AbstractList<E>() {
-	val cache = MutableList<Any?>(size) { sNone }
+	private val cache = MutableList<Any?>(size) { sNone }
 	
 	protected abstract fun createAt(index: Int): E
 	

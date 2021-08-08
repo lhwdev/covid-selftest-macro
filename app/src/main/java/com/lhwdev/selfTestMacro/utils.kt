@@ -12,12 +12,6 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 
-@Suppress("unused")
-private val dummyForInit = run {
-	// if(BuildConfig.DEBUG) sDebugFetch = true
-}
-
-
 inline fun <R> tryAtMost(maxTrial: Int, onError: (th: Throwable) -> Unit = {}, block: () -> R): R {
 	var trialCount = 0
 	while(true) {
@@ -36,6 +30,8 @@ fun <K, V> Map<K, V>.added(key: K, value: V): Map<K, V> {
 	newMap[key] = value
 	return newMap
 }
+
+fun <T> List<T>.replaced(from: T, to: T): List<T> = map { if(it == from) to else it }
 
 fun Int.toPx() = (this * Resources.getSystem().displayMetrics.density).toInt()
 

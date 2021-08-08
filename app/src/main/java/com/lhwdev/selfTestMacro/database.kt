@@ -17,7 +17,7 @@ class PreferenceState(pref: PreferenceHolder) {
 		// version migration
 		when(p.getInt("lastVersion", -1)) {
 			in -1..999 -> p.edit { clear() }
-			in 1000..1006 -> p.edit { clear() }
+			in 1000..1999 -> p.edit { clear() }
 			BuildConfig.VERSION_CODE -> Unit // latest
 		}
 		
@@ -63,6 +63,6 @@ fun Context.prefMain(): SharedPreferences =
 
 
 fun Context.createIntent(): PendingIntent = PendingIntent.getBroadcast(
-	this, AlarmReceiver.REQUEST_CODE, Intent(this, AlarmReceiver::class.java),
+	this, 1000, Intent(this, AlarmReceiver::class.java),
 	PendingIntent.FLAG_UPDATE_CURRENT
 )

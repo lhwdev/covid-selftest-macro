@@ -74,7 +74,7 @@ fun FloatingMaterialDialogScope.IconTitle(
 }
 
 /**
- * Create an content in the dialog with appropriate padding
+ * Create a content in the dialog with appropriate padding
  * @param content the content of the view
  */
 @Composable

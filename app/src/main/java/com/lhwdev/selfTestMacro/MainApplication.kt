@@ -11,7 +11,6 @@ import kotlinx.coroutines.runBlocking
 class MainApplication : Application() {
 	override fun onCreate() {
 		super.onCreate()
-		sDummyForInitialization
 		sDebugFetch = false
 		
 		// debug code

@@ -24,6 +24,5 @@ data class Asset(
 	@Serializable(URLSerializer::class) val browserDownloadUrl: URL
 )
 
-suspend fun Repository.getReleaseLatest() = ioTask {
+suspend fun Repository.getReleaseLatest(): Release =
 	fetch(releaseUrl["latest"]).toJsonLoose(Release.serializer())
-}

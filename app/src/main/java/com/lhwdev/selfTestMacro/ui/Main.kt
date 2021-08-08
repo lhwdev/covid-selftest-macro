@@ -381,10 +381,10 @@ private fun ColumnScope.GroupStatusView(repository: MainRepository, target: DbTe
 	val allowInit = users.size <= 4 || forceAllowInit
 	
 	var groupStatusKey by remember { mutableStateOf(0) }
-	val groupStatus = lazyState(null, key = groupStatusKey, allowInit = allowInit) {
-		val statusMap = users.map {
-			it to repository.getCurrentStatus(it)
-		}.toMap()
+	val groupStatus = lazyState(null, key = groupStatusKey, allowInit = allowInit) state@ {
+		val statusMap = users.associateWith {
+			repository.getCurrentStatus(it) ?: return@state null
+		}
 		allStatus = statusMap
 		
 		val suspicious = mutableListOf<DbUser>()
@@ -473,7 +473,11 @@ private fun ColumnScope.GroupStatusView(repository: MainRepository, target: DbTe
 					for((user, status) in allStatus) ListItem(
 						icon = {
 							val icon = when(status) {
-								is Status.Submitted -> if(status.isHealthy) R.drawable.ic_check_24 else R.drawable.ic_warning_24
+								is Status.Submitted -> if(status.isHealthy) {
+									R.drawable.ic_check_24
+								} else {
+									R.drawable.ic_warning_24
+								}
 								Status.NotSubmitted -> R.drawable.ic_clear_24
 							}
 							

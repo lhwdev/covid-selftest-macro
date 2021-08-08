@@ -539,8 +539,10 @@ fun FloatingMaterialDialogScope.NewGroup(initialSelection: List<DbTestGroup> = e
 		PositiveButton(onClick = {
 			val realUsers = users.filterIndexed { index, _ -> selection[index] }
 			
+			val ids = pref.db.testGroups.ids
 			val group = DbTestGroup(
-				target = DbTestTarget.Group(name = groupName, userIds = emptyList())
+				target = DbTestTarget.Group(name = groupName, userIds = emptyList()),
+				id = ids.nextTestGroupId()
 			)
 			
 			// whether `group` is present in db.testGroups does not matter
@@ -549,6 +551,7 @@ fun FloatingMaterialDialogScope.NewGroup(initialSelection: List<DbTestGroup> = e
 				target = realUsers.map { (it.target as DbTestTarget.Single).userId to it },
 				toGroup = group
 			)
+			
 			navigator.popRoute()
 		}) { Text("확인") }
 		NegativeButton { Text("취소") }

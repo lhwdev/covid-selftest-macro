@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.icons.ExpandLess
 import com.lhwdev.selfTestMacro.icons.ExpandMore
 import com.lhwdev.selfTestMacro.icons.Icons
@@ -43,7 +44,7 @@ enum class VisibilityAnimationState(
 }
 
 
-// do not supports inserting middle of the list
+// does not support inserting middle of the list
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun <T> AnimateListAsComposable(
@@ -66,8 +67,11 @@ fun <T> AnimateListAsComposable(
 		}
 	}
 	
+	println(backing.joinToString())
+	println(animationStates.joinToString())
+	
 	fun removeAt(index: Int) {
-		val backingToRemove = backing[index]
+		// val backingToRemove = backing[index]
 		animationStates[index] = VisibilityAnimationState.exit
 	}
 	
@@ -115,8 +119,10 @@ fun <T> AnimateListAsComposable(
 						VisibilityAnimationState.enter ->
 							animationStates[newIndex] = VisibilityAnimationState.visible
 						VisibilityAnimationState.visible -> Unit // no-op
-						VisibilityAnimationState.exit ->
+						VisibilityAnimationState.exit -> {
 							animationStates.removeAt(newIndex)
+							backing.removeAt(newIndex)
+						}
 					}
 				}
 			) { content(index, item) }
@@ -171,7 +177,7 @@ fun AnimateHeight(
  *
  * @param onClick the lambda to be invoked when this icon is pressed
  * @param modifier optional [Modifier] for this IconButton
- * @param enabled whether or not this IconButton will handle input events and appear enabled for
+ * @param enabled whether this IconButton will handle input events and appear enabled for
  * semantics purposes
  * @param interactionSource the [MutableInteractionSource] representing the stream of
  * [Interaction]s for this IconButton. You can create and pass in your own remembered

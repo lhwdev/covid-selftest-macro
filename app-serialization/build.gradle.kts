@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-	compileSdk = 30
+	compileSdk = 31
 	
 	defaultConfig {
 		minSdk = 19
@@ -32,6 +32,7 @@ android {
 
 
 dependencies {
+	implementation(project(":api-base"))
 	implementation(project(":api"))
 	
 	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
@@ -39,10 +40,10 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
 	
 	
-	val compose = "1.0.0" // also kotlinCompilerExtensionVersion, app-serialization/version
+	val compose = "1.0.1" // also kotlinCompilerExtensionVersion, app-serialization/version
 	implementation("androidx.compose.runtime:runtime:$compose")
 	
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.1")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.2")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 	testImplementation("junit:junit:4.13.2")
 	androidTestImplementation("androidx.test.ext:junit:1.1.3")

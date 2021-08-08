@@ -5,7 +5,6 @@ plugins {
 
 android {
 	compileSdk = 31
-	buildToolsVersion = "30.0.3"
 	
 	defaultConfig {
 		applicationId = "com.lhwdev.selfTestMacro"
@@ -52,7 +51,8 @@ android {
 	}
 	
 	composeOptions {
-		kotlinCompilerExtensionVersion = "1.0.0"
+		kotlinCompilerVersion = "1.5.21"
+		kotlinCompilerExtensionVersion = "1.0.1"
 	}
 }
 
@@ -62,14 +62,16 @@ dependencies {
 	implementation(project(":api"))
 	implementation(project(":app-serialization")) // workaround for compose + serialization
 	
+	
+	implementation("net.gotev:cookie-store:1.3.5")
+	
 	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-	implementation(kotlin("stdlib"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
 	
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.1")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.2")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 	
-	val compose = "1.0.0" // also kotlinCompilerExtensionVersion, app-serialization/version
+	val compose = "1.0.1" // also kotlinCompilerExtensionVersion, app-serialization/version
 	implementation("androidx.compose.ui:ui:$compose")
 	implementation("androidx.compose.ui:ui-tooling:$compose")
 	implementation("androidx.compose.foundation:foundation:$compose")

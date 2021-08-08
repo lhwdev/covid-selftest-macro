@@ -2,6 +2,7 @@
 
 package com.lhwdev.selfTestMacro
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.*
 import java.io.OutputStream
 import java.io.Writer
@@ -36,6 +37,22 @@ interface WriterHttpBody : HttpBody {
 	fun writeDebug(out: Writer): Unit = error("debug not provided")
 }
 
+
+fun <T> HttpBodies.json(serializer: KSerializer<T>, value: T, json: Json = Json): HttpBody = object : WriterHttpBody {
+	override fun write(out: Writer) {
+		out.write(json.encodeToString(serializer, value))
+	}
+	
+	override val contentType: String get() = "application/json"
+	
+	override fun writeDebug(out: Writer) {
+		val config = Json(from = json) { prettyPrint = true }
+		val result = json.encodeToString(serializer, value)
+		out.write(result)
+		println(result)
+	}
+	override val debugAvailable: Boolean get() = true
+}
 
 fun HttpBodies.jsonObject(block: JsonObjectScope.() -> Unit): HttpBody = object : WriterHttpBody {
 	override fun write(out: Writer) {

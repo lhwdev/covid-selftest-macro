@@ -46,12 +46,12 @@ fun MaterialDialogScope.Buttons(content: @Composable MaterialDialogButtonsScope.
 			val placeables = measurables.map {
 				(it.layoutId as MaterialDialogButtonTypes) to it.measure(constraints)
 			}
-			val totalWidth = placeables.map { it.second.width }.sum()
+			val totalWidth = placeables.sumOf { it.second.width }
 			val column = totalWidth > 0.8 * constraints.maxWidth
 			
 			val height =
 				if(column) {
-					val buttonHeight = placeables.map { it.second.height }.sum()
+					val buttonHeight = placeables.sumOf { it.second.height }
 					val heightPadding = (placeables.size - 1) * interButtonPadding
 					buttonHeight + heightPadding
 				} else {
@@ -156,7 +156,7 @@ class MaterialDialogButtonsScope(private val scope: MaterialDialogScope) {
 	}
 	
 	/**
-	 * Adds a accessibility button to the bottom left of the dialog
+	 * Adds an accessibility button to the bottom left of the dialog
 	 *
 	 * @param onClick a callback which is called when the button is pressed
 	 * @param icon the icon to be shown on the button

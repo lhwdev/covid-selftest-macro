@@ -6,8 +6,12 @@ import android.content.SharedPreferences
 class PreferenceHolder(val pref: SharedPreferences) {
 	private val propertyClean = mutableMapOf<String, Boolean>()
 	
-	private val listener = pref.registerOnSharedPreferenceChangeListener { _, key ->
+	private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
 		if(key != null) propertyClean[key] = false
+	}
+	
+	init {
+		pref.registerOnSharedPreferenceChangeListener(listener)
 	}
 	
 	

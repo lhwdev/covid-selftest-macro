@@ -16,6 +16,8 @@ import com.lhwdev.selfTestMacro.api.SurveyData
 import com.lhwdev.selfTestMacro.api.UserInfo
 import com.lhwdev.selfTestMacro.api.getUserInfo
 import com.lhwdev.selfTestMacro.api.registerSurvey
+import com.lhwdev.selfTestMacro.ui.Color
+import com.lhwdev.selfTestMacro.ui.MainModel
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -36,19 +38,24 @@ val Context.isNetworkAvailable: Boolean
 
 
 class MainRepositoryImpl(
-	val pref: PreferenceState
+	val pref: PreferenceState,
+	val session: Session = Session()
 ) : MainRepository {
-	override suspend fun getCurrentStatus(user: DbUser): Status = with(pref.db) {
-		Status(getUserInfo(user.institute, user.user))
+	override suspend fun getCurrentStatus(user: DbUser): Status? = with(pref.db) {
+		try {
+			Status(session.getUserInfo(user.institute, user.user))
+		} catch(th: Throwable) {
+			null
+		}
 	}
 	
 	private suspend fun DatabaseManager.submitSelfTest(
 		target: DbTestTarget,
 		surveyData: SurveyData
-	): List<SubmitResult> {
-		return target.allUsers.map { user ->
+	): List<SubmitResult> = try {
+		target.allUsers.map { user ->
 			try {
-				val data = registerSurvey(
+				val data = session.registerSurvey(
 					institute = user.institute,
 					user = user.user,
 					surveyData = surveyData
@@ -59,7 +66,7 @@ class MainRepositoryImpl(
 			}
 		}
 		
-	}
+	} catch(th: Throwable) { emptyList() }
 	
 	override suspend fun Context.submitSelfTestNow(
 		manager: DatabaseManager,
@@ -67,61 +74,65 @@ class MainRepositoryImpl(
 		target: DbTestTarget,
 		surveyData: SurveyData
 	): List<SubmitResult> {
-		if(!isNetworkAvailable) {
-			CoroutineScope(currentCoroutineContext()).launch {
-				model.showSnackbar("네트워크에 연결되어 있지 않습니다.", actionLabel = "확인")
+		return try {
+			if(!isNetworkAvailable) {
+				CoroutineScope(currentCoroutineContext()).launch {
+					model.showSnackbar("네트워크에 연결되어 있지 않습니다.", actionLabel = "확인")
+				}
+				return emptyList()
 			}
-			return emptyList()
-		}
-		val result = manager.submitSelfTest(target, surveyData)
-		if(result.all { it is SubmitResult.Success }) CoroutineScope(currentCoroutineContext()).launch {
-			model.showSnackbar(
-				if(target is DbTestTarget.Group) "모두 자가진단을 완료했습니다." else "자가진단을 완료했습니다.",
-				actionLabel = "확인"
-			)
-		} else model.navigator.showDialogUnit {
-			Title { Text("자가진단 실패") }
+			val result = manager.submitSelfTest(target, surveyData)
+			if(result.isEmpty()) return result
 			
-			ListContent {
-				for(resultItem in result) when(resultItem) {
-					is SubmitResult.Success -> ListItem {
-						Text(
-							"${resultItem.target.user.name}: 성공",
-							color = com.lhwdev.selfTestMacro.ui.Color(
-								onLight = Color(0xf4259644),
-								onDark = Color(0xff99ffa0)
+			if(result.all { it is SubmitResult.Success }) CoroutineScope(currentCoroutineContext()).launch {
+				model.showSnackbar(
+					if(target is DbTestTarget.Group) "모두 자가진단을 완료했습니다." else "자가진단을 완료했습니다.",
+					actionLabel = "확인"
+				)
+			} else model.navigator.showDialogUnit {
+				Title { Text("자가진단 실패") }
+				
+				ListContent {
+					for(resultItem in result) when(resultItem) {
+						is SubmitResult.Success -> ListItem {
+							Text(
+								"${resultItem.target.user.name}: 성공",
+								color = Color(
+									onLight = Color(0xf4259644),
+									onDark = Color(0xff99ffa0)
+								)
 							)
-						)
-					}
-					
-					is SubmitResult.Failed -> ListItem(
-						modifier = Modifier.clickable {
-							model.navigator.showDialogAsync {
-								Title { Text("${resultItem.target.user.name} (${resultItem.target.instituteName}): ${resultItem.message}") }
-								
-								Content {
-									val stackTrace = remember(resultItem.error) {
-										resultItem.error.stackTraceToString()
+						}
+						
+						is SubmitResult.Failed -> ListItem(
+							modifier = Modifier.clickable {
+								model.navigator.showDialogAsync {
+									Title { Text("${resultItem.target.user.name} (${resultItem.target.instituteName}): ${resultItem.message}") }
+									
+									Content {
+										val stackTrace = remember(resultItem.error) {
+											resultItem.error.stackTraceToString()
+										}
+										Text(stackTrace)
 									}
-									Text(stackTrace)
 								}
 							}
-						}
-					) {
-						Text(
-							"${resultItem.target.user.name}: 실패",
-							color = com.lhwdev.selfTestMacro.ui.Color(
-								onLight = Color(0xffff1122),
-								onDark = Color(0xffff9099)
+						) {
+							Text(
+								"${resultItem.target.user.name}: 실패",
+								color = Color(
+									onLight = Color(0xffff1122),
+									onDark = Color(0xffff9099)
+								)
 							)
-						)
+						}
 					}
 				}
+				
+				Buttons { PositiveButton { Text("확인") } }
 			}
-			
-			Buttons { PositiveButton { Text("확인") } }
-		}
-		return result
+			result
+		} catch(th: Throwable) { emptyList() }
 	}
 	
 	override suspend fun scheduleSelfTest(group: DbTestGroup, newSchedule: DbTestSchedule) {

@@ -1,27 +1,27 @@
 package com.lhwdev.selfTestMacro
 
 
-fun List<Int>.nextId(): Int {
+fun List<Int>.nextTestGroupId(): Int {
 	for(i in 0..Int.MAX_VALUE) {
 		if(i !in this) return i
 	}
 	return -1
 }
 
-fun DatabaseManager.removeTestGroup(group: DbTestGroup) {
+fun DatabaseManager.removeTestGroup(group: DbTestGroup): Unit = transactDb {
 	removeUsers(group.target.allUserIds)
 	
 	testGroups = testGroups.copy(groups = testGroups.groups - group)
 }
 
-fun DatabaseManager.removeTestGroups(groups: List<DbTestGroup>) {
+fun DatabaseManager.removeTestGroups(groups: List<DbTestGroup>): Unit = transactDb {
 	removeUsers(groups.flatMap { it.target.allUserIds })
 	
 	testGroups = testGroups.copy(groups = testGroups.groups - groups)
 }
 
 
-fun DatabaseManager.removeUsers(userIdsToRemove: List<Int>) {
+fun DatabaseManager.removeUsers(userIdsToRemove: List<Int>): Unit = transactDb {
 	// clear user groups
 	val userGroupsToModify = userIdsToRemove.map { users.users.getValue(it).userGroup.id }.toSet()
 	
@@ -46,14 +46,13 @@ fun DatabaseManager.disbandGroup(group: DbTestGroup, inheritSchedule: Boolean) {
 	val users = group.target.allUsers
 	val ids = testGroups.groups.map { it.id }.toMutableList()
 	val newTestGroups = users.map {
-		val id = ids.nextId()
+		val id = ids.nextTestGroupId()
 		ids += id
 		val target = DbTestTarget.Single(it.id)
 		if(inheritSchedule) DbTestGroup(
 			id = id,
 			target = target,
 			schedule = group.schedule,
-			excludeHoliday = group.excludeHoliday,
 			excludeWeekend = group.excludeWeekend
 		) else DbTestGroup(id = id, target = target)
 	}

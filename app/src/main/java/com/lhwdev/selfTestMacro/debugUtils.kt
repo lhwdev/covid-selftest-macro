@@ -40,9 +40,7 @@ suspend fun Context.onErrorToast(error: Throwable, description: String = "???") 
 suspend fun Context.onError(error: Throwable, description: String = "???") {
 	Log.e("ERROR", description, error)
 	val info = getErrorInfo(error, description)
-	if(isDebugEnabled) withContext(Dispatchers.Main) {
-		showErrorInfo(info)
-	}
+	if(isDebugEnabled) showErrorInfo(info)
 	writeErrorLog(info)
 }
 
@@ -70,8 +68,8 @@ suspend fun getErrorInfo(error: Throwable, description: String) = """
 	
 """.trimIndent()
 
-private fun Context.showErrorInfo(info: String) {
-	AlertDialog.Builder(this).apply {
+private suspend fun Context.showErrorInfo(info: String): Unit = withContext(Dispatchers.Main) {
+	AlertDialog.Builder(this@showErrorInfo).apply {
 		setTitle("오류 발생")
 		setMessage("* 복사된 오류정보는 기기의 정보 등 민감한 정보를 포함할 수 있습니다.\n$info")
 		

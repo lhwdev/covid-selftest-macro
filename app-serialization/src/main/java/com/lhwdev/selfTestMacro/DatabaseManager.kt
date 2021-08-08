@@ -5,6 +5,8 @@ import androidx.compose.runtime.setValue
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 
 
+val DbTestGroups.ids: MutableList<Int> get() = groups.map { it.id }.toMutableList()
+
 class DatabaseManager(pref: PreferenceHolder) {
 	var testGroups: DbTestGroups by pref.preferenceSerialized(
 		key = "testGroups",

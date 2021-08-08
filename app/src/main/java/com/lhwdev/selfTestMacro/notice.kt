@@ -66,7 +66,7 @@ suspend fun Activity.checkNotice() = withContext(Dispatchers.IO) {
 			}
 		}
 	} catch(e: Exception) {
-		// ignore; - network error or etc
+		// ignore; - network error etc.
 		// notification is not that important
 		
 		onError(e, "알림")

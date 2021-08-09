@@ -7,7 +7,7 @@
 ### [**📎 앱 다운로드 받기**](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)  
 - [개인정보 처리 방침](PRIVACY_POLICY.md)
 - 이 앱을 공유할 때는 위 링크보다 이 사이트의 주소를 공유해주세요. (위의 링크는 바뀔 수도)  
-- 자가진단 사이트의 구조가 바뀌거나 해서 앱이 작동하지 않을 때 알림을 받으려면 [디스코드 서버](https://discord.gg/a2hNMF39AC) 에 들어오세요.  
+- 자가진단 사이트의 구조가 바뀌거나 해서 앱이 작동하지 않을 때 알림을 받으려면 [디스코드 서버](https://discord.gg/a2hNMF39AC)에 들어오세요.  
 
 오류가 생기면 보통 몇 시간 안에 패치합니다.  
 제작자 자신이 쓸려고 만든 앱이고 제작자의 지인들도 쓰고 있답니다.  

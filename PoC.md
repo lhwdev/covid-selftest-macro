@@ -8,7 +8,7 @@
 ## 토큰
 여기서는 토큰을 세가지 종류, UsersIdToken, UsersToken, UserToken으로 구분하도록 하겠습니다.
 이름 그대로 'users-'로 시작하는 토큰은 사용자 그룹에 대한 토큰입니다.
-각 토큰은 jwt 형식으로 `Bearer xxx.yyy.zzz`의 형식을 띕니다. (xxx, yyy, zzz는 Base64 인코딩됨)
+각 토큰은 jwt 형식으로 `Bearer xxx.yyy.zzz`의 형식을 띕니다. (xxx, yyy, zzz는 Base64 인코딩됨)  
 
 ## 기본 url
 공통 url: `https://hcs.eduro.go.kr`
@@ -135,6 +135,8 @@
     - 1003: 비밀번호가 초기화됨
 
 ### 그룹의 사용자 목록 보기
+여기 아래로는 `WAF`, `_JSESSIONID` 같은 쿠키가 있어야 잘 작동하는 것 같습니다.
+
 * 주소: HTTP POST, `시도 교육청 url/v2/selectUserGroup`
 * 헤더:
   - `Content-Type: application/json;charset=utf-8`

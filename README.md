@@ -55,7 +55,7 @@
 개인 이메일: lhwdev6@outlook.com (최대한 버그가 있어서 작동하던 앱이 작동하지 않게 된 경우에만 보내주세요)  
 [디스코드 서버](https://discord.gg/a2hNMF39AC): 업데이트 공지나 버그 제보
 
-## 오픈소스 라이센스
+## 오픈소스 라이센스 & 기타
 - [mTranskey](https://github.com/Nua07/mTransKey)
-- Special thanks to [blluv](https://github.com/blluv)
+- Special thanks to [blluv](https://github.com/blluv), 이승수
 

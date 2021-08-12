@@ -23,6 +23,9 @@ public suspend fun Session.sendPushNotification(institute: InstituteInfo, token:
 	fetch(
 		institute.requestUrl["push"],
 		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token)
+		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
+		body = HttpBodies.jsonObject {
+			TODO()
+		}
 	)
 }

@@ -115,6 +115,7 @@
   }
   ```
   `<transkey>` 부분은 [여기를 참고하세요. (비공개)](https://github.com/lhwdev/covid-selftest-macro-transkey/tree/master/PoC.md)  
+  지금 만들고는 있는데 한참 걸릴겁니다. 차라리 소스코드를 보세요.
 
 * 출력:
   - 로그인 성공 시: `"<UsersToken>"` (쌍따옴표 " " 포함)

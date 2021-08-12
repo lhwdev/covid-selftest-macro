@@ -36,11 +36,13 @@
   ```
 
 #### url 쿼리:
+( ): 안써도 됨
+
 - 학교
   * `loginType`: 고정값 `school`
   * `orgName`: 학교 이름
-  * `lctnScCode`: 지역 코드(하단 표 참고)
-  * `schulCrseScCode`: 햑교 단계 코드(하단 표 참고)
+  * (`lctnScCode`: 지역 코드(하단 표 참고))
+  * (`schulCrseScCode`: 햑교 단계 코드(하단 표 참고))
 - 대학
   * `loginType`: 고정값 `univ`
   * `orgName`: 학교 이름

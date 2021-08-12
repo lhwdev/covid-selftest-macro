@@ -111,6 +111,7 @@ public suspend fun getClassSurveyStatus(
 
 
 /**
+ * ```json
  * {
  *   "joinInfo": {
  *     "grade":"<number>",
@@ -120,9 +121,10 @@ public suspend fun getClassSurveyStatus(
  *     "isHealthy":boolean,
  *     "atptOfcdcConctUrl":"???hcs.eduro.go.kr",
  *     "pInfAgrmYn":"Y/N",
- *     "mobnuEncpt":"<phone number>"
+ *     "mobnuEncpt":"<base64 encrypted phone number>"
  *   }
  * }
+ * ```
  */
 @Serializable
 public data class ClassSurveyStudentStatusDetail(
@@ -131,8 +133,10 @@ public data class ClassSurveyStudentStatusDetail(
 	val name: String,
 	@SerialName("surveyYn") @Serializable(YesNoSerializer::class) val registeredSurvey: Boolean,
 	val isHealthy: Boolean,
-	@SerialName("mobnuEncpt") val phoneNumber: String
-)
+	@SerialName("mobnuEncpt") val phoneNumberBase64Encoded: String
+) {
+	val phoneNumber: String get() = decodeBase64(phoneNumberBase64Encoded).toString(Charsets.UTF_8)
+}
 
 public suspend fun getStudentSurveyStatusDetail(
 	institute: InstituteInfo, manager: User, student: ClassSurveyStudentStatus

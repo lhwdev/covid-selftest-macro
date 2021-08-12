@@ -42,13 +42,37 @@ import kotlinx.serialization.encoding.Encoder
 @Serializable(UserToken.Serializer::class)
 public data class UserToken(val token: String) {
 	public object Serializer : KSerializer<UserToken> {
-		override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(UserToken::class.java.name, PrimitiveKind.STRING)
+		override val descriptor: SerialDescriptor =
+			PrimitiveSerialDescriptor(UserToken::class.java.name, PrimitiveKind.STRING)
+		
 		override fun deserialize(decoder: Decoder): UserToken = UserToken(decoder.decodeString())
 		override fun serialize(encoder: Encoder, value: UserToken) {
 			encoder.encodeString(value.token)
 		}
 	}
 }
+
+/**
+ * @param question1 `학생 본인이 37.5도 이상 발열 또는 발열감이 있나요?`
+ * @param question2 `학생에게 코로나19가 의심되는 임상증상이 있나요? (기침, 호흡곤란, 오한, 근육통, 두통, 인후통, 후각·미각 소실 또는 폐렴 등)`
+ * @param question3 `학생 본인 또는 동거인이 방역당국에 의해 현재 자가격리가 이루어지고 있나요?`
+ */
+public fun ActualSurveyData(
+	deviceUuid: String,
+	question1: Boolean = false,
+	question2: Boolean = false,
+	question3: Boolean = false,
+	upperUserToken: UserToken,
+	upperUserName: String
+): SurveyData = SurveyData(
+	deviceUuid = deviceUuid,
+	rspns00 = !question1 && !question2 && !question3,
+	rspns01 = if(question1) "2" else "1",
+	rspns02 = if(question2) "0" else "1",
+	rspns09 = if(question3) "1" else "0",
+	upperUserToken = upperUserToken,
+	upperUserName = upperUserName
+)
 
 @Serializable
 public data class SurveyData(
@@ -69,7 +93,7 @@ public data class SurveyData(
 	val rspns13: String? = null,
 	val rspns14: String? = null,
 	val rspns15: String? = null,
-	@SerialName("upperToken") val userToken: UserToken,
+	@SerialName("upperToken") val upperUserToken: UserToken,
 	@SerialName("upperUserNameEncpt") val upperUserName: String
 )
 

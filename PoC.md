@@ -11,9 +11,9 @@
 각 토큰은 jwt 형식으로 `Bearer xxx.yyy.zzz`의 형식을 띕니다. (xxx, yyy, zzz는 Base64 인코딩됨)  
 
 ## 기본 url
-공통 url: `https://hcs.eduro.go.kr`
-시도 교육청 url: `https://???hcs.eduro.go.kr`  
-추가: 관리자 url: `https://???hcm.eduro.go.kr`
+- 공통 url: `https://hcs.eduro.go.kr`
+- 시도 교육청 url: `https://???hcs.eduro.go.kr`
+- 관리자 url: `https://???hcm.eduro.go.kr`
 
 ## 암호화
 '암호화'라 쓰인 곳: `RSA/ECB/PKCS1Padding`으로 암호화
@@ -109,11 +109,13 @@
 * 입력: json
   ```json5
   {
-    "password": "<transkey>", // transkey의 결과.
+    "password": "<transkey>", // transkey의 결과
     "makeSession": true,
     "deviceUuid": "<기기 uuid>" // 공식 앱 사용시에 들어감, ""로 비워둬도 됨
   }
   ```
+  `<transkey>` 부분은 [여기를 참고하세요. (비공개)](https://github.com/lhwdev/covid-selftest-macro-transkey/tree/master/PoC.md)  
+
 * 출력:
   - 로그인 성공 시: `"<UsersToken>"` (쌍따옴표 " " 포함)
   - 실패 시: json

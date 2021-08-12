@@ -9,6 +9,10 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
 
+@RequiresOptIn(message = "This api is dangerous to use. You should get user information in 'right' and confirm user before calling this api.")
+public annotation class DangerousHcsApi
+
+
 internal val JsonEncodeDefaults = Json { encodeDefaults = true }
 internal val JsonLoose = Json { ignoreUnknownKeys = true }
 

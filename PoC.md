@@ -114,7 +114,7 @@
     "deviceUuid": "<기기 uuid>" // 공식 앱 사용시에 들어감, ""로 비워둬도 됨
   }
   ```
-  `<transkey>` 부분은 [여기를 참고하세요. (비공개)](https://github.com/lhwdev/covid-selftest-macro-transkey/tree/master/PoC.md)  
+  `<transkey>` 부분은 [여기를 참고하세요. (비공개)](https://github.com/lhwdev/covid-selftest-macro-transkey/blob/master/PoC.md)  
   지금 만들고는 있는데 한참 걸릴겁니다. 차라리 소스코드를 보세요.
 
 * 출력:

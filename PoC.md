@@ -310,7 +310,7 @@
       "isHealthy": false, // '정상' 여부
       "atptOfcdcConctUrl":"???hcs.eduro.go.kr", // 시도교육청 주소
       "pInfAgrmYn":"Y/N",
-      "mobnuEncpt":"<학생 휴대전화 번호>"
+      "mobnuEncpt":"<학생 휴대전화 번호(base64 인코딩됨)>"
     }
   }
   ```

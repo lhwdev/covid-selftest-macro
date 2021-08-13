@@ -150,15 +150,28 @@
 * 출력: json
   ```json5
   [
-    {
+    { // 메인 사용자
       "orgCode": "D000000000", // 기관 코드,
       "orgName": "<학교 이름>",
       "userPNo": "<사용자 id>",
+      "userNameEncpt": "<사용자 이름>",
       "stdntYn": "Y/N", // 학생 여부
+      "mngrYn": "Y/N", // 관리자 여부
+      "otherYn": "N", // 메인 학생 여부
+      "atptOfcdcConctUrl": "<자가진단 시/도 url>",
       // ...
       "token": "<UserToken>"
     },
-    // 그룹에 속한 다른 사용자들 ...
+    // 여기서부터는 한 계정에 여러명을 등록할 경우
+    {
+      "orgCode": "D000000000", // 기관 코드,
+      "userPNo": "<사용자 id>",
+      "otherYn": "Y", // 메인 학생 여부
+      "atptOfcdcConctUrl": "<자가진단 시/도 url>",
+      // ...
+      "token": "<UserToken>"
+    }
+    // ...
   ]
   ```
 ### 사용자 정보 자세히 보기

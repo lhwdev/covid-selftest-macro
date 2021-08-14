@@ -1,10 +1,11 @@
 plugins {
 	kotlin("jvm")
-	id("kotlinx-serialization")
+	kotlin("plugin.serialization")
 }
 
 kotlin {
 	explicitApi()
+	target.compilations.all { kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.RequiresOptIn" }
 }
 
 dependencies {

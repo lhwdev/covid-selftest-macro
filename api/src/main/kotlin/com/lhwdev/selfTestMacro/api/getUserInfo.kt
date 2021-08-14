@@ -8,12 +8,6 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-private data class GetUserInfoRequestBody(
-	@SerialName("orgCode") val instituteCode: String,
-	@SerialName("userPNo") val userCode: String
-)
-
-@Serializable
 public data class UserInfo(
 	@SerialName("userName") val userName: String,
 	
@@ -84,8 +78,8 @@ public suspend fun Session.getUserInfo(institute: InstituteInfo, user: User): Us
 	headers = sDefaultFakeHeader + mapOf(
 		"Authorization" to user.token.token
 	),
-	body = HttpBodies.json(
-		GetUserInfoRequestBody.serializer(),
-		GetUserInfoRequestBody(institute.code, user.userCode)
-	)
+	body = HttpBodies.jsonObject {
+		"orgCode" set institute.code
+		"userPNo" set user.userCode
+	}
 ).toJsonLoose(UserInfo.serializer())

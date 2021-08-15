@@ -5,22 +5,10 @@ package com.lhwdev.selfTestMacro.api
 import com.lhwdev.selfTestMacro.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.net.URL
 
 
 @Serializable
 public data class InstituteInfoResponse(@SerialName("schulList") val instituteList: List<InstituteInfo>)
-
-@Serializable
-public data class InstituteInfo(
-	@SerialName("kraOrgNm") val name: String,
-	@SerialName("orgCode") val code: String,
-	@SerialName("addres") val address: String,
-	@SerialName("atptOfcdcConctUrl") val requestUrlBody: String
-) {
-	val requestUrl2: URL get() = URL("https://$requestUrlBody/v2")
-	val requestUrl: URL get() = URL("https://$requestUrlBody")
-}
 
 
 // 학교: lctnScCode=03&schulCrseScCode=4&orgName=...&loginType=school
@@ -28,7 +16,7 @@ public suspend fun Session.getSchoolData(
 	regionCode: String,
 	schoolLevelCode: String,
 	name: String
-): InstituteInfoResponse {
+): List<InstituteInfo> {
 	val params = queryUrlParamsToString(
 		"lctnScCode" to regionCode,
 		"schulCrseScCode" to schoolLevelCode,
@@ -37,33 +25,33 @@ public suspend fun Session.getSchoolData(
 	)
 	
 	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose(InstituteInfoResponse.serializer())
+		.toJsonLoose(InstituteInfoResponse.serializer()).instituteList
 }
 
 // 대학: orgName=...&loginType=univ
 public suspend fun Session.getUniversityData(
 	name: String
-): InstituteInfoResponse {
+): List<InstituteInfo> {
 	val params = queryUrlParamsToString(
 		"orgName" to name,
 		"loginType" to "univ"
 	)
 	
 	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose(InstituteInfoResponse.serializer())
+		.toJsonLoose(InstituteInfoResponse.serializer()).instituteList
 }
 
 // 교육행정기관: orgName=...&loginType=office
 public suspend fun Session.getOfficeData(
 	name: String
-): InstituteInfoResponse {
+): List<InstituteInfo> {
 	val params = queryUrlParamsToString(
 		"orgName" to name,
 		"loginType" to "office"
 	)
 	
 	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose(InstituteInfoResponse.serializer())
+		.toJsonLoose(InstituteInfoResponse.serializer()).instituteList
 }
 
 /*
@@ -108,7 +96,7 @@ public suspend fun Session.getAcademyData(
 	regionCode: String,
 	sigCode: String,
 	name: String
-): InstituteInfoResponse {
+): List<InstituteInfo> {
 	val params = queryUrlParamsToString(
 		"lctnScCode" to regionCode,
 		"sigCode" to sigCode,
@@ -118,6 +106,6 @@ public suspend fun Session.getAcademyData(
 	)
 	
 	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose(InstituteInfoResponse.serializer())
+		.toJsonLoose(InstituteInfoResponse.serializer()).instituteList
 }
 

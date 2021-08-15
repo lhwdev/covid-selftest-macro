@@ -99,7 +99,29 @@
   }
   ```
 
+### 비밀번호 존재 유무 확인
+
+* 주소: HTTP POST, `시도 교육청 url/v2/hasPassword`
+* 헤더:
+  - `Content-Type: application/json;charset=utf-8`
+  - Authorization: **UsersIdToken**
+* 입력: json
+  ```json5
+  {}
+  ```
+
+* 결과: json
+  ```json5
+  {
+    "userName": "<사용자 이름>",
+    "token": "<UsersIdToken>",
+    "stdntYn": "Y/N",
+    // ...
+  }
+  ```
+
 ### 비밀번호 확인 및 로그인
+
 * 주소: HTTP POST, `시도 교육청 url/v2/validatePassword`
 * 헤더:
   - `Content-Type: application/json;charset=utf-8`
@@ -115,7 +137,7 @@
   }
   ```
   `<transkey>` 부분은 [여기를 참고하세요. (비공개)](https://github.com/lhwdev/covid-selftest-macro-transkey/blob/master/PoC.md)  
-  지금 만들고는 있는데 한참 걸릴겁니다. 차라리 소스코드를 보세요.
+  지금 만들고는 있는데 한참 걸릴겁니다. 차라리 transkey 소스코드(비공개)를 보세요.
 
 * 출력:
   - 로그인 성공 시: `"<UsersToken>"` (쌍따옴표 " " 포함)
@@ -146,7 +168,10 @@
 * 헤더:
   - `Content-Type: application/json;charset=utf-8`
   - Authorization: **UsersToken**
-* 입력: json `{}` (말 그대로 빈 json object)
+* 입력: json
+  ```json5
+  {}
+  ```
 * 출력: json
   ```json5
   [

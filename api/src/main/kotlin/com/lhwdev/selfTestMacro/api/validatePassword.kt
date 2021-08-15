@@ -4,14 +4,8 @@ import com.lhwdev.selfTestMacro.*
 import com.lhwdev.selfTestMacro.transkey.Transkey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import java.net.URL
 import kotlin.random.Random
@@ -20,27 +14,8 @@ import kotlin.random.Random
 public val transkeyUrl: URL = URL("https://hcs.eduro.go.kr/transkeyServlet")
 
 
-/*
- * usersId token --(validatePassword)--> users token(temporary) --(selectUserGroup)--> user token
- */
-
 public sealed class PasswordResult {
 	public abstract val isSuccess: Boolean
-}
-
-@Serializable(UsersToken.Serializer::class)
-public data class UsersToken(val token: String) : PasswordResult() {
-	override val isSuccess: Boolean get() = true
-	
-	public object Serializer : KSerializer<UsersToken> {
-		override val descriptor: SerialDescriptor =
-			PrimitiveSerialDescriptor(UsersToken::class.java.name, PrimitiveKind.STRING)
-		
-		override fun deserialize(decoder: Decoder): UsersToken = UsersToken(decoder.decodeString())
-		override fun serialize(encoder: Encoder, value: UsersToken) {
-			encoder.encodeString(value.token)
-		}
-	}
 }
 
 // {isError: true, statusCode: 252, errorCode: 1001, data: {failCnt: 1, canInitPassword: false}}
@@ -95,7 +70,7 @@ private val json = Json { ignoreUnknownKeys = true }
 
 public suspend fun Session.validatePassword(
 	institute: InstituteInfo,
-	usersIdentifier: UsersIdentifier,
+	token: UsersIdToken,
 	password: String
 ): PasswordResult = withContext(Dispatchers.IO) main@ {
 	val transkey = Transkey(this@validatePassword, transkeyUrl, Random)

@@ -5,7 +5,7 @@ plugins {
 
 kotlin {
 	explicitApi()
-	target.compilations.all { kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.RequiresOptIn" }
+	target.compilations.all { kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn" }
 }
 
 dependencies {

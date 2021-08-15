@@ -1,6 +1,5 @@
 package com.lhwdev.selfTestMacro
 
-import com.lhwdev.selfTestMacro.api.LoginType
 import java.net.URL
 
 
@@ -14,10 +13,3 @@ public val sRegions: Map<String, String> = mapOf(
 
 public val sSchoolLevels: Map<Int, String> =
 	mapOf(1 to "유치원", 2 to "초등학교", 3 to "중학교", 4 to "고등학교", 5 to "특수학교 등")
-
-public enum class InstituteType(public val displayName: String, public val loginType: LoginType) {
-	school("학교", LoginType.school),
-	university("대학교", LoginType.univ),
-	academy("학원", LoginType.office),
-	office("회사", LoginType.office)
-}

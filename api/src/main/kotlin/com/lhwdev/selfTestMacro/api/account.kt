@@ -4,11 +4,12 @@ import com.lhwdev.selfTestMacro.*
 
 
 // you must inform user when using this api: https://hcs.eduro.go.kr/agreement
-public suspend fun Session.updateAgreement(institute: InstituteInfo, usersIdentifier: UsersIdentifier) {
+@DangerousHcsApi
+public suspend fun Session.updateAgreement(institute: InstituteInfo, token: UsersIdToken) {
 	fetch(
 		institute.requestUrl2["updatePInfAgrmYn"],
 		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Authorization" to usersIdentifier.token.token),
+		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 		body = HttpBodies.jsonObject {}
 	)
 }
@@ -16,41 +17,55 @@ public suspend fun Session.updateAgreement(institute: InstituteInfo, usersIdenti
 
 public suspend fun Session.hasPassword(
 	institute: InstituteInfo,
-	usersIdentifier: UsersIdentifier
+	token: UsersIdToken
 ): Boolean = fetch(
 	institute.requestUrl2["hasPassword"],
 	method = HttpMethod.post,
-	headers = sDefaultFakeHeader + mapOf("Authorization" to usersIdentifier.token.token)
+	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token)
 ).getText().toBooleanStrict()
 
 public suspend fun Session.registerPassword(
 	institute: InstituteInfo,
-	usersIdentifier: UsersIdentifier,
+	token: UsersIdToken,
 	password: String,
 	deviceUuid: String = "",
 	upperUserToken: UsersToken? = null
 ): Boolean = fetch(
 	institute.requestUrl2["registerPassword"],
 	method = HttpMethod.post,
-	headers = sDefaultFakeHeader + mapOf("Authorization" to usersIdentifier.token.token),
+	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 	body = HttpBodies.jsonObject {
 		"password" set encrypt(password)
 		"deviceUuid" set deviceUuid
-		if(upperUserToken != null) "upperToken" set upperUserToken.token
+		"upperToken" set upperUserToken?.token
 	}
 ).getText().toBooleanStrict() // TODO: confirm this
 
+
+public enum class ChangePasswordResult { success, lastNotMatched, wrongNewPassword }
+
+@DangerousHcsApi
 public suspend fun Session.changePassword(
 	institute: InstituteInfo,
-	usersIdentifier: UsersIdentifier,
+	token: UsersToken,
 	lastPassword: String,
 	newPassword: String
-): Boolean = fetch(
-	institute.requestUrl2["changePassword"],
-	method = HttpMethod.post,
-	headers = sDefaultFakeHeader + mapOf("Authorization" to usersIdentifier.token.token),
-	body = HttpBodies.jsonObject {
-		"password" set encrypt(lastPassword)
-		"newPassword" set encrypt(newPassword)
+): ChangePasswordResult {
+	if(newPassword.isBlank()) return ChangePasswordResult.wrongNewPassword
+	
+	val result = fetch(
+		institute.requestUrl2["changePassword"],
+		method = HttpMethod.post,
+		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
+		body = HttpBodies.jsonObject {
+			"password" set encrypt(lastPassword)
+			"newPassword" set encrypt(newPassword)
+		}
+	)
+	
+	return if(result.isOk) {
+		ChangePasswordResult.success
+	} else {
+		ChangePasswordResult.lastNotMatched
 	}
-).getText().toBooleanStrict()
+}

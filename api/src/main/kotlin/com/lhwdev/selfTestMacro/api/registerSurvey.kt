@@ -3,14 +3,8 @@
 package com.lhwdev.selfTestMacro.api
 
 import com.lhwdev.selfTestMacro.*
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 
 
 /*
@@ -35,22 +29,6 @@ import kotlinx.serialization.encoding.Encoder
  * upperUserNameEncpt: "홍길동"
  */
 
-
-/**
- * Can be used only once.
- */
-@Serializable(UserToken.Serializer::class)
-public data class UserToken(val token: String) {
-	public object Serializer : KSerializer<UserToken> {
-		override val descriptor: SerialDescriptor =
-			PrimitiveSerialDescriptor(UserToken::class.java.name, PrimitiveKind.STRING)
-		
-		override fun deserialize(decoder: Decoder): UserToken = UserToken(decoder.decodeString())
-		override fun serialize(encoder: Encoder, value: UserToken) {
-			encoder.encodeString(value.token)
-		}
-	}
-}
 
 /**
  * @param question1 `학생 본인이 37.5도 이상 발열 또는 발열감이 있나요?`
@@ -103,6 +81,8 @@ public data class SurveyResult(
 	// what is 'inveYmd'?
 )
 
+
+@DangerousHcsApi
 public suspend fun Session.registerSurvey(
 	institute: InstituteInfo,
 	user: User,

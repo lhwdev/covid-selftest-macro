@@ -2,7 +2,14 @@
 
 package com.lhwdev.selfTestMacro.api
 
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.fetch.Bodies
+import com.lhwdev.fetch.http.HttpMethod
+import com.lhwdev.fetch.http.Session
+import com.lhwdev.fetch.http.fetch
+import com.lhwdev.fetch.json
+import com.lhwdev.selfTestMacro.get
+import com.lhwdev.selfTestMacro.sDefaultFakeHeader
+import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -93,5 +100,5 @@ public suspend fun Session.registerSurvey(
 	headers = sDefaultFakeHeader + mapOf(
 		"Authorization" to user.token.token
 	),
-	body = HttpBodies.json(SurveyData.serializer(), surveyData, json = JsonEncodeDefaults)
+	body = Bodies.json(SurveyData.serializer(), surveyData, json = JsonEncodeDefaults)
 ).toJsonLoose(SurveyResult.serializer())

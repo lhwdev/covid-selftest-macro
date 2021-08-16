@@ -1,27 +1,14 @@
 @file:Suppress("BlockingMethodInNonBlockingContext")
 
-package com.lhwdev.selfTestMacro
+package com.lhwdev.fetch.http
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-import java.io.*
+import com.lhwdev.fetch.*
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.Closeable
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLDecoder
-
-
-fun interface FetchInterceptor {
-	suspend fun intercept(
-		url: URL,
-		method: FetchMethod?,
-		headers: Map<String, String>,
-		session: Session?,
-		body: FetchBody?
-	): FetchResult?
-}
 
 
 private val sHttpProtocols = listOf("http", "https")
@@ -32,12 +19,13 @@ fun interface HttpInterceptor : FetchInterceptor {
 		method: FetchMethod?,
 		headers: Map<String, String>,
 		session: Session?,
-		body: FetchBody?
+		body: FetchBody?,
+		interceptorChain: InterceptorChain
 	): FetchResult? {
-		if(method !is HttpMethod? || body !is HttpBody?) return null
+		if(method !is HttpMethod? || body !is DataBody?) return null
 		if(url.protocol !in sHttpProtocols) return null
 		
-		return intercept(url, method ?: HttpMethod.get, headers, session, body)
+		return intercept(url, method ?: HttpMethod.get, headers, session, body, interceptorChain)
 	}
 	
 	suspend fun intercept(
@@ -45,11 +33,13 @@ fun interface HttpInterceptor : FetchInterceptor {
 		method: HttpMethod,
 		headers: Map<String, String>,
 		session: Session?,
-		body: HttpBody?
+		body: DataBody?,
+		interceptorChain: InterceptorChain
 	): FetchResult?
 }
 
-val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, headers, session, body ->
+
+val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, headers, session, body, _ ->
 	if(sDebugFetch) {
 		println("")
 		
@@ -88,7 +78,7 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 				val cookies = session.cookieManager.get(
 					url.toURI(), headers.mapValues { listOf(it.value) }
 				).values.singleOrNull() // returns "Cookie": [...]
-
+				
 				if(cookies?.isNotEmpty() == true) {
 					val cookieStr = cookies.fold(cookies.first()) { acc, entry -> "$acc; $entry" }
 					println("    \u001B[36mCookie\u001B[0m: \u001B[37m$cookieStr\u001b[0m (session)")
@@ -197,22 +187,7 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 }
 
 
-val sFetchInterceptors = mutableListOf<FetchInterceptor>(HttpInterceptorImpl)
-
-
-interface FetchBody
-
-fun interface HttpBody : FetchBody {
-	fun write(out: OutputStream)
-	
-	fun writeDebug(out: OutputStream): Unit = error("debug not capable")
-	val debugAvailable: Boolean get() = false
-	val contentType: String? get() = null
-}
-
-
-interface FetchMethod
-
+@Suppress("unused")
 enum class HttpMethod(val requestName: String) : FetchMethod {
 	get("GET"),
 	head("HEAD"),
@@ -224,16 +199,12 @@ enum class HttpMethod(val requestName: String) : FetchMethod {
 	patch("PATCH")
 }
 
-interface FetchResult {
-	val responseCode: Int
-	val responseCodeMessage: String
-	val rawResponse: InputStream
-	
-	fun close()
-}
 
-private class HttpResultImpl(val connection: HttpURLConnection) :
-	FetchResult, Closeable {
+private class MapEntry<K, V>(override val key: K, override val value: V) : Map.Entry<K, V>
+
+private class HttpResultImpl(val connection: HttpURLConnection) : FetchResult, Closeable {
+	override val interceptorDescription: String get() = "HTTP"
+	
 	override val responseCode get() = connection.responseCode
 	override val responseCodeMessage: String get() = connection.responseMessage
 	override val rawResponse: InputStream
@@ -245,71 +216,15 @@ private class HttpResultImpl(val connection: HttpURLConnection) :
 	override fun close() {
 		connection.disconnect()
 	}
+	
+	
+	// fetch headers
+	private val cache = mutableMapOf<FetchHeaderKey<*>, FetchHeader?>()
+	
+	@Suppress("UNCHECKED_CAST")
+	override fun <T : FetchHeader> get(key: FetchHeaderKey<T>): T? = cache.getOrPut(key) {
+		connection.getHeaderField(key.key)?.let { key.parse(it) }
+	} as T?
+	
+	override fun contains(key: FetchHeaderKey<*>): Boolean = get(key) != null
 }
-
-class HttpIoException(responseCode: Int, responseMessage: String, cause: Throwable? = null) :
-	IOException("HTTP error $responseCode $responseMessage", cause)
-
-fun FetchResult.requireOk() {
-	if(responseCode !in 200..299 /* -> ??? */)
-		throw HttpIoException(responseCode, responseCodeMessage)
-}
-
-
-suspend inline fun <reified T> FetchResult.toJson(from: Json = Json.Default): T =
-	withContext(Dispatchers.IO) { from.decodeFromString(getText()) }
-
-suspend fun <T> FetchResult.toJson(
-	serializer: KSerializer<T>,
-	from: Json = Json.Default
-): T = withContext(Dispatchers.IO) { from.decodeFromString(serializer, getText()) }
-
-suspend fun FetchResult.getText(): String = withContext(Dispatchers.IO) {
-	val value = rawResponse.reader().readText()
-	rawResponse.close()
-	value
-}
-
-
-var sDebugFetch = false
-
-
-fun readableUrl(url: String): String {
-	val index = url.indexOf("?")
-	if(index == -1) return url
-	val link = url.substring(0, index)
-	val attrs = url.substring(index + 1)
-	return "\u001B[0m$link\u001B[0m?.. (urlParams: " + attrs.split('&').joinToString {
-		val eqIndex = it.indexOf('=')
-		val k = it.substring(0, eqIndex)
-		val v = URLDecoder.decode(it.substring(eqIndex + 1), "UTF-8")
-		"\u001B[91m$k \u001B[96m= \u001B[97m'$v'\u001B[0m"
-	} + ")"
-}
-
-suspend fun fetch( // for debug
-	url: URL,
-	method: FetchMethod? = null,
-	headers: Map<String, String> = emptyMap(),
-	session: Session? = null,
-	body: FetchBody? = null
-): FetchResult = withContext(Dispatchers.IO) main@{
-	for(interceptor in sFetchInterceptors) {
-		val result = interceptor.intercept(url, method, headers, session, body)
-		if(result != null) return@main result
-	}
-	error("couldn't find appropriate matcher")
-}
-
-
-suspend fun fetch(
-	url: URL,
-	method: HttpMethod = HttpMethod.get,
-	headers: Map<String, String> = emptyMap(),
-	session: Session? = null,
-	body: String
-): FetchResult = fetch(url, method, headers, session, HttpBody {
-	val writer = it.bufferedWriter()
-	writer.write(body)
-	writer.flush()
-})

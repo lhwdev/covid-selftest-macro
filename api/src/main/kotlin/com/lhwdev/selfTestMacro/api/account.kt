@@ -1,6 +1,14 @@
 package com.lhwdev.selfTestMacro.api
 
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.fetch.Bodies
+import com.lhwdev.fetch.getText
+import com.lhwdev.fetch.http.HttpMethod
+import com.lhwdev.fetch.http.Session
+import com.lhwdev.fetch.http.fetch
+import com.lhwdev.fetch.isOk
+import com.lhwdev.fetch.jsonObject
+import com.lhwdev.selfTestMacro.get
+import com.lhwdev.selfTestMacro.sDefaultFakeHeader
 
 
 // you must inform user when using this api: https://hcs.eduro.go.kr/agreement
@@ -10,7 +18,7 @@ public suspend fun Session.updateAgreement(institute: InstituteInfo, token: User
 		institute.requestUrl2["updatePInfAgrmYn"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
-		body = HttpBodies.jsonObject {}
+		body = Bodies.jsonObject {}
 	)
 }
 
@@ -34,7 +42,7 @@ public suspend fun Session.registerPassword(
 	institute.requestUrl2["registerPassword"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
-	body = HttpBodies.jsonObject {
+	body = Bodies.jsonObject {
 		"password" set encrypt(password)
 		"deviceUuid" set deviceUuid
 		"upperToken" set upperUserToken?.token
@@ -57,7 +65,7 @@ public suspend fun Session.changePassword(
 		institute.requestUrl2["changePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
-		body = HttpBodies.jsonObject {
+		body = Bodies.jsonObject {
 			"password" set encrypt(lastPassword)
 			"newPassword" set encrypt(newPassword)
 		}

@@ -2,13 +2,16 @@
 
 package com.lhwdev.selfTestMacro.api
 
+import com.lhwdev.fetch.http.HttpMethod
+import com.lhwdev.fetch.http.Session
+import com.lhwdev.fetch.http.fetch
 import com.lhwdev.selfTestMacro.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-public data class InstituteInfoResponse(@SerialName("schulList") val instituteList: List<InstituteInfo>)
+private data class InstituteInfoResponse(@SerialName("schulList") val instituteList: List<InstituteInfo>)
 
 
 // 학교: lctnScCode=03&schulCrseScCode=4&orgName=...&loginType=school

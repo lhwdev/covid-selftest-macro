@@ -2,10 +2,16 @@
 
 package com.lhwdev.selfTestMacro.api
 
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.fetch.Bodies
+import com.lhwdev.fetch.fetch
+import com.lhwdev.fetch.http.HttpMethod
+import com.lhwdev.fetch.json
+import com.lhwdev.selfTestMacro.decodeBase64
+import com.lhwdev.selfTestMacro.get
+import com.lhwdev.selfTestMacro.sDefaultFakeHeader
+import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 
 /**
@@ -106,7 +112,7 @@ public suspend fun getClassSurveyStatus(
 	headers = sDefaultFakeHeader + mapOf(
 		"Authorization" to manager.token.token
 	),
-	body = HttpBodies.json(ClassInfo.serializer(), classInfo)
+	body = Bodies.json(ClassInfo.serializer(), classInfo)
 ).toJsonLoose(ClassSurveyStatus.serializer())
 
 
@@ -146,5 +152,5 @@ public suspend fun getStudentSurveyStatusDetail(
 	headers = sDefaultFakeHeader + mapOf(
 		"Authorization" to manager.token.token
 	),
-	body = HttpBodies.json(ClassSurveyStudentStatus.serializer(), student)
+	body = Bodies.json(ClassSurveyStudentStatus.serializer(), student)
 ).toJsonLoose(ClassSurveyStudentStatusDetail.serializer())

@@ -1,7 +1,10 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "BlockingMethodInNonBlockingContext")
 
-package com.lhwdev.selfTestMacro
+package com.lhwdev.fetch
 
+import com.lhwdev.selfTestMacro.JsonObjectScope
+import com.lhwdev.selfTestMacro.jsonString
+import com.lhwdev.selfTestMacro.queryUrlParamsToString
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.*
 import java.io.OutputStream
@@ -13,20 +16,20 @@ import java.io.Writer
 annotation class StructureBuilder
 
 
-object HttpBodies
+object Bodies
 
 
-interface WriterHttpBody : HttpBody {
-	override fun write(out: OutputStream) {
+fun interface WriterDataBody : DataBody {
+	override suspend fun write(out: OutputStream) {
 		val writer = out.writer()
 		write(writer)
 		writer.flush()
 		writer.close()
 	}
 	
-	fun write(out: Writer)
+	suspend fun write(out: Writer)
 	
-	override fun writeDebug(out: OutputStream) {
+	override suspend fun writeDebug(out: OutputStream) {
 		val writer = out.writer()
 		val debug = writeDebug(writer)
 		writer.flush()
@@ -34,18 +37,21 @@ interface WriterHttpBody : HttpBody {
 		return debug
 	}
 	
-	fun writeDebug(out: Writer): Unit = error("debug not provided")
+	suspend fun writeDebug(out: Writer): Unit = error("debug not provided")
 }
 
 
-fun <T> HttpBodies.json(serializer: KSerializer<T>, value: T, json: Json = Json): HttpBody = object : WriterHttpBody {
-	override fun write(out: Writer) {
+fun Bodies.binary(array: ByteArray): DataBody = DataBody { it.write(array) }
+fun Bodies.text(text: String): DataBody = WriterDataBody { it.write(text) }
+
+fun <T> Bodies.json(serializer: KSerializer<T>, value: T, json: Json = Json): DataBody = object : WriterDataBody {
+	override suspend fun write(out: Writer) {
 		out.write(json.encodeToString(serializer, value))
 	}
 	
-	override val contentType: String get() = "application/json"
+	override val contentType: String get() = "application/json;charset=utf-8"
 	
-	override fun writeDebug(out: Writer) {
+	override suspend fun writeDebug(out: Writer) {
 		val config = Json(from = json) { prettyPrint = true }
 		val result = json.encodeToString(serializer, value)
 		out.write(result)
@@ -54,16 +60,16 @@ fun <T> HttpBodies.json(serializer: KSerializer<T>, value: T, json: Json = Json)
 	override val debugAvailable: Boolean get() = true
 }
 
-fun HttpBodies.jsonObject(block: JsonObjectScope.() -> Unit): HttpBody = object : WriterHttpBody {
-	override fun write(out: Writer) {
-		out.write(jsonString(block))
+fun Bodies.jsonObject(block: suspend JsonObjectScope.() -> Unit): DataBody = object : WriterDataBody {
+	override suspend fun write(out: Writer) {
+		out.write(jsonString { block() })
 	}
 	
-	override val contentType: String get() = "application/json"
+	override val contentType: String get() = "application/json;charset=utf-8"
 	
 	override val debugAvailable: Boolean get() = true
-	override fun writeDebug(out: Writer) {
-		val json = com.lhwdev.selfTestMacro.jsonObject(block)
+	override suspend fun writeDebug(out: Writer) {
+		val json = com.lhwdev.selfTestMacro.jsonObject { block() }
 		out.write(json.toString())
 		fun dump(json: JsonElement, indent: String): Unit = when(json) {
 			JsonNull -> println("\u001b[96mnull\u001b[0m")
@@ -92,14 +98,14 @@ fun HttpBodies.jsonObject(block: JsonObjectScope.() -> Unit): HttpBody = object 
 	}
 }
 
-fun HttpBodies.form(block: FormScope.() -> Unit): HttpBody = object : WriterHttpBody {
-	override fun write(out: Writer) {
+fun Bodies.form(block: FormScope.() -> Unit): DataBody = object : WriterDataBody {
+	override suspend fun write(out: Writer) {
 		out.write(FormScope().apply(block).build())
 	}
 	
-	override val contentType: String get() = "application/x-www-form-urlencoded"
+	override val contentType: String get() = "application/x-www-form-urlencoded;charset=utf-8"
 	
-	override fun writeDebug(out: Writer) {
+	override suspend fun writeDebug(out: Writer) {
 		val form = FormScope().apply(block)
 		out.write(form.build())
 		println("\u001b[90m(html form)")

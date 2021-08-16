@@ -2,14 +2,12 @@
 
 package com.lhwdev.selfTestMacro
 
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
-import java.net.HttpCookie
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import java.net.URL
 import java.net.URLEncoder
 
@@ -101,84 +99,44 @@ fun queryUrlParamsToString(params: Map<String, String>): String =
 	}
 
 
-object HttpCookieSerializer : KSerializer<HttpCookie> {
-	@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-	override val descriptor: SerialDescriptor = buildClassSerialDescriptor("java.net.HttpCookie") {
-		element("name", String.serializer().descriptor)
-		element("value", String.serializer().descriptor)
-		element("comment", String.serializer().descriptor, isOptional = true)
-		element("commentURL", String.serializer().descriptor, isOptional = true)
-		element("domain", String.serializer().descriptor)
-		element("maxAge", Long.serializer().descriptor)
-		element("path", String.serializer().descriptor)
-		element("portlist", String.serializer().descriptor, isOptional = true)
-		element("version", Int.serializer().descriptor)
-		element("secure", Boolean.serializer().descriptor)
-		element("discard", Boolean.serializer().descriptor)
-	}
+@PublishedApi
+internal val sNone = Any()
+
+
+// not thread-safe; if you want, use Collections.synchronizedList
+abstract class LazyListBase<E>(final override val size: Int) : AbstractList<E>() {
+	private val cache = MutableList<Any?>(size) { sNone }
 	
-	override fun serialize(encoder: Encoder, value: HttpCookie): Unit = encoder.encodeStructure(descriptor) {
-		val descriptor = descriptor
-		
-		encodeStringElement(descriptor, 0, value.name)
-		encodeStringElement(descriptor, 1, value.value)
-		if(value.comment != null) encodeStringElement(descriptor, 2, value.comment)
-		if(value.commentURL != null) encodeStringElement(descriptor, 3, value.commentURL)
-		encodeStringElement(descriptor, 4, value.domain)
-		encodeLongElement(descriptor, 5, value.maxAge)
-		encodeStringElement(descriptor, 6, value.path)
-		if(value.portlist != null) encodeStringElement(descriptor, 7, value.portlist)
-		encodeIntElement(descriptor, 8, value.version)
-		encodeBooleanElement(descriptor, 9, value.secure)
-		encodeBooleanElement(descriptor, 10, value.discard)
-	}
+	protected abstract fun createAt(index: Int): E
 	
-	@OptIn(ExperimentalSerializationApi::class)
-	override fun deserialize(decoder: Decoder): HttpCookie = decoder.decodeStructure(descriptor) {
-		// json do not support decodeSequentially()
-		val descriptor = descriptor
+	override fun get(index: Int): E {
+		val element = cache[index]
+		val result = if(element === sNone) {
+			val new = createAt(index)
+			cache[index] = new
+			new
+		} else element
 		
-		var name = ""
-		var value = ""
-		var comment: String? = null
-		var commentURL: String? = null
-		var domain = ""
-		var maxAge = 0L
-		var path = ""
-		var portlist: String? = null
-		var version = 0
-		var secure = false
-		var discard = false
-		
-		while(true) {
-			when(decodeElementIndex(descriptor)) {
-				CompositeDecoder.DECODE_DONE -> break
-				0 -> name = decodeStringElement(descriptor, 0)
-				1 -> value = decodeStringElement(descriptor, 1)
-				2 -> comment = decodeStringElement(descriptor, 2)
-				3 -> commentURL = decodeStringElement(descriptor, 3)
-				4 -> domain = decodeStringElement(descriptor, 4)
-				5 -> maxAge = decodeLongElement(descriptor, 5)
-				6 -> path = decodeStringElement(descriptor, 6)
-				7 -> portlist = decodeStringElement(descriptor, 7)
-				8 -> version = decodeIntElement(descriptor, 8)
-				9 -> secure = decodeBooleanElement(descriptor, 9)
-				10 -> discard = decodeBooleanElement(descriptor, 10)
-			}
-		}
-		
-		val cookie = HttpCookie(name, value)
-		cookie.comment = comment
-		cookie.commentURL = commentURL
-		cookie.domain = domain
-		cookie.maxAge = maxAge
-		cookie.path = path
-		cookie.portlist = portlist
-		cookie.version = version
-		cookie.secure = secure
-		cookie.discard = discard
-		
-		cookie
+		@Suppress("UNCHECKED_CAST")
+		return result as E
 	}
 }
 
+fun <T> Iterable<T>.asList(): List<T> = when(this) {
+	is List<T> -> this
+	else -> toList()
+}
+
+inline fun <T, R> List<T>.lazyMap(
+	crossinline block: (T) -> R
+): List<R> = object : LazyListBase<R>(size) {
+	private val list = this@lazyMap
+	override fun createAt(index: Int): R = block(list[index])
+}
+
+
+fun String.splitTwo(by: Char): Pair<String, String> {
+	val index = indexOf(by)
+	check(index != -1) { "'$by' is not found in '$this'" }
+	return take(index) to drop(index + 1)
+}

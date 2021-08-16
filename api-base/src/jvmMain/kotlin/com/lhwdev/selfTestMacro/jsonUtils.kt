@@ -1,9 +1,7 @@
 package com.lhwdev.selfTestMacro
 
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import com.lhwdev.fetch.StructureBuilder
+import kotlinx.serialization.json.*
 
 
 @StructureBuilder
@@ -11,15 +9,22 @@ class JsonObjectScope {
 	@PublishedApi
 	internal val content: MutableMap<String, JsonElement> = linkedMapOf()
 	
-	infix fun String.set(value: Number) {
+	infix fun String.set(value: Nothing?) {
+		content[this] = JsonNull
+	}
+	
+	infix fun String.set(value: Number?) {
 		content[this] = JsonPrimitive(value)
 	}
-	infix fun String.set(value: String) {
+	
+	infix fun String.set(value: String?) {
 		content[this] = JsonPrimitive(value)
 	}
-	infix fun String.set(value: Boolean) {
+	
+	infix fun String.set(value: Boolean?) {
 		content[this] = JsonPrimitive(value)
 	}
+	
 	inline infix fun String.jsonObject(block: JsonObjectScope.() -> Unit) {
 		content[this] = com.lhwdev.selfTestMacro.jsonObject(block)
 	}

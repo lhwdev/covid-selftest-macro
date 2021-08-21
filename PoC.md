@@ -27,11 +27,16 @@
 * 결과: json
   ```json5
   {
-    "kraOrgNm": "<기관 이름>",
-    "orgCode": "<기관 코드>",
-    "addres": "<주소>",
-    "atptOfcdcConctUrl": "<시도 교육청 url>",
-    // ...
+    "schulList": [
+      {
+        "kraOrgNm": "<기관 이름>",
+        "orgCode": "<기관 코드>",
+        "addres": "<주소>",
+        "atptOfcdcConctUrl": "<시도 교육청 url>",
+        // ...
+      },
+      // ...
+    ]
   }
   ```
 

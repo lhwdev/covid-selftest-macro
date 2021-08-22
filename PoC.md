@@ -65,12 +65,15 @@
 * 주소: HTTP GET, `공통 url/v2/getMinors` + url 쿼리
 * 결과: json
   ```json5
-  {
-    "cdcValueNm": "<시/도 이름>",
-    "cdcValueAbrvNm": "<시/도 이름 줄임>",
-    "upperCdcValue": "<시/군/구 코드>",
+  [
+    {
+      "cdcValueNm": "<시/도 이름>",
+      "cdcValueAbrvNm": "<시/도 이름 줄임>",
+      "upperCdcValue": "<시/군/구 코드>",
+      // ...
+    },
     // ...
-  }
+  ]
   ```
 
 #### url 쿼리:

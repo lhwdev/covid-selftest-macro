@@ -120,12 +120,7 @@
 
 * 결과: json
   ```json5
-  {
-    "userName": "<사용자 이름>",
-    "token": "<UsersIdToken>",
-    "stdntYn": "Y/N",
-    // ...
-  }
+  true
   ```
 
 ### 비밀번호 확인 및 로그인

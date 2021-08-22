@@ -113,10 +113,6 @@
 * 헤더:
   - `Content-Type: application/json;charset=utf-8`
   - Authorization: **UsersIdToken**
-* 입력: json
-  ```json5
-  {}
-  ```
 
 * 결과: json
   ```json5

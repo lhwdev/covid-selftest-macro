@@ -6,7 +6,6 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +28,8 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.icons.ExpandLess
 import com.lhwdev.selfTestMacro.icons.ExpandMore
 import com.lhwdev.selfTestMacro.icons.Icons
+import kotlinx.collections.immutable.mutate
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
@@ -43,12 +44,19 @@ enum class VisibilityAnimationState(
 	exit(fromState = true, targetState = false, animating = true)
 }
 
+@Stable
+private class AnimationListEntry<T>(val item: T, state: VisibilityAnimationState) {
+	var state by mutableStateOf(state)
+	
+	override fun toString() = "AnimationListEntry(item=$item, state=$state)"
+}
 
-// does not support inserting middle of the list
+
+// stack design; does not support diffing
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun <T> AnimateListAsComposable(
-	list: List<T>,
+	items: List<T>,
 	key: (T) -> Any? = { it },
 	isOpaque: (T) -> Boolean = { true },
 	animation: @Composable (
@@ -60,72 +68,100 @@ fun <T> AnimateListAsComposable(
 	content: @Composable (index: Int, T) -> Unit
 ) {
 	val scope = rememberCoroutineScope()
-	val backing = remember { mutableStateListOf<T>().also { it += list } }
-	val animationStates = remember {
-		mutableStateListOf<VisibilityAnimationState>().also {
-			it += List(list.size) { VisibilityAnimationState.visible }
-		}
+	
+	// AnimateListAsComposable assigns list to other value, causing recomposition.
+	// So uses workaround, but be aware to call recompositionScope.invalidate()
+	var list by remember {
+		Ref(items.map { AnimationListEntry(it, VisibilityAnimationState.visible) }.toPersistentList())
 	}
+	val recomposeScope = currentRecomposeScope
+	var lastItems by remember { Ref(items.toList()) }
 	
-	println(backing.joinToString())
-	println(animationStates.joinToString())
+	// diffing goes here
+	@Suppress("UnnecessaryVariable")
+	val last = list
 	
-	fun removeAt(index: Int) {
-		// val backingToRemove = backing[index]
-		animationStates[index] = VisibilityAnimationState.exit
-	}
-	
-	fun add(index: Int, value: T) {
-		backing.add(index, value)
-		animationStates.add(index, VisibilityAnimationState.enter)
-	}
-	
-	if(list != backing) for(i in 0 until max(list.size, backing.size)) {
-		when {
-			// list shrunk
-			i >= list.size -> removeAt(i)
+	val result = if(lastItems == items) {
+		// 1. fast path
+		last
+	} else {
+		// 2. diff
+		// note that this diff is not like Mayer Diff; just checking whether it is as-is
+		
+		var firstChange = -1
+		
+		val maxIndex = max(items.size, last.size)
+		for(i in 0 until maxIndex) {
+			val conflict =
+				// list shrunk; index out of new items bound
+				i >= items.size ||
+					
+					// list expanded; index
+					i >= last.size ||
+					
+					// conflict
+					items[i] != last[i].item
 			
-			// list expanded
-			i >= backing.size -> add(i, list[i])
-			
-			// conflict, we do not track items
-			list[i] != backing[i] -> {
-				removeAt(i)
-				add(i, list[i])
+			if(conflict) {
+				firstChange = i
+				break
 			}
 		}
+		
+		if(firstChange == -1) {
+			// 3. fast path: no changes
+			list
+		} else {
+			// 4. apply to list
+			for(i in firstChange until last.size) {
+				val entry = last[i]
+				entry.state = VisibilityAnimationState.exit
+			}
+			
+			val new = last.mutate { l ->
+				// l.subList(firstConflict, l.lastIndex).clear() // preserved for animation
+				l += items.drop(firstChange).map { AnimationListEntry(it, VisibilityAnimationState.enter) }
+			}
+			
+			@Suppress("UNUSED_VALUE")
+			list = new
+			@Suppress("UNUSED_VALUE")
+			lastItems = items.toList()
+			new
+		}
 	}
 	
-	val lastOpaqueIndex = backing.indices.indexOfLast { index ->
-		val state = animationStates[index]
-		val transparent = state == VisibilityAnimationState.enter ||
-			state == VisibilityAnimationState.exit ||
-			!isOpaque(backing[index]) // inherently transparent like dialog
+	
+	val lastOpaqueIndex = result.indexOfLast {
+		val transparent = it.state.animating || !isOpaque(it.item) // inherently transparent like dialog
 		!transparent
 	}.coerceAtLeast(0)
 	
-	for((index, item) in backing.withIndex()) key(key(item)) {
-		val state = animationStates[index]
-		
-		Box(Modifier.graphicsLayer {
-			alpha = if(index >= lastOpaqueIndex) 1f else 0f
-		}) {
-			animation(
-				item, state,
-				{
-					val newIndex = animationStates.indexOf(state)
-					if(newIndex == -1) return@animation
-					when(state) {
-						VisibilityAnimationState.enter ->
-							animationStates[newIndex] = VisibilityAnimationState.visible
-						VisibilityAnimationState.visible -> Unit // no-op
-						VisibilityAnimationState.exit -> {
-							animationStates.removeAt(newIndex)
-							backing.removeAt(newIndex)
+	println(result)
+	
+	Box {
+		for((index, entry) in result.withIndex()) key(key(entry.item)) {
+			Box(Modifier.graphicsLayer {
+				alpha = if(index >= lastOpaqueIndex) 1f else 0f
+			}) {
+				animation(
+					entry.item,
+					entry.state,
+					{
+						val newIndex = list.indexOf(entry)
+						if(newIndex == -1) return@animation
+						when(entry.state) {
+							VisibilityAnimationState.enter ->
+								entry.state = VisibilityAnimationState.visible
+							VisibilityAnimationState.visible -> Unit // no-op
+							VisibilityAnimationState.exit -> {
+								list = list.removeAt(newIndex)
+								recomposeScope.invalidate()
+							}
 						}
 					}
-				}
-			) { content(index, item) }
+				) { content(index, entry.item) }
+			}
 		}
 	}
 }
@@ -163,29 +199,6 @@ fun AnimateHeight(
 }
 
 
-/**
- * IconButton is a clickable icon, used to represent actions. An IconButton has an overall minimum
- * touch target size of 48 x 48dp, to meet accessibility guidelines. [content] is centered
- * inside the IconButton.
- *
- * This component is typically used inside an App Bar for the navigation icon / actions. See App
- * Bar documentation for samples of this.
- *
- * [content] should typically be an [Icon], using an icon from
- * [androidx.compose.material.icons.Icons]. If using a custom icon, note that the typical size for the
- * internal icon is 24 x 24 dp.
- *
- * @param onClick the lambda to be invoked when this icon is pressed
- * @param modifier optional [Modifier] for this IconButton
- * @param enabled whether this IconButton will handle input events and appear enabled for
- * semantics purposes
- * @param interactionSource the [MutableInteractionSource] representing the stream of
- * [Interaction]s for this IconButton. You can create and pass in your own remembered
- * [MutableInteractionSource] if you want to observe [Interaction]s and customize the
- * appearance / behavior of this IconButton in different [Interaction]s.
- * @param content the content (icon) to be drawn inside the IconButton. This is typically an
- * [Icon].
- */
 @Composable
 fun SmallIconButton(
 	onClick: () -> Unit,
@@ -362,76 +375,4 @@ fun DropdownPicker(
 	}
 }
 
-
-/**
- * A dropdown menu item, as defined by the Material Design spec.
- *
- * @param onClick Called when the menu item was clicked
- * @param modifier The modifier to be applied to the menu item
- * @param enabled Controls the enabled state of the menu item - when `false`, the menu item
- * will not be clickable and [onClick] will not be invoked
- * @param contentPadding the padding applied to the content of this menu item
- * @param interactionSource the [MutableInteractionSource] representing the stream of
- * [Interaction]s for this DropdownMenuItem. You can create and pass in your own remembered
- * [MutableInteractionSource] if you want to observe [Interaction]s and customize the
- * appearance / behavior of this DropdownMenuItem in different [Interaction]s.
- */
-@Composable
-fun DropdownMenuItem(
-	onClick: () -> Unit,
-	modifier: Modifier = Modifier,
-	enabled: Boolean = true,
-	contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
-	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-	content: @Composable RowScope.() -> Unit
-) {
-	DropdownMenuItemContent(
-		onClick = onClick,
-		modifier = modifier,
-		enabled = enabled,
-		contentPadding = contentPadding,
-		interactionSource = interactionSource,
-		content = content
-	)
-}
-
-@Composable
-internal fun DropdownMenuItemContent(
-	onClick: () -> Unit,
-	modifier: Modifier = Modifier,
-	enabled: Boolean = true,
-	contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
-	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-	content: @Composable RowScope.() -> Unit
-) {
-	Row(
-		modifier = modifier
-			.clickable(
-				enabled = enabled,
-				onClick = onClick,
-				interactionSource = interactionSource,
-				indication = rememberRipple(true)
-			)
-			.fillMaxWidth()
-			// Preferred min and max width used during the intrinsic measurement.
-			.sizeIn(
-				minWidth = DropdownMenuItemDefaultMinWidth,
-				minHeight = DropdownMenuItemDefaultMinHeight
-			)
-			.padding(contentPadding),
-		verticalAlignment = Alignment.CenterVertically
-	) {
-		val typography = MaterialTheme.typography
-		ProvideTextStyle(typography.subtitle1) {
-			val contentAlpha = if(enabled) ContentAlpha.high else ContentAlpha.disabled
-			CompositionLocalProvider(LocalContentAlpha provides contentAlpha) {
-				content()
-			}
-		}
-	}
-}
-
-
-private val DropdownMenuItemDefaultMinWidth = 112.dp
-private val DropdownMenuItemDefaultMinHeight = 48.dp
 private val DropdownMenuDefaultMaxHeight = 370.dp

@@ -2,16 +2,9 @@
 
 package com.lhwdev.selfTestMacro.ui
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.material.Text
+import androidx.compose.material.Surface
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -93,9 +86,7 @@ class CurrentNavigator(private val navigator: Navigator, val currentRoute: Route
 		return removeRoute(currentRoute)
 	}
 	
-	val onPopRoute: () -> Unit = { popRoute() } // common verbatim for event listener
-	
-	fun replaceRoute(route: Route): Boolean = if(route == routes.last()) {
+	fun replaceRoute(route: Route): Boolean = if(currentRoute == routes.last()) {
 		replaceLastRoute(route)
 		true
 	} else {
@@ -112,8 +103,11 @@ interface Route {
 fun RouteContent(route: Route) {
 	val navigator = LocalGlobalNavigator.current
 	val currentNav = remember(navigator, route) { CurrentNavigator(navigator, route) }
+	
 	CompositionLocalProvider(sLocalCurrentNavigator provides currentNav) {
-		route.content()
+		Surface(color = if(route.isOpaque) Color.Transparent else Color.White) {
+			route.content()
+		}
 	}
 }
 
@@ -122,135 +116,56 @@ interface RouteObserver {
 	fun onRouteRemoved(navigator: Navigator)
 }
 
-interface RouteTransition {
-	@Composable
-	fun Transition(
-		visibleState: VisibilityAnimationState,
-		onAnimationEnd: () -> Unit,
-		content: @Composable () -> Unit
-	)
-}
 
-@Composable
-fun OnTransitionEndObserver(transition: Transition<*>, onAnimationEnd: () -> Unit) {
-	LaunchedEffect(transition) {
-		snapshotFlow { transition.currentState }
-			.collect {
-				onAnimationEnd()
-			}
-	}
-}
-
-// note: this does not support snapping externally
-@Composable
-fun updateRouteTransition(visibleState: VisibilityAnimationState): Transition<Boolean> {
-	val transitionState = remember {
-		MutableTransitionState(initialState = visibleState == VisibilityAnimationState.visible)
-	}
-	transitionState.targetState = visibleState.targetState
-	
-	return updateTransition(transitionState, label = "updateRouteTransition")
-}
-
-val DefaultOpaqueRouteTransition: RouteTransition = object : RouteTransition {
-	@Composable
-	override fun Transition(
-		visibleState: VisibilityAnimationState,
-		onAnimationEnd: () -> Unit,
-		content: @Composable () -> Unit
-	) {
-		val transition = updateRouteTransition(visibleState)
-		
-		OnTransitionEndObserver(transition, onAnimationEnd)
-		
-		val scrimTransparency = transition.animateFloat(label = "ScrimTransparency",
-			transitionSpec = { tween(30000) }) {
-			if(it) 1f else 0f
-		}
-		
-		Box {
-			Box(
-				Modifier
-					.matchParentSize()
-					.graphicsLayer { alpha = scrimTransparency.value }
-			)
-			transition.AnimatedVisibility(
-				visible = { it },
-				enter = slideInHorizontally(initialOffsetX = { it }, tween(30000)),
-				exit = slideOutHorizontally(targetOffsetX = { it }, tween(30000)),
-			) { content() }
-		}
-	}
-}
-
-val DefaultTransparentRouteTransition: RouteTransition = object : RouteTransition {
-	@Composable
-	override fun Transition(
-		visibleState: VisibilityAnimationState,
-		onAnimationEnd: () -> Unit,
-		content: @Composable () -> Unit
-	) {
-		val transition = updateRouteTransition(visibleState)
-		
-		OnTransitionEndObserver(transition, onAnimationEnd)
-		
-		transition.AnimatedVisibility(
-			visible = { it },
-			enter = fadeIn(),
-			exit = fadeOut()
-		) { content() }
-	}
-}
-
-
-fun Route(isOpaque: Boolean = true, content: @Composable () -> Unit): Route = object : Route {
+fun Route(
+	isOpaque: Boolean = true,
+	transition: RouteTransition = DefaultTransition(isOpaque),
+	content: @Composable () -> Unit
+): Route = object : Route, RouteTransition by transition {
 	override val content: @Composable () -> Unit = content
 	override val isOpaque: Boolean = isOpaque
 }
 
+
 fun DialogRoute(
-	isOpaque: Boolean = false, content: @Composable () -> Unit
-): Route = object : Route, RouteTransition {
+	isOpaque: Boolean = false,
+	content: @Composable () -> Unit
+): Route = object : Route, RouteTransition by NoneTransition {
 	override val content: @Composable () -> Unit get() = content
 	override val isOpaque: Boolean = isOpaque
-	
-	@Composable
-	override fun Transition(
-		visibleState: VisibilityAnimationState,
-		onAnimationEnd: () -> Unit,
-		content: @Composable () -> Unit
-	) {
-		content()
-		if(changed(visibleState)) {
-			onAnimationEnd()
-		}
-	}
 }
 
-inline fun Navigator.pushRoute(isOpaque: Boolean = true, noinline content: @Composable () -> Unit) {
-	pushRoute(Route(isOpaque, content))
+inline fun Navigator.pushRoute(
+	isOpaque: Boolean = true,
+	transition: RouteTransition = DefaultTransition(isOpaque),
+	noinline content: @Composable () -> Unit
+) {
+	pushRoute(Route(isOpaque, transition, content))
 }
 
 inline fun Navigator.replaceLastRoute(
 	isOpaque: Boolean = true,
+	transition: RouteTransition = DefaultTransition(isOpaque),
 	noinline content: @Composable () -> Unit
 ) {
-	replaceLastRoute(Route(isOpaque, content))
+	replaceLastRoute(Route(isOpaque, transition, content))
 }
 
 inline fun CurrentNavigator.replaceRoute(
 	isOpaque: Boolean = true,
+	transition: RouteTransition = DefaultTransition(isOpaque),
 	noinline content: @Composable () -> Unit
-) {
-	replaceRoute(Route(isOpaque, content))
+): Boolean {
+	return replaceRoute(Route(isOpaque, transition, content))
 }
 
 
 suspend inline fun Navigator.showRouteUnit(
 	isOpaque: Boolean = true,
+	transition: RouteTransition = DefaultTransition(isOpaque),
 	crossinline content: @Composable (removeRoute: () -> Unit) -> Unit
 ) {
-	showRoute<Unit>(isOpaque) {
+	showRoute<Unit>(isOpaque, transition) {
 		content { it(Unit) }
 	}
 }
@@ -279,8 +194,9 @@ suspend fun <T> Navigator.showRoute(
 
 suspend inline fun <T> Navigator.showRoute(
 	isOpaque: Boolean = true,
+	transition: RouteTransition = DefaultTransition(isOpaque),
 	noinline content: @Composable (removeRoute: (T) -> Unit) -> Unit
-): T = showRoute(routeFactory = { Route(isOpaque, it) }, content = content)
+): T = showRoute(routeFactory = { Route(isOpaque, transition, it) }, content = content)
 
 fun Navigator.showRouteAsync(
 	routeFactory: (content: @Composable () -> Unit) -> Route,
@@ -301,7 +217,8 @@ fun Navigator.showRouteAsync(
 
 inline fun Navigator.showRouteAsync(
 	isOpaque: Boolean = true,
+	transition: RouteTransition = DefaultTransition(isOpaque),
 	noinline content: @Composable (removeRoute: () -> Unit) -> Unit
 ) {
-	showRouteAsync(routeFactory = { Route(isOpaque, it) }, content = content)
+	showRouteAsync(routeFactory = { Route(isOpaque, transition, it) }, content = content)
 }

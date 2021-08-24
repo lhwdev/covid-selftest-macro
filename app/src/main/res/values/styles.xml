@@ -4,6 +4,13 @@
 		<item name="android:statusBarColor" tools:targetApi="l">@color/transparent</item>
 		<item name="android:navigationBarColor" tools:targetApi="l">@color/transparent</item>
 		<item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
+		
+		
+		<item name="colorPrimary">@color/primary</item>
+		<item name="colorAccent">@color/accent</item>
+		
+		<item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/primary</item>
+		<item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@null</item>
 	</style>
 	
 	<style name="AppTheme.Transparent">
@@ -16,8 +23,8 @@
 	</style>
 	
 	<style name="AppTheme.Dialog" parent="Theme.AppCompat.Light.Dialog">
-		<item name="colorPrimary">#ff6200ee</item>
-		<item name="colorAccent">#ff03dac5</item>
+		<item name="colorPrimary">@color/primary</item>
+		<item name="colorAccent">@color/accent</item>
 	</style>
 
 </resources>

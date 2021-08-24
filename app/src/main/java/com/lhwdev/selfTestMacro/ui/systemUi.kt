@@ -46,6 +46,8 @@ fun ProvideAppliedUiPaddings(paddings: AppliedUiPaddings, content: @Composable (
 
 
 val ScrimDarkColor = Color.Black.copy(alpha = 0.1f)
+val ScrimLightColor = Color.White.copy(alpha = 0.4f)
+val ScrimNavLightColor = Color.White.copy(alpha = 0.7f)
 
 sealed interface SystemUiMode {
 	object Default : SystemUiMode
@@ -59,7 +61,9 @@ sealed interface OnScreenSystemUiMode : SystemUiMode {
 
 class Scrims(
 	val statusBar: @Composable () -> Unit,
+	val statusBarSpacer: @Composable () -> Unit,
 	val navigationBar: @Composable () -> Unit,
+	val navigationBarSpacer: @Composable () -> Unit,
 )
 
 private fun Color.isDarkColor(): Boolean = luminance() < 0.5f
@@ -159,7 +163,7 @@ fun ProvideAutoWindowInsets(
 				// custom padding.
 				
 				// this is not quite accurate, just an effort not to be seen a lot weird.
-				// maybe a little bit better?
+				// maybe a little better?
 				
 				// I don't know why, but this is needed to correctly subscribe to snapshot state
 				ime.layoutInsets.bottom
@@ -200,15 +204,14 @@ fun ProvideAutoWindowInsets(
 				
 				val newInsets = remember(insets) {
 					object : WindowInsets by insets {
-						override val navigationBars: WindowInsets.Type =
-							object : WindowInsets.Type {
-								// not `nav`: to subscribe correctly?
-								override val isVisible: Boolean get() = insets.navigationBars.isVisible
-								override val layoutInsets: Insets get() = navInsetsState
-								override val animatedInsets: Insets get() = navInsetsState
-								override val animationFraction: Float get() = animationFractionState
-								override val animationInProgress: Boolean get() = insets.ime.animationInProgress
-							}
+						override val navigationBars: WindowInsets.Type = object : WindowInsets.Type {
+							// not `nav`: to subscribe correctly?
+							override val isVisible: Boolean get() = insets.navigationBars.isVisible
+							override val layoutInsets: Insets get() = navInsetsState
+							override val animatedInsets: Insets get() = navInsetsState
+							override val animationFraction: Float get() = animationFractionState
+							override val animationInProgress: Boolean get() = insets.ime.animationInProgress
+						}
 					}
 				}
 				
@@ -262,7 +265,7 @@ fun AutoSystemUi(
 	)
 }
 
-// note that this does not clean-up
+// note that this does not clean up
 @Composable
 fun AutoSystemUi(
 	enabled: Boolean = true,
@@ -289,7 +292,9 @@ fun AutoSystemUi(
 		)
 		
 		val isDark = LocalContentColor.current.isDarkColor()
+		println("scrim")
 		if(enabledState) PreviewSideEffect {
+			println("scrim to $isDark")
 			controller.statusBarDarkContentEnabled = isDark
 		}
 	}
@@ -326,15 +331,24 @@ fun AutoSystemUi(
 					StatusBarScrim(statusBar.scrimColor)
 				}
 			},
+			statusBarSpacer = {
+				if(statusBarState is OnScreenSystemUiMode.Immersive)
+					Spacer(Modifier.statusBarsHeight().fillMaxWidth())
+			},
 			navigationBar = {
 				val navigationBar = navigationBarState
 				if(navigationBar is OnScreenSystemUiMode.Immersive) {
 					NavigationBarScrim(navigationBar.scrimColor)
 				}
+			},
+			navigationBarSpacer = {
+				if(statusBarState is OnScreenSystemUiMode.Immersive)
+					Spacer(Modifier.navigationBarsHeight().fillMaxWidth())
 			}
 		)
 	}
 	
+	@Suppress("RedundantExplicitType")
 	var modifier: Modifier = Modifier
 	if(imeState is SystemUiMode.Default) modifier = modifier.imePadding()
 	// if(statusBarMode is OnScreenSystemUiMode.Opaque) modifier = modifier.statusBarsPadding()

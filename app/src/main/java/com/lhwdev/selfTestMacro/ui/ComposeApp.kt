@@ -4,15 +4,13 @@ package com.lhwdev.selfTestMacro.ui
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.lightColors
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.systemuicontroller.SystemUiController
-import com.lhwdev.selfTestMacro.PreferenceState
-import com.lhwdev.selfTestMacro.preferenceState
+import com.lhwdev.selfTestMacro.database.PreferenceState
+import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.repository.SelfTestManagerImpl
+import com.lhwdev.selfTestMacro.ui.pages.splash.Splash
 import kotlinx.coroutines.flow.collect
 
 
@@ -28,10 +26,7 @@ fun ComposeApp(activity: Activity) {
 	val navigator = remember {
 		val navigator = NavigatorImpl()
 		
-		val initialFirst = pref.isFirstTime
-		
-		if(initialFirst || pref.db.testGroups.groups.isEmpty()) navigator.pushRoute { Setup() }
-		else navigator.pushRoute { Main() }
+		navigator.pushRoute { Splash() }
 		
 		navigator
 	}
@@ -62,6 +57,7 @@ fun ComposeApp(activity: Activity) {
 							DefaultTransparentRouteTransition
 						}
 						transition.Transition(
+							route = route,
 							visibleState = visible,
 							onAnimationEnd = onAnimationEnd,
 							content = content
@@ -90,17 +86,3 @@ private fun EnabledRoute(enabled: Boolean, content: @Composable () -> Unit) {
 
 val LocalPreviewUiController =
 	staticCompositionLocalOf<SystemUiController> { error("not provided") }
-
-@Composable
-fun AppTheme(content: @Composable () -> Unit) {
-	MaterialTheme(
-		colors = lightColors(
-			primary = Color(0xff2962ff),
-			primaryVariant = Color(0xff5000b3),
-			onPrimary = Color(0xffffffff),
-			secondary = Color(0xff03dac5),
-			secondaryVariant = Color(0xff04bfad)
-		),
-		content = content
-	)
-}

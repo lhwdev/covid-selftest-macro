@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro.ui
+package com.lhwdev.selfTestMacro.ui.pages.info
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,14 +8,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.BuildConfig
-import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.isDebugEnabled
 import com.lhwdev.selfTestMacro.openWebsite
+import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.common.BackButton
 import com.vanpra.composematerialdialogs.ListContent
 import com.vanpra.composematerialdialogs.Title
 import com.vanpra.composematerialdialogs.showDialogAsync
@@ -35,12 +34,7 @@ fun Info(): Unit = MaterialTheme(
 		) {
 			TopAppBar(
 				navigationIcon = {
-					IconButton(onClick = { navigator.popRoute() }) {
-						Icon(
-							painterResource(R.drawable.ic_arrow_left_24),
-							contentDescription = "back"
-						)
-					}
+					BackButton { navigator.popRoute() }
 				},
 				title = {},
 				actions = {
@@ -82,6 +76,14 @@ fun Info(): Unit = MaterialTheme(
 				Text("Thanks to 이승수")
 				
 				Spacer(Modifier.height(16.dp))
+				
+				Text(
+					"오픈소스 라이센스",
+					style = LocalTextStyle.current.copy(textDecoration = TextDecoration.Underline),
+					modifier = Modifier.clickable {
+						navigator.pushRoute { OpenSources() }
+					}
+				)
 				
 				Spacer(Modifier.weight(8.5f))
 				

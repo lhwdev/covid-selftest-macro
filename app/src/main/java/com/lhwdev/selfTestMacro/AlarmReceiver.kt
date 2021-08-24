@@ -3,6 +3,9 @@ package com.lhwdev.selfTestMacro
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.lhwdev.selfTestMacro.database.PreferenceHolder
+import com.lhwdev.selfTestMacro.database.PreferenceState
+import com.lhwdev.selfTestMacro.database.prefMain
 import kotlinx.coroutines.runBlocking
 
 class AlarmReceiver : BroadcastReceiver() {

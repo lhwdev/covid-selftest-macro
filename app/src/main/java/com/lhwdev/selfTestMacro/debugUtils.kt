@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.material.SnackbarHostState
 import androidx.core.content.getSystemService
+import com.lhwdev.selfTestMacro.database.preferenceState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,6 +16,11 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 val Context.isDebugEnabled get() = BuildConfig.DEBUG || preferenceState.isDebugEnabled
+
+
+fun onError(th: Throwable, message: String) {
+	Log.e("SelfTestMacro", message, th)
+}
 
 
 fun selfLog(message: String) {

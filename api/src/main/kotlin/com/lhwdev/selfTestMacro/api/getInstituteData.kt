@@ -16,19 +16,22 @@ private data class InstituteInfoResponse(@SerialName("schulList") val instituteL
 
 // 학교: lctnScCode=03&schulCrseScCode=4&orgName=...&loginType=school
 public suspend fun Session.getSchoolData(
-	regionCode: String,
+	regionCode: String?,
 	schoolLevelCode: String,
 	name: String
 ): List<InstituteInfo> {
-	val params = queryUrlParamsToString(
-		"lctnScCode" to regionCode,
+	var params = arrayOf(
 		"schulCrseScCode" to schoolLevelCode,
 		"orgName" to name,
 		"loginType" to "school"
 	)
+	if(regionCode != null) params += "lctnScCode" to regionCode
 	
-	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose(InstituteInfoResponse.serializer()).instituteList
+	return fetch(
+		url = sCommonUrl.get("searchSchool", *params),
+		method = HttpMethod.get,
+		headers = sDefaultFakeHeader
+	).toJsonLoose(InstituteInfoResponse.serializer()).instituteList
 }
 
 // 대학: orgName=...&loginType=univ

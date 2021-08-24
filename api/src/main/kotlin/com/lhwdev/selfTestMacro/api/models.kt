@@ -69,7 +69,7 @@ public data class InstituteInfo(
 	/**
 	 * The english name of institute.
 	 */
-	@SerialName("engOrgNm") val englishName: String,
+	@SerialName("engOrgNm") val englishName: String? = null,
 	
 	/**
 	 * The code of institute.

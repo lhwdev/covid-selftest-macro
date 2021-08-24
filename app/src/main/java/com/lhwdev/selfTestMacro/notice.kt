@@ -2,14 +2,32 @@ package com.lhwdev.selfTestMacro
 
 import android.app.Activity
 import android.text.method.LinkMovementMethod
-import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.text.HtmlCompat
+import com.lhwdev.selfTestMacro.database.preferenceState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.URL
+
+@Serializable
+data class NotificationObject(
+	val notificationVersion: Int,
+	val entries: List<NotificationEntry>
+)
+
+@Serializable
+data class NotificationEntry(
+	val id: String,
+	val version: VersionSpec?, // null to all versions
+	val priority: Priority,
+	val title: String,
+	val message: String
+) {
+	enum class Priority { once, everyWithDoNotShowAgain, every }
+}
 
 
 suspend fun Activity.checkNotice() = withContext(Dispatchers.IO) {
@@ -34,8 +52,6 @@ suspend fun Activity.checkNotice() = withContext(Dispatchers.IO) {
 			// incapable of displaying this
 			return@withContext
 		}
-		
-		Log.d("hOI", notificationObject.toString())
 		
 		val currentVersion = App.version
 		

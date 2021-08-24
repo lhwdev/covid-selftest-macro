@@ -20,7 +20,7 @@ fun SetupPreview(@PreviewParameter(WizardIndexPreviewProvider::class) index: Int
 	PreviewBase(statusBar = true) {
 		val model = remember {
 			SetupModel().apply {
-				instituteInfo = InstitutionInfoModel.School()
+				instituteInfo = InstituteInfoModel.School()
 			}
 		}
 		val parameters = SetupParameters.Default

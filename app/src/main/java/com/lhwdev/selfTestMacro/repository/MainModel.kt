@@ -4,9 +4,10 @@ import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.SurveyData
-import com.lhwdev.selfTestMacro.ui.MainModel
+import com.lhwdev.selfTestMacro.database.*
+import com.lhwdev.selfTestMacro.ui.pages.main.MainModel
 
 
 @Immutable
@@ -18,6 +19,8 @@ sealed class SubmitResult(val target: DbUser) {
 
 @Immutable
 interface MainRepository {
+	suspend fun sessionFor(group: DbUserGroup): Session
+	
 	suspend fun getCurrentStatus(user: DbUser): Status?
 	
 	suspend fun Context.submitSelfTestNow(

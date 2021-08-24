@@ -1,7 +1,7 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.database
 
 import com.lhwdev.selfTestMacro.api.InstituteInfo
-import com.lhwdev.selfTestMacro.api.User
+import com.lhwdev.selfTestMacro.api.InstituteType
 import com.lhwdev.selfTestMacro.api.UsersIdentifier
 import kotlinx.serialization.Serializable
 
@@ -56,11 +56,24 @@ data class DbUsers(
 )
 
 @Serializable
+data class DbInstitute(
+	val type: InstituteType,
+	val code: String,
+	val name: String,
+	val classifierCode: String,
+	val hcsUrl: String,
+	val regionCode: String? = null,
+	val levelCode: String? = null,
+	val sigCode: String? = null
+)
+
+@Serializable
 data class DbUser(
 	val id: Int,
-	val user: User,
-	val instituteName: String,
-	val instituteType: InstituteType,
+	val name: String,
+	val userCode: String,
+	val userBirth: String,
+	val institute: DbInstitute,
 	val userGroupId: Int
 )
 
@@ -74,6 +87,9 @@ data class DbUserGroups(
 @Serializable
 data class DbUserGroup(
 	val id: Int,
+	val masterName: String,
+	val masterBirth: String,
+	val password: String,
 	val userIds: List<Int>,
 	val usersIdentifier: UsersIdentifier,
 	val instituteType: InstituteType,

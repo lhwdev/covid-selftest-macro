@@ -1,6 +1,9 @@
 package com.lhwdev.github.repo
 
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.fetch.fetch
+import com.lhwdev.selfTestMacro.URLSerializer
+import com.lhwdev.selfTestMacro.get
+import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.net.URL

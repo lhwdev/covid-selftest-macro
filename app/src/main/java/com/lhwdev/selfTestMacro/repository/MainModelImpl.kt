@@ -11,17 +11,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.getSystemService
-import com.lhwdev.selfTestMacro.*
-import com.lhwdev.selfTestMacro.api.SurveyData
-import com.lhwdev.selfTestMacro.api.UserInfo
-import com.lhwdev.selfTestMacro.api.getUserInfo
-import com.lhwdev.selfTestMacro.api.registerSurvey
+import com.lhwdev.fetch.http.Session
+import com.lhwdev.selfTestMacro.api.*
+import com.lhwdev.selfTestMacro.database.*
+import com.lhwdev.selfTestMacro.onError
+import com.lhwdev.selfTestMacro.selfLog
 import com.lhwdev.selfTestMacro.ui.Color
-import com.lhwdev.selfTestMacro.ui.MainModel
+import com.lhwdev.selfTestMacro.ui.pages.main.MainModel
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
+import kotlin.collections.List
+import kotlin.collections.all
+import kotlin.collections.emptyList
+import kotlin.collections.map
+import kotlin.collections.set
 
 
 val Context.isNetworkAvailable: Boolean
@@ -38,26 +43,46 @@ val Context.isNetworkAvailable: Boolean
 
 
 class MainRepositoryImpl(
-	val pref: PreferenceState,
-	val session: Session = Session()
+	val pref: PreferenceState
 ) : MainRepository {
+	override suspend fun sessionFor(group: DbUserGroup): Session {
+		val info = SessionManager.sessionInfoFor(database = pref.db, group = group)
+		if(!info.sessionFullyLoaded) try {
+			val result = info.session.validatePassword(group.institute, group.usersIdentifier.token, group.password)
+			if(result is UsersToken) {
+				pref.db.apiLoginCache[group.usersIdentifier.token] = result
+				info.sessionFullyLoaded = true
+			}
+		} catch(th: Throwable) {
+			onError(th, "MainRepositoryImpl.sessionFor")
+		}
+		
+		return info.session
+	}
+	
 	override suspend fun getCurrentStatus(user: DbUser): Status? = with(pref.db) {
 		try {
-			Status(session.getUserInfo(user.institute, user.user))
+			val session = sessionFor(user.userGroup)
+			Status(session.getUserInfo(user.usersInstitute, user.apiUser(session)!!))
 		} catch(th: Throwable) {
+			selfLog("getCurrentStatus: error")
+			th.printStackTrace()
 			null
 		}
 	}
 	
+	// TODO: separate random time for those in one group
+	@OptIn(DangerousHcsApi::class)
 	private suspend fun DatabaseManager.submitSelfTest(
 		target: DbTestTarget,
 		surveyData: SurveyData
 	): List<SubmitResult> = try {
 		target.allUsers.map { user ->
 			try {
+				val session = sessionFor(user.userGroup)
 				val data = session.registerSurvey(
-					institute = user.institute,
-					user = user.user,
+					institute = user.usersInstitute,
+					user = user.apiUser(session)!!,
 					surveyData = surveyData
 				)
 				SubmitResult.Success(user, data.registerAt)
@@ -66,7 +91,9 @@ class MainRepositoryImpl(
 			}
 		}
 		
-	} catch(th: Throwable) { emptyList() }
+	} catch(th: Throwable) {
+		emptyList()
+	}
 	
 	override suspend fun Context.submitSelfTestNow(
 		manager: DatabaseManager,
@@ -96,7 +123,7 @@ class MainRepositoryImpl(
 					for(resultItem in result) when(resultItem) {
 						is SubmitResult.Success -> ListItem {
 							Text(
-								"${resultItem.target.user.name}: 성공",
+								"${resultItem.target.name}: 성공",
 								color = Color(
 									onLight = Color(0xf4259644),
 									onDark = Color(0xff99ffa0)
@@ -107,7 +134,7 @@ class MainRepositoryImpl(
 						is SubmitResult.Failed -> ListItem(
 							modifier = Modifier.clickable {
 								model.navigator.showDialogAsync {
-									Title { Text("${resultItem.target.user.name} (${resultItem.target.instituteName}): ${resultItem.message}") }
+									Title { Text("${resultItem.target.name} (${resultItem.target.institute.name}): ${resultItem.message}") }
 									
 									Content {
 										val stackTrace = remember(resultItem.error) {
@@ -119,7 +146,7 @@ class MainRepositoryImpl(
 							}
 						) {
 							Text(
-								"${resultItem.target.user.name}: 실패",
+								"${resultItem.target.name}: 실패",
 								color = Color(
 									onLight = Color(0xffff1122),
 									onDark = Color(0xffff9099)
@@ -132,7 +159,9 @@ class MainRepositoryImpl(
 				Buttons { PositiveButton { Text("확인") } }
 			}
 			result
-		} catch(th: Throwable) { emptyList() }
+		} catch(th: Throwable) {
+			emptyList()
+		}
 	}
 	
 	override suspend fun scheduleSelfTest(group: DbTestGroup, newSchedule: DbTestSchedule) {

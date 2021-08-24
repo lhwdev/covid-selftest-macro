@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.database
 
 import android.content.SharedPreferences
 

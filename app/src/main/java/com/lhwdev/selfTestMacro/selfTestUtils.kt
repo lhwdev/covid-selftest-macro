@@ -3,16 +3,16 @@
 
 package com.lhwdev.selfTestMacro
 
-import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
-import com.lhwdev.selfTestMacro.api.*
-import net.gotev.cookiestore.InMemoryCookieStore
+import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.User
+import com.lhwdev.selfTestMacro.database.DbTestGroup
+import com.lhwdev.selfTestMacro.database.DbTestSchedule
+import net.gotev.cookiestore.InMemoryCookieStore
 import java.net.CookieManager
 import java.net.CookiePolicy
-import java.util.Calendar
 
 
 fun DbTestGroup.scheduleInfo(): String = buildString {

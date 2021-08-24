@@ -6,7 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.content.getSystemService
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.fetch.http.Session
+import com.lhwdev.selfTestMacro.AlarmReceiver
+import com.lhwdev.selfTestMacro.api.SurveyData
+import com.lhwdev.selfTestMacro.database.*
+import com.lhwdev.selfTestMacro.replaced
 import java.util.Calendar
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -25,6 +29,21 @@ private fun Context.createScheduleIntent(id: Int): PendingIntent = PendingIntent
 
 
 class SelfTestManagerImpl(private val context: Context, private val database: DatabaseManager) : SelfTestManager {
+	override suspend fun sessionFor(group: DbUserGroup): Session {
+	}
+	
+	override suspend fun getCurrentStatus(user: DbUser): Status? {
+	}
+	
+	override suspend fun Context.submitSelfTestNow(
+		manager: DatabaseManager,
+		target: DbTestTarget,
+		surveyData: SurveyData
+	): List<SubmitResult> {
+	}
+	
+	/// Scheduling
+	
 	private val random = Random(System.currentTimeMillis())
 	private val lastGroups = database.testGroups.groups
 	private val intentCache = mutableMapOf<Int, PendingIntent>()

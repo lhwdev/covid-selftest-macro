@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.database
 
 
 fun List<Int>.nextTestGroupId(): Int {

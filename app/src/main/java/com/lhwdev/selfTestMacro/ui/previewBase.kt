@@ -1,10 +1,9 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +48,7 @@ fun PreviewBase(statusBar: Boolean = false, content: @Composable () -> Unit) {
 	AppTheme {
 		CompositionLocalProvider(
 			LocalPreview provides true,
-			LocalNavigator provides remember { mutableStateListOf(@Composable {}) },
+			LocalGlobalNavigator provides NavigatorImpl(),
 			LocalWindowInsets provides remember {
 				object : WindowInsets {
 					override val ime: WindowInsets.Type = ImmutableWindowInsetsType()

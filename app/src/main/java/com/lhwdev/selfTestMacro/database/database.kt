@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.database
 
 import android.app.PendingIntent
 import android.content.Context
@@ -8,6 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
+import com.lhwdev.selfTestMacro.AlarmReceiver
+import com.lhwdev.selfTestMacro.BuildConfig
 import java.util.WeakHashMap
 
 

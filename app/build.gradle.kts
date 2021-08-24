@@ -1,6 +1,29 @@
 plugins {
 	id("com.android.application")
 	kotlin("android")
+	kotlin("plugin.serialization")
+	
+	id("app.cash.licensee") version "1.2.0"
+}
+
+repositories {
+	maven(url = "https://oss.sonatype.org/content/repositories/snapshots") // lottie-compose
+}
+
+licensee {
+	allow("Apache-2.0")
+	// allow("MIT")
+	
+	// see https://github.com/airbnb/lottie-android/issues/1865
+	allowDependency(groupId = "com.airbnb.android", artifactId = "lottie", version = "4.1.0")
+	allowDependency(groupId = "com.airbnb.android", artifactId = "lottie-compose", version = "4.1.0")
+}
+
+tasks.register<Copy>("updateLicenses") {
+	dependsOn("licenseeRelease")
+	from(File(project.buildDir, "reports/licensee/release/artifacts.json"))
+	into(project.file("src/main/res/raw"))
+	rename { "open_source_license.json" }
 }
 
 android {
@@ -60,8 +83,8 @@ android {
 dependencies {
 	implementation(project(":api-base"))
 	implementation(project(":api"))
-	implementation(project(":app-serialization")) // workaround for compose + serialization
 	
+	implementation("com.airbnb.android:lottie-compose:4.1.0")
 	
 	implementation("net.gotev:cookie-store:1.3.5")
 	
@@ -70,6 +93,8 @@ dependencies {
 	
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.2")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+	
+	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
 	
 	val compose = "1.0.1" // also kotlinCompilerExtensionVersion, app-serialization/version
 	implementation("androidx.compose.ui:ui:$compose")

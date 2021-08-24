@@ -1,5 +1,8 @@
 package com.lhwdev.selfTestMacro
 
+import com.lhwdev.selfTestMacro.database.DatabaseManager
+import com.lhwdev.selfTestMacro.database.DbTestTarget
+
 
 private inline fun <T, K> List<T>.fixDuplicate(key: (T) -> K): Pair<Map<T, K>, List<T>> {
 	val removedList = mutableMapOf<T, K>()

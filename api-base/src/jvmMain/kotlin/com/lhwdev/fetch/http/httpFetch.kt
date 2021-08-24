@@ -227,4 +227,5 @@ private class HttpResultImpl(val connection: HttpURLConnection) : FetchResult, C
 	} as T?
 	
 	override fun contains(key: FetchHeaderKey<*>): Boolean = get(key) != null
+	override fun contains(key: String): Boolean = connection.getHeaderField(key) != null
 }

@@ -1,4 +1,4 @@
-package com.lhwdev.fetch.http.headers
+package com.lhwdev.fetch.headers
 
 import com.lhwdev.fetch.FetchHeader
 import com.lhwdev.fetch.FetchHeaderKey

@@ -2,7 +2,7 @@
 
 package com.lhwdev.fetch
 
-import com.lhwdev.fetch.http.headers.contentType
+import com.lhwdev.fetch.headers.contentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer

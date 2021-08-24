@@ -18,20 +18,32 @@ val sDefaultFakeHeader = mapOf(
 )
 
 
-operator fun URL.get(childPath: String? = null) = URL(
+operator fun URL.get(childPath: String): URL = URL(
 	this,
 	buildString {
 		append(path.removeSuffix("/"))
-		if(childPath != null) append("/$childPath")
+		append('/')
+		append(childPath)
 	}
 )
 
-operator fun URL.get(vararg params: Pair<String, String>) = URL(
+operator fun URL.get(vararg params: Pair<String, String>): URL = URL(
 	this,
 	buildString {
 		append(path.removeSuffix("/"))
 		append('?')
-		append(queryUrlParamsToString(mapOf(*params)))
+		append(queryUrlParamsToString(*params))
+	}
+)
+
+operator fun URL.get(childPath: String, vararg params: Pair<String, String>): URL = URL(
+	this,
+	buildString {
+		append(path.removeSuffix("/"))
+		append('/')
+		append(childPath)
+		append('?')
+		append(queryUrlParamsToString(*params))
 	}
 )
 

@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.os.Build
 import android.os.Handler
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -123,6 +124,9 @@ class PreferenceState(val pref: SharedPreferences) {
 	
 	var firstState by pref.preferenceInt("first", 0)
 	var isSchedulingEnabled by pref.preferenceBoolean("isSchedulingEnabled", false)
+	var isRandomEnabled by pref.preferenceBoolean("isRandomEnabled", false)
+	var isIsolated by pref.preferenceBoolean("isIsolated", false)
+	
 	var hour by pref.preferenceInt("hour", -1)
 	var min by pref.preferenceInt("min", 0)
 	
@@ -132,6 +136,8 @@ class PreferenceState(val pref: SharedPreferences) {
 		by pref.preferenceSerialized("institute", InstituteInfo.serializer())
 	var setting: UserSetting?
 		by pref.preferenceSerialized("userSetting", UserSetting.serializer())
+	
+	var lastQuestion: String? by pref.preferenceString("lastQuestion")
 	
 	var shownNotices: Set<String>
 		get() = pref.getStringSet("shownNotices", setOf())!!
@@ -230,7 +236,7 @@ fun Context.prefMain() = getSharedPreferences("main", AppCompatActivity.MODE_PRI
 
 fun Context.createIntent() = PendingIntent.getBroadcast(
 	this, AlarmReceiver.REQUEST_CODE, Intent(this, AlarmReceiver::class.java),
-	PendingIntent.FLAG_UPDATE_CURRENT
+	PendingIntent.FLAG_UPDATE_CURRENT or (if(Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_IMMUTABLE else 0)
 )
 
 fun Int.toPx() = (this * Resources.getSystem().displayMetrics.density).toInt()

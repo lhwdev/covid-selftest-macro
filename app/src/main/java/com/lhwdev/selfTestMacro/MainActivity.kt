@@ -127,6 +127,21 @@ class MainActivity : AppCompatActivity() {
 			}
 		}
 		
+		switch_random.isChecked = pref.isRandomEnabled
+		
+		switch_random.setOnCheckedChangeListener { _, isChecked ->
+			pref.isRandomEnabled = isChecked
+			update()
+		}
+		
+		
+		switch_isolation.isChecked = pref.isIsolated
+		
+		switch_isolation.setOnCheckedChangeListener { _, isChecked ->
+			pref.isIsolated = isChecked
+		}
+		
+		
 		time.setOnClickListener {
 			pickTime()
 		}

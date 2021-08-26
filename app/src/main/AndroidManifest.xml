@@ -33,6 +33,8 @@
 		<activity android:name=".FirstActivity"
 			android:theme="@style/AppTheme.Dialog" />
 		
+		<activity android:name=".DebugActivity" />
+		
 		<receiver android:name=".AlarmReceiver" />
 		
 		<receiver

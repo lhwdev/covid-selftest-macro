@@ -228,8 +228,8 @@ class FirstActivity : AppCompatActivity() {
 						pref.firstState = 1
 					}
 				} catch(e: Throwable) {
+					onError(e, "잘못된 학생 정보입니다.", forceShow = true)
 					e.printStackTrace()
-					showToastSuspendAsync("잘못된 학생 정보입니다.")
 				}
 				
 			}

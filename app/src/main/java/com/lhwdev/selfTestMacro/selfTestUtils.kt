@@ -12,6 +12,7 @@ import net.gotev.cookiestore.InMemoryCookieStore
 import java.net.CookieManager
 import java.net.CookiePolicy
 import java.util.Calendar
+import kotlin.random.Random
 
 
 fun selfTestSession(context: Context): Session {
@@ -42,6 +43,8 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 			val loginInfo: UserLoginInfo =
 				preferenceState.user!! // (not valid ->) // note: `preferenceStte.user` may change after val user = ...
 			
+			val isIsolated = preferenceState.isIsolated
+			
 			// val user = loginInfo.ensureTokenValid(
 			// 	session, institute,
 			// 	onUpdate = { preferenceState.user = it }
@@ -60,7 +63,7 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 			val result = session.registerSurvey(
 				preferenceState.institute!!,
 				user,
-				SurveyData(userToken = user.token, upperUserName = user.name)
+				SurveyData(userToken = user.token, upperUserName = user.name, rspns09 = if(isIsolated) "1" else "0")
 			)
 			
 			println("selfTestMacro: submitSuspend=success")
@@ -76,25 +79,30 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 }
 
 fun Context.updateTime(intent: PendingIntent) {
+	val preferenceState = preferenceState
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	alarmManager.cancel(intent)
 	if(preferenceState.isSchedulingEnabled)
-		scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min)
+		scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min, isRandom = preferenceState.isRandomEnabled)
 }
+
+private val random = Random
 
 @SuppressLint("NewApi")
 fun Context.scheduleNextAlarm(
 	intent: PendingIntent,
 	hour: Int,
 	min: Int,
-	nextDay: Boolean = false
+	isRandom: Boolean,
+	nextDay: Boolean = false,
 ) {
 	(getSystemService(Context.ALARM_SERVICE) as AlarmManager).setExact(
 		AlarmManager.RTC_WAKEUP,
 		Calendar.getInstance().run {
+			val newMin = if(isRandom) (min + random.nextInt(-5, 6)).coerceIn(0, 59) else min
 			val new = clone() as Calendar
 			new[Calendar.HOUR_OF_DAY] = hour
-			new[Calendar.MINUTE] = min
+			new[Calendar.MINUTE] = newMin
 			new[Calendar.SECOND] = 0
 			new[Calendar.MILLISECOND] = 0
 			if(nextDay || new <= this) new.add(Calendar.DAY_OF_YEAR, 1)

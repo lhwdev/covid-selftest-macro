@@ -61,7 +61,7 @@ suspend fun Activity.askUpdate(update: Release, requestCode: Int): Boolean {
 		
 		val result = promptDialog<Boolean> { onResult ->
 			setTitle("업데이트 안내")
-			setMessage("버전 ${update.tagName}으로 업데이트할 수 있습니다.")
+			setMessage("버전 ${update.tagName}으로 업데이트할 수 있어요.")
 			setPositiveButton("업데이트") { _, _ -> onResult(true) }
 			setNegativeButton("취소", null)
 		}
@@ -75,7 +75,7 @@ suspend fun Activity.askUpdate(update: Release, requestCode: Int): Boolean {
 		val download = DownloadManager.Request(Uri.parse(url.toExternalForm()))
 		download.apply {
 			setMimeType("application/vnd.android.package-archive")
-			setTitle("업데이트를 다운받고 있습니다.")
+			setTitle("업데이트를 다운받고 있어요.")
 			setDestinationInExternalFilesDir(this@askUpdate, null, externalPath)
 		}
 		

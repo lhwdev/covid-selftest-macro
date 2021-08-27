@@ -50,8 +50,8 @@ fun selfTestSession(context: Context): Session {
 
 
 suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) list.single() else {
-	if(list.isEmpty()) showToastSuspendAsync("사용자를 찾지 못했습니다.")
-	else showToastSuspendAsync("아직 여러명의 자가진단은 지원하지 않습니다.")
+	if(list.isEmpty()) showToastSuspendAsync("사용자를 찾지 못했어요.")
+	else showToastSuspendAsync("아직 여러명의 자가진단은 지원하지 않아요.")
 	null
 }
 

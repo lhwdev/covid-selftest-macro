@@ -115,7 +115,7 @@ private suspend fun submitLogin(
 		selfLog("#3. 비밀번호 확인")
 		session.validatePassword(institute, userId.token, password)
 	} catch(e: Throwable) {
-		model.onError(context, "로그인에 실패하였습니다.", e)
+		model.onError(context, "로그인에 실패했어요.", e)
 		return false
 	}
 	
@@ -126,7 +126,7 @@ private suspend fun submitLogin(
 			Title { Text("로그인 실패") }
 			Content {
 				Text(
-					result.errorMessage ?: "로그인에 실패하였습니다. (에러코드 ${result.errorCode}"
+					result.errorMessage ?: "로그인에 실패했어요. (에러코드 ${result.errorCode}"
 				)
 			}
 			Buttons {
@@ -164,7 +164,7 @@ private suspend fun submitLogin(
 				
 				return true
 			} catch(e: Throwable) {
-				model.onError(context, "사용자 정보를 불러오지 못했습니다.", e)
+				model.onError(context, "사용자 정보를 불러오지 못했어요.", e)
 			}
 		}
 	}

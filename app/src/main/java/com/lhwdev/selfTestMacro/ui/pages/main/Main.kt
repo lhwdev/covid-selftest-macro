@@ -172,7 +172,7 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 			horizontalAlignment = Alignment.CenterHorizontally,
 			modifier = Modifier.fillMaxSize()
 		) {
-			Text("등록된 사용자가 없습니다.", style = MaterialTheme.typography.h4)
+			Text("등록된 사용자가 없어요.", style = MaterialTheme.typography.h4)
 			Spacer(Modifier.height(32.dp))
 			RoundButton(
 				onClick = {

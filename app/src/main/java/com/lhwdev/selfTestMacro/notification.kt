@@ -36,11 +36,11 @@ fun Context.initializeNotificationChannel() {
 object TestCompleteNotification {
 	const val id = "com.lhwdev.selfTestMacro/selfTestCompleted"
 	const val notificationId = 123
-	const val failedName = "자가진단에 실패하였습니다."
-	const val successName = "자가진단을 완료하였습니다."
+	const val failedName = "자가진단에 실패했어요."
+	const val successName = "자가진단을 완료했어요."
 	const val visibleName = "자가진단을 완료 알람"
 	
-	val content = { time: String -> "자가진단을 ${time}에 완료했습니다" }
+	val content = { time: String -> "자가진단을 ${time}에 완료했어요" }
 	
 	@RequiresApi(Build.VERSION_CODES.N)
 	const val importance = NotificationManager.IMPORTANCE_DEFAULT
@@ -77,7 +77,7 @@ object UpdateAvailableNotification {
 	const val notificationId = 124
 	const val name = "자가진단 매크로 업데이트 안내"
 	const val visibleName = "업데이트 안내"
-	val content = { version: String -> "버전 ${version}이 사용가능합니다." }
+	val content = { version: String -> "버전 ${version}이 사용 가능해요." }
 	
 	@RequiresApi(Build.VERSION_CODES.N)
 	const val importance = NotificationManager.IMPORTANCE_DEFAULT

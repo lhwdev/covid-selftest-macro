@@ -87,7 +87,7 @@ class MainRepositoryImpl(
 				)
 				SubmitResult.Success(user, data.registerAt)
 			} catch(th: Throwable) {
-				SubmitResult.Failed(user, "자가진단에 실패했습니다.", th)
+				SubmitResult.Failed(user, "자가진단에 실패했어요.", th)
 			}
 		}
 		
@@ -113,7 +113,7 @@ class MainRepositoryImpl(
 			
 			if(result.all { it is SubmitResult.Success }) CoroutineScope(currentCoroutineContext()).launch {
 				model.showSnackbar(
-					if(target is DbTestTarget.Group) "모두 자가진단을 완료했습니다." else "자가진단을 완료했습니다.",
+					if(target is DbTestTarget.Group) "모두 자가진단을 완료했어요." else "자가진단을 완료했어요.",
 					actionLabel = "확인"
 				)
 			} else model.navigator.showDialogUnit {

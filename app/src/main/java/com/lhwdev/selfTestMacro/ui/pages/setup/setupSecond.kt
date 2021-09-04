@@ -21,8 +21,7 @@ import com.lhwdev.selfTestMacro.*
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
-import com.lhwdev.selfTestMacro.api.getSchoolData
-import com.lhwdev.selfTestMacro.repository.SessionManager
+import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.ui.*
 import com.vanpra.composematerialdialogs.Buttons
 import com.vanpra.composematerialdialogs.FloatingMaterialDialogScope
@@ -35,6 +34,7 @@ import kotlinx.coroutines.launch
 internal fun WizardInstituteInfo(
 	model: InstituteInfoModel,
 	setupModel: SetupModel,
+	parameters: SetupParameters,
 	wizard: SetupWizard,
 ) {
 	val notFulfilled = remember { mutableStateOf(-1) }
@@ -48,6 +48,11 @@ internal fun WizardInstituteInfo(
 				TopAppBar(
 					title = { Text("${model.type.displayName} 정보 입력") },
 					backgroundColor = MaterialTheme.colors.surface,
+					navigationIcon = if(parameters.endRoute == null) null else ({
+						IconButton(onClick = parameters.endRoute) {
+							Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")
+						}
+					}),
 					statusBarScrim = { scrims.statusBar() }
 				)
 			},
@@ -102,6 +107,7 @@ internal fun ColumnScope.WizardSchoolInfo(
 ) {
 	val scope = rememberCoroutineScope()
 	val context = LocalContext.current
+	val selfTestManager = LocalSelfTestManager.current
 	val navigator = LocalNavigator
 	
 	var complete by remember { mutableStateOf(false) }
@@ -118,9 +124,9 @@ internal fun ColumnScope.WizardSchoolInfo(
 		
 		val schools = runCatching {
 			selfLog("#1. 학교 정보 찾기")
-			SessionManager.anonymousSession.getSchoolData(
+			selfTestManager.findSchool(
 				regionCode = model.regionCode,
-				schoolLevelCode = "${model.schoolLevel}",
+				schoolLevelCode = model.schoolLevel,
 				name = model.schoolName
 			)
 		}.getOrElse { exception ->

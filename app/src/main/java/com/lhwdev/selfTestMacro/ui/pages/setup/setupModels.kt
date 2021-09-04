@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.onError
+import com.lhwdev.selfTestMacro.repository.WizardUser
 
 
 @Immutable
@@ -41,17 +42,6 @@ internal class SetupModel {
 	}
 }
 
-@Immutable
-internal data class WizardUser(val user: User, val info: UserInfo, val master: MasterUser)
-
-@Immutable
-internal data class MasterUser(
-	val identifier: UsersIdentifier,
-	val birth: String,
-	val password: String,
-	val instituteInfo: InstituteInfo,
-	val instituteType: InstituteType
-)
 
 
 @Suppress("CanSealedSubClassBeObject") // model: no comparison needed

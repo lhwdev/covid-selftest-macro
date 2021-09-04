@@ -18,7 +18,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.*
-import com.lhwdev.selfTestMacro.scheduleInfo
+import com.lhwdev.selfTestMacro.ui.scheduleInfo
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.Navigator
 import com.vanpra.composematerialdialogs.*

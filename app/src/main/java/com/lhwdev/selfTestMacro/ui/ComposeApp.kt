@@ -3,59 +3,68 @@
 package com.lhwdev.selfTestMacro.ui
 
 import android.app.Activity
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import com.google.accompanist.systemuicontroller.SystemUiController
-import com.lhwdev.selfTestMacro.database.PreferenceState
+import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
+import com.lhwdev.selfTestMacro.repository.SelfTestManager
 import com.lhwdev.selfTestMacro.repository.SelfTestManagerImpl
 import com.lhwdev.selfTestMacro.ui.pages.splash.Splash
 import kotlinx.coroutines.flow.collect
 
 
-val LocalActivity = compositionLocalOf<Activity> { error("not provided") }
-val LocalPreference = compositionLocalOf<PreferenceState> { error("not provided") }
-val LocalPreview = staticCompositionLocalOf { false }
+fun SelfTestManager(context: Context, database: DatabaseManager): SelfTestManager = SelfTestManagerImpl(
+	context = context,
+	database = database,
+	newAlarmIntent = { Intent(it, AlarmManager::class.java) }
+)
 
 
 @Composable
 fun ComposeApp(activity: Activity) {
 	val context = LocalContext.current
 	val pref = remember(context) { context.preferenceState }
+	val selfTestManager = remember { SelfTestManager(context.applicationContext, pref.db) }
+	selfTestManager.context = context.applicationContext
+	
 	val navigator = remember {
 		val navigator = NavigatorImpl()
 		
-		navigator.pushRoute { Splash() }
+		navigator.pushRoute(
+			transition = FadeRouteTransition(animationSpec = tween(durationMillis = 400))
+		) { Splash() }
 		
 		navigator
 	}
-	val scheduler = remember { SelfTestManagerImpl(context.applicationContext, pref.db) }
 	
 	LaunchedEffect(pref) {
 		snapshotFlow {
 			pref.db.testGroups
 		}.collect {
-			scheduler.onScheduleUpdated(pref.db)
+			selfTestManager.onScheduleUpdated()
 		}
 	}
 	
 	AppTheme {
 		CompositionLocalProvider(
 			LocalActivity provides activity,
+			LocalGlobalNavigator provides navigator,
+			
 			LocalPreference provides pref,
-			LocalGlobalNavigator provides navigator
+			LocalSelfTestManager provides selfTestManager
 		) {
 			ProvideAutoWindowInsets {
 				AnimateListAsComposable(
 					navigator.routes,
 					isOpaque = { it.isOpaque },
 					animation = { route, visible, onAnimationEnd, content ->
-						val transition = route as? RouteTransition ?: if(route.isOpaque) {
-							DefaultOpaqueRouteTransition
-						} else {
-							DefaultTransparentRouteTransition
-						}
+						val transition = route as? RouteTransition ?: DefaultTransition(isOpaque = route.isOpaque)
 						transition.Transition(
 							route = route,
 							visibleState = visible,
@@ -83,6 +92,3 @@ private fun EnabledRoute(enabled: Boolean, content: @Composable () -> Unit) {
 		content()
 	}
 }
-
-val LocalPreviewUiController =
-	staticCompositionLocalOf<SystemUiController> { error("not provided") }

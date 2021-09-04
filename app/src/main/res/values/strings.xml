@@ -1,5 +1,3 @@
 <resources>
 	<string name="app_name" translatable="false">자가진단 매크로</string>
-	<string name="action_expand_more">Expand</string>
-	<string name="action_expand_less">Collapse</string>
 </resources>

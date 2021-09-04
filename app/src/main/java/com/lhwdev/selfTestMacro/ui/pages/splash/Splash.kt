@@ -15,8 +15,8 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.pages.intro.Intro
 import com.lhwdev.selfTestMacro.ui.pages.main.Main
-import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
 import kotlinx.coroutines.delay
 
 
@@ -51,12 +51,12 @@ fun Splash() {
 		
 		val content: @Composable () -> Unit =
 			if(initialFirst || pref.db.testGroups.groups.isEmpty()) {
-				{ Setup() }
+				{ Intro() }
 			} else {
 				{ Main() }
 			}
 		
-		navigator.replaceRoute(Route(transition = FadeRouteTransition, content = content))
+		navigator.replaceRoute(Route(transition = FadeRouteTransition(), content = content))
 	}
 	
 }

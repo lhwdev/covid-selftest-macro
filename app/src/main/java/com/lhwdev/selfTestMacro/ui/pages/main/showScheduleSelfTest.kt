@@ -21,7 +21,7 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestSchedule
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.repository.GroupInfo
-import com.lhwdev.selfTestMacro.repository.MainRepository
+import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.showToast
 import com.lhwdev.selfTestMacro.ui.*
 import com.vanpra.composematerialdialogs.Buttons
@@ -30,13 +30,13 @@ import kotlinx.coroutines.launch
 
 
 internal fun Navigator.showScheduleSelfTest(
-	repository: MainRepository,
 	info: GroupInfo
 ): Unit = showDialogAsync(
 	maxHeight = Dp.Unspecified
 ) { removeRoute ->
 	val pref = LocalPreference.current
 	val context = LocalContext.current
+	val selfTestManager = LocalSelfTestManager.current
 	val scope = rememberCoroutineScope()
 	
 	val group = info.group
@@ -240,7 +240,7 @@ internal fun Navigator.showScheduleSelfTest(
 				}
 			}
 			scope.launch {
-				repository.scheduleSelfTest(group, schedule)
+				selfTestManager.updateSchedule(group, schedule)
 				
 				removeRoute()
 			}

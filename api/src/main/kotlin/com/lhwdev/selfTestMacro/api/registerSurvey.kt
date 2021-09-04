@@ -7,8 +7,8 @@ import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.http.fetch
 import com.lhwdev.fetch.json
-import com.lhwdev.selfTestMacro.get
-import com.lhwdev.selfTestMacro.sDefaultFakeHeader
+import com.lhwdev.fetch.get
+import com.lhwdev.fetch.sDefaultFakeHeader
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -38,29 +38,30 @@ import kotlinx.serialization.Serializable
 
 
 /**
- * @param question1 `학생 본인이 37.5도 이상 발열 또는 발열감이 있나요?`
- * @param question2 `학생에게 코로나19가 의심되는 임상증상이 있나요? (기침, 호흡곤란, 오한, 근육통, 두통, 인후통, 후각·미각 소실 또는 폐렴 등)`
- * @param question3 `학생 본인 또는 동거인이 방역당국에 의해 현재 자가격리가 이루어지고 있나요?`
+ * @param questionSuspicious `학생 본인이 코로나19가 의심되는 아래의 임상증상(발열 (37.5℃ 이상), 기침, 호흡곤란, 오한, 근육통, 두통, 인후통, 후각·미각 소실)이 있나요?`
+ * @param questionWaitingResult `학생 본인 또는 동거인이 코로나19 진단검사를 받고 그 결과를 기다리고 있나요?`
+ * @param questionQuarantined `학생 본인 또는 동거인이 방역당국에 의해 현재 자가격리가 이루어지고 있나요?`
  */
-public fun ActualSurveyData(
-	deviceUuid: String,
-	question1: Boolean = false,
-	question2: Boolean = false,
-	question3: Boolean = false,
-	upperUserToken: UserToken,
-	upperUserName: String
-): SurveyData = SurveyData(
-	deviceUuid = deviceUuid,
-	rspns00 = !question1 && !question2 && !question3,
-	rspns01 = if(question1) "2" else "1",
-	rspns02 = if(question2) "0" else "1",
-	rspns09 = if(question3) "1" else "0",
-	upperUserToken = upperUserToken,
-	upperUserName = upperUserName
-)
+public data class SurveyData(
+	val questionSuspicious: Boolean = false,
+	val questionWaitingResult: Boolean = false,
+	val questionQuarantined: Boolean = false,
+	val deviceUuid: String = "",
+	val upperUserToken: UserToken? = null, // null for default
+	val upperUserName: String? = null // null for default
+) {
+	public fun toApiSurveyData(user: User, name: String): ApiSurveyData = ApiSurveyData(
+		upperUserToken = user.token,
+		upperUserName = name,
+		rspns00 = !questionSuspicious && !questionWaitingResult && !questionQuarantined,
+		rspns01 = if(questionSuspicious) "2" else "1",
+		rspns02 = if(questionWaitingResult) "0" else "1",
+		rspns09 = if(questionQuarantined) "1" else "0"
+	)
+}
 
 @Serializable
-public data class SurveyData(
+public data class ApiSurveyData(
 	val deviceUuid: String = "",
 	@Serializable(with = YesNoSerializer::class) val rspns00: Boolean = true,
 	val rspns01: String = "1",
@@ -93,6 +94,7 @@ public data class SurveyResult(
 public suspend fun Session.registerSurvey(
 	institute: InstituteInfo,
 	user: User,
+	name: String,
 	surveyData: SurveyData
 ): SurveyResult = fetch(
 	institute.requestUrl["registerServey"],
@@ -100,5 +102,5 @@ public suspend fun Session.registerSurvey(
 	headers = sDefaultFakeHeader + mapOf(
 		"Authorization" to user.token.token
 	),
-	body = Bodies.json(SurveyData.serializer(), surveyData, json = JsonEncodeDefaults)
+	body = Bodies.json(ApiSurveyData.serializer(), surveyData.toApiSurveyData(user, name), json = JsonEncodeDefaults)
 ).toJsonLoose(SurveyResult.serializer())

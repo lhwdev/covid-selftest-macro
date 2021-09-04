@@ -18,8 +18,9 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.repository.GroupStatus
-import com.lhwdev.selfTestMacro.repository.MainRepository
+import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.Status
+import com.lhwdev.selfTestMacro.repository.SuspiciousKind
 import com.lhwdev.selfTestMacro.ui.*
 import com.vanpra.composematerialdialogs.Buttons
 import com.vanpra.composematerialdialogs.ListContent
@@ -27,16 +28,23 @@ import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.Title
 
 
+private val SuspiciousKind?.displayText get() = when(this) {
+	null -> "정상"
+	SuspiciousKind.quarantined -> "자가격리 중"
+	SuspiciousKind.symptom -> "의심증상 있음"
+}
+
 @Composable
 internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
-	repository: MainRepository,
 	target: DbTestTarget.Single
 ) {
 	val pref = LocalPreference.current
+	val selfTestManager = LocalSelfTestManager.current
 	
 	var statusKey by remember { mutableStateOf(0) }
+	if(changed(target)) statusKey++
 	val status = lazyState(null, key = statusKey) {
-		with(pref.db) { repository.getCurrentStatus(target.user) }
+		with(pref.db) { selfTestManager.getCurrentStatus(target.user) }
 	}.value
 	
 	Row(verticalAlignment = Alignment.CenterVertically) {
@@ -61,8 +69,7 @@ internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
 	when(status) {
 		null -> Text("불러오는 중...", style = MaterialTheme.typography.h3)
 		is Status.Submitted -> {
-			if(status.isHealthy) Text("정상", style = MaterialTheme.typography.h3)
-			else Text("의심증상 있음", style = MaterialTheme.typography.h3)
+			Text(status.suspicious.displayText, style = MaterialTheme.typography.h3)
 			
 			Spacer(Modifier.height(20.dp))
 			
@@ -78,8 +85,9 @@ internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
 
 @Suppress("unused")
 @Composable
-internal fun ColumnScope.GroupStatusView(repository: MainRepository, target: DbTestTarget.Group) {
+internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group) {
 	val pref = LocalPreference.current
+	val selfTestManager = LocalSelfTestManager.current
 	val users = with(pref.db) { target.allUsers }
 	
 	var allStatus by remember { mutableStateOf<Map<DbUser, Status>>(emptyMap()) } // stub
@@ -87,21 +95,26 @@ internal fun ColumnScope.GroupStatusView(repository: MainRepository, target: DbT
 	val allowInit = users.size <= 4 || forceAllowInit
 	
 	var groupStatusKey by remember { mutableStateOf(0) }
+	if(changed(target)) groupStatusKey++
 	val groupStatus = lazyState(null, key = groupStatusKey, allowInit = allowInit) state@{
 		val statusMap = users.associateWith {
-			repository.getCurrentStatus(it) ?: return@state null
+			selfTestManager.getCurrentStatus(it) ?: return@state null
 		}
 		allStatus = statusMap
 		
-		val suspicious = mutableListOf<DbUser>()
+		val symptom = mutableListOf<DbUser>()
+		val quarantined = mutableListOf<DbUser>()
 		var notSubmitted = 0
 		
 		for((user, status) in statusMap) when(status) {
-			is Status.Submitted -> if(!status.isHealthy) suspicious += user
+			is Status.Submitted -> when(status.suspicious) {
+				SuspiciousKind.symptom -> symptom += user
+				SuspiciousKind.quarantined -> quarantined += user
+			}
 			is Status.NotSubmitted -> notSubmitted++
 		}
 		
-		GroupStatus(notSubmittedCount = notSubmitted, suspicious = suspicious)
+		GroupStatus(notSubmittedCount = notSubmitted, symptom = symptom, quarantined = quarantined)
 	}.value
 	
 	if(groupStatus == null && !allowInit) {
@@ -133,35 +146,35 @@ internal fun ColumnScope.GroupStatusView(repository: MainRepository, target: DbT
 		
 		Spacer(Modifier.height(16.dp))
 		
-		when {
-			groupStatus == null -> {
-				Text("불러오는 중...", style = MaterialTheme.typography.h3)
-			}
+		if(groupStatus == null) {
+			Text("불러오는 중...", style = MaterialTheme.typography.h3)
+		} else {
+			val noSpecial = groupStatus.symptom.isEmpty() && groupStatus.quarantined.isEmpty()
 			
-			groupStatus.notSubmittedCount == 0 -> if(groupStatus.suspicious.isEmpty()) {
-				Text("모두 정상", style = MaterialTheme.typography.h3)
+			if(groupStatus.notSubmittedCount == 0) {
+				if(noSpecial) {
+					Text("모두 정상", style = MaterialTheme.typography.h3)
+				} else {
+					Text("이상 있음", style = MaterialTheme.typography.h3)
+				}
 			} else {
-				Text("유증상자 있음", style = MaterialTheme.typography.h3)
-				
-				Spacer(Modifier.height(12.dp))
-				
-				Text(
-					"유증상자: ${groupStatus.suspicious.joinToString { it.name }}",
-					style = MaterialTheme.typography.body1
-				)
-			}
-			
-			else -> {
 				Text(
 					"자가진단 ${groupStatus.notSubmittedCount}명 미완료",
 					style = MaterialTheme.typography.h4
 				)
+			}
+			
+			if(!noSpecial) {
+				Spacer(Modifier.height(18.dp))
 				
-				if(groupStatus.suspicious.isNotEmpty()) Text(
-					"유증상자: ${groupStatus.suspicious.joinToString { it.name }}",
+				if(groupStatus.symptom.isNotEmpty()) Text(
+					"유증상자: ${groupStatus.symptom.joinToString { it.name }}",
 					style = MaterialTheme.typography.body1
 				)
-				
+				if(groupStatus.quarantined.isNotEmpty()) Text(
+					"자가격리 중: ${groupStatus.quarantined.joinToString { it.name }}",
+					style = MaterialTheme.typography.body1
+				)
 			}
 		}
 		
@@ -179,7 +192,7 @@ internal fun ColumnScope.GroupStatusView(repository: MainRepository, target: DbT
 					for((user, status) in allStatus) ListItem(
 						icon = {
 							val icon = when(status) {
-								is Status.Submitted -> if(status.isHealthy) {
+								is Status.Submitted -> if(status.suspicious == null) {
 									R.drawable.ic_check_24
 								} else {
 									R.drawable.ic_warning_24
@@ -200,7 +213,7 @@ internal fun ColumnScope.GroupStatusView(repository: MainRepository, target: DbT
 								append(": ")
 								
 								when(status) {
-									is Status.Submitted -> if(status.isHealthy) withStyle(
+									is Status.Submitted -> if(status.suspicious == null) withStyle(
 										SpanStyle(
 											color = Color(
 												onLight = Color(0xff285db9),
@@ -217,7 +230,7 @@ internal fun ColumnScope.GroupStatusView(repository: MainRepository, target: DbT
 											)
 										)
 									) {
-										append("의심증상 있음")
+										append(status.suspicious.displayText)
 									}
 									
 									Status.NotSubmitted -> withStyle(SpanStyle(MediumContentColor)) {

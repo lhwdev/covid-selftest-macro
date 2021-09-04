@@ -1,0 +1,4 @@
+<resources>
+	<string name="action_expand_more">Expand</string>
+	<string name="action_expand_less">Collapse</string>
+</resources>

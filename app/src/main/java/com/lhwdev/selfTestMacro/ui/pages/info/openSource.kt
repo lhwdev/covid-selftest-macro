@@ -139,9 +139,7 @@ fun OpenSourcesContent(
 		}
 		
 		item {
-			Text("와!")
 			navigationBarSpacer()
-			Text("와@@!")
 		}
 	}
 }
@@ -165,7 +163,7 @@ fun OpenSourcesList(groupId: String, items: List<LicenseItem>) {
 			val otherStyle = SpanStyle(MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.medium))
 			
 			Column {
-				LazyColumn {
+				LazyColumn(modifier = Modifier.weight(1f)) {
 					items(items = items) { item ->
 						val text = buildAnnotatedString {
 							withStyle(artifactStyle) { append(item.artifactId) }
@@ -205,7 +203,7 @@ fun OpenSourcesDetail(item: LicenseItem) {
 				)
 			}
 		) {
-			Column(Modifier.padding(48.dp)) {
+			Column(Modifier.padding(vertical = 48.dp, horizontal = 32.dp)) {
 				Text("${item.groupId}:${item.artifactId}", style = MaterialTheme.typography.h4)
 				
 				Spacer(Modifier.height(48.dp))

@@ -7,8 +7,8 @@ import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.http.fetch
 import com.lhwdev.fetch.isOk
 import com.lhwdev.fetch.jsonObject
-import com.lhwdev.selfTestMacro.get
-import com.lhwdev.selfTestMacro.sDefaultFakeHeader
+import com.lhwdev.fetch.get
+import com.lhwdev.fetch.sDefaultFakeHeader
 
 
 // you must inform user when using this api: https://hcs.eduro.go.kr/agreement

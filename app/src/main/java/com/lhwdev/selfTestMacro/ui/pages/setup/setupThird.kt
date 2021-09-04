@@ -1,10 +1,7 @@
 package com.lhwdev.selfTestMacro.ui.pages.setup
 
 import android.content.Context
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,9 +22,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
-import com.lhwdev.selfTestMacro.api.*
-import com.lhwdev.selfTestMacro.repository.SessionManager
-import com.lhwdev.selfTestMacro.repository.SessionUserKey
+import com.lhwdev.selfTestMacro.api.PasswordWrong
+import com.lhwdev.selfTestMacro.api.UsersToken
+import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
+import com.lhwdev.selfTestMacro.repository.MasterUser
+import com.lhwdev.selfTestMacro.repository.SelfTestManager
+import com.lhwdev.selfTestMacro.repository.WizardUser
 import com.lhwdev.selfTestMacro.selfLog
 import com.lhwdev.selfTestMacro.ui.*
 import com.vanpra.composematerialdialogs.*
@@ -35,9 +35,9 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-internal fun WizardUserInfo(model: SetupModel, wizard: SetupWizard) {
+internal fun WizardUserInfo(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
 	when(model.instituteInfo) {
-		is InstituteInfoModel.School -> WizardStudentInfo(model, wizard)
+		is InstituteInfoModel.School -> WizardStudentInfo(model, parameters, wizard)
 		null -> wizard.before()
 	}
 }
@@ -46,6 +46,8 @@ internal fun WizardUserInfo(model: SetupModel, wizard: SetupWizard) {
 private suspend fun submitLogin(
 	context: Context,
 	model: SetupModel,
+	parameters: SetupParameters,
+	selfTestManager: SelfTestManager,
 	navigator: Navigator
 ): Boolean {
 	val name = model.userName
@@ -53,14 +55,13 @@ private suspend fun submitLogin(
 	val instituteInfo = model.instituteInfo ?: return false
 	val institute = instituteInfo.institute ?: return false
 	
-	val sessionInfo = SessionManager.sessionInfoFor(
-		key = SessionUserKey(name = name, birth = birth, instituteCode = institute.code)
-	)
+	val sessionInfo = selfTestManager.createSession()
 	val session = sessionInfo.session
 	
 	val userId = try {
 		selfLog("#2. 사용자 찾기")
-		session.findUser(
+		selfTestManager.findUser(
+			session = session,
 			institute = institute,
 			name = name, birthday = birth,
 			loginType = instituteInfo.type.loginType
@@ -113,7 +114,7 @@ private suspend fun submitLogin(
 	// validate & login with password
 	val result = try {
 		selfLog("#3. 비밀번호 확인")
-		session.validatePassword(institute, userId.token, password)
+		selfTestManager.validatePassword(session, institute, userId.token, password)
 	} catch(e: Throwable) {
 		model.onError(context, "로그인에 실패하였습니다.", e)
 		return false
@@ -133,40 +134,38 @@ private suspend fun submitLogin(
 				PositiveButton { Text("확인") }
 			}
 		}
-		is UsersToken -> {
-			sessionInfo.sessionFullyLoaded = true
+		is UsersToken -> try {
+			val userList = selfTestManager.getUserGroup(session, institute, result)
 			
-			try {
-				val userList = session.getUserGroup(institute, result)
-				val master = MasterUser(
-					identifier = userId,
-					birth = birth,
-					password = password,
-					instituteInfo = institute,
-					instituteType = instituteInfo.type
+			val master = MasterUser(
+				identifier = userId,
+				birth = birth,
+				password = password,
+				instituteInfo = institute,
+				instituteType = instituteInfo.type
+			)
+			
+			val list = userList.map {
+				WizardUser(
+					user = it,
+					info = selfTestManager.getUserInfo(session, institute, it),
+					master = master
 				)
-				
-				val list = userList.map {
-					WizardUser(
-						user = it,
-						info = session.getUserInfo(institute, it),
-						master = master
-					)
-				}
-				
-				val target = model.userList
-				
-				for(user in list) { // I don't know if this is indeed needed
-					val index = target.indexOfFirst { it.user.userCode == user.user.userCode }
-					if(index == -1) target += user
-					else target[index] = user
-				}
-				
-				return true
-			} catch(e: Throwable) {
-				model.onError(context, "사용자 정보를 불러오지 못했습니다.", e)
 			}
+			
+			val target = model.userList
+			
+			for(user in list) { // I don't know if this is indeed needed 
+				val index = target.indexOfFirst { it.user.userCode == user.user.userCode }
+				if(index == -1) target += user
+				else target[index] = user
+			}
+			
+			return true
+		} catch(e: Throwable) {
+			model.onError(context, "사용자 정보를 불러오지 못했습니다.", e)
 		}
+		
 	}
 	return false
 }
@@ -174,6 +173,7 @@ private suspend fun submitLogin(
 @Composable
 private fun WizardStudentInfo(
 	model: SetupModel,
+	parameters: SetupParameters,
 	wizard: SetupWizard
 ): Unit = MaterialTheme(
 	colors = MaterialTheme.colors.copy(
@@ -183,6 +183,7 @@ private fun WizardStudentInfo(
 ) {
 	val scope = rememberCoroutineScope()
 	val context = LocalContext.current
+	val selfTestManager = LocalSelfTestManager.current
 	val navigator = LocalNavigator
 	
 	val colors = MaterialTheme.colors
@@ -197,7 +198,7 @@ private fun WizardStudentInfo(
 	if(model.userName.isBlank()) complete = false
 	
 	fun submit() = scope.launch {
-		val success = submitLogin(context, model, navigator)
+		val success = submitLogin(context, model, parameters, selfTestManager, navigator)
 		if(success) {
 			complete = true
 			wizard.next()
@@ -222,6 +223,11 @@ private fun WizardStudentInfo(
 			onScreenMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
 		) { scrims ->
 			scrims.statusBar()
+			if(parameters.endRoute != null) IconOnlyTopAppBar(
+				navigationIcon = painterResource(R.drawable.ic_clear_24),
+				contentDescription = "닫기",
+				onClick = parameters.endRoute
+			) else Spacer(Modifier.height(AppBarHeight))
 			
 			WizardCommon(
 				wizard = wizard,

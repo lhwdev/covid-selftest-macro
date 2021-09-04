@@ -1,5 +1,5 @@
 rootProject.name = "SelfTest-Macro"
-include(":app", ":transkey", ":api-base", ":api", ":test")
+include(":app", ":app-base", ":app-models", ":utils", ":transkey", ":api-base", ":api", ":test")
 
 
 pluginManagement {

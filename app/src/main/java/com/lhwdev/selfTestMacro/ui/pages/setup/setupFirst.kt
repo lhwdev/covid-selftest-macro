@@ -7,15 +7,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.DropdownPicker
-import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.*
 import kotlinx.coroutines.launch
 
+
+
+val AppBarHeight = 56.dp
+
+
 @Composable
-internal fun WizardSelectType(model: SetupModel, wizard: SetupWizard) {
+internal fun WizardSelectType(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
 	val scope = rememberCoroutineScope()
 	
 	Surface(
@@ -27,6 +32,12 @@ internal fun WizardSelectType(model: SetupModel, wizard: SetupWizard) {
 			onScreenMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
 		) { scrims ->
 			scrims.statusBar()
+			
+			if(parameters.endRoute != null) IconOnlyTopAppBar(
+				navigationIcon = painterResource(R.drawable.ic_clear_24),
+				contentDescription = "닫기",
+				onClick = parameters.endRoute
+			) else Spacer(Modifier.height(AppBarHeight))
 			
 			WizardCommon(
 				wizard,

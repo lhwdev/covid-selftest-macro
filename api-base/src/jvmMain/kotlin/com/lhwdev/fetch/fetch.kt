@@ -16,20 +16,16 @@ import java.util.LinkedList
 fun interface FetchInterceptor {
 	suspend fun intercept(
 		url: URL,
-		method: FetchMethod?,
-		headers: Map<String, String>,
-		session: Session?,
-		body: FetchBody?,
+		method: FetchMethod?, headers: Map<String, String>,
+		session: Session?, body: FetchBody?,
 		interceptorChain: InterceptorChain
 	): FetchResult?
 }
 
 suspend inline fun FetchInterceptor.ensureIntercepted(
 	url: URL,
-	method: FetchMethod?,
-	headers: Map<String, String>,
-	session: Session?,
-	body: FetchBody?,
+	method: FetchMethod?, headers: Map<String, String>,
+	session: Session?, body: FetchBody?,
 	interceptorChain: InterceptorChain
 ): FetchResult = intercept(url, method, headers, session, body, interceptorChain)
 	?: interceptorChain.interceptNext(url, method, headers, session, body)
@@ -37,10 +33,8 @@ suspend inline fun FetchInterceptor.ensureIntercepted(
 class InterceptorChain(private val list: List<FetchInterceptor>, private val index: Int) {
 	suspend fun interceptNext(
 		url: URL,
-		method: FetchMethod?,
-		headers: Map<String, String>,
-		session: Session?,
-		body: FetchBody?
+		method: FetchMethod?, headers: Map<String, String>,
+		session: Session?, body: FetchBody?
 	): FetchResult {
 		return nextInterceptor().ensureIntercepted(url, method, headers, session, body, nextChain())
 	}
@@ -178,3 +172,15 @@ suspend fun fetch(
 	val interceptor = sFetchInterceptors.firstOrNull() ?: error("no interceptors")
 	interceptor.ensureIntercepted(url, method, headers, session, body, InterceptorChain(sFetchInterceptors, 0))
 }
+
+suspend inline fun fetch(
+	url: String,
+	method: FetchMethod? = null, headers: FetchHeadersBuilder,
+	session: Session? = null, body: FetchBody? = null
+): FetchResult = fetch(URL(url), method, headers, session, body)
+
+suspend inline fun fetch(
+	url: String,
+	method: FetchMethod? = null, headers: Map<String, String> = emptyMap(),
+	session: Session? = null, body: FetchBody? = null
+): FetchResult = fetch(URL(url), method, headers, session, body)

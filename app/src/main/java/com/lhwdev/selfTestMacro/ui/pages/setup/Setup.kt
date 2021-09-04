@@ -65,9 +65,9 @@ private fun SetupWizardView(model: SetupModel, parameters: SetupParameters) {
 @VisibleForTesting
 internal fun SetupWizardPage(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
 	when(wizard.index) {
-		0 -> WizardSelectType(model, wizard)
-		1 -> WizardInstituteInfo(model.instituteInfo ?: return, model, wizard)
-		2 -> WizardUserInfo(model, wizard)
+		0 -> WizardSelectType(model, parameters, wizard)
+		1 -> WizardInstituteInfo(model.instituteInfo ?: return, model, parameters, wizard)
+		2 -> WizardUserInfo(model, parameters, wizard)
 		3 -> WizardSelectUsers(model, parameters, wizard)
 		else -> error("unknown page")
 	}

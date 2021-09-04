@@ -13,6 +13,7 @@ import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
 import com.lhwdev.github.repo.Release
 import com.lhwdev.github.repo.getReleaseLatest
+import com.lhwdev.selfTestMacro.models.Version
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File

@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -20,21 +21,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
+import com.lhwdev.selfTestMacro.api.SurveyData
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.allUserIds
-import com.lhwdev.selfTestMacro.icons.ExpandMore
-import com.lhwdev.selfTestMacro.icons.Icons
 import com.lhwdev.selfTestMacro.repository.GroupInfo
-import com.lhwdev.selfTestMacro.repository.MainRepository
-import com.lhwdev.selfTestMacro.repository.MainRepositoryImpl
-import com.lhwdev.selfTestMacro.scheduleInfo
+import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.icons.ExpandMore
+import com.lhwdev.selfTestMacro.ui.icons.Icons
 import com.lhwdev.selfTestMacro.ui.pages.edit.EditUsers
 import com.lhwdev.selfTestMacro.ui.pages.info.Info
 import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
 import com.vanpra.composematerialdialogs.MaterialDialog
+import kotlinx.coroutines.launch
 
 
 @Immutable
@@ -49,16 +50,13 @@ data class MainModel(val navigator: Navigator, val scaffoldState: ScaffoldState)
 
 @Preview
 @Composable
-fun Main(
-	repository: MainRepository = run {
-		val pref = LocalPreference.current
-		remember { MainRepositoryImpl(pref) }
-	}
-): Unit = Surface(color = MaterialTheme.colors.surface) {
+fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 	val navigator = LocalNavigator
 	
 	AutoSystemUi(enabled = true) { scrims ->
+		val scaffoldState = rememberScaffoldState()
 		Scaffold(
+			scaffoldState = scaffoldState,
 			topBar = {
 				var showMoreActions by remember { mutableStateOf(false) }
 				TopAppBar(
@@ -91,11 +89,11 @@ fun Main(
 			Column(
 				modifier = Modifier
 					.padding(paddingValue)
-					.padding(vertical = 28.dp)
+					.padding(vertical = 28.dp, horizontal = 16.dp)
 					.fillMaxSize(),
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
-				MainContent(repository)
+				MainContent(scaffoldState)
 			}
 		}
 		
@@ -141,14 +139,20 @@ private fun resolveNewGroup(last: DbTestGroup, groups: List<DbTestGroup>): DbTes
 		val target = last.target
 		if(target is DbTestTarget.Single) {
 			// case 1. group was made
-			val toGroup = groups.find { it.target is DbTestTarget.Group && target.userId in it.target.userIds }
+			val toGroup = groups.find {
+				val t = it.target
+				t is DbTestTarget.Group && target.userId in t.userIds
+			}
 			if(toGroup != null) return toGroup
 		}
 		if(target is DbTestTarget.Group) {
 			// case 2. group was demolished
 			val one = target.userIds.firstOrNull()
 			if(one != null) {
-				val toSingle = groups.find { it.target is DbTestTarget.Single && it.target.userId == one }
+				val toSingle = groups.find {
+					val t = it.target
+					t is DbTestTarget.Single && t.userId == one
+				}
 				if(toSingle != null) return toSingle
 			}
 		}
@@ -159,9 +163,12 @@ private fun resolveNewGroup(last: DbTestGroup, groups: List<DbTestGroup>): DbTes
 }
 
 @Composable
-private fun ColumnScope.MainContent(repository: MainRepository) {
+private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 	val pref = LocalPreference.current
 	val navigator = LocalNavigator
+	val selfTestManager = LocalSelfTestManager.current
+	val context = LocalContext.current
+	val scope = rememberCoroutineScope()
 	
 	val users = pref.db.users.users
 	val groups = pref.db.testGroups.groups
@@ -246,10 +253,10 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 	//  '자세히 보기'
 	when(val target = selectedGroup.group.target) {
 		is DbTestTarget.Group -> {
-			GroupStatusView(repository, target)
+			GroupStatusView(target)
 		}
 		is DbTestTarget.Single -> {
-			SingleStatusView(repository, target)
+			SingleStatusView(target)
 		}
 	}
 	
@@ -262,7 +269,7 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 	// '자가진단 예약: 꺼짐'
 	RoundButton(
 		onClick = {
-			navigator.showScheduleSelfTest(repository, selectedGroup)
+			navigator.showScheduleSelfTest(selectedGroup)
 		},
 		icon = {
 			Icon(
@@ -286,7 +293,24 @@ private fun ColumnScope.MainContent(repository: MainRepository) {
 	Spacer(Modifier.height(16.dp))
 	
 	RoundButton(
-		onClick = {},
+		onClick = {
+			scope.launch {
+				selfTestManager.submitSelfTestNow(
+					context = UiContext(
+						context = context,
+						navigator = navigator,
+						showMessage = { message, action ->
+							scaffoldState.snackbarHostState.showSnackbar(message, action)
+						},
+						scope = scope
+					),
+					target = selectedTestGroup.target,
+					surveyData = { // TODO
+						SurveyData()
+					}
+				)
+			}
+		},
 		colors = ButtonDefaults.buttonColors()
 	) {
 		Text("지금 자가진단 제출하기")

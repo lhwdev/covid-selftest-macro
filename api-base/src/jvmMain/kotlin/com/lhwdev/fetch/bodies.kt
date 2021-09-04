@@ -4,7 +4,6 @@ package com.lhwdev.fetch
 
 import com.lhwdev.selfTestMacro.JsonObjectScope
 import com.lhwdev.selfTestMacro.jsonString
-import com.lhwdev.selfTestMacro.queryUrlParamsToString
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.*
 import java.io.OutputStream

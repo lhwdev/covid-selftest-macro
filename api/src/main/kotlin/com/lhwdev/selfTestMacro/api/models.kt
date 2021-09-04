@@ -265,11 +265,11 @@ public data class UserInfo(
 	@SerialName("isHealthy") val isHealthy: Boolean? = null,
 	
 	
-	@SerialName("rspns01") val question1: String? = null,
+	@SerialName("rspns01") val rspns01: String? = null,
 	
-	@SerialName("rspns02") val question2: String? = null,
+	@SerialName("rspns02") val rspns02: String? = null,
 	
-	@SerialName("rspns09") val question3: String? = null,
+	@SerialName("rspns09") val rspns03: String? = null,
 	
 	// etc
 	@SerialName("newNoticeCount") val newNoticeCount: Int,
@@ -279,6 +279,27 @@ public data class UserInfo(
 	
 	@SerialName("deviceUuid") val deviceUuid: String? = null
 ) {
+	val questionSuspicious: Boolean? get() = when(rspns01) {
+		"2" -> true
+		"1" -> false
+		else -> null
+	}
+	
+	val questionWaitingResult: Boolean?
+		get() = when(rspns02) {
+			"0" -> true
+			"1" -> false
+			else -> null
+		}
+	
+	val questionQuarantined: Boolean?
+		get() = when(rspns03) {
+			"1" -> true
+			"0" -> false
+			else -> null
+		}
+	
+	
 	public val instituteStub: InstituteInfo = InstituteInfo(
 		name = instituteName,
 		englishName = instituteName,

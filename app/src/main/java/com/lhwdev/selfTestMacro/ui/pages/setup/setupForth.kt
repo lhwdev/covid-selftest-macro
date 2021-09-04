@@ -15,8 +15,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
-import com.lhwdev.selfTestMacro.database.*
-import com.lhwdev.selfTestMacro.repository.MainRepositoryImpl
+import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
+import com.lhwdev.selfTestMacro.repository.WizardUser
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.pages.main.Main
 import kotlinx.coroutines.launch
@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
 	val navigator = LocalNavigator
 	val pref = LocalPreference.current
+	val selfTestManager = LocalSelfTestManager.current
 	val scope = rememberCoroutineScope()
 	
 	val userList = model.userList
@@ -54,6 +55,12 @@ internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, w
 			enabled = wizard.isCurrent,
 			onScreenMode = OnScreenSystemUiMode.Opaque(Color.Transparent)
 		) {
+			if(parameters.endRoute != null) IconOnlyTopAppBar(
+				navigationIcon = painterResource(R.drawable.ic_clear_24),
+				contentDescription = "닫기",
+				onClick = parameters.endRoute
+			) else Spacer(Modifier.height(AppBarHeight))
+			
 			WizardCommon(
 				wizard,
 				wizardFulfilled = if(pref.isFirstTime) enabled.isNotEmpty() else true,
@@ -63,114 +70,11 @@ internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, w
 					}
 				},
 				onNext = next@{ // complete
-					val realUsers = userList.filterIndexed { index, _ -> enabled[index] }
-					
-					// group by 'master user'
-					val usersMap = realUsers.groupBy { it.master }
-					
-					val previousUserGroups = pref.db.userGroups
-					var userGroupId = previousUserGroups.maxId
-					val newUserGroups = ArrayList<DbUserGroup>(usersMap.size)
-					
-					val previousUsers = pref.db.users
-					var userId = previousUsers.maxId
-					val newUsers = ArrayList<DbUser>(realUsers.size)
-					
-					for((master, users) in usersMap) {
-						val thisGroupId = ++userGroupId
-						
-						// user
-						val dbUsers = users.map { user ->
-							DbUser(
-								id = ++userId,
-								name = user.info.userName,
-								userCode = user.user.userCode,
-								userBirth = user.master.birth,
-								institute = DbInstitute(
-									type = user.info.instituteType,
-									code = user.info.instituteCode,
-									name = user.info.instituteName,
-									classifierCode = user.info.instituteClassifierCode,
-									hcsUrl = user.info.instituteRequestUrlBody,
-									regionCode = user.info.instituteRegionCode,
-									levelCode = user.info.schoolLevelCode,
-									sigCode = user.info.instituteSigCode
-								),
-								userGroupId = thisGroupId
-							)
-						}
-						newUsers += dbUsers
-						
-						// userGroup
-						val dbGroup = DbUserGroup(
-							id = thisGroupId,
-							masterName = master.identifier.mainUserName,
-							masterBirth = master.birth,
-							password = master.password,
-							userIds = dbUsers.map { it.id },
-							usersIdentifier = master.identifier,
-							instituteType = master.instituteType,
-							institute = master.instituteInfo
-						)
-						newUserGroups += dbGroup
-					}
-					
-					
-					pref.db.users = previousUsers.copy(
-						users = previousUsers.users + newUsers.associateBy { it.id },
-						maxId = userId
+					selfTestManager.addTestGroupToDb(
+						usersToAdd = userList.filterIndexed { index, _ -> enabled[index] },
+						targetGroup = parameters.targetTestGroup,
+						isAllGrouped = isAllGrouped
 					)
-					
-					pref.db.userGroups = previousUserGroups.copy(
-						groups = previousUserGroups.groups + newUserGroups.associateBy { it.id },
-						maxId = userGroupId
-					)
-					
-					val previousTestGroups = pref.db.testGroups
-					val targetTestGroup = parameters.targetTestGroup
-					val hadAnyTestGroups = previousTestGroups.groups.isNotEmpty()
-					
-					if(targetTestGroup == null) {
-						// add new group
-						var maxGroupGeneratedNameIndex =
-							previousTestGroups.maxGroupGeneratedNameIndex
-						
-						// testGroup
-						val testTargets = if(isAllGrouped) listOf(
-							DbTestTarget.Group(
-								"그룹 ${++maxGroupGeneratedNameIndex}",
-								newUsers.map { it.id }
-							)
-						) else newUsers.map {
-							DbTestTarget.Single(it.id)
-						}
-						
-						val ids = previousTestGroups.ids
-						val newTestGroups = testTargets.map { target ->
-							val id = ids.nextTestGroupId()
-							ids += id
-							DbTestGroup(id = id, target = target)
-						}
-						
-						pref.db.testGroups = previousTestGroups.copy(
-							groups = previousTestGroups.groups + newTestGroups,
-							maxGroupGeneratedNameIndex = maxGroupGeneratedNameIndex
-						)
-					} else {
-						// add to existing group
-						val testGroups = pref.db.testGroups.groups.toMutableList()
-						
-						val targetIndex = testGroups.indexOf(targetTestGroup)
-						if(targetIndex == -1) error("what the..?") // what the error
-						
-						val testTarget = targetTestGroup.target as DbTestTarget.Group
-						val added = testTarget.copy(
-							userIds = testTarget.userIds + newUsers.map { it.id }
-						)
-						
-						testGroups[targetIndex] = targetTestGroup.copy(target = added)
-						pref.db.testGroups = pref.db.testGroups.copy(groups = testGroups)
-					}
 					
 					when {
 						parameters.endRoute != null -> parameters.endRoute.invoke()
@@ -178,8 +82,7 @@ internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, w
 						navigator.routes.size == 1 -> {
 							pref.isFirstTime = false
 							navigator.clearRoute()
-							val repository = MainRepositoryImpl(pref)
-							navigator.pushRoute { Main(repository) }
+							navigator.pushRoute { Main() }
 						}
 						else -> {
 							navigator.popRoute()
@@ -259,6 +162,7 @@ private fun ColumnScope.WizardSelectUsersContent(
 				// reset fields
 				model.userName = ""
 				model.userBirth = ""
+				// TODO: ability to go back and go forward back
 				
 				wizard.scrollTo(2) // #3: user info
 			}

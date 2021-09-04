@@ -6,9 +6,9 @@ import com.lhwdev.fetch.Bodies
 import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.json
-import com.lhwdev.selfTestMacro.decodeBase64
-import com.lhwdev.selfTestMacro.get
-import com.lhwdev.selfTestMacro.sDefaultFakeHeader
+import com.lhwdev.io.decodeBase64
+import com.lhwdev.fetch.get
+import com.lhwdev.fetch.sDefaultFakeHeader
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

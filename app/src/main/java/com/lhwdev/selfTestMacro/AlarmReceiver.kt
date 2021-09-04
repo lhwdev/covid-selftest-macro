@@ -6,15 +6,20 @@ import android.content.Intent
 import com.lhwdev.selfTestMacro.database.PreferenceHolder
 import com.lhwdev.selfTestMacro.database.PreferenceState
 import com.lhwdev.selfTestMacro.database.prefMain
+import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.ui.SelfTestManager
 import kotlinx.coroutines.runBlocking
 
 class AlarmReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
 		val result = goAsync()
-		val session = selfTestSession(context)
+		val selfTestManager = SelfTestManager(context, context.preferenceState.db)
 		
 		runBlocking { // TODO: is this okay?
-			context.submitSuspend(session)
+			with(selfTestManager) {
+				// context.submitSelfTestNow()
+				TODO()
+			}
 			context.checkUpdate()
 			
 			result.finish()

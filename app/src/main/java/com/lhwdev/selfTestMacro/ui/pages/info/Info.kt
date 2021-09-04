@@ -110,27 +110,12 @@ fun Info(): Unit = MaterialTheme(
 						
 						RoundButton(
 							onClick = {
-								navigator.showDialogAsync {
-									Title { Text("개발자 모드") }
-									ListContent {
-										Column {
-											ListItem(
-												modifier = Modifier.clickable {
-													pref.isDebugEnabled = false
-												}
-											) {
-												Text("개발자 모드 끄기")
-											}
-											
-											ListItem { Text("에러 로깅 활성화됨") }
-										}
-									}
-								}
+								
 							},
 							colors = ButtonDefaults.buttonColors(backgroundColor = Color(0x88555555)),
 							contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
 						) {
-							Text("개발자 모드 ${if(context.isDebugEnabled) "켜짐" else "꺼짐"}")
+							Text("개발자 모드 ${if(pref.isDebugEnabled) "켜짐" else "꺼짐"}")
 						}
 					}
 				}

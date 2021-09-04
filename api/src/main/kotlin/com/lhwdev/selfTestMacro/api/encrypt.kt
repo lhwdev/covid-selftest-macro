@@ -1,6 +1,6 @@
 package com.lhwdev.selfTestMacro.api
 
-import com.lhwdev.selfTestMacro.encodeBase64
+import com.lhwdev.io.encodeBase64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.math.BigInteger

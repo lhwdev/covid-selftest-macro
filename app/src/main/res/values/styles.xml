@@ -10,7 +10,6 @@
 		<item name="colorAccent">@color/accent</item>
 		
 		<item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/primary</item>
-		<item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@null</item>
 	</style>
 	
 	<style name="AppTheme.Transparent">

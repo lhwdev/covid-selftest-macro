@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.ui.pages.setup
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -19,6 +18,7 @@ import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.WizardUser
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.pages.main.Main
+import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
 import kotlinx.coroutines.launch
 
 
@@ -175,27 +175,10 @@ private fun ColumnScope.WizardSelectUsersContent(
 		contentAlignment = Alignment.Center,
 		modifier = Modifier.fillMaxWidth()
 	) {
-		Row(verticalAlignment = Alignment.CenterVertically) {
-			val interactionSource = remember { MutableInteractionSource() }
-			
-			Checkbox(
-				checked = isAllGrouped,
-				onCheckedChange = setIsAllGrouped,
-				interactionSource = interactionSource
-			)
-			
-			Text(
-				"한 그룹으로 묶기",
-				style = MaterialTheme.typography.body1,
-				modifier = Modifier
-					.clickable(
-						interactionSource = interactionSource,
-						indication = null,
-						onClick = { setIsAllGrouped(!isAllGrouped) }
-					)
-					.padding(8.dp)
-			)
-		}
+		TextCheckbox(
+			text = { Text("한 그룹으로 묶기") },
+			checked = isAllGrouped,
+			setChecked = setIsAllGrouped
+		)
 	}
 }
-

@@ -10,6 +10,6 @@ fun Context.openWebsite(url: String) {
 	if(intent.resolveActivity(packageManager) != null) {
 		startActivity(intent)
 	} else {
-		showToast("설치된 웹 브라우저가 없습니다.")
+		showToast("설치된 웹 브라우저가 없어요.")
 	}
 }

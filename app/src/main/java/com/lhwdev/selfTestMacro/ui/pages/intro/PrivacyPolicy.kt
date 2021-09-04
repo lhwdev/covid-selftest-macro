@@ -41,9 +41,9 @@ fun Navigator.showPrivacyPolicy() {
 							headers = mapOf("Accept" to "application/vnd.github.v3.raw")
 						).getText()
 					} catch(th: Throwable) {
-						onError(th, "개인정보 처리 방침을 불러오지 못했습니다.")
+						onError(th, "개인정보 처리 방침을 불러오지 못했어요.")
 						"""
-							개인정보 처리 방침을 불러오지 못했습니다. 네트워크에 연결되어 있는지 확인해주세요.
+							개인정보 처리 방침을 불러오지 못했어요. 네트워크에 연결되어 있는지 확인해주세요.
 							만약 이 상태가 지속된다면 [여기를 눌러주세요.]($sPrivacyPolicyLink)
 						""".trimIndent()
 					}

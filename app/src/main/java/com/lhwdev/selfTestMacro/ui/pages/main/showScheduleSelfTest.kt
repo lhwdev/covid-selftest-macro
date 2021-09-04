@@ -66,6 +66,8 @@ internal fun Navigator.showScheduleSelfTest(
 	var toHour by remember { mutableStateOf(random?.to?.hour ?: -1) }
 	var toMinute by remember { mutableStateOf(random?.to?.minute ?: 0) }
 	
+	var excludeWeekend by remember { mutableStateOf(group.excludeWeekend) }
+	
 	
 	TopAppBar(
 		navigationIcon = {

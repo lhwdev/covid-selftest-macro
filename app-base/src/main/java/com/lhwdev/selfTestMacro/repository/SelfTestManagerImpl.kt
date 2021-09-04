@@ -339,7 +339,7 @@ class SelfTestManagerImpl(
 				)
 				SubmitResult.Success(user, data.registerAt)
 			} catch(th: Throwable) {
-				SubmitResult.Failed(user, "자가진단에 실패했습니다.", th)
+				SubmitResult.Failed(user, "자가진단에 실패했어요.", th)
 			}
 		}
 		
@@ -356,7 +356,7 @@ class SelfTestManagerImpl(
 		return try {
 			if(!context.context.isNetworkAvailable) {
 				context.scope.launch {
-					context.showMessage("네트워크에 연결되어 있지 않습니다.", "확인")
+					context.showMessage("네트워크에 연결되어 있지 않아요.", "확인")
 				}
 				return emptyList()
 			}
@@ -365,7 +365,7 @@ class SelfTestManagerImpl(
 			
 			if(result.all { it is SubmitResult.Success }) context.scope.launch {
 				context.showMessage(
-					if(target is DbTestTarget.Group) "모두 자가진단을 완료했습니다." else "자가진단을 완료했습니다.",
+					if(target is DbTestTarget.Group) "모두 자가진단을 완료했어요." else "자가진단을 완료했어요.",
 					"확인"
 				)
 			} else context.navigator.showDialogUnit {

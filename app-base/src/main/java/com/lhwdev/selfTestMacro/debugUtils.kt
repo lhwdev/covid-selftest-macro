@@ -40,7 +40,7 @@ suspend fun Context.onError(
 
 
 suspend fun Context.onErrorToast(error: Throwable, description: String = "???") {
-	showToastSuspendAsync("오류가 발생했습니다. ($description)")
+	showToastSuspendAsync("오류가 발생했어요. ($description)")
 	onError(error, description)
 }
 
@@ -79,7 +79,7 @@ suspend fun getErrorInfo(error: Throwable, description: String) = """
 private suspend fun Context.showErrorInfo(info: String): Unit = withContext(Dispatchers.Main) {
 	AlertDialog.Builder(this@showErrorInfo).apply {
 		setTitle("오류 발생")
-		setMessage("* 복사된 오류정보는 기기의 정보 등 민감한 정보를 포함할 수 있습니다.\n$info")
+		setMessage("* 복사된 오류정보는 기기의 정보 등 민감한 정보를 포함할 수 있어요.\n$info")
 		
 		setPositiveButton("오류정보 복사") { _, _ ->
 			CoroutineScope(Dispatchers.Main).launch {

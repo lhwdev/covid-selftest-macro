@@ -130,12 +130,12 @@ internal fun ColumnScope.WizardSchoolInfo(
 				name = model.schoolName
 			)
 		}.getOrElse { exception ->
-			context.onError(snackbarHostState, "학교를 찾지 못했습니다.", exception)
+			context.onError(snackbarHostState, "학교를 찾지 못했어요.", exception)
 			return@find
 		}
 		
 		if(schools.isEmpty()) {
-			snackbarHostState.showSnackbar("학교를 찾지 못했습니다.", "확인")
+			snackbarHostState.showSnackbar("학교를 찾지 못했어요.", "확인")
 			return@find
 		}
 		

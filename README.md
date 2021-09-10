@@ -4,9 +4,9 @@
 [![Email](https://img.shields.io/badge/%EC%9D%B4%EB%A9%94%EC%9D%BC-%EA%B0%9C%EC%9D%B8-orange?style=for-the-badge)](mailto:lhwdev6@outlook.com)
 [![covid-hcs](https://img.shields.io/badge/organization-covid--hcs-2962ff?style=for-the-badge)](https://github.com/covid-hcs)
 
-예약해두면 매일 특정 시간에 자동으로 자가진단을 합니다.  
-**이 앱을 사용하여 생기는 모든 문제의 책임은 이 앱의 사용자인 여러분에게 있습니다.**
-건강상태가 좋지 않다면 매크로 예약을 취소해두고 공식 사이트나 앱에서 자가진단을 하시길 바랍니다.
+> 예약해두면 매일 특정 시간에 자동으로 자가진단을 합니다.  
+  **이 앱을 사용하여 생기는 모든 문제의 책임은 이 앱의 사용자인 여러분에게 있습니다.**
+  건강상태가 좋지 않다면 매크로 예약을 취소해두고 공식 사이트나 앱에서 자가진단을 하시길 바랍니다.
 
 ### [**📎 앱 다운로드 받기**](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)  
 - [개인정보 처리 방침](PRIVACY_POLICY.md)

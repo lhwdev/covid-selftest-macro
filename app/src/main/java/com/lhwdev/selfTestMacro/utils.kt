@@ -47,12 +47,18 @@ data class UserSetting(
 	val studentBirth: String
 )
 
-inline fun <R> tryAtMost(maxTrial: Int, onError: (th: Throwable) -> Unit = {}, block: () -> R): R {
+inline fun <R> tryAtMost(
+	maxTrial: Int,
+	errorFilter: (Throwable) -> Boolean = { true },
+	onError: (th: Throwable) -> Unit = {},
+	block: () -> R
+): R {
 	var trialCount = 0
 	while(true) {
 		try {
 			return block()
 		} catch(th: Throwable) {
+			if(!errorFilter(th)) throw th
 			trialCount++
 			if(trialCount >= maxTrial) throw th
 			onError(th)

@@ -1,8 +1,7 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.Application
-import android.content.Intent
-import kotlinx.coroutines.runBlocking
+import javax.net.ssl.SSLHandshakeException
 
 
 class MainApplication : Application() {
@@ -10,5 +9,12 @@ class MainApplication : Application() {
 		super.onCreate()
 		
 		sDebugFetch = isDebugEnabled
+		
+		val last = sFetchInterceptors.first()
+		sFetchInterceptors.add(0) { url, fetchMethod, map, session, fetchBody ->
+			tryAtMost(maxTrial = 10, errorFilter = { it is SSLHandshakeException }) {
+				last.intercept(url, fetchMethod, map, session, fetchBody)
+			}
+		}
 	}
 }

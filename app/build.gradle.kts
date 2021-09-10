@@ -12,6 +12,7 @@ repositories {
 
 licensee {
 	allow("Apache-2.0")
+	allowUrl("http://opensource.org/licenses/BSD-2-Clause") // commonmark
 	// allow("MIT")
 	
 	// see https://github.com/airbnb/lottie-android/issues/1865
@@ -34,7 +35,7 @@ android {
 		minSdk = 21
 		targetSdk = 30
 		versionCode = 3000
-		versionName = "3.0.0"
+		versionName = "3.0.0-build01"
 		
 		// multiDexEnabled = true
 		
@@ -48,6 +49,10 @@ android {
 				getDefaultProguardFile("proguard-android-optimize.txt"),
 				"proguard-rules.pro"
 			)
+		}
+		
+		named("debug") {
+			applicationIdSuffix = ".preview"
 		}
 	}
 	
@@ -105,7 +110,7 @@ dependencies {
 	implementation("androidx.compose.material:material:$compose")
 	implementation("androidx.activity:activity-compose:1.3.1")
 	
-	val accompanist = "0.12.0" // also in app-base
+	val accompanist = "0.17.0" // also in app-base
 	implementation("com.google.accompanist:accompanist-insets:$accompanist")
 	implementation("com.google.accompanist:accompanist-insets-ui:$accompanist")
 	implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanist")

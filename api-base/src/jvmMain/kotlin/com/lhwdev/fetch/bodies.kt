@@ -2,8 +2,8 @@
 
 package com.lhwdev.fetch
 
-import com.lhwdev.selfTestMacro.JsonObjectScope
-import com.lhwdev.selfTestMacro.jsonString
+import com.lhwdev.io.JsonObjectScope
+import com.lhwdev.io.jsonString
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.*
 import java.io.OutputStream
@@ -52,7 +52,7 @@ fun <T> Bodies.json(serializer: KSerializer<T>, value: T, json: Json = Json): Da
 	
 	override suspend fun writeDebug(out: Writer) {
 		val config = Json(from = json) { prettyPrint = true }
-		val result = json.encodeToString(serializer, value)
+		val result = config.encodeToString(serializer, value)
 		out.write(result)
 		println(result)
 	}
@@ -68,7 +68,7 @@ fun Bodies.jsonObject(block: suspend JsonObjectScope.() -> Unit): DataBody = obj
 	
 	override val debugAvailable: Boolean get() = true
 	override suspend fun writeDebug(out: Writer) {
-		val json = com.lhwdev.selfTestMacro.jsonObject { block() }
+		val json = com.lhwdev.io.jsonObject { block() }
 		out.write(json.toString())
 		fun dump(json: JsonElement, indent: String): Unit = when(json) {
 			JsonNull -> println("\u001b[96mnull\u001b[0m")

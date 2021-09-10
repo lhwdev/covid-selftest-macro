@@ -14,7 +14,12 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.lhwdev.selfTestMacro.R
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.Route
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.LocalPreference
+import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.pages.intro.Intro
 import com.lhwdev.selfTestMacro.ui.pages.main.Main
 import kotlinx.coroutines.delay

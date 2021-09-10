@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.ListItem
 import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
+import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.ui.LocalPreference
-import com.lhwdev.selfTestMacro.ui.Navigator
 import com.vanpra.composematerialdialogs.ListContent
 import com.vanpra.composematerialdialogs.Title
 import com.vanpra.composematerialdialogs.showDialogAsync

@@ -1,4 +1,6 @@
-package com.lhwdev.selfTestMacro.ui
+@file:Suppress("ObjectLiteralToLambda") // not supported by compose compiler
+
+package com.lhwdev.selfTestMacro.navigation
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -11,6 +13,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.lhwdev.selfTestMacro.ui.utils.VisibilityAnimationState
 import kotlinx.coroutines.flow.collect
 
 

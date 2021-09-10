@@ -9,5 +9,7 @@ object App {
 	lateinit var version: Version
 	lateinit var versionName: String
 	var versionCode: Int = -1
+	
 	val githubRepo = Repository(sGithubInstanceDefault, "lhwdev", "covid-selftest-macro")
+	val metaBranch = "meta"
 }

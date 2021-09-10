@@ -18,6 +18,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.openWebsite
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.BackButton
@@ -34,15 +36,27 @@ data class LicenseItem(
 	val artifactId: String,
 	val version: String,
 	val spdxLicenses: List<SpdxLicense>? = null,
+	val unknownLicenses: List<UnknownLicense>? = null,
 	val scm: ScmItem
 )
+
+sealed interface OpenSourceLicense {
+	val name: String
+	val url: String
+}
 
 @Serializable
 data class SpdxLicense(
 	val identifier: String,
-	val name: String,
-	val url: String
-)
+	override val name: String,
+	override val url: String
+) : OpenSourceLicense
+
+@Serializable
+data class UnknownLicense(
+	override val name: String,
+	override val url: String
+) : OpenSourceLicense
 
 @Serializable
 data class ScmItem(val url: String)
@@ -211,10 +225,13 @@ fun OpenSourcesDetail(item: LicenseItem) {
 				ProvideTextStyle(MaterialTheme.typography.body1) {
 					Text("버전: ${item.version}")
 					
-					val licenses = item.spdxLicenses
+					val licenses = mutableListOf<OpenSourceLicense>().apply {
+						item.spdxLicenses?.let { addAll(it) }
+						item.unknownLicenses?.let { addAll(it) }
+					}
 					
 					when {
-						licenses == null || licenses.isEmpty() -> Text("라이센스 없음")
+						licenses.isEmpty() -> Text("라이센스 없음")
 						licenses.size == 1 -> {
 							val license = licenses[0]
 							Row {
@@ -247,7 +264,7 @@ fun OpenSourcesDetail(item: LicenseItem) {
 }
 
 @Composable
-private fun LicenseItemText(license: SpdxLicense) {
+private fun LicenseItemText(license: OpenSourceLicense) {
 	val context = LocalContext.current
 	
 	Text(

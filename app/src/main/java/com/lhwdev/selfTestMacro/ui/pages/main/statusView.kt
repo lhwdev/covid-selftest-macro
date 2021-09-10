@@ -22,6 +22,7 @@ import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.Status
 import com.lhwdev.selfTestMacro.repository.SuspiciousKind
 import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.utils.SmallIconButton
 import com.vanpra.composematerialdialogs.Buttons
 import com.vanpra.composematerialdialogs.ListContent
 import com.vanpra.composematerialdialogs.MaterialDialog

@@ -2,6 +2,7 @@ package com.lhwdev.selfTestMacro.ui
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
+import com.lhwdev.selfTestMacro.navigation.Navigator
 import kotlinx.coroutines.CoroutineScope
 
 

@@ -14,6 +14,8 @@ import com.google.accompanist.insets.Insets
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.WindowInsets
 import com.google.accompanist.systemuicontroller.SystemUiController
+import com.lhwdev.selfTestMacro.navigation.LocalGlobalNavigator
+import com.lhwdev.selfTestMacro.navigation.NavigatorImpl
 
 
 @Composable

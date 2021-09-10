@@ -25,7 +25,6 @@ import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import kotlin.random.Random
-import kotlin.random.nextInt
 
 
 private fun Context.createScheduleIntent(
@@ -429,37 +428,48 @@ class SelfTestManagerImpl(
 	
 	
 	private fun DbTestGroup.nextTime(): Long {
-		val resultHour: Int
-		val resultMinute: Int
-		when(val schedule = schedule) {
+		fun calendarFor(schedule: DbTestSchedule.Fixed): Calendar {
+			val calendar = Calendar.getInstance()
+			calendar[Calendar.SECOND] = 0
+			calendar[Calendar.MILLISECOND] = 0
+			
+			calendar[Calendar.HOUR_OF_DAY] = schedule.hour
+			calendar[Calendar.MINUTE] = schedule.minute
+			return calendar
+		}
+		
+		var calendar: Calendar? = null
+		val timeInMillis = when(val schedule = schedule) {
 			is DbTestSchedule.Fixed -> {
-				resultHour = schedule.hour
-				resultMinute = schedule.minute
+				calendar = calendarFor(schedule)
+				calendar.timeInMillis
 			}
 			is DbTestSchedule.Random -> {
-				resultHour = random.nextInt(schedule.from.hour..schedule.to.hour)
-				resultMinute = random.nextInt(schedule.from.minute..schedule.to.minute)
+				val from = calendarFor(schedule.from).timeInMillis
+				val to = calendarFor(schedule.to).timeInMillis
+				random.nextLong(from = from, until = to + 1)
 			}
 			DbTestSchedule.None -> return -1L
 		}
 		
-		val calendar = Calendar.getInstance()
-		calendar[Calendar.SECOND] = 0
-		calendar[Calendar.MILLISECOND] = 0
-		
-		calendar[Calendar.HOUR_OF_DAY] = resultHour
-		calendar[Calendar.MINUTE] = resultMinute
-		while(true) {
-			if(excludeWeekend) {
-				val day = calendar[Calendar.DAY_OF_WEEK]
-				if(day == Calendar.SATURDAY || day == Calendar.SUNDAY) continue
-			}
+		if(excludeWeekend) {
+			val c = if(calendar == null) {
+				calendar = Calendar.getInstance()
+				calendar.timeInMillis = timeInMillis
+				calendar
+			} else calendar
 			
-			break
+			while(true) {
+				when(c[Calendar.DAY_OF_WEEK]) {
+					Calendar.SATURDAY -> c.add(Calendar.DAY_OF_YEAR, 2)
+					Calendar.SUNDAY -> c.add(Calendar.DAY_OF_YEAR, 1)
+					else -> break
+				}
+			}
 		}
 		
 		
-		return calendar.timeInMillis
+		return timeInMillis
 	}
 	
 	private fun setSchedule(alarmManager: AlarmManager, target: DbTestGroup) {
@@ -470,20 +480,19 @@ class SelfTestManagerImpl(
 		}
 	}
 	
-	override fun updateSchedule(target: DbTestGroup, schedule: DbTestSchedule) {
+	override fun updateSchedule(target: DbTestGroup, new: DbTestGroup) {
 		val testGroups = database.testGroups
 		
 		val alarmManager = context.getSystemService<AlarmManager>()!!
 		alarmManager.cancel(intentCache(target.id))
 		
-		val newTarget = target.copy(schedule = schedule)
 		
 		// change testGroups -> preferenceState.cache updated -> state update -> snapshot mutation -> snapshotFlow(see ComposeApp.kt) -> call onScheduleUpdated
 		disableOnScheduleUpdated = true
-		database.testGroups = testGroups.copy(groups = testGroups.groups.replaced(from = target, to = newTarget))
+		database.testGroups = testGroups.copy(groups = testGroups.groups.replaced(from = target, to = new))
 		disableOnScheduleUpdated = false
 		
-		setSchedule(alarmManager, newTarget)
+		setSchedule(alarmManager, new)
 	}
 	
 	private var disableOnScheduleUpdated: Boolean = false

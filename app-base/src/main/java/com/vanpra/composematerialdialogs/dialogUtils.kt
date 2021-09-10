@@ -10,7 +10,7 @@ import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.navigation.*
 
 
 suspend fun <T> Navigator.showDialog(

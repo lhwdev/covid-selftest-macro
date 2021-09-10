@@ -8,7 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.replaceRoute
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.DefaultContentColor
+import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
 
 
@@ -16,7 +21,7 @@ import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
 fun Intro() {
 	val navigator = LocalNavigator
 	
-	Surface(color = MaterialTheme.colors.primarySurface) {
+	Surface(color = MaterialTheme.colors.primary) {
 		AutoSystemUi(onScreenMode = OnScreenSystemUiMode.Immersive(Color.Transparent)) { scrims ->
 			scrims.statusBar()
 			

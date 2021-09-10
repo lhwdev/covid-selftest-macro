@@ -21,8 +21,13 @@ import com.lhwdev.selfTestMacro.*
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.TopAppBar
+import com.lhwdev.selfTestMacro.ui.primaryActive
+import com.lhwdev.selfTestMacro.ui.utils.DropdownPicker
 import com.vanpra.composematerialdialogs.Buttons
 import com.vanpra.composematerialdialogs.FloatingMaterialDialogScope
 import com.vanpra.composematerialdialogs.Title

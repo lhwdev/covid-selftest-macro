@@ -15,8 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 
-fun TextCheckbox(text: @Composable () -> Unit, checked: Boolean, setChecked: (Boolean) -> Unit) {
-	Row(verticalAlignment = Alignment.CenterVertically) {
+@Composable
+fun TextCheckbox(
+	text: @Composable () -> Unit,
+	checked: Boolean,
+	setChecked: (Boolean) -> Unit,
+	modifier: Modifier = Modifier
+) {
+	Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
 		val interactionSource = remember { MutableInteractionSource() }
 		
 		Checkbox(

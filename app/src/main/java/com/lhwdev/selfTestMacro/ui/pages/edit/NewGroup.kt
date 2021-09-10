@@ -13,7 +13,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.database.*
-import com.lhwdev.selfTestMacro.ui.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.vanpra.composematerialdialogs.*
 

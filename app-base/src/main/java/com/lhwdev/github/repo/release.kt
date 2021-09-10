@@ -1,7 +1,7 @@
 package com.lhwdev.github.repo
 
-import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.URLSerializer
+import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.get
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
@@ -27,5 +27,7 @@ data class Asset(
 	@Serializable(URLSerializer::class) val browserDownloadUrl: URL
 )
 
-suspend fun Repository.getReleaseLatest(): Release =
-	fetch(releaseUrl["latest"]).toJsonLoose(Release.serializer())
+suspend fun Repository.getRelease(name: String): Release =
+	fetch(releaseUrl[name]).toJsonLoose(Release.serializer())
+
+suspend inline fun Repository.getReleaseLatest(): Release = getRelease("latest")

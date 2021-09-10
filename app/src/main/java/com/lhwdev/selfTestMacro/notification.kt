@@ -34,7 +34,7 @@ open class AndroidNotificationChannel(
 	protected inline fun Context.buildNotification(block: NotificationCompat.Builder.() -> Unit): Notification =
 		NotificationCompat.Builder(this, channelId).also {
 			it.priority = priority
-			it.setSmallIcon(R.drawable.ic_launcher_foreground)
+			it.setSmallIcon(R.mipmap.ic_launcher_foreground)
 			it.block()
 		}.build()
 }
@@ -57,6 +57,12 @@ fun Context.initializeNotificationChannel() {
 
 
 private const val sNotificationPrefix = "com.lhwdev.selfTestMacro"
+
+object NotificationIds {
+	const val selfTestSuccess = 1
+	const val selfTestFailed = 2
+	const val updateAvailable = 3
+}
 
 
 // object BeforeTestNotification : AndroidNotificationEntry(

@@ -5,12 +5,13 @@ import android.text.method.LinkMovementMethod
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.text.HtmlCompat
+import com.lhwdev.selfTestMacro.api.JsonLoose
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.models.VersionSpec
+import com.lhwdev.selfTestMacro.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import java.net.URL
 
 @Serializable
@@ -31,13 +32,9 @@ data class NotificationEntry(
 }
 
 
-suspend fun Activity.checkNotice() = withContext(Dispatchers.IO) {
+suspend fun Activity.checkNotice(navigator: Navigator) = withContext(Dispatchers.IO) {
 	// also check updates
-	val update = getUpdateAvailable()
-	if(update != null) {
-		askUpdate(update, 1001)
-		return@withContext
-	}
+	checkAndAskUpdate(navigator, 1001)
 	
 	val content: String?
 	try {
@@ -45,9 +42,7 @@ suspend fun Activity.checkNotice() = withContext(Dispatchers.IO) {
 		content =
 			URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/notice_v4.json").readText()
 		
-		val notificationObject = Json {
-			ignoreUnknownKeys = true /* loose */
-		}.decodeFromString(NotificationObject.serializer(), content)
+		val notificationObject = JsonLoose.decodeFromString(NotificationObject.serializer(), content)
 		
 		if(notificationObject.notificationVersion != 4) {
 			// incapable of displaying this

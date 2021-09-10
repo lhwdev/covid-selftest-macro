@@ -26,6 +26,9 @@ import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.allUserIds
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.pushRoute
+import com.lhwdev.selfTestMacro.navigation.showRouteAsync
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.ui.*
@@ -34,18 +37,9 @@ import com.lhwdev.selfTestMacro.ui.icons.Icons
 import com.lhwdev.selfTestMacro.ui.pages.edit.EditUsers
 import com.lhwdev.selfTestMacro.ui.pages.info.Info
 import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
+import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.vanpra.composematerialdialogs.MaterialDialog
 import kotlinx.coroutines.launch
-
-
-@Immutable
-data class MainModel(val navigator: Navigator, val scaffoldState: ScaffoldState) {
-	suspend fun showSnackbar(
-		message: String,
-		actionLabel: String? = null,
-		duration: SnackbarDuration = SnackbarDuration.Short
-	): SnackbarResult = scaffoldState.snackbarHostState.showSnackbar(message, actionLabel, duration)
-}
 
 
 @Preview

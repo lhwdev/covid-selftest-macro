@@ -18,12 +18,19 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestSchedule
 import com.lhwdev.selfTestMacro.database.DbTestTarget
+import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.showToast
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.InputPhase
+import com.lhwdev.selfTestMacro.ui.LocalPreference
+import com.lhwdev.selfTestMacro.ui.MediumContentColor
+import com.lhwdev.selfTestMacro.ui.TextFieldDecoration
+import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
+import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
 import com.vanpra.composematerialdialogs.Buttons
 import com.vanpra.composematerialdialogs.showDialogAsync
 import kotlinx.coroutines.launch
@@ -217,6 +224,15 @@ internal fun Navigator.showScheduleSelfTest(
 		}
 	}
 	
+	Spacer(Modifier.height(8.dp))
+	
+	TextCheckbox(
+		text = { Text("주말에는 자가진단하지 않기") },
+		checked = excludeWeekend,
+		setChecked = { excludeWeekend = it },
+		modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+	)
+	
 	Spacer(Modifier.height(4.dp))
 	
 	Buttons {
@@ -242,7 +258,15 @@ internal fun Navigator.showScheduleSelfTest(
 				}
 			}
 			scope.launch {
-				selfTestManager.updateSchedule(group, schedule)
+				selfTestManager.updateSchedule(
+					target = group,
+					new = DbTestGroup(
+						id = group.id,
+						target = group.target,
+						schedule = schedule,
+						excludeWeekend = excludeWeekend
+					)
+				)
 				
 				removeRoute()
 			}

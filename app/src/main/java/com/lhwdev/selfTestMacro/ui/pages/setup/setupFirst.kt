@@ -11,7 +11,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.utils.DropdownPicker
+import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import kotlinx.coroutines.launch
 
 

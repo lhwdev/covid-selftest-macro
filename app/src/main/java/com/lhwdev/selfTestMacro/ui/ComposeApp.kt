@@ -12,6 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.navigation.ComposeNavigationHost
+import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
+import com.lhwdev.selfTestMacro.navigation.NavigatorImpl
+import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.SelfTestManager
 import com.lhwdev.selfTestMacro.repository.SelfTestManagerImpl
@@ -53,42 +57,16 @@ fun ComposeApp(activity: Activity) {
 	
 	AppTheme {
 		CompositionLocalProvider(
-			LocalActivity provides activity,
-			LocalGlobalNavigator provides navigator,
-			
 			LocalPreference provides pref,
 			LocalSelfTestManager provides selfTestManager
 		) {
 			ProvideAutoWindowInsets {
-				AnimateListAsComposable(
-					navigator.routes,
-					isOpaque = { it.isOpaque },
-					animation = { route, visible, onAnimationEnd, content ->
-						val transition = route as? RouteTransition ?: DefaultTransition(isOpaque = route.isOpaque)
-						transition.Transition(
-							route = route,
-							visibleState = visible,
-							onAnimationEnd = onAnimationEnd,
-							content = content
-						)
-					}
-				) { index, route ->
-					EnabledRoute(enabled = index == navigator.routes.lastIndex) {
-						RouteContent(route)
-					}
-				}
+				ComposeNavigationHost(navigator)
 			}
 		}
 		
 		BackHandler(navigator.size > 1) {
 			navigator.popLastRoute()
 		}
-	}
-}
-
-@Composable
-private fun EnabledRoute(enabled: Boolean, content: @Composable () -> Unit) {
-	EnableAutoSystemUi(enabled) {
-		content()
 	}
 }

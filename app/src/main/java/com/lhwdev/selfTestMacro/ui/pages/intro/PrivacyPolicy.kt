@@ -15,8 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.getText
+import com.lhwdev.selfTestMacro.navigation.CustomDialogRouteTransition
+import com.lhwdev.selfTestMacro.navigation.Navigator
+import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.onError
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.ScrimNavLightColor
+import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.zachklipp.richtext.markdown.Markdown
 import com.zachklipp.richtext.ui.material.MaterialRichText
 

@@ -14,10 +14,15 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.WizardUser
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.LocalPreference
+import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.pages.main.Main
+import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
 import kotlinx.coroutines.launch
 

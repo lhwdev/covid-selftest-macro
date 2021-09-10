@@ -5,7 +5,10 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.*
-import com.lhwdev.selfTestMacro.database.*
+import com.lhwdev.selfTestMacro.database.DbTestGroup
+import com.lhwdev.selfTestMacro.database.DbTestTarget
+import com.lhwdev.selfTestMacro.database.DbUser
+import com.lhwdev.selfTestMacro.database.DbUserGroup
 import com.lhwdev.selfTestMacro.ui.UiContext
 
 
@@ -69,6 +72,6 @@ interface SelfTestManager {
 		surveyData: (DbUser) -> SurveyData
 	): List<SubmitResult>
 	
-	fun updateSchedule(target: DbTestGroup, schedule: DbTestSchedule)
+	fun updateSchedule(target: DbTestGroup, new: DbTestGroup)
 	fun onScheduleUpdated()
 }

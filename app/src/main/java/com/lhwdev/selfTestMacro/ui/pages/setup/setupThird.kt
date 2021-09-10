@@ -24,12 +24,18 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.PasswordWrong
 import com.lhwdev.selfTestMacro.api.UsersToken
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.MasterUser
 import com.lhwdev.selfTestMacro.repository.SelfTestManager
 import com.lhwdev.selfTestMacro.repository.WizardUser
 import com.lhwdev.selfTestMacro.selfLog
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.EmptyRestartable
+import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.isImeVisible
+import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
 

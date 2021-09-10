@@ -13,8 +13,8 @@ import kotlinx.serialization.json.Json
 public annotation class DangerousHcsApi
 
 
-internal val JsonEncodeDefaults = Json { encodeDefaults = true }
-internal val JsonLoose = Json { ignoreUnknownKeys = true }
+public val JsonEncodeDefaults: Json = Json { encodeDefaults = true }
+public val JsonLoose: Json = Json { ignoreUnknownKeys = true }
 
 
 public object YesNoSerializer : KSerializer<Boolean> {

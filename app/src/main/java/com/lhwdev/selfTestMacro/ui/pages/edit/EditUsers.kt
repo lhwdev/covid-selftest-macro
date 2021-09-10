@@ -13,7 +13,12 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.removeTestGroups
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.showRouteAsync
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.LocalPreference
+import com.lhwdev.selfTestMacro.ui.MediumContentColor
+import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.pages.main.iconFor
 import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupParameters

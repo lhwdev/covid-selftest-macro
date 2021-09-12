@@ -37,20 +37,19 @@ fun DialogRoute(
 	override val isOpaque: Boolean = isOpaque
 }
 
+fun FullDialogRoute(
+	content: @Composable () -> Unit
+): Route = object : Route, RouteTransition by CustomDialogRouteTransition() {
+	override val content: @Composable () -> Unit = content
+	override val isOpaque: Boolean get() = true
+}
+
 inline fun Navigator.pushRoute(
 	isOpaque: Boolean = true,
 	transition: RouteTransition = DefaultTransition(isOpaque),
 	noinline content: @Composable () -> Unit
 ) {
 	pushRoute(Route(isOpaque, transition, content))
-}
-
-inline fun Navigator.replaceLastRoute(
-	isOpaque: Boolean = true,
-	transition: RouteTransition = DefaultTransition(isOpaque),
-	noinline content: @Composable () -> Unit
-) {
-	replaceLastRoute(Route(isOpaque, transition, content))
 }
 
 inline fun CurrentNavigator.replaceRoute(
@@ -100,9 +99,9 @@ suspend inline fun <T> Navigator.showRoute(
 	noinline content: @Composable (removeRoute: (T) -> Unit) -> Unit
 ): T = showRoute(routeFactory = { Route(isOpaque, transition, it) }, content = content)
 
-fun Navigator.showRouteAsync(
+inline fun Navigator.showRouteAsync(
 	routeFactory: (content: @Composable () -> Unit) -> Route,
-	content: @Composable (removeRoute: () -> Unit) -> Unit
+	crossinline content: @Composable (removeRoute: () -> Unit) -> Unit
 ) {
 	lateinit var route: Route
 	

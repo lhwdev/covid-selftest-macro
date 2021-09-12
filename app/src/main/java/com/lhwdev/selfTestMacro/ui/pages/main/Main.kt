@@ -39,6 +39,7 @@ import com.lhwdev.selfTestMacro.ui.pages.info.Info
 import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.showFullDialogAsync
 import kotlinx.coroutines.launch
 
 
@@ -358,10 +359,10 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 					},
 					modifier = Modifier.clickable {
 						showSelect = false
-						navigator.showRouteAsync { EditUsers() }
+						navigator.showFullDialogAsync { EditUsers() }
 					}
 				) {
-					Text("편집")
+					Text("편집 / 사용자 추가")
 				}
 			}
 		}

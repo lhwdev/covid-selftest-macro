@@ -13,12 +13,12 @@ import androidx.compose.ui.window.DialogProperties
 import com.lhwdev.selfTestMacro.navigation.*
 
 
-suspend fun <T> Navigator.showDialog(
+suspend inline fun <T> Navigator.showDialog(
 	modifier: Modifier = Modifier,
-	properties: DialogProperties = com.vanpra.composematerialdialogs.FloatingDialogProperties,
-	maxHeight: Dp = com.vanpra.composematerialdialogs.FloatingDialogMaxHeight,
-	routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
-	content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
+	properties: DialogProperties = FloatingDialogProperties,
+	maxHeight: Dp = FloatingDialogMaxHeight,
+	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
+	crossinline content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
 ): T? = showRoute(routeFactory = routeFactory) { removeRoute ->
 	MaterialDialog(
 		onCloseRequest = { removeRoute(null) },
@@ -30,8 +30,8 @@ suspend fun <T> Navigator.showDialog(
 
 suspend inline fun Navigator.showDialogUnit(
 	modifier: Modifier = Modifier,
-	properties: DialogProperties = com.vanpra.composematerialdialogs.FloatingDialogProperties,
-	maxHeight: Dp = com.vanpra.composematerialdialogs.FloatingDialogMaxHeight,
+	properties: DialogProperties = FloatingDialogProperties,
+	maxHeight: Dp = FloatingDialogMaxHeight,
 	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
 	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
@@ -45,9 +45,9 @@ suspend inline fun Navigator.showDialogUnit(
 
 inline fun Navigator.showDialogAsync(
 	modifier: Modifier = Modifier,
-	properties: DialogProperties = com.vanpra.composematerialdialogs.FloatingDialogProperties,
-	maxHeight: Dp = com.vanpra.composematerialdialogs.FloatingDialogMaxHeight,
-	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
+	properties: DialogProperties = FloatingDialogProperties,
+	maxHeight: Dp = FloatingDialogMaxHeight,
+	routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
 	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showRouteAsync(routeFactory) { removeRoute ->
@@ -60,13 +60,35 @@ inline fun Navigator.showDialogAsync(
 	}
 }
 
+suspend inline fun <T> Navigator.showFullDialog(
+	modifier: Modifier = Modifier,
+	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { FullDialogRoute(content = it) },
+	noinline content: @Composable (FullMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit)
+): T? = showRoute(routeFactory = routeFactory) { remoteRoute ->
+	FullMaterialDialogStub(
+		onCloseRequest = { remoteRoute(null) }
+	) { content(remoteRoute) }
+}
+
+inline fun Navigator.showFullDialogAsync(
+	modifier: Modifier = Modifier,
+	routeFactory: (content: @Composable () -> Unit) -> Route = { FullDialogRoute(content = it) },
+	noinline content: @Composable (FullMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
+) {
+	showRouteAsync(routeFactory = routeFactory) { remoteRoute ->
+		FullMaterialDialogStub(
+			onCloseRequest = { remoteRoute() }
+		) { content(remoteRoute) }
+	}
+}
+
 
 suspend fun Navigator.promptYesNoDialog(
 	title: @Composable () -> Unit,
 	content: @Composable (FloatingMaterialDialogScope.() -> Unit)? = null,
 	yesButton: @Composable () -> Unit = { Text("확인") },
 	noButton: @Composable () -> Unit = { Text("취소") },
-	properties: DialogProperties = com.vanpra.composematerialdialogs.FloatingDialogProperties
+	properties: DialogProperties = FloatingDialogProperties
 ): Boolean? = showDialog(properties = properties) { removeRoute ->
 	Title { title() }
 	

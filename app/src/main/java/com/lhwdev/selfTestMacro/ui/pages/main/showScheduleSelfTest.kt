@@ -15,7 +15,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestGroup
@@ -25,22 +24,26 @@ import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.showToast
-import com.lhwdev.selfTestMacro.ui.InputPhase
-import com.lhwdev.selfTestMacro.ui.LocalPreference
-import com.lhwdev.selfTestMacro.ui.MediumContentColor
-import com.lhwdev.selfTestMacro.ui.TextFieldDecoration
+import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
-import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
 import com.vanpra.composematerialdialogs.Buttons
-import com.vanpra.composematerialdialogs.showDialogAsync
+import com.vanpra.composematerialdialogs.FullMaterialDialogScope
+import com.vanpra.composematerialdialogs.showFullDialogAsync
 import kotlinx.coroutines.launch
 
 
 internal fun Navigator.showScheduleSelfTest(
 	info: GroupInfo
-): Unit = showDialogAsync(
-	maxHeight = Dp.Unspecified
-) { removeRoute ->
+): Unit = showFullDialogAsync { dismiss ->
+	Surface(color = MaterialTheme.colors.background) {
+		AutoSystemUi { scrims ->
+			this@showFullDialogAsync.ScheduleContent(info, dismiss, scrims)
+		}
+	}
+}
+
+@Composable
+private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: () -> Unit, scrims: Scrims) {
 	val pref = LocalPreference.current
 	val context = LocalContext.current
 	val selfTestManager = LocalSelfTestManager.current
@@ -78,20 +81,21 @@ internal fun Navigator.showScheduleSelfTest(
 	
 	TopAppBar(
 		navigationIcon = {
-			IconButton(onClick = removeRoute) {
+			IconButton(onClick = dismiss) {
 				Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")
 			}
 		},
 		title = { Text("자가진단 예약") },
 		backgroundColor = Color.Transparent,
-		elevation = 0.dp
+		elevation = 0.dp,
+		statusBarScrim = scrims.statusBar
 	)
 	Divider()
 	
 	Column(
 		modifier = Modifier
 			.verticalScroll(rememberScrollState())
-			.weight(1f, fill = false)
+			.weight(1f)
 	) {
 		@Composable
 		fun Header(text: String) {
@@ -174,10 +178,16 @@ internal fun Navigator.showScheduleSelfTest(
 			visible = type == ScheduleType.fixed,
 			modifier = Modifier.padding(horizontal = 16.dp)
 		) {
-			ScheduleTime(label = "시간 설정", hour = hour, minute = minute, setTime = { h, m ->
-				hour = h
-				minute = m
-			})
+			ScheduleTime(
+				label = "시간 설정",
+				hour = hour,
+				minute = minute,
+				setTime = { h, m ->
+					hour = h
+					minute = m
+				},
+				modifier = Modifier.fillMaxWidth()
+			)
 		}
 		
 		
@@ -224,18 +234,27 @@ internal fun Navigator.showScheduleSelfTest(
 		}
 	}
 	
-	Spacer(Modifier.height(8.dp))
+	Spacer(Modifier.height(16.dp))
 	
-	TextCheckbox(
+	// ListItem {
+	// 	TextCheckbox(
+	// 		text = { Text("주말에는 자가진단하지 않기") },
+	// 		checked = excludeWeekend,
+	// 		setChecked = { excludeWeekend = it }
+	// 	)
+	// }
+	
+	ListItem(
+		icon = {
+			Checkbox(checked = excludeWeekend, onCheckedChange = null)
+		},
 		text = { Text("주말에는 자가진단하지 않기") },
-		checked = excludeWeekend,
-		setChecked = { excludeWeekend = it },
-		modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+		modifier = Modifier.clickable { excludeWeekend = !excludeWeekend }
 	)
 	
 	Spacer(Modifier.height(4.dp))
 	
-	Buttons {
+	this.Buttons {
 		PositiveButton(onClick = submit@{
 			val schedule = when(type) {
 				ScheduleType.none -> DbTestSchedule.None
@@ -268,9 +287,11 @@ internal fun Navigator.showScheduleSelfTest(
 					)
 				)
 				
-				removeRoute()
+				dismiss()
 			}
 		}) { Text("확인") }
 		NegativeButton { Text("취소") }
 	}
+	
+	scrims.navigationBar()
 }

@@ -6,8 +6,10 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -135,7 +137,10 @@ fun SlideRouteTransition(): RouteTransition = object : RouteTransition {
 }
 
 // TODO
-fun CustomDialogRouteTransition(elevation: Dp = 24.dp): RouteTransition = object : RouteTransition {
+fun CustomDialogRouteTransition(
+	elevation: Dp = 24.dp,
+	startPosition: (screenSize: Offset) -> Offset = { it / 2f }
+): RouteTransition = object : RouteTransition {
 	@Composable
 	override fun Transition(
 		route: Route,
@@ -167,7 +172,14 @@ fun CustomDialogRouteTransition(elevation: Dp = 24.dp): RouteTransition = object
 			if(it) 1f else 0f
 		}
 		
-		Box {
+		BoxWithConstraints {
+			val size = remember {
+				with(density) { Offset(maxWidth.toPx(), maxHeight.toPx()) }
+			}
+			val startPositionResult = remember {
+				startPosition(size)
+			}
+			
 			Box(
 				Modifier
 					.matchParentSize()
@@ -190,7 +202,8 @@ fun CustomDialogRouteTransition(elevation: Dp = 24.dp): RouteTransition = object
 					
 					scaleX = scale
 					scaleY = scale
-					shadowElevation = with(density) { elevation.toPx() }
+					translationX = startPositionResult.x - size.x / 2
+					// shadowElevation = with(density) { elevation.toPx() }
 				}
 			) { content() }
 		}

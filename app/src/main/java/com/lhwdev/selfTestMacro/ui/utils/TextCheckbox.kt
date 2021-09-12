@@ -2,9 +2,7 @@ package com.lhwdev.selfTestMacro.ui.utils
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Checkbox
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
@@ -30,6 +28,8 @@ fun TextCheckbox(
 			onCheckedChange = setChecked,
 			interactionSource = interactionSource
 		)
+		
+		Spacer(Modifier.width(4.dp))
 		
 		ProvideTextStyle(MaterialTheme.typography.body1) {
 			Box(

@@ -54,7 +54,7 @@ fun Info(): Unit = MaterialTheme(
 				Spacer(Modifier.weight(4f))
 				
 				Text("자가진단 매크로", style = MaterialTheme.typography.h3)
-				Spacer(Modifier.height(8.dp))
+				Spacer(Modifier.height(12.dp))
 				
 				Text(
 					BuildConfig.VERSION_NAME,
@@ -83,7 +83,7 @@ fun Info(): Unit = MaterialTheme(
 					)
 				}
 				
-				Spacer(Modifier.height(16.dp))
+				Spacer(Modifier.height(24.dp))
 				
 				LinkedText(
 					"오픈소스 라이센스",

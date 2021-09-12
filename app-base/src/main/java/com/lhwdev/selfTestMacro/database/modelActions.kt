@@ -62,24 +62,45 @@ fun DatabaseManager.disbandGroup(group: DbTestGroup, inheritSchedule: Boolean) {
 }
 
 fun DatabaseManager.moveToTestGroup(
-	target: List<Pair<Int, DbTestGroup>>,
+	target: List<DbTestGroup>,
 	toGroup: DbTestGroup
 ): DbTestGroup {
-	check(target.all { it.second.target is DbTestTarget.Single })
+	check(target.all { it.target is DbTestTarget.Single })
 	check(toGroup.target is DbTestTarget.Group)
 	
 	val newGroup = toGroup.copy(
-		target = toGroup.target.copy(userIds = toGroup.target.userIds + target.map { it.first })
+		target = toGroup.target.copy(userIds = toGroup.target.userIds +
+			target.map { (it.target as DbTestTarget.Single).userId })
 	)
 	
 	testGroups = testGroups.copy(
-		groups = testGroups.groups - target.map { it.second } - toGroup + newGroup
+		groups = testGroups.groups - target - toGroup + newGroup
 	)
 	
 	return newGroup
 }
 
-fun DatabaseManager.replaceTestGroup(from: DbTestGroup, to: DbTestGroup) {
+fun DatabaseManager.moveOutFromTestGroup(
+	fromGroup: DbTestGroup,
+	target: List<DbTestGroup> // not added to db yet
+): DbTestGroup {
+	check(target.all { it.target is DbTestTarget.Single })
+	check(fromGroup.target is DbTestTarget.Group)
+	
+	val newGroup = fromGroup.copy(
+		target = fromGroup.target.copy(userIds = fromGroup.target.userIds -
+			target.map { (it.target as DbTestTarget.Single).userId }
+		)
+	)
+	
+	testGroups = testGroups.copy(
+		groups = testGroups.groups - fromGroup + newGroup + target
+	)
+	
+	return newGroup
+}
+
+fun DatabaseManager.replaceTestGroupDangerous(from: DbTestGroup, to: DbTestGroup) {
 	testGroups = testGroups.copy(groups = testGroups.groups.map {
 		if(it == from) to else it
 	})
@@ -87,13 +108,13 @@ fun DatabaseManager.replaceTestGroup(from: DbTestGroup, to: DbTestGroup) {
 
 fun DatabaseManager.updateSchedule(group: DbTestGroup, schedule: DbTestSchedule): DbTestGroup {
 	val newGroup = group.copy(schedule = schedule)
-	replaceTestGroup(group, newGroup)
+	replaceTestGroupDangerous(group, newGroup)
 	return newGroup
 }
 
 fun DatabaseManager.renameTestGroup(group: DbTestGroup, newName: String): DbTestGroup {
 	check(group.target is DbTestTarget.Group)
 	val newGroup = group.copy(target = group.target.copy(name = newName))
-	replaceTestGroup(group, newGroup)
+	replaceTestGroupDangerous(group, newGroup)
 	return newGroup
 }

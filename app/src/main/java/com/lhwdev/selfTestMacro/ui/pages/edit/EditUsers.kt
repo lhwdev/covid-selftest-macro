@@ -81,7 +81,7 @@ fun EditUsers() {
 								
 								DropdownMenuItem(onClick = {
 									showAddDialog = false
-									navigator.showDialogAsync { NewGroup() }
+									navigator.showDialogAsync { SetupGroup(previousGroup = null) }
 								}) {
 									Text("그룹 만들기")
 								}
@@ -132,7 +132,7 @@ fun EditUsers() {
 									
 									DropdownMenuItem(onClick = clickAction {
 										navigator.showDialogAsync {
-											NewGroup(initialSelection = selection)
+											SetupGroup(previousGroup = null, initialSelection = selection)
 										}
 									}) { Text("그룹 만들기") }
 									

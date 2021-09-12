@@ -107,7 +107,6 @@ fun MaterialDialog(
 		onCloseRequest = onCloseRequest,
 		properties = properties
 	) { info ->
-		/* Only using 40.dp padding as 8.dp is already provided */
 		AutoSystemUi(
 			onScreenMode = null,
 			ime = SystemUiMode.Default
@@ -153,5 +152,28 @@ fun MaterialDialog(
 
 class FloatingMaterialDialogScope(
 	info: MaterialDialogInfo,
-	private val columnScope: ColumnScope
+	columnScope: ColumnScope
+) : MaterialDialogScope(info), ColumnScope by columnScope
+
+
+// this adds nothing; animation is done by navigator
+@Composable
+fun FullMaterialDialogStub(
+	onCloseRequest: () -> Unit,
+	content: @Composable FullMaterialDialogScope.() -> Unit
+) {
+	val info = remember {
+		MaterialDialogInfo(onCloseRequest)
+	}
+	info.onCloseRequest = onCloseRequest
+	
+	
+	Column {
+		FullMaterialDialogScope(info, this).content()
+	}
+}
+
+class FullMaterialDialogScope(
+	info: MaterialDialogInfo,
+	columnScope: ColumnScope
 ) : MaterialDialogScope(info), ColumnScope by columnScope

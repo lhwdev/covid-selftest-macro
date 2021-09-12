@@ -1,5 +1,10 @@
 {
-  "titles": [],
+  "titles": [
+    [
+      "Splash screen by ",
+      "@Gradient"
+    ]
+  ],
   "details": {
     "Gradient": {
       "profile": "https://cdn.discordapp.com/attachments/868429218466381866/886524524466696232/20e7d58d47fe752e.jpg",

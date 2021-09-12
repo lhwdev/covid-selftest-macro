@@ -17,17 +17,13 @@ fun Navigator.showDebugWindow() = showDialogAsync {
 	Title { Text("개발자 모드") }
 	ListContent {
 		Column {
-			ListItem(
-				modifier = Modifier.clickable {
-					pref.isDebugEnabled = false
-				}
-			) { Text("개발자 모드 끄기") }
+			ListItem(modifier = Modifier.clickable {
+				pref.isDebugEnabled = false
+			}) { Text("개발자 모드 끄기") }
 			
-			ListItem(
-				modifier = Modifier.clickable {
-					
-				}
-			) { Text("가상 서버 설정") }
+			ListItem(modifier = Modifier.clickable {
+				pref.isVirtualServer = !pref.isVirtualServer
+			}) { Text("가상 서버 ${if(pref.isVirtualServer) "끄기" else "켜기"}") }
 			
 			ListItem { Text("에러 로깅 활성화됨") }
 		}

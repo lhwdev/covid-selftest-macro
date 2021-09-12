@@ -8,7 +8,13 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
@@ -61,7 +67,16 @@ fun ComposeApp(activity: Activity) {
 			LocalSelfTestManager provides selfTestManager
 		) {
 			ProvideAutoWindowInsets {
-				ComposeNavigationHost(navigator)
+				Box {
+					if(pref.isVirtualServer) Text(
+						"가상 서버",
+						modifier = Modifier
+							.background(Color.Black.copy(alpha = .3f))
+							.align(Alignment.TopEnd)
+					)
+					
+					ComposeNavigationHost(navigator)
+				}
 			}
 		}
 		

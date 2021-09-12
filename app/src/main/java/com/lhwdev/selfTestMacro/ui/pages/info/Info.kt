@@ -3,11 +3,16 @@ package com.lhwdev.selfTestMacro.ui.pages.info
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.lhwdev.fetch.toJson
+import com.lhwdev.github.repo.getRawContent
+import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.BuildConfig
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
@@ -20,6 +25,15 @@ import com.lhwdev.selfTestMacro.ui.common.BackButton
 import com.lhwdev.selfTestMacro.ui.common.LinkedText
 import com.lhwdev.selfTestMacro.ui.pages.intro.showPrivacyPolicy
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
+import com.vanpra.composematerialdialogs.Content
+import com.vanpra.composematerialdialogs.Title
+import com.vanpra.composematerialdialogs.showDialogAsync
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+
+private const val sInfoDeveloper = "info-developer.json"
 
 
 @Composable
@@ -29,6 +43,7 @@ fun Info(): Unit = MaterialTheme(
 	val navigator = LocalNavigator
 	val pref = LocalPreference.current
 	val context = LocalContext.current
+	val scope = rememberCoroutineScope()
 	
 	Surface(color = MaterialTheme.colors.primarySurface) {
 		AutoSystemUi(
@@ -70,27 +85,41 @@ fun Info(): Unit = MaterialTheme(
 					Text("개발자: ")
 					LinkedText(
 						"lhwdev (이현우)",
-						onClick = { context.openWebsite("https://github.com/lhwdev") }
+						onClick = {
+							scope.launch {
+								val data = withContext(Dispatchers.IO) {
+									try {
+										App.githubRepo.getRawContent(sInfoDeveloper, App.metaBranch)
+											.toJson(InfoUserStructure.Detail.serializer(), anyContentType = true)
+									} catch(th: Throwable) {
+										navigator.showDialogAsync {
+											Title { Text("정보를 불러오지 못했습니다.") }
+											Content { Text(th.stackTraceToString()) }
+										}
+										null
+									}
+								} ?: return@launch
+								
+								navigator.showDialogAsync(maxHeight = Dp.Infinity) {
+									InfoUsersDetail(data)
+								}
+							}
+						}
 					)
 				}
 				
-				Text("Thanks to 이승수")
-				Row {
-					Text("Splash design by ")
-					LinkedText(
-						"권순엽",
-						onClick = { context.openWebsite("https://agar.io/") }
-					)
-				}
+				Spacer(Modifier.height(8.dp))
 				
-				Spacer(Modifier.height(24.dp))
+				InfoUsers()
+				
+				Spacer(Modifier.height(8.dp))
 				
 				LinkedText(
 					"오픈소스 라이센스",
 					onClick = { navigator.pushRoute { OpenSources() } }
 				)
 				
-				Spacer(Modifier.height(8.dp))
+				Spacer(Modifier.height(28.dp))
 				
 				LinkedText(
 					"개인정보 처리방침",

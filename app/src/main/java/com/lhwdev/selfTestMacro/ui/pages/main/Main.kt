@@ -246,12 +246,14 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 	// '자가진단 상태'
 	//  '모두 정상'
 	//  '자세히 보기'
+	val statusKey = remember { mutableStateOf(0) }
+	
 	when(val target = selectedGroup.group.target) {
 		is DbTestTarget.Group -> {
-			GroupStatusView(target)
+			GroupStatusView(target, statusKey)
 		}
 		is DbTestTarget.Single -> {
-			SingleStatusView(target)
+			SingleStatusView(target, statusKey)
 		}
 	}
 	
@@ -304,6 +306,8 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 						SurveyData()
 					}
 				)
+				
+				statusKey.value++
 			}
 		},
 		colors = ButtonDefaults.buttonColors()

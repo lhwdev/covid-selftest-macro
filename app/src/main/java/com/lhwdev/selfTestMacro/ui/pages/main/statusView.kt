@@ -17,16 +17,14 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.GroupStatus
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.Status
 import com.lhwdev.selfTestMacro.repository.SuspiciousKind
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.utils.SmallIconButton
-import com.vanpra.composematerialdialogs.Buttons
-import com.vanpra.composematerialdialogs.ListContent
-import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.Title
+import com.vanpra.composematerialdialogs.*
 
 
 private val SuspiciousKind?.displayText get() = when(this) {
@@ -37,14 +35,14 @@ private val SuspiciousKind?.displayText get() = when(this) {
 
 @Composable
 internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
-	target: DbTestTarget.Single
+	target: DbTestTarget.Single,
+	statusKey: MutableState<Int>
 ) {
 	val pref = LocalPreference.current
 	val selfTestManager = LocalSelfTestManager.current
 	
-	var statusKey by remember { mutableStateOf(0) }
-	if(changed(target)) statusKey++
-	val status = lazyState(null, key = statusKey) {
+	if(changed(target)) statusKey.value++
+	val status = lazyState(null, key = statusKey.value) {
 		with(pref.db) { selfTestManager.getCurrentStatus(target.user) }
 	}.value
 	
@@ -56,7 +54,7 @@ internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
 		Spacer(Modifier.width(8.dp))
 		
 		SmallIconButton(onClick = {
-			statusKey++
+			statusKey.value++
 		}) {
 			Icon(
 				painterResource(R.drawable.ic_refresh_24),
@@ -86,18 +84,18 @@ internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
 
 @Suppress("unused")
 @Composable
-internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group) {
+internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: MutableState<Int>) {
 	val pref = LocalPreference.current
 	val selfTestManager = LocalSelfTestManager.current
+	val navigator = LocalNavigator
 	val users = with(pref.db) { target.allUsers }
 	
 	var allStatus by remember { mutableStateOf<Map<DbUser, Status>>(emptyMap()) } // stub
 	var forceAllowInit by remember { mutableStateOf(false) }
 	val allowInit = users.size <= 4 || forceAllowInit
 	
-	var groupStatusKey by remember { mutableStateOf(0) }
-	if(changed(target)) groupStatusKey++
-	val groupStatus = lazyState(null, key = groupStatusKey, allowInit = allowInit) state@{
+	if(changed(target)) statusKey.value++
+	val groupStatus = lazyState(null, key = statusKey.value, allowInit = allowInit) state@{
 		val statusMap = users.associateWith {
 			selfTestManager.getCurrentStatus(it) ?: return@state null
 		}
@@ -134,7 +132,7 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group) {
 			Spacer(Modifier.width(8.dp))
 			
 			SmallIconButton(onClick = {
-				groupStatusKey++
+				statusKey.value++
 				forceAllowInit = true
 			}) {
 				Icon(
@@ -202,6 +200,9 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group) {
 							}
 							
 							Icon(painterResource(icon), contentDescription = null)
+						},
+						modifier = Modifier.clickable {
+							navigator.showDialogAsync { OneUserDetail(user, status) }
 						}
 					) {
 						Row {

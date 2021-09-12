@@ -8,7 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import java.io.InputStream
 import java.nio.charset.Charset
 
@@ -33,9 +32,12 @@ val FetchResult.charset: Charset get() = contentType?.charset ?: Charsets.UTF_8
 suspend fun <T> FetchResult.toJson(
 	serializer: KSerializer<T>,
 	from: Json = Json,
-	charset: Charset = this.charset
+	charset: Charset = this.charset,
+	anyContentType: Boolean = false
 ): T = withContext(Dispatchers.IO) {
-	check(contentType?.mediaType == MediaTypes.json)
+	check(anyContentType || contentType?.mediaType == MediaTypes.json) {
+		"Content-Type of fetched resource is not application/json: $contentType"
+	}
 	from.decodeFromString(serializer, getText(charset))
 }
 
@@ -46,9 +48,9 @@ suspend fun FetchResult.getText(charset: Charset = this.charset): String = runIn
 }
 
 
-suspend fun FetchResult.toJson(
-	from: Json = Json,
-	charset: Charset = this.charset
-): JsonElement = withContext(Dispatchers.IO) {
-	from.parseToJsonElement(getText(charset))
-}
+// suspend fun FetchResult.toJson(
+// 	from: Json = Json,
+// 	charset: Charset = this.charset
+// ): JsonElement = withContext(Dispatchers.IO) {
+// 	from.parseToJsonElement(getText(charset))
+// }

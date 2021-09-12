@@ -25,6 +25,7 @@ class PreferenceState(pref: PreferenceHolder) {
 	
 	
 	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
+	var isVirtualServer by pref.preferenceBoolean("isVirtualServer", false)
 	
 	var isFirstTime by pref.preferenceBoolean("first", true)
 	

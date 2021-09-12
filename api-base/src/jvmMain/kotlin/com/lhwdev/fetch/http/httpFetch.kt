@@ -103,7 +103,7 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 					val out = ByteArrayOutputStream()
 					body.write(out)
 					val array = out.toByteArray()
-					System.out.write(array)
+					System.out.write(array, 0, array.size.coerceAtMost(2000))
 					it.write(array)
 				}
 				println()
@@ -130,7 +130,8 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 				if(count < 10) {
 					println(text)
 				} else {
-					val cut = text.splitToSequence('\n')
+					val cut = text.let { if(it.length > 2000) it.take(2000) else it }
+						.splitToSequence('\n')
 						.joinToString(limit = 20, separator = "\n", truncated = "\n\u001b[90m  ...\u001b[0m")
 					println(cut)
 					println()

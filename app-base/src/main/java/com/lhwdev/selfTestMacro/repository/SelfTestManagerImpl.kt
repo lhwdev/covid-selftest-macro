@@ -261,7 +261,6 @@ class SelfTestManagerImpl(
 		)
 		
 		val previousTestGroups = database.testGroups
-		val hadAnyTestGroups = previousTestGroups.groups.isNotEmpty()
 		
 		if(targetGroup == null) {
 			// add new group

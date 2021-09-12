@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
@@ -161,17 +162,22 @@ fun OpenSourcesContent(
 
 @Composable
 fun OpenSourcesList(groupId: String, items: List<LicenseItem>) {
+	val navigator = LocalNavigator
+	
 	AutoSystemUi { scrims ->
 		Scaffold(
 			topBar = {
 				TopAppBar(
 					title = { Text(groupId) },
+					navigationIcon = {
+						IconButton(onClick = { navigator.popRoute() }) {
+							Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")
+						}
+					},
 					statusBarScrim = scrims.statusBar
 				)
 			}
 		) {
-			val navigator = LocalNavigator
-			
 			val artifactStyle = SpanStyle(MaterialTheme.colors.primaryActive)
 			val versionStyle = SpanStyle(MaterialTheme.colors.onBackground.copy(alpha = .9f))
 			val otherStyle = SpanStyle(MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.medium))

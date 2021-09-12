@@ -61,7 +61,6 @@ inline fun Navigator.showDialogAsync(
 }
 
 suspend inline fun <T> Navigator.showFullDialog(
-	modifier: Modifier = Modifier,
 	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { FullDialogRoute(content = it) },
 	noinline content: @Composable (FullMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit)
 ): T? = showRoute(routeFactory = routeFactory) { remoteRoute ->
@@ -71,7 +70,6 @@ suspend inline fun <T> Navigator.showFullDialog(
 }
 
 inline fun Navigator.showFullDialogAsync(
-	modifier: Modifier = Modifier,
 	routeFactory: (content: @Composable () -> Unit) -> Route = { FullDialogRoute(content = it) },
 	noinline content: @Composable (FullMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {

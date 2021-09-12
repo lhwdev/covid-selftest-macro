@@ -42,7 +42,15 @@ enum class SuspiciousKind { symptom, quarantined }
 
 @Immutable
 sealed class Status {
-	data class Submitted(val suspicious: SuspiciousKind?, val time: String) : Status()
+	data class Submitted(
+		val suspicious: SuspiciousKind?,
+		val time: String,
+		
+		val questionSuspicious: Boolean?,
+		val questionWaitingResult: Boolean?,
+		val questionQuarantined: Boolean?
+	) : Status()
+	
 	object NotSubmitted : Status()
 }
 
@@ -72,7 +80,14 @@ val UserInfo.suspiciousKind: SuspiciousKind?
 
 fun Status(info: UserInfo): Status = when {
 	info.isHealthy != null && info.lastRegisterAt != null ->
-		Status.Submitted(info.suspiciousKind, formatRegisterTime(info.lastRegisterAt!!))
+		Status.Submitted(
+			suspicious = info.suspiciousKind,
+			time = formatRegisterTime(info.lastRegisterAt!!),
+			
+			questionSuspicious = info.questionSuspicious,
+			questionWaitingResult = info.questionWaitingResult,
+			questionQuarantined = info.questionQuarantined
+		)
 	else -> Status.NotSubmitted
 }
 

@@ -5,7 +5,6 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.lifecycleScope
-import com.lhwdev.github.repo.getRelease
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.navigation.ComposeNavigationHost
 import com.lhwdev.selfTestMacro.navigation.NavigatorImpl
@@ -28,12 +27,7 @@ class UpdateActivity : AppCompatActivity() {
 		}
 		
 		lifecycleScope.launch {
-			val update = getUpdateAvailable()
-			if(update == null) finish()
-			else {
-				val release = App.githubRepo.getRelease(update.toString())
-				askUpdate(navigator, release, 1001)
-			}
+			checkAndAskUpdate(navigator, 1001)
 		}
 	}
 }

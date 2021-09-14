@@ -12,7 +12,6 @@ repositories {
 
 licensee {
 	allow("Apache-2.0")
-	allowUrl("http://opensource.org/licenses/BSD-2-Clause") // commonmark
 	// allow("MIT")
 	
 	// see https://github.com/airbnb/lottie-android/issues/1865
@@ -35,7 +34,7 @@ android {
 		minSdk = 21
 		targetSdk = 30
 		versionCode = 3000
-		versionName = "3.0.0-build01"
+		versionName = "3.0.0-build02"
 		
 		// multiDexEnabled = true
 		
@@ -80,7 +79,7 @@ android {
 	
 	composeOptions {
 		kotlinCompilerVersion = "1.5.21"
-		kotlinCompilerExtensionVersion = "1.0.1"
+		kotlinCompilerExtensionVersion = "1.0.2"
 	}
 }
 
@@ -102,7 +101,7 @@ dependencies {
 	
 	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
 	
-	val compose = "1.0.1" // also kotlinCompilerExtensionVersion, app-serialization/version, app-models
+	val compose = "1.0.2" // also kotlinCompilerExtensionVersion, app-serialization/version, app-models
 	implementation("androidx.compose.ui:ui:$compose")
 	implementation("androidx.compose.ui:ui-tooling:$compose")
 	implementation("androidx.compose.foundation:foundation:$compose")
@@ -110,13 +109,10 @@ dependencies {
 	implementation("androidx.compose.material:material:$compose")
 	implementation("androidx.activity:activity-compose:1.3.1")
 	
-	val accompanist = "0.17.0" // also in app-base
+	val accompanist = "0.18.0" // also in app-base
 	implementation("com.google.accompanist:accompanist-insets:$accompanist")
 	implementation("com.google.accompanist:accompanist-insets-ui:$accompanist")
 	implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanist")
-	
-	implementation("com.halilibo.compose-richtext:richtext-ui-material:0.7.0")
-	implementation("com.halilibo.compose-richtext:richtext-commonmark:0.7.0")
 	
 	implementation("androidx.appcompat:appcompat:1.3.1")
 	implementation("androidx.core:core-ktx:1.6.0")

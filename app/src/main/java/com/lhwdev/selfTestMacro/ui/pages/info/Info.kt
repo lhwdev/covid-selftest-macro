@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.toJson
-import com.lhwdev.github.repo.getRawContent
+import com.lhwdev.github.repo.getContent
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.BuildConfig
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
@@ -89,7 +89,7 @@ fun Info(): Unit = MaterialTheme(
 							scope.launch {
 								val data = withContext(Dispatchers.IO) {
 									try {
-										App.githubRepo.getRawContent(sInfoDeveloper, App.metaBranch)
+										App.githubRepo.getContent(sInfoDeveloper, App.metaBranch)
 											.toJson(InfoUserStructure.Detail.serializer(), anyContentType = true)
 									} catch(th: Throwable) {
 										navigator.showDialogAsync {

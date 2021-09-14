@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.toJson
-import com.lhwdev.github.repo.getRawContent
+import com.lhwdev.github.repo.getContent
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
@@ -65,7 +65,7 @@ fun InfoUsers() {
 	val data = produceState<Any?>(null) {
 		withContext(Dispatchers.IO) {
 			value = try {
-				App.githubRepo.getRawContent(sInfoUsers, App.metaBranch)
+				App.githubRepo.getContent(sInfoUsers, App.metaBranch)
 					.toJson(InfoUserStructure.Root.serializer(), anyContentType = true)
 			} catch(th: Throwable) {
 				false

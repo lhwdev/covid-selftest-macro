@@ -17,28 +17,47 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
-import com.lhwdev.fetch.getText
 import com.lhwdev.github.repo.Release
-import com.lhwdev.github.repo.getRawContent
+import com.lhwdev.github.repo.getContent
 import com.lhwdev.github.repo.getRelease
+import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.models.Version
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.vanpra.composematerialdialogs.Buttons
 import com.vanpra.composematerialdialogs.Content
 import com.vanpra.composematerialdialogs.Title
 import com.vanpra.composematerialdialogs.showDialog
-import com.zachklipp.richtext.markdown.Markdown
-import com.zachklipp.richtext.ui.RichText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import java.io.File
 
 
-suspend fun Context.getUpdateAvailable(): Version? = withContext(Dispatchers.IO) {
+@Serializable
+class LatestVersion(val version: Version, val releaseId: String)
+
+enum class UpdateResult { updated, alreadyLatest, error }
+
+
+suspend fun Context.getUpdateAvailable(): LatestVersion? = withContext(Dispatchers.IO) {
+	val pref = preferenceState
+	
 	try {
-		val latest = App.githubRepo.getRawContent("latest-version.txt", App.metaBranch).getText()
-		val version = Version(latest)
-		if(version > App.version) version else null
+		val latest = App.githubRepo.getContent("latest-version.json", App.metaBranch)
+			.toJsonLoose(
+				MapSerializer(
+					keySerializer = String.serializer(),
+					valueSerializer = LatestVersion.serializer()
+				)
+			)
+		
+		val channel = latest.getOrElse(pref.updateChannel ?: pref.defaultUpdateChannel) {
+			latest.getValue(pref.defaultUpdateChannel)
+		}
+		
+		if(channel.version > App.version) channel else null
 	} catch(e: Throwable) {
 		onError(e, "getUpdateAvailable")
 		null
@@ -46,7 +65,7 @@ suspend fun Context.getUpdateAvailable(): Version? = withContext(Dispatchers.IO)
 }
 
 
-suspend fun Context.checkUpdate() {
+suspend fun Context.checkAndNotifyUpdate() {
 	try {
 		val update = getUpdateAvailable() ?: return
 		NotificationManagerCompat.from(this).notify(
@@ -58,39 +77,48 @@ suspend fun Context.checkUpdate() {
 	}
 }
 
-suspend fun Activity.checkAndAskUpdate(navigator: Navigator, requestCode: Int): Boolean {
+suspend fun Activity.checkAndAskUpdate(navigator: Navigator, requestCode: Int): UpdateResult? {
 	return try {
-		val update = getUpdateAvailable() ?: return false
-		val release = App.githubRepo.getRelease("v" + update.toString())
+		val update = getUpdateAvailable() ?: return UpdateResult.alreadyLatest
+		val release = App.githubRepo.getRelease(update.releaseId)
 		askUpdate(navigator, release, requestCode)
 	} catch(e: Throwable) {
 		onError(e, "checkAndAskUpdate")
-		false
+		UpdateResult.error
 	}
 }
 
 
 const val sUpdateApkExternalPath = "update/download_apk.apk"
 
-suspend fun Activity.askUpdate(navigator: Navigator, update: Release, requestCode: Int): Boolean {
-	try {
-		val apkAsset = update.assets.find { it.name == "app-release.apk" } ?: return false
-		
-		val result = navigator.showDialog<Boolean> { removeRoute ->
-			Title { Text("업데이트 안내") }
-			Content {
-				Text("버전 ${update.tagName}으로 업데이트할 수 있어요.")
-				Spacer(Modifier.height(16.dp))
-				RichText {
-					Markdown(update.body)
-				}
-			}
-			Buttons {
-				PositiveButton(onClick = { removeRoute(true) }) { Text("업데이트") }
-				NegativeButton { Text("취소") }
-			}
+suspend fun Activity.askUpdate(navigator: Navigator, update: Release, requestCode: Int): UpdateResult? {
+	val result = navigator.showDialog<Boolean> { removeRoute ->
+		Title { Text("업데이트 안내") }
+		Content {
+			Text("버전 ${update.tagName}으로 업데이트할 수 있어요.")
+			Spacer(Modifier.height(16.dp))
+			Text(update.body) // TODO: support markdown
 		}
-		if(result != true) return false
+		Buttons {
+			PositiveButton(onClick = { removeRoute(true) }) { Text("업데이트") }
+			NegativeButton { Text("취소") }
+		}
+	}
+	if(result != true) return null
+	
+	return performUpdate(update, requestCode)
+}
+
+// suspend fun Activity.checkAndUpdate(requestCode: Int): UpdateResult {
+// 	val update = getUpdateAvailable() ?: return UpdateResult.alreadyLatest
+// 	val release = App.githubRepo.getRelease(update.releaseId)
+// 	return performUpdate(release, requestCode)
+// }
+
+suspend fun Activity.performUpdate(update: Release, requestCode: Int): UpdateResult {
+	try {
+		val apkAsset = update.assets.find { it.name == "app-release.apk" } ?: return UpdateResult.error
+		
 		val url = apkAsset.browserDownloadUrl
 		
 		val externalPath = sUpdateApkExternalPath
@@ -101,7 +129,7 @@ suspend fun Activity.askUpdate(navigator: Navigator, update: Release, requestCod
 		download.apply {
 			setMimeType("application/vnd.android.package-archive")
 			setTitle("업데이트를 다운받고 있어요.")
-			setDestinationInExternalFilesDir(this@askUpdate, null, externalPath)
+			setDestinationInExternalFilesDir(this@performUpdate, null, externalPath)
 		}
 		
 		val lastDownloadedReceiver = sApkDownloadedReceiver
@@ -120,7 +148,7 @@ suspend fun Activity.askUpdate(navigator: Navigator, update: Release, requestCod
 					install.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
 					install.setDataAndType(contentUri, "application/vnd.android.package-archive")
 					ActivityCompat.startActivityForResult(
-						this@askUpdate,
+						this@performUpdate,
 						install,
 						requestCode,
 						null
@@ -152,10 +180,10 @@ suspend fun Activity.askUpdate(navigator: Navigator, update: Release, requestCod
 		
 		downloadManager.enqueue(download)
 		
-		return true
+		return UpdateResult.updated
 	} catch(e: Throwable) {
 		onError(e, "askUpdate")
-		return false
+		return UpdateResult.error
 	}
 }
 

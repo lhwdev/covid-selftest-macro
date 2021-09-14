@@ -60,6 +60,7 @@ fun PreviewBase(statusBar: Boolean = false, content: @Composable () -> Unit) {
 					)
 					override val systemBars: WindowInsets.Type = ImmutableWindowInsetsType()
 					override val systemGestures: WindowInsets.Type = ImmutableWindowInsetsType()
+					override val displayCutout: WindowInsets.Type = ImmutableWindowInsetsType()
 				}
 			},
 			LocalPreviewUiController provides uiController

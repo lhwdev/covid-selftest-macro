@@ -20,7 +20,7 @@ class AlarmReceiver : BroadcastReceiver() {
 				// context.submitSelfTestNow()
 				TODO()
 			}
-			context.checkUpdate()
+			context.checkAndNotifyUpdate()
 			
 			result.finish()
 		}

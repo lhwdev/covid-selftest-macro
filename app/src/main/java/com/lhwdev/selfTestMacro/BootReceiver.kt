@@ -8,6 +8,7 @@ import android.content.Intent
 class BootReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
 		if(intent.action != Intent.ACTION_BOOT_COMPLETED) return
+		return // TODO
 		TODO()
 	}
 }

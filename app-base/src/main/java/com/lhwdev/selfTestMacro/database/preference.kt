@@ -24,6 +24,9 @@ class PreferenceState(pref: PreferenceHolder) {
 	}
 	
 	
+	var updateChannel by pref.preferenceString("updateChannel", defaultUpdateChannel)
+	val defaultUpdateChannel = "stable"
+	
 	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
 	var isVirtualServer by pref.preferenceBoolean("isVirtualServer", false)
 	

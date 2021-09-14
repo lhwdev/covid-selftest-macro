@@ -50,7 +50,7 @@ android {
 	
 	composeOptions {
 		kotlinCompilerVersion = "1.5.21"
-		kotlinCompilerExtensionVersion = "1.0.1"
+		kotlinCompilerExtensionVersion = "1.0.2"
 	}
 }
 
@@ -71,7 +71,7 @@ dependencies {
 	
 	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
 	
-	val compose = "1.0.1" // also kotlinCompilerExtensionVersion, app-serialization/version, app-models
+	val compose = "1.0.2" // also kotlinCompilerExtensionVersion, app-serialization/version, app-models
 	implementation("androidx.compose.ui:ui:$compose")
 	implementation("androidx.compose.ui:ui-tooling:$compose")
 	implementation("androidx.compose.foundation:foundation:$compose")

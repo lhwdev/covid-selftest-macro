@@ -5,13 +5,14 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 
 // 'major.minor(.patch)(-preRelease)'
 // ex: 3.0.0-alpha01
-@Serializable
+@Serializable(with = Version.VersionSerializer::class)
 data class Version(
 	val major: Int,
 	val minor: Int,
@@ -19,6 +20,17 @@ data class Version(
 	val preRelease: PreRelease?,
 	private var stringCache: String? = null
 ) : Comparable<Version> {
+	object VersionSerializer : KSerializer<Version> {
+		override val descriptor: SerialDescriptor =
+			PrimitiveSerialDescriptor(Version::class.qualifiedName!!, PrimitiveKind.STRING)
+		
+		override fun deserialize(decoder: Decoder): Version = Version(decoder.decodeString())
+		
+		override fun serialize(encoder: Encoder, value: Version) {
+			encoder.encodeString(value.toString())
+		}
+	}
+	
 	override fun compareTo(other: Version) = when {
 		major != other.major -> major - other.major
 		minor != other.minor -> minor - other.minor
@@ -93,7 +105,7 @@ data class VersionSpec(val from: Version, val to: Version) {
 }
 
 object VersionSpecSerializer : KSerializer<VersionSpec> {
-	override val descriptor = PrimitiveSerialDescriptor(VersionSpec::class.java.name, PrimitiveKind.STRING)
+	override val descriptor = PrimitiveSerialDescriptor(VersionSpec::class.qualifiedName!!, PrimitiveKind.STRING)
 	
 	override fun deserialize(decoder: Decoder) = VersionSpec(decoder.decodeString())
 	

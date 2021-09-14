@@ -38,7 +38,7 @@ data class GroupInfo(
 		}
 }
 
-enum class SuspiciousKind { symptom, quarantined }
+enum class SuspiciousKind(val displayName: String) { symptom("유증상 있음"), quarantined("자가격리함") }
 
 @Immutable
 sealed class Status {

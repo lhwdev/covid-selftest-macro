@@ -5,7 +5,7 @@ on:
       - meta
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -13,7 +13,7 @@ jobs:
         with:
           deno-version: v1.x
       - name: Minify files
-        run: deno run --allow-write publish/mod.ts
+        run: deno run --allow-read --allow-write publish/mod.ts
       - name: Commit files
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"

@@ -1,7 +1,7 @@
 import { resolve } from "https://deno.land/std@0.107.0/path/mod.ts";
 
 const input = "src";
-const output = "public";
+const output = "output";
 
 onDirectory(".");
 
@@ -15,7 +15,6 @@ async function onDirectory(dir: string) {
 async function onFile(dir: string, entry: Deno.DirEntry) {
   const name = entry.name;
   const path = resolve(input, `${dir}/${entry.name}`);
-  console.log(path)
   const index = name.lastIndexOf(".");
   const extension = index == -1 ? null : name.slice(index + 1);
   switch (extension) {
@@ -28,7 +27,6 @@ async function onFile(dir: string, entry: Deno.DirEntry) {
       const result = JSON.stringify(JSON.parse(string));
       const toDir = resolve(output, dir);
       Deno.mkdir(toDir, { recursive: true });
-      console.log(`to ${toDir}/${name}`)
       await Deno.writeTextFile(`${toDir}/${name}`, result);
       break;
     }

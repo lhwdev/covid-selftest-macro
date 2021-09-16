@@ -1,0 +1,20 @@
+{
+  "app-main": {
+    "stable": {
+      "version": "2.13",
+      "releaseId": "2.13"
+    },
+    "unstable": {
+      "version": "3.0.0-build01",
+      "releaseId": "v3.0.0-build01"
+    }
+  },
+  "components": {
+    ":api": {
+      "stable": {
+        "version": "1.0",
+        "releaseId": null
+      }
+    }
+  }
+}

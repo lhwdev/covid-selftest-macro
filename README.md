@@ -7,4 +7,4 @@
 
 본인이 앱 개발에 기여했다고 생각한다면 info-users.json을 수정해서 PR을 넣어주세요.
 
-
+json 파일들은 minify되어 `app-meta` 브랜치에서 불러옵니다.

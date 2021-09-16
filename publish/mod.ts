@@ -25,8 +25,9 @@ async function onFile(dir: string, entry: Deno.DirEntry) {
     case "json": {
       const string = await Deno.readTextFile(path);
       const result = JSON.stringify(JSON.parse(string));
-      const toDir = resolve(output, dir)
-      Deno.mkdir(toDir, { recursive: true })
+      const toDir = resolve(output, dir);
+      console.log(`toDir: ${toDir}`);
+      Deno.mkdir(toDir, { recursive: true });
       await Deno.writeTextFile(`${toDir}/${name}`, result);
       break;
     }

@@ -15,6 +15,7 @@ async function onDirectory(dir: string) {
 async function onFile(dir: string, entry: Deno.DirEntry) {
   const name = entry.name;
   const path = resolve(input, `${dir}/${entry.name}`);
+  console.log(path)
   const index = name.lastIndexOf(".");
   const extension = index == -1 ? null : name.slice(index + 1);
   switch (extension) {
@@ -26,7 +27,6 @@ async function onFile(dir: string, entry: Deno.DirEntry) {
       const string = await Deno.readTextFile(path);
       const result = JSON.stringify(JSON.parse(string));
       const toDir = resolve(output, dir);
-      console.log(`toDir: ${toDir}`);
       Deno.mkdir(toDir, { recursive: true });
       await Deno.writeTextFile(`${toDir}/${name}`, result);
       break;

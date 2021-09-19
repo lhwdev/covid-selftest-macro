@@ -57,8 +57,14 @@
 
 디자인에 관련해서는 컴포넌트를 만들기도 하지만 그냥 하나하나 스타일을 집어넣는 경우도 많아서 코드가 조금 더럽습니다. 대규모 프젝도 아니라서 그냥 그렇게 했답니다..!
 
-이 코드의 일부분은 노출될 경우 곤란합니다. 따라서 transkey 폴더는 이 저장소에 올라와있지
-않습니다. 코틀린 구현체가 필요하신 분은 따로 연락주세요.  
+~~이 코드의 일부분은 노출될 경우 곤란합니다. 따라서 transkey 폴더는 이 저장소에 올라와있지
+않습니다. 코틀린 구현체가 필요하신 분은 따로 연락주세요.~~ [이제 별 문제 없을 거 같아서 그냥 공개했습니다.](https://github.com/lhwdev/covid-selftest-macro-transkey)
+클론할 때는 저 리포를 클론하지 마시고 이 리포를 `--recurse-submodules`와 함께 클론하면 됩니다.  
+예시 명령줄:
+```shell
+git clone --recurse-submodules https://github.com/lhwdev/covid-selftest-macro
+```
+
 참고로 이미 [파이썬으로 만들어진 자가진단 구현체](https://github.com/331leo/hcskr_python)가 있습니다.
 다른 언어의 경우 위 구현체를 직접 포팅해주세요.
 

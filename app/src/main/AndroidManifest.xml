@@ -44,6 +44,8 @@
 			android:name=".UpdateActivity"
 			android:theme="@style/AppTheme.Transparent" />
 		
+		<activity android:name=".DebugActivity" />
+		
 		<receiver android:name=".AlarmReceiver" />
 		
 		<receiver

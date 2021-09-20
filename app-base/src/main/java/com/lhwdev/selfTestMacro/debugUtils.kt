@@ -45,10 +45,12 @@ suspend fun Context.onErrorToast(error: Throwable, description: String = "???") 
 }
 
 
-suspend fun Context.onError(error: Throwable, description: String = "???") {
+suspend fun Context.onError(error: Throwable, description: String = "???", forceShow: Boolean = false) {
 	Log.e("ERROR", description, error)
 	val info = getErrorInfo(error, description)
-	if(isDebugEnabled) showErrorInfo(info)
+	if(forceShow || isDebugEnabled) withContext(Dispatchers.Main) {
+		showErrorInfo(info)
+	}
 	writeErrorLog(info)
 }
 

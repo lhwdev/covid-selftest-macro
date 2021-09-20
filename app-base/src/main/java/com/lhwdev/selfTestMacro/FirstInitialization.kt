@@ -10,6 +10,7 @@ import com.lhwdev.github.sGithubInstanceDefault
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.ui.utils.sDebugAnimateListAsComposable
 import java.net.URL
+import javax.net.ssl.SSLHandshakeException
 
 
 object FirstInitialization {
@@ -44,7 +45,7 @@ object SelfTestHttpErrorRetryInterceptor : HttpInterceptor {
 		body: DataBody?,
 		interceptorChain: InterceptorChain
 	): FetchResult {
-		val next = tryAtMost(maxTrial = 10) {
+		val next = tryAtMost(maxTrial = 10, errorFilter = { it is SSLHandshakeException }) {
 			interceptorChain.interceptNext(url, method, headers, session, body)
 		}
 		

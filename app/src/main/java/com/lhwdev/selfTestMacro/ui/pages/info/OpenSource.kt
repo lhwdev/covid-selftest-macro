@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
@@ -66,6 +65,8 @@ data class ScmItem(val url: String)
 @Composable
 fun OpenSources() {
 	val context = LocalContext.current
+	val navigator = LocalNavigator
+	
 	val items by lazyState(defaultValue = null) {
 		val input = context.resources.openRawResource(R.raw.open_source_license)
 		withContext(Dispatchers.IO) {
@@ -81,6 +82,7 @@ fun OpenSources() {
 			topBar = {
 				TopAppBar(
 					title = { Text("오픈소스 라이센스") },
+					navigationIcon = { BackButton(onClick = { navigator.popRoute() }) },
 					statusBarScrim = scrims.statusBar
 				)
 			}
@@ -169,11 +171,7 @@ fun OpenSourcesList(groupId: String, items: List<LicenseItem>) {
 			topBar = {
 				TopAppBar(
 					title = { Text(groupId) },
-					navigationIcon = {
-						IconButton(onClick = { navigator.popRoute() }) {
-							Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")
-						}
-					},
+					navigationIcon = { BackButton(onClick = { navigator.popRoute() }) },
 					statusBarScrim = scrims.statusBar
 				)
 			}

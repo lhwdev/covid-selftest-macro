@@ -19,13 +19,13 @@ inline val LocalNavigator: CurrentNavigator
 
 
 @Composable
-fun RouteContent(route: Route) {
+fun RouteContent(route: RouteInstance) {
 	val navigator = LocalGlobalNavigator.current
 	val currentNav = remember(navigator, route) { CurrentNavigator(navigator, route) }
 	
 	CompositionLocalProvider(sLocalCurrentNavigator provides currentNav) {
-		Surface(color = if(route.isOpaque) Color.Transparent else Color.White) {
-			route.content()
+		Surface(color = if(route.route.isOpaque) Color.Transparent else Color.White) {
+			route.route.content()
 		}
 	}
 }

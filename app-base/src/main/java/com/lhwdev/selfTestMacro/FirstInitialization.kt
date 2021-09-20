@@ -5,8 +5,12 @@ import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpInterceptor
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
-import com.lhwdev.selfTestMacro.models.Version
+import com.lhwdev.github.repo.Repository
+import com.lhwdev.github.sGithubInstanceDefault
+import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.ui.utils.sDebugAnimateListAsComposable
 import java.net.URL
+import javax.net.ssl.SSLHandshakeException
 
 
 object FirstInitialization {
@@ -15,10 +19,16 @@ object FirstInitialization {
 	}
 	
 	fun Context.initializeApplication(versionName: String, versionCode: Int) {
-		sDebugFetch = isDebugEnabled
-		App.versionCode = versionCode
-		App.versionName = versionName
-		App.version = Version(versionName)
+		AppInitializationInfo.versionCode = versionCode
+		AppInitializationInfo.versionName = versionName
+		AppInitializationInfo.githubRepo = Repository(sGithubInstanceDefault, "lhwdev", "covid-selftest-macro")
+		
+		val pref = preferenceState
+		
+		if(pref.isDebugEnabled) {
+			sDebugFetch = pref.isDebugFetchEnabled
+			sDebugAnimateListAsComposable = pref.isNavigationDebugEnabled
+		}
 	}
 }
 
@@ -35,7 +45,11 @@ object SelfTestHttpErrorRetryInterceptor : HttpInterceptor {
 		body: DataBody?,
 		interceptorChain: InterceptorChain
 	): FetchResult {
-		val next = interceptorChain.interceptNext(url, method, headers, session, body)
+		val next = try {
+			interceptorChain.interceptNext(url, method, headers, session, body)
+		} catch(ssl: SSLHandshakeException) {
+			
+		}
 		
 		if("eduro.go.kr" !in url.path) return next
 		

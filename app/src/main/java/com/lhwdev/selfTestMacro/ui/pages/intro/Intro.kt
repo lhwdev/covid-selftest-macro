@@ -54,9 +54,12 @@ fun Intro() {
 						onClick = {
 							navigator.replaceRoute(
 								transition = FadeRouteTransition(animationSpec = tween(durationMillis = 500))
-							) { Setup() }
+							) {
+								Setup()
+							}
 						},
-						colors = ButtonDefaults.textButtonColors(contentColor = DefaultContentColor)
+						colors = ButtonDefaults.textButtonColors(contentColor = DefaultContentColor),
+						contentPadding = PaddingValues(all = 12.dp)
 					) { Text("동의") }
 				}
 			}

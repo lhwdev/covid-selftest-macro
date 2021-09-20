@@ -38,6 +38,8 @@ fun EditUsers() {
 	val groups = pref.db.testGroups.groups
 	if(!groups.containsAll(selection)) {
 		val filtered = selection.filter { it in groups }
+		selection.clear()
+		selection.addAll(filtered)
 	}
 	
 	BackHandler(enabled = selection.isNotEmpty()) {

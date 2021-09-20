@@ -44,16 +44,32 @@ android {
 	buildTypes {
 		named("release") {
 			isMinifyEnabled = true
+			isShrinkResources = true
+			
 			proguardFiles(
 				getDefaultProguardFile("proguard-android-optimize.txt"),
 				"proguard-rules.pro"
 			)
 		}
-		
-		named("debug") {
+	}
+	
+	
+	flavorDimensions("lifecycle")
+	
+	productFlavors {
+		register("stable") {
+			dimension = "lifecycle"
+		}
+		register("preview") {
+			dimension = "lifecycle"
 			applicationIdSuffix = ".preview"
 		}
+		register("dev") {
+			dimension = "lifecycle"
+			applicationIdSuffix = ".dev"
+		}
 	}
+	
 	
 	buildFeatures {
 		compose = true

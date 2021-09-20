@@ -1,15 +1,23 @@
 package com.lhwdev.selfTestMacro
 
 import com.lhwdev.github.repo.Repository
-import com.lhwdev.github.sGithubInstanceDefault
+import com.lhwdev.github.repo.branch
+import com.lhwdev.github.repo.defaultBranch
 import com.lhwdev.selfTestMacro.models.Version
 
 
-object App {
-	lateinit var version: Version
-	lateinit var versionName: String
+object AppInitializationInfo {
 	var versionCode: Int = -1
+	lateinit var versionName: String
+	lateinit var githubRepo: Repository
+}
+
+
+object App {
+	val version: Version = Version(AppInitializationInfo.versionName)
+	val versionCode: Int = AppInitializationInfo.versionCode
 	
-	val githubRepo = Repository(sGithubInstanceDefault, "lhwdev", "covid-selftest-macro")
-	val metaBranch = "meta"
+	val githubRepo: Repository = AppInitializationInfo.githubRepo
+	val masterBranch = githubRepo.defaultBranch()
+	val metaBranch = githubRepo.branch("app-meta")
 }

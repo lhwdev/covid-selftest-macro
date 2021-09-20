@@ -13,11 +13,11 @@ fun ComposeNavigationHost(navigator: Navigator) {
 	) {
 		AnimateListAsComposable(
 			navigator.routes,
-			isOpaque = { it.isOpaque },
+			isOpaque = { it.route.isOpaque },
 			animation = { route, visible, onAnimationEnd, content ->
-				val transition = route as? RouteTransition ?: DefaultTransition(isOpaque = route.isOpaque)
+				val transition = route.route as? RouteTransition ?: DefaultTransition(isOpaque = route.route.isOpaque)
 				transition.Transition(
-					route = route,
+					route = route.route,
 					visibleState = visible,
 					onAnimationEnd = onAnimationEnd,
 					content = content

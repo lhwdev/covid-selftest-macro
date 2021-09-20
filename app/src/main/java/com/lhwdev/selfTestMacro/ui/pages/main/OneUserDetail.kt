@@ -1,11 +1,16 @@
 package com.lhwdev.selfTestMacro.ui.pages.main
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.ListItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.repository.Status
+import com.vanpra.composematerialdialogs.Buttons
 import com.vanpra.composematerialdialogs.FloatingMaterialDialogScope
 import com.vanpra.composematerialdialogs.ListContent
 import com.vanpra.composematerialdialogs.Title
@@ -23,6 +28,8 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 			}
 			ListItem { Text(text) }
 			
+			Spacer(Modifier.height(8.dp))
+			
 			if(status is Status.Submitted) {
 				ListItem {
 					Text("'1. 학생 본인이 코로나19가 의심되는 임상증상이 있나요?': ${if(status.questionSuspicious == true) "있음" else "없음"}")
@@ -35,5 +42,9 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 				}
 			}
 		}
+	}
+	
+	Buttons {
+		PositiveButton { Text("확인") }
 	}
 }

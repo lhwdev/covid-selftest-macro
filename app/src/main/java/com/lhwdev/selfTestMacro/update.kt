@@ -18,7 +18,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
 import com.lhwdev.github.repo.Release
-import com.lhwdev.github.repo.getContent
 import com.lhwdev.github.repo.getRelease
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.models.Version
@@ -30,34 +29,30 @@ import com.vanpra.composematerialdialogs.showDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
 import java.io.File
 
 
-@Serializable
-class LatestVersion(val version: Version, val releaseId: String)
+object LatestVersion {
+	@Serializable
+	class Root(val appMain: Entry, val components: Map<String, Entry>)
+	
+	@Serializable
+	class Entry(val version: Version, val releaseId: String)
+}
 
 enum class UpdateResult { updated, alreadyLatest, error }
 
 
-suspend fun Context.getUpdateAvailable(): LatestVersion? = withContext(Dispatchers.IO) {
+// TODO: update components
+suspend fun Context.getUpdateAvailable(): LatestVersion.Entry? = withContext(Dispatchers.IO) {
 	val pref = preferenceState
+	val updateChannel = pref.updateChannel
 	
 	try {
-		val latest = App.githubRepo.getContent("latest-version.json", App.metaBranch)
-			.toJsonLoose(
-				MapSerializer(
-					keySerializer = String.serializer(),
-					valueSerializer = LatestVersion.serializer()
-				)
-			)
+		val latest = App.metaBranch.getContent("update/latest-$updateChannel.json")
+			.toJsonLoose(LatestVersion.Root.serializer())
 		
-		val channel = latest.getOrElse(pref.updateChannel ?: pref.defaultUpdateChannel) {
-			latest.getValue(pref.defaultUpdateChannel)
-		}
-		
-		if(channel.version > App.version) channel else null
+		if(latest.appMain.version > App.version) latest.appMain else null
 	} catch(e: Throwable) {
 		onError(e, "getUpdateAvailable")
 		null

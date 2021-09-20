@@ -11,7 +11,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.toJson
-import com.lhwdev.github.repo.getContent
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.BuildConfig
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
@@ -33,7 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-private const val sInfoDeveloper = "info-developer.json"
+private const val sInfoDeveloper = "info/developer.json"
 
 
 @Composable
@@ -89,7 +88,7 @@ fun Info(): Unit = MaterialTheme(
 							scope.launch {
 								val data = withContext(Dispatchers.IO) {
 									try {
-										App.githubRepo.getContent(sInfoDeveloper, App.metaBranch)
+										App.metaBranch.getContent(sInfoDeveloper)
 											.toJson(InfoUserStructure.Detail.serializer(), anyContentType = true)
 									} catch(th: Throwable) {
 										navigator.showDialogAsync {

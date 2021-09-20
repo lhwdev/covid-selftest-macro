@@ -5,39 +5,51 @@ import androidx.compose.runtime.mutableStateListOf
 
 
 interface Navigator {
-	val routes: List<Route>
+	val routes: List<RouteInstance>
 	
 	val size: Int
 	
-	fun pushRoute(route: Route)
+	fun pushRoute(route: RouteInstance)
 	
 	fun popLastRoute(): Boolean
 	fun removeRoute(route: Route): Boolean
+	fun removeRoute(route: RouteInstance): Boolean
 	fun clearRoute()
-	
-	fun replaceLastRoute(route: Route)
+}
+
+fun Navigator.pushRoute(route: Route) {
+	pushRoute(RouteInstance(route))
 }
 
 
+
+class RouteInstance(val route: Route)
+
+
 class NavigatorImpl : Navigator {
-	private val list: MutableList<Route> = mutableStateListOf()
-	override val routes: List<Route> get() = list
+	private val list: MutableList<RouteInstance> = mutableStateListOf()
+	override val routes: List<RouteInstance> get() = list
 	
 	override val size: Int get() = list.size
 	
-	override fun pushRoute(route: Route) {
+	override fun pushRoute(route: RouteInstance) {
 		list.add(route)
-		if(route is RouteObserver) route.onRouteAdded(this)
+		if(route.route is RouteObserver) route.route.onRouteAdded(this)
 	}
 	
 	override fun popLastRoute(): Boolean {
 		val route = list.removeLastOrNull() ?: return false
-		if(route is RouteObserver) route.onRouteRemoved(this)
+		if(route.route is RouteObserver) route.route.onRouteRemoved(this)
 		return true
 	}
 	
-	override fun removeRoute(route: Route): Boolean {
-		val index = list.lastIndexOf(route)
+	override fun removeRoute(route: Route): Boolean =
+		removeRouteAt(list.indexOfLast { it.route === route })
+	
+	override fun removeRoute(route: RouteInstance): Boolean =
+		removeRouteAt(list.lastIndexOf(route))
+	
+	private fun removeRouteAt(index: Int): Boolean {
 		if(index == -1) return false
 		
 		repeat(list.size - index) {
@@ -52,29 +64,24 @@ class NavigatorImpl : Navigator {
 			popLastRoute()
 		}
 	}
-	
-	override fun replaceLastRoute(route: Route) {
-		val last = list.last()
-		list[list.lastIndex] = route
-		
-		if(last is RouteObserver) last.onRouteRemoved(this)
-		if(route is RouteObserver) route.onRouteAdded(this)
-	}
 }
 
-class CurrentNavigator(private val navigator: Navigator, val currentRoute: Route) :
-	Navigator by navigator {
-	
+class CurrentNavigator(navigator: Navigator, val currentRoute: RouteInstance) : Navigator by navigator {
 	val isRoot: Boolean get() = routes.firstOrNull() == currentRoute
+	val isTop: Boolean get() = routes.last() == currentRoute
 	
 	fun popRoute(): Boolean {
 		return removeRoute(currentRoute)
 	}
 	
-	fun replaceRoute(route: Route): Boolean = if(currentRoute == routes.last()) {
-		replaceLastRoute(route)
-		true
-	} else {
-		false
+	fun replaceRoute(route: Route): Boolean {
+		val result = removeRoute(currentRoute)
+		if(!result) {
+			println("[Navigator] couldn't replace route $route: not exist in routes")
+			return false
+		}
+		
+		pushRoute(route)
+		return true
 	}
 }

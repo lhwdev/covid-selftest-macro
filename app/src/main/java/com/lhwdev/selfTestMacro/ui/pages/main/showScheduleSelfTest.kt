@@ -107,16 +107,21 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 		}
 		
 		ListItem(
-			icon = { Icon(painterResource(pref.db.iconFor(target)), contentDescription = null) }
-		) {
-			val text = with(pref.db) {
-				when(target) {
-					is DbTestTarget.Group -> "${target.name} (${target.userIds.size})"
-					is DbTestTarget.Single -> target.name
+			icon = { Icon(painterResource(pref.db.iconFor(target)), contentDescription = null) },
+			text = {
+				val text = with(pref.db) {
+					when(target) {
+						is DbTestTarget.Group -> "${target.name} (${target.userIds.size})"
+						is DbTestTarget.Single -> target.name
+					}
 				}
-			}
-			Text(text)
-		}
+				Text(text)
+			},
+			secondaryText = if(target is DbTestTarget.Group) ({
+				val users = with(pref.db) { target.allUsers }.joinToString { it.name }
+				Text(users)
+			}) else null
+		)
 		
 		Spacer(Modifier.height(12.dp))
 		

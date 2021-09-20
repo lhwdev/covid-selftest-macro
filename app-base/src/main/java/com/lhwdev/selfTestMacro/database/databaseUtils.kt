@@ -5,11 +5,13 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotMutableState
+import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.core.content.edit
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
+
 
 inline fun <T> PreferenceHolder.preferenceState(
 	key: String,
@@ -17,7 +19,8 @@ inline fun <T> PreferenceHolder.preferenceState(
 	crossinline write: (SharedPreferences, T) -> Unit
 ): MutableState<T> = object : SnapshotMutableState<T> {
 	private val handle = property(key)
-	private var cache = mutableStateOf<T?>(null) as SnapshotMutableState<T?>
+	private val cache = mutableStateOf<T?>(null)
+	
 	
 	override var value: T
 		get() {
@@ -32,6 +35,8 @@ inline fun <T> PreferenceHolder.preferenceState(
 			}
 		}
 		set(value) {
+			if(cache.value == value) return
+			
 			cache.value = value
 			val current = currentTransaction
 			if(current == null) {
@@ -51,7 +56,7 @@ inline fun <T> PreferenceHolder.preferenceState(
 	
 	override val policy: SnapshotMutationPolicy<T>
 		@Suppress("UNCHECKED_CAST")
-		get() = cache.policy as SnapshotMutationPolicy<T>
+		get() = structuralEqualityPolicy()
 }
 
 

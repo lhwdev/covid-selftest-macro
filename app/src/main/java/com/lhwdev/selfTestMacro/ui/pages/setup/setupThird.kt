@@ -223,7 +223,7 @@ private fun WizardStudentInfo(
 	}
 	
 	
-	Surface(color = if(colors.isLight) Color(0xffb7ffcb) else colors.surface) {
+	Surface(color = if(colors.isLight) Color(0xffb4fce3) else colors.surface) {
 		AutoSystemUi(
 			enabled = wizard.isCurrent,
 			onScreenMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)

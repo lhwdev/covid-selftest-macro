@@ -15,20 +15,22 @@ class PreferenceState(pref: PreferenceHolder) {
 		val p = pref.pref
 		// version migration
 		when(p.getInt("lastVersion", -1)) {
+			App.versionCode -> Unit // latest
 			in -1..999 -> p.edit { clear() }
 			in 1000..1999 -> p.edit { clear() }
-			App.versionCode -> Unit // latest
 		}
 		
 		p.edit { putInt("lastVersion", App.versionCode) }
 	}
 	
 	
-	var updateChannel by pref.preferenceString("updateChannel", defaultUpdateChannel)
 	val defaultUpdateChannel = "stable"
+	var updateChannel by pref.preferenceString("updateChannel", defaultUpdateChannel)
 	
 	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
 	var isVirtualServer by pref.preferenceBoolean("isVirtualServer", false)
+	var isDebugFetchEnabled by pref.preferenceBoolean("isDebugFetchEnabled", false)
+	var isNavigationDebugEnabled by pref.preferenceBoolean("isDebugAnimateListAsComposableEnabled", false)
 	
 	var isFirstTime by pref.preferenceBoolean("first", true)
 	

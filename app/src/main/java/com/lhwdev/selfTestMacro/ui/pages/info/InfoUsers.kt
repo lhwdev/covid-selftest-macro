@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.toJson
-import com.lhwdev.github.repo.getContent
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
@@ -37,7 +36,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
 
-private const val sInfoUsers = "info-users.json"
+private const val sInfoSpecialThanks = "info/special-thanks.json"
 
 
 // https://github.com/lhwdev/covid-selftest-macro/blob/meta/info-users.json
@@ -65,7 +64,7 @@ fun InfoUsers() {
 	val data = produceState<Any?>(null) {
 		withContext(Dispatchers.IO) {
 			value = try {
-				App.githubRepo.getContent(sInfoUsers, App.metaBranch)
+				App.metaBranch.getContent(sInfoSpecialThanks)
 					.toJson(InfoUserStructure.Root.serializer(), anyContentType = true)
 			} catch(th: Throwable) {
 				false

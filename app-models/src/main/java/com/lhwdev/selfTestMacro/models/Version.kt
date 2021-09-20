@@ -58,15 +58,23 @@ data class Version(
 }
 
 
-private val sPreReleaseNames = PreRelease.Kind.values().map { it.name }
-
 @Serializable
 data class PreRelease(val name: Kind, val version: Int) : Comparable<PreRelease> {
-	enum class Kind {
-		build, dev, test,
-		alpha,
-		beta,
-		snapshot, rc
+	enum class Kind { // See https://en.wikipedia.org/wiki/Software_release_life_cycle.
+		// pre-alpha
+		build, // Build: just nothing
+		dev, // Dev: just nothing with different name
+		test, // Test: just nothing but for test
+		
+		// alpha
+		alpha, // Alpha: to be tested by developers; not well tested
+		
+		// beta
+		beta, // Beta: some public testing & feedback stage
+		snapshot, // Snapshot: prone to change
+		m, // Milestone: some feature sets
+		rc // Release Candidate: beta version with potential to stable
+		// nothing(preRelease = null) means it's stable release
 	}
 	
 	override fun compareTo(other: PreRelease): Int {

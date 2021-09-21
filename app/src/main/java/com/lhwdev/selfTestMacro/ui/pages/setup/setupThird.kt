@@ -36,6 +36,7 @@ import com.lhwdev.selfTestMacro.ui.EmptyRestartable
 import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.isImeVisible
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
+import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
 
@@ -235,12 +236,29 @@ private fun WizardStudentInfo(
 				onClick = parameters.endRoute
 			) else Spacer(Modifier.height(AppBarHeight))
 			
+			val addingSameInstituteUser = model.addingSameInstituteUser
+			
 			WizardCommon(
 				wizard = wizard,
 				onNext = {
 					if(complete) wizard.next()
 					else submit()
 				},
+				extra = if(addingSameInstituteUser != null) ({
+					RoundButton(
+						onClick = {
+							complete = true
+							notFulfilled = -1
+							model.userName = addingSameInstituteUser.name
+							model.userBirth = addingSameInstituteUser.birth
+							model.addingSameInstituteUser = null
+							wizard.next()
+						},
+						trailingIcon = {
+							Icon(painterResource(R.drawable.ic_clear_24), contentDescription = null)
+						}
+					) { Text("추가 취소") }
+				}) else null,
 				wizardFulfilled = model.userName.isNotBlank() &&
 					model.userBirth.isNotBlank() && model.userBirth.length <= 6,
 				showNotFulfilledWarning = {
@@ -254,7 +272,7 @@ private fun WizardStudentInfo(
 			) {
 				Column(
 					modifier = Modifier
-						.padding(12.dp)
+						.padding(horizontal = 12.dp)
 						.verticalScroll(rememberScrollState())
 				) {
 					val focusManager = LocalFocusManager.current

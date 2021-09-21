@@ -1,6 +1,5 @@
 package com.lhwdev.selfTestMacro.ui.pages.main
 
-import android.app.TimePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,16 +19,18 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestSchedule
 import com.lhwdev.selfTestMacro.database.DbTestTarget
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.showToast
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
+import com.lhwdev.selfTestMacro.ui.utils.TimePickerDialog
 import com.vanpra.composematerialdialogs.Buttons
 import com.vanpra.composematerialdialogs.FullMaterialDialogScope
+import com.vanpra.composematerialdialogs.showDialogAsync
 import com.vanpra.composematerialdialogs.showFullDialogAsync
-import kotlinx.coroutines.launch
 
 
 internal fun Navigator.showScheduleSelfTest(
@@ -37,6 +38,7 @@ internal fun Navigator.showScheduleSelfTest(
 ): Unit = showFullDialogAsync { dismiss ->
 	Surface(color = MaterialTheme.colors.background) {
 		AutoSystemUi { scrims ->
+			@Suppress("ExplicitThis")
 			this@showFullDialogAsync.ScheduleContent(info, dismiss, scrims)
 		}
 	}
@@ -47,7 +49,7 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 	val pref = LocalPreference.current
 	val context = LocalContext.current
 	val selfTestManager = LocalSelfTestManager.current
-	val scope = rememberCoroutineScope()
+	val navigator = LocalNavigator
 	
 	val group = info.group
 	val target = group.target
@@ -150,15 +152,22 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 				inputState = if(hour == -1) InputPhase.UnfocusedEmpty else InputPhase.UnfocusedNotEmpty,
 				modifier = modifier.padding(8.dp),
 				innerModifier = Modifier.clickable {
-					val dialog = TimePickerDialog(
-						context,
-						R.style.AppTheme_Dialog,
-						{ _, h, m ->
-							setTime(h, m)
-						},
-						hour.coerceAtLeast(0), minute, false
-					)
-					dialog.show()
+					// val dialog = TimePickerDialog(
+					// 	context,
+					// 	R.style.AppTheme_Dialog,
+					// 	{ _, h, m ->
+					// 		setTime(h, m)
+					// 	},
+					// 	hour.coerceAtLeast(0), minute, false
+					// )
+					// dialog.show()
+					navigator.showDialogAsync {
+						TimePickerDialog(
+							initialHour = if(hour == -1) 7 else hour,
+							initialMinute = minute,
+							dismiss = { h, m -> setTime(h, m) }
+						)
+					}
 				}
 			) {
 				if(hour != -1) {
@@ -281,19 +290,17 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 					)
 				}
 			}
-			scope.launch {
-				selfTestManager.updateSchedule(
-					target = group,
-					new = DbTestGroup(
-						id = group.id,
-						target = group.target,
-						schedule = schedule,
-						excludeWeekend = excludeWeekend
-					)
+			selfTestManager.updateSchedule(
+				target = group,
+				new = DbTestGroup(
+					id = group.id,
+					target = group.target,
+					schedule = schedule,
+					excludeWeekend = excludeWeekend
 				)
-				
-				dismiss()
-			}
+			)
+			
+			dismiss()
 		}) { Text("확인") }
 		NegativeButton { Text("취소") }
 	}

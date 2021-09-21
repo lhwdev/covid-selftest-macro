@@ -20,14 +20,14 @@ import androidx.compose.ui.unit.dp
 @Composable
 private fun FloatingMaterialDialogScope.BaseTitle(
 	modifier: Modifier,
+	center: Boolean = false,
 	content: @Composable () -> Unit
 ) {
 	ProvideTextStyle(MaterialTheme.typography.h6) {
 		Box(
 			modifier
-				.fillMaxWidth()
+				.align(if(center) Alignment.CenterHorizontally else Alignment.Start)
 				.padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 12.dp)
-				.wrapContentHeight(Alignment.CenterVertically)
 		) {
 			content()
 		}
@@ -37,23 +37,15 @@ private fun FloatingMaterialDialogScope.BaseTitle(
 
 /**
  * Adds a title with the given text to the dialog
- * @param center text is aligned to center when true
  * @param text title text
  */
 @Composable
 fun FloatingMaterialDialogScope.Title(
+	modifier: Modifier = Modifier,
 	center: Boolean = false,
 	text: @Composable () -> Unit,
 ) {
-	BaseTitle(
-		Modifier.wrapContentWidth(
-			if(center) {
-				Alignment.CenterHorizontally
-			} else {
-				Alignment.Start
-			}
-		)
-	) { text() }
+	BaseTitle(modifier, center) { text() }
 }
 
 /**

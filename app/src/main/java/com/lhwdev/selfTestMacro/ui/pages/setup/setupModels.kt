@@ -3,7 +3,8 @@ package com.lhwdev.selfTestMacro.ui.pages.setup
 import android.content.Context
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import com.lhwdev.selfTestMacro.api.*
+import com.lhwdev.selfTestMacro.api.InstituteInfo
+import com.lhwdev.selfTestMacro.api.InstituteType
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.onError
 import com.lhwdev.selfTestMacro.repository.WizardUser
@@ -24,6 +25,7 @@ data class SetupParameters(
 internal class SetupModel {
 	var scaffoldState = ScaffoldState(DrawerState(DrawerValue.Closed), SnackbarHostState())
 	
+	var addingSameInstituteUser by mutableStateOf<AddSameInstituteUser?>(null)
 	var instituteInfo by mutableStateOf<InstituteInfoModel?>(null)
 	
 	var userName by mutableStateOf("")

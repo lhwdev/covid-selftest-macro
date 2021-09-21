@@ -176,10 +176,14 @@ fun FloatingMaterialDialogScope.SetupGroup(
 				@Suppress("UnnecessaryVariable")
 				val added = realUsers
 				
-				@Suppress("UNUSED_VALUE")
 				if(added.isNotEmpty()) group = pref.db.moveToTestGroup(
 					target = added,
 					toGroup = group
+				)
+				
+				pref.db.replaceTestGroupDangerous(
+					from = group,
+					to = group.copy(target = (group.target as DbTestTarget.Group).copy(name = groupName))
 				)
 			}
 			

@@ -7,11 +7,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.ui.AutoScaffold
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
@@ -137,6 +139,7 @@ internal fun WizardCommon(
 	wizardFulfilled: Boolean,
 	showNotFulfilledWarning: () -> Unit,
 	modifier: Modifier = Modifier,
+	extra: @Composable (() -> Unit)? = null,
 	onNext: () -> Unit = { wizard.next() },
 	onBefore: () -> Unit = { wizard.before() },
 	showNext: Boolean = true,
@@ -147,7 +150,7 @@ internal fun WizardCommon(
 			content()
 		}
 		
-		Row {
+		Row(verticalAlignment = Alignment.CenterVertically) {
 			IconButton(
 				onClick = onBefore,
 				modifier = if(wizard.index == 0) Modifier.alpha(0f) else Modifier
@@ -156,6 +159,11 @@ internal fun WizardCommon(
 					painterResource(id = R.drawable.ic_arrow_left_24),
 					contentDescription = "앞으로"
 				)
+			}
+			
+			if(extra != null) {
+				Spacer(Modifier.width(8.dp))
+				extra()
 			}
 			
 			Spacer(Modifier.weight(100f))
@@ -172,8 +180,8 @@ internal fun WizardCommon(
 							id = if(wizard.index != wizard.count - 1) R.drawable.ic_arrow_right_24
 							else R.drawable.ic_check_24
 						),
-						contentDescription = "뒤로",
-						tint = if(wizardFulfilled) contentColor else contentColor.copy(alpha = 0.9f)
+						contentDescription = null,
+						tint = if(wizardFulfilled) contentColor else contentColor.copy(alpha = 0.8f)
 					)
 				}
 			) {

@@ -201,6 +201,7 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: 
 							
 							Icon(painterResource(icon), contentDescription = null)
 						},
+						trailing = { Icon(painterResource(R.drawable.ic_arrow_right_24), contentDescription = null) },
 						modifier = Modifier.clickable {
 							navigator.showDialogAsync { OneUserDetail(user, status) }
 						}

@@ -89,7 +89,7 @@ internal fun FloatingMaterialDialogScope.MultipleInstituteDialog(
 ) {
 	Title { Text("${instituteType.displayName} 선택") }
 	
-	Column {
+	Column(modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
 		for(institute in institutes) ListItem(
 			modifier = Modifier.clickable { onSelect(institute) }
 		) {

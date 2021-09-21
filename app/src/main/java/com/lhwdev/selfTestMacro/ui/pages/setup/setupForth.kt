@@ -2,6 +2,8 @@ package com.lhwdev.selfTestMacro.ui.pages.setup
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +28,8 @@ import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
 import kotlinx.coroutines.launch
 
+
+class AddSameInstituteUser(val name: String, val birth: String)
 
 @Composable
 internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
@@ -131,24 +135,26 @@ private fun ColumnScope.WizardSelectUsersContent(
 	isAllGrouped: Boolean,
 	setIsAllGrouped: (Boolean) -> Unit
 ) {
-	for((index, user) in userList.withIndex()) key(user) {
-		ListItem(
-			icon = {
-				Checkbox(checked = enabled[index], onCheckedChange = null)
-			},
-			text = { Text(user.info.userName) },
-			secondaryText = { Text(user.info.instituteName) },
-			modifier = Modifier
-				.clearAndSetSemantics {
-					text = AnnotatedString("${user.info.instituteName} ${user.info.userName}")
-					toggleableState = ToggleableState(enabled[index])
-					role = Role.Checkbox
-				}
-				.clickable { // this adds semantics onClick
-					setEnabled(index, !enabled[index])
-				}
-				.padding(horizontal = 12.dp)
-		)
+	Column(modifier = Modifier.verticalScroll(rememberScrollState()).weight(1f, fill = false)) {
+		for((index, user) in userList.withIndex()) key(user) {
+			ListItem(
+				icon = {
+					Checkbox(checked = enabled[index], onCheckedChange = null)
+				},
+				text = { Text(user.info.userName) },
+				secondaryText = { Text(user.info.instituteName) },
+				modifier = Modifier
+					.clearAndSetSemantics {
+						text = AnnotatedString("${user.info.instituteName} ${user.info.userName}")
+						toggleableState = ToggleableState(enabled[index])
+						role = Role.Checkbox
+					}
+					.clickable { // this adds semantics onClick
+						setEnabled(index, !enabled[index])
+					}
+					.padding(horizontal = 12.dp)
+			)
+		}
 	}
 	
 	val addSameInstituteText = when(model.instituteInfo?.type) {
@@ -165,6 +171,7 @@ private fun ColumnScope.WizardSelectUsersContent(
 		modifier = Modifier
 			.clickable {
 				// reset fields
+				model.addingSameInstituteUser = AddSameInstituteUser(model.userName, model.userBirth)
 				model.userName = ""
 				model.userBirth = ""
 				// TODO: ability to go back and go forward back

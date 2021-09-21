@@ -19,6 +19,7 @@ import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.MediumContentColor
 import com.lhwdev.selfTestMacro.ui.TopAppBar
+import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.pages.main.iconFor
 import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupParameters
@@ -52,23 +53,20 @@ fun EditUsers() {
 				topBar = {
 					TopAppBar(
 						navigationIcon = if(navigator.isRoot) null else ({
-							IconButton(onClick = { navigator.popRoute() }) {
-								Icon(
-									painterResource(R.drawable.ic_arrow_back_24),
-									contentDescription = "뒤로 가기"
-								)
-							}
+							SimpleIconButton(
+								icon = R.drawable.ic_arrow_back_24,
+								contentDescription = "뒤로 가기",
+								onClick = { navigator.popRoute() }
+							)
 						}),
 						title = { Text("사용자 편집") },
 						actions = {
 							var showAddDialog by remember { mutableStateOf(false) }
 							
-							IconButton(onClick = { showAddDialog = true }) {
-								Icon(
-									painterResource(R.drawable.ic_add_24),
-									contentDescription = "추가"
-								)
-							}
+							SimpleIconButton(
+								icon = R.drawable.ic_add_24, contentDescription = "추가",
+								onClick = { showAddDialog = true }
+							)
 							
 							DropdownMenu(
 								expanded = showAddDialog,
@@ -101,12 +99,10 @@ fun EditUsers() {
 					) {
 						TopAppBar(
 							navigationIcon = {
-								IconButton(onClick = { selection.clear() }) {
-									Icon(
-										painterResource(R.drawable.ic_clear_24),
-										contentDescription = "선택 취소"
-									)
-								}
+								SimpleIconButton(
+									icon = R.drawable.ic_clear_24, contentDescription = "선택 취소",
+									onClick = { selection.clear() }
+								)
 							},
 							title = { Text("${selection.size}명 선택") },
 							actions = {
@@ -115,12 +111,10 @@ fun EditUsers() {
 									moreActions = false
 									block()
 								}
-								IconButton(onClick = { moreActions = true }) {
-									Icon(
-										painterResource(R.drawable.ic_more_vert_24),
-										contentDescription = "더브기"
-									)
-								}
+								SimpleIconButton(
+									icon = R.drawable.ic_more_vert_24, contentDescription = "더브기",
+									onClick = { moreActions = true }
+								)
 								
 								DropdownMenu(
 									expanded = moreActions,

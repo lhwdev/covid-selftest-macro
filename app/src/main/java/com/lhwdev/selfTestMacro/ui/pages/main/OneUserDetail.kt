@@ -4,20 +4,25 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.ListItem
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbUser
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.Status
-import com.vanpra.composematerialdialogs.Buttons
-import com.vanpra.composematerialdialogs.FloatingMaterialDialogScope
-import com.vanpra.composematerialdialogs.ListContent
-import com.vanpra.composematerialdialogs.Title
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.TopAppBar
+import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
+import com.vanpra.composematerialdialogs.*
 
 
 @Composable
 fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
+	val navigator = LocalNavigator
+	
 	Title { Text("${user.name}의 자가진단 현황") }
 	
 	ListContent {
@@ -45,6 +50,31 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 	}
 	
 	Buttons {
+		Button(onClick = {
+			navigator.showFullDialogAsync { dismiss ->
+				ChangeAnswer(dismiss)
+			}
+		}) { Text("응답 바꾸기") }
 		PositiveButton { Text("확인") }
+	}
+}
+
+
+@Composable
+fun ChangeAnswer(dismiss: () -> Unit): Unit = AutoSystemUi { scrims ->
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				title = { Text("응답 바꾸기") },
+				navigationIcon = {
+					SimpleIconButton(icon = R.drawable.ic_clear_24, contentDescription = "닫기", onClick = dismiss)
+				},
+				statusBarScrim = scrims.statusBar
+			)
+		}
+	) {
+		Column {
+			
+		}
 	}
 }

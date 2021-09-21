@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.*
@@ -26,6 +25,7 @@ import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.TopAppBar
+import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.primaryActive
 import com.lhwdev.selfTestMacro.ui.utils.DropdownPicker
 import com.vanpra.composematerialdialogs.Buttons
@@ -54,9 +54,10 @@ internal fun WizardInstituteInfo(
 					title = { Text("${model.type.displayName} 정보 입력") },
 					backgroundColor = MaterialTheme.colors.surface,
 					navigationIcon = if(parameters.endRoute == null) null else ({
-						IconButton(onClick = parameters.endRoute) {
-							Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")
-						}
+						SimpleIconButton(
+							icon = R.drawable.ic_clear_24, contentDescription = "닫기",
+							onClick = parameters.endRoute
+						)
 					}),
 					statusBarScrim = { scrims.statusBar() }
 				)
@@ -236,12 +237,11 @@ internal fun ColumnScope.WizardSchoolInfo(
 				singleLine = true,
 				isError = notFulfilled.value == 2,
 				trailingIcon = {
-					IconButton(onClick = { findSchool() }) {
-						Icon(
-							painterResource(if(complete) R.drawable.ic_check_24 else R.drawable.ic_search_24),
-							contentDescription = "검색"
-						)
-					}
+					SimpleIconButton(
+						icon = if(complete) R.drawable.ic_check_24 else R.drawable.ic_search_24,
+						contentDescription = "검색",
+						onClick = { findSchool() }
+					)
 				},
 				modifier = commonModifier
 			)

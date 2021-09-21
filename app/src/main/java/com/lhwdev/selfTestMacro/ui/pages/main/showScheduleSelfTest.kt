@@ -25,6 +25,7 @@ import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.showToast
 import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
 import com.lhwdev.selfTestMacro.ui.utils.TimePickerDialog
 import com.vanpra.composematerialdialogs.Buttons
@@ -83,9 +84,7 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 	
 	TopAppBar(
 		navigationIcon = {
-			IconButton(onClick = dismiss) {
-				Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")
-			}
+			SimpleIconButton(icon = R.drawable.ic_clear_24, contentDescription = "닫기", onClick = dismiss)
 		},
 		title = { Text("자가진단 예약") },
 		backgroundColor = Color.Transparent,

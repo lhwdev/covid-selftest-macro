@@ -32,6 +32,7 @@ import com.lhwdev.selfTestMacro.navigation.showRouteAsync
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.icons.ExpandMore
 import com.lhwdev.selfTestMacro.ui.icons.Icons
 import com.lhwdev.selfTestMacro.ui.pages.edit.EditUsers
@@ -57,12 +58,10 @@ fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 				TopAppBar(
 					title = { Text("코로나19 자가진단 매크로") },
 					actions = {
-						IconButton(onClick = { showMoreActions = true }) {
-							Icon(
-								painterResource(R.drawable.ic_more_vert_24),
-								contentDescription = "옵션 더보기"
-							)
-						}
+						SimpleIconButton(
+							icon = R.drawable.ic_more_vert_24, contentDescription = "옵션 더보기",
+							onClick = { showMoreActions = true }
+						)
 						
 						DropdownMenu(
 							expanded = showMoreActions,
@@ -328,12 +327,10 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 					TopAppBar(
 						title = { Text("대상 선택") },
 						navigationIcon = {
-							IconButton(onClick = { showSelect = false }) {
-								Icon(
-									painterResource(R.drawable.ic_clear_24),
-									contentDescription = "닫기"
-								)
-							}
+							SimpleIconButton(
+								icon = R.drawable.ic_clear_24, contentDescription = "닫기",
+								onClick = { showSelect = false }
+							)
 						},
 						elevation = 0.dp,
 						backgroundColor = Color.Transparent

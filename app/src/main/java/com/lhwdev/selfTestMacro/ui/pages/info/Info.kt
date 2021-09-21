@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.toJson
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.BuildConfig
+import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.openWebsite
@@ -20,8 +21,8 @@ import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.MediumContentColor
 import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
-import com.lhwdev.selfTestMacro.ui.common.BackButton
 import com.lhwdev.selfTestMacro.ui.common.LinkedText
+import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.pages.intro.showPrivacyPolicy
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.vanpra.composematerialdialogs.Content
@@ -50,7 +51,10 @@ fun Info(): Unit = MaterialTheme(
 		) {
 			TopAppBar(
 				navigationIcon = {
-					BackButton { navigator.popRoute() }
+					SimpleIconButton(
+						icon = R.drawable.ic_arrow_back_24, contentDescription = "뒤로 가기",
+						onClick = { navigator.popRoute() }
+					)
 				},
 				title = {},
 				actions = {

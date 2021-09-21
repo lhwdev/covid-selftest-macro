@@ -142,7 +142,7 @@ private fun ColumnScope.WizardSelectUsersContent(
 					Checkbox(checked = enabled[index], onCheckedChange = null)
 				},
 				text = { Text(user.info.userName) },
-				secondaryText = { Text(user.info.instituteName) },
+				singleLineSecondaryText = { Text(user.info.instituteName) },
 				modifier = Modifier
 					.clearAndSetSemantics {
 						text = AnnotatedString("${user.info.instituteName} ${user.info.userName}")

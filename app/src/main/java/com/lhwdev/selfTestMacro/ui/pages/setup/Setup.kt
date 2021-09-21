@@ -5,7 +5,10 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +21,7 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.ui.AutoScaffold
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.LocalPreference
+import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -151,15 +155,11 @@ internal fun WizardCommon(
 		}
 		
 		Row(verticalAlignment = Alignment.CenterVertically) {
-			IconButton(
+			SimpleIconButton(
+				icon = R.drawable.ic_arrow_left_24, contentDescription = "앞으로",
 				onClick = onBefore,
 				modifier = if(wizard.index == 0) Modifier.alpha(0f) else Modifier
-			) {
-				Icon(
-					painterResource(id = R.drawable.ic_arrow_left_24),
-					contentDescription = "앞으로"
-				)
-			}
+			)
 			
 			if(extra != null) {
 				Spacer(Modifier.width(8.dp))

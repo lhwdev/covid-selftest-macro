@@ -22,7 +22,7 @@ import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.openWebsite
 import com.lhwdev.selfTestMacro.ui.*
-import com.lhwdev.selfTestMacro.ui.common.BackButton
+import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -82,7 +82,12 @@ fun OpenSources() {
 			topBar = {
 				TopAppBar(
 					title = { Text("오픈소스 라이센스") },
-					navigationIcon = { BackButton(onClick = { navigator.popRoute() }) },
+					navigationIcon = {
+						SimpleIconButton(
+							icon = R.drawable.ic_arrow_back_24,
+							contentDescription = "뒤로 가기",
+							onClick = { navigator.popRoute() })
+					},
 					statusBarScrim = scrims.statusBar
 				)
 			}
@@ -171,7 +176,12 @@ fun OpenSourcesList(groupId: String, items: List<LicenseItem>) {
 			topBar = {
 				TopAppBar(
 					title = { Text(groupId) },
-					navigationIcon = { BackButton(onClick = { navigator.popRoute() }) },
+					navigationIcon = {
+						SimpleIconButton(
+							icon = R.drawable.ic_arrow_back_24,
+							contentDescription = "뒤로 가기",
+							onClick = { navigator.popRoute() })
+					},
 					statusBarScrim = scrims.statusBar
 				)
 			}
@@ -213,7 +223,12 @@ fun OpenSourcesDetail(item: LicenseItem) {
 		Scaffold(
 			topBar = {
 				TopAppBar(
-					navigationIcon = { BackButton { navigator.popRoute() } },
+					navigationIcon = {
+						SimpleIconButton(
+							icon = R.drawable.ic_arrow_back_24, contentDescription = "뒤로 가기",
+							onClick = { navigator.popRoute() }
+						)
+					},
 					title = { Text("오픈소스 정보") },
 					statusBarScrim = scrims.statusBar,
 					backgroundColor = Color.Transparent,

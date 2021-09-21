@@ -110,6 +110,7 @@ private fun EditUserDetail(
 								ListItem(
 									text = { Text(itemTarget.name) },
 									secondaryText = { Text(with(pref.db) { itemTarget.allUsers.joinToString { it.name } }) },
+									singleLineSecondaryText = false,
 									modifier = Modifier.clickable {
 										removeRoute(item)
 									}

@@ -25,6 +25,7 @@ import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.showToast
 import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
 import com.lhwdev.selfTestMacro.ui.utils.TimePickerDialog
@@ -121,7 +122,8 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 			secondaryText = if(target is DbTestTarget.Group) ({
 				val users = with(pref.db) { target.allUsers }.joinToString { it.name }
 				Text(users)
-			}) else null
+			}) else null,
+			singleLineSecondaryText = false
 		)
 		
 		Spacer(Modifier.height(12.dp))
@@ -257,13 +259,9 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 	// 	)
 	// }
 	
-	ListItem(
-		icon = {
-			Checkbox(checked = excludeWeekend, onCheckedChange = null)
-		},
-		text = { Text("주말에는 자가진단하지 않기") },
-		modifier = Modifier.clickable { excludeWeekend = !excludeWeekend }
-	)
+	CheckBoxListItem(
+		checked = excludeWeekend, onCheckChanged = { excludeWeekend = it }
+	) { Text("주말에는 자가진단하지 않기") }
 	
 	Spacer(Modifier.height(4.dp))
 	

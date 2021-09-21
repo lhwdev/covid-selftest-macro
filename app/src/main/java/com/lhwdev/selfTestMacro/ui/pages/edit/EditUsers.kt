@@ -233,6 +233,7 @@ private fun EditUsersContent(
 								.joinToString(separator = ", ", limit = 4) { it.name }
 						)
 					}) else null,
+					singleLineSecondaryText = false,
 					modifier = Modifier
 						.combinedClickable(
 							onLongClick = {

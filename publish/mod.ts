@@ -3,6 +3,8 @@ import { resolve } from "https://deno.land/std@0.107.0/path/mod.ts";
 const input = "src";
 const output = "output";
 
+console.log(Array.of(...Deno.readDirSync(resolve(output))).map(e => e.name).join(' '));
+
 onDirectory(".");
 
 async function onDirectory(dir: string) {

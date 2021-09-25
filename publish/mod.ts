@@ -4,7 +4,6 @@ const input = "src";
 const output = "output";
 
 Deno.mkdirSync(resolve(output), { recursive: true })
-console.log(Array.of(...Deno.readDirSync(resolve(output))).map(e => e.name).join(' '));
 
 onDirectory(".");
 
@@ -17,7 +16,7 @@ async function onDirectory(dir: string) {
 
 async function onFile(dir: string, entry: Deno.DirEntry) {
   const name = entry.name;
-  const path = resolve(input, `${dir}/${entry.name}`);
+  const path = resolve(input, `${dir}/${name}`);
   const index = name.lastIndexOf(".");
   const extension = index == -1 ? null : name.slice(index + 1);
   switch (extension) {
@@ -30,7 +29,8 @@ async function onFile(dir: string, entry: Deno.DirEntry) {
       const result = JSON.stringify(JSON.parse(string));
       const toDir = resolve(output, dir);
       Deno.mkdir(toDir, { recursive: true });
-      console.log(`write to ${toDir}/${name}`)
+      console.log(`write to ${toDir} | ${name}`)
+      console.log(Array.of(...Deno.readDirSync(toDir)).map(e => e.name).join(' '))
       await Deno.writeTextFile(`${toDir}/${name}`, result);
       break;
     }

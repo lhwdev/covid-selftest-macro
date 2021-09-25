@@ -5,8 +5,13 @@ on:
       - opened
 
 jobs:
+
   automerge:
     runs-on: ubuntu-latest
     steps:
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
       - name: main
         run: deno run --allow-net auto-merge/mod.ts {{ github.repository }} {{ github.token }} {{ github.event.number }}

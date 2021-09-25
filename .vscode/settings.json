@@ -1,4 +1,9 @@
 {
   "deno.enable": true,
-  "deno.lint": true
+  "deno.lint": true,
+  "deno.suggest.imports.hosts": {
+    "https://cdn.skypack.dev": false,
+    "https://e": false,
+    "https://esm.": false
+  }
 }

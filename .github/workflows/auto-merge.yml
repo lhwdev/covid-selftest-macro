@@ -1,0 +1,12 @@
+name: Auto merge
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: main
+        run: deno run --allow-net auto-merge/mod.ts {{ github.repository }} {{ github.token }} {{ github.event.number }}

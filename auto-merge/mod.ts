@@ -34,7 +34,7 @@ if(!allowedUser) failSecurity()
 if(!pullInfo.data.body?.includes('automerge')) failCondition()
 
 async function comment(str: string) {
-  await octokit.request("POST /repos/{owner}/{repo}/pulls/{pull_number}/comments", {
+  await octokit.request("POST /repos/{owner}/{repo}/issues/{pull_number}/comments", {
     owner, repo,
     pull_number: pullNumber,
     body: str

@@ -33,17 +33,31 @@ if(!allowedUser) failSecurity()
 
 if(!pullInfo.data.body?.includes('automerge')) failCondition()
 
+async function comment(str: string) {
+  await octokit.request("POST /repos/{owner}/{repo}/pulls/{pull_number}/comments", {
+    owner, repo,
+    pull_number: pullNumber,
+    body: str
+  })
+}
+
 const pullFiles = await octokit.request("GET /repos/{owner}/{repo}/pulls/{pull_number}/files", {
   owner, repo,
   pull_number: pullNumber
 })
 
 const files = pullFiles.data
-if(files.length !== 1) failSecurity()
+if(files.length !== 1) {
+  await comment('❌ 오직 허용된 파일을 편집했을 때만 automerge를 사용할 수 있어요.\n 허용된 파일: ' + allowedFiles.map(s => '`' + s + '`').join(', '))
+  failSecurity()
+}
 
 const file = files[0]
 const allowedFiles = ["src/info/special-thanks.json"]
-if(!allowedFiles.includes(file.filename)) failSecurity()
+if(!allowedFiles.includes(file.filename)) {
+  await comment('❌ 오직 허용된 파일을 편집했을 때만 automerge를 사용할 수 있어요.\n 허용된 파일: ' + allowedFiles.map(s => '`' + s + '`').join(', '))
+  failSecurity()
+}
 
 
 // TODO: more checks

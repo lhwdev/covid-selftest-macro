@@ -1,4 +1,5 @@
-import { Octokit } from "https://esm.sh/@octokit/core";
+// @deno-types=https://cdn.esm.sh/v53/@octokit/core@3.5.1/dist-types/index.d.ts
+import { Octokit } from "https://cdn.skypack.dev/@octokit/core";
 
 function failSecurity(): never {
   Deno.exit()

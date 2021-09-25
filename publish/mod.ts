@@ -9,8 +9,8 @@ onDirectory(".");
 
 async function onDirectory(dir: string) {
   for await (const entry of Deno.readDir(resolve(input, dir))) {
-    if (entry.isFile) onFile(dir, entry);
-    else onDirectory(`${dir}/${entry.name}`);
+    if (entry.isFile) await onFile(dir, entry);
+    else await onDirectory(`${dir}/${entry.name}`);
   }
 }
 
@@ -28,9 +28,11 @@ async function onFile(dir: string, entry: Deno.DirEntry) {
       const string = await Deno.readTextFile(path);
       const result = JSON.stringify(JSON.parse(string));
       const toDir = resolve(output, dir);
-      Deno.mkdir(toDir, { recursive: true });
-      console.log(`write to ${toDir} | ${name}`)
-      console.log(Array.of(...Deno.readDirSync(toDir)).map(e => e.name).join(' '))
+      try {
+        Deno.mkdir(toDir, { recursive: true });
+      } catch(_) {
+        // when directory exists already, this throws error
+      }
       await Deno.writeTextFile(`${toDir}/${name}`, result);
       break;
     }

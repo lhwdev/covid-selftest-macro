@@ -5,6 +5,11 @@ function failSecurity(): never {
   Deno.exit()
 }
 
+function failIntendedSecurity(): never {
+  Deno.exit(1)
+}
+
+
 function failCondition(): never {
   Deno.exit()
 }
@@ -50,13 +55,13 @@ const files = pullFiles.data
 const allowedFiles = ["src/info/special-thanks.json"]
 if(files.length !== 1) {
   await comment('❌ 오직 허용된 파일을 편집했을 때만 automerge를 사용할 수 있어요.\n 허용된 파일: ' + allowedFiles.map(s => '`' + s + '`').join(', '))
-  failSecurity()
+  failIntendedSecurity()
 }
 
 const file = files[0]
 if(!allowedFiles.includes(file.filename)) {
   await comment('❌ 오직 허용된 파일을 편집했을 때만 automerge를 사용할 수 있어요.\n 허용된 파일: ' + allowedFiles.map(s => '`' + s + '`').join(', '))
-  failSecurity()
+  failIntendedSecurity()
 }
 
 

@@ -1,22 +1,22 @@
-import { resolve } from "https://deno.land/std@0.107.0/path/mod.ts";
+import { join, resolve } from "https://deno.land/std@0.107.0/path/mod.ts";
+import { copy } from "https://deno.land/std@0.107.0/fs/mod.ts";
 
-const input = "src";
-const output = "output";
-
-Deno.mkdirSync(resolve(output), { recursive: true })
+const input = resolve("src");
+const output = resolve("output");
 
 onDirectory(".");
+copy("public", output, { overwrite: true });
 
 async function onDirectory(dir: string) {
-  for await (const entry of Deno.readDir(resolve(input, dir))) {
+  for await (const entry of Deno.readDir(join(input, dir))) {
     if (entry.isFile) await onFile(dir, entry);
-    else await onDirectory(`${dir}/${entry.name}`);
+    else await onDirectory(join(dir, entry.name));
   }
 }
 
 async function onFile(dir: string, entry: Deno.DirEntry) {
   const name = entry.name;
-  const path = resolve(input, `${dir}/${name}`);
+  const path = join(input, dir, name);
   const index = name.lastIndexOf(".");
   const extension = index == -1 ? null : name.slice(index + 1);
   switch (extension) {
@@ -27,13 +27,13 @@ async function onFile(dir: string, entry: Deno.DirEntry) {
     case "json": {
       const string = await Deno.readTextFile(path);
       const result = JSON.stringify(JSON.parse(string));
-      const toDir = resolve(output, dir);
+      const toDir = join(output, dir);
       try {
         Deno.mkdir(toDir, { recursive: true });
-      } catch(_) {
+      } catch (_) {
         // when directory exists already, this throws error
       }
-      await Deno.writeTextFile(`${toDir}/${name}`, result);
+      await Deno.writeTextFile(join(toDir, name), result);
       break;
     }
   }

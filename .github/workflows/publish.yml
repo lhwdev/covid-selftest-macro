@@ -15,7 +15,7 @@ jobs:
           deno-version: v1.x
 
       - name: Minify files
-        run: deno run --allow-read --allow-write publish/mod.ts
+        run: deno run --allow-read --allow-write --unstable publish/mod.ts
       
       - name: Deploy # originally for deploying github pages, but quite useful and optimized for this situation.
           # we are `deploying` to app-meta branch, just not for pages

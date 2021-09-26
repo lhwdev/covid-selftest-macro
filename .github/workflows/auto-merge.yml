@@ -1,9 +1,12 @@
 name: Auto merge
 on:
   pull_request:
+    branches:
+      - meta
     types:
       - opened
       - reopened
+    
 
 jobs:
 

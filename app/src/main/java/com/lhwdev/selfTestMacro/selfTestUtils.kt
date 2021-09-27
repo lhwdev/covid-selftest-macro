@@ -7,6 +7,9 @@ import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.util.Log
 import com.lhwdev.selfTestMacro.api.*
 import net.gotev.cookiestore.InMemoryCookieStore
 import java.net.CookieManager
@@ -96,18 +99,42 @@ fun Context.scheduleNextAlarm(
 	isRandom: Boolean,
 	nextDay: Boolean = false,
 ) {
-	(getSystemService(Context.ALARM_SERVICE) as AlarmManager).setExact(
-		AlarmManager.RTC_WAKEUP,
-		Calendar.getInstance().run {
-			val newMin = if(isRandom) (min + random.nextInt(-5, 6)).coerceIn(0, 59) else min
-			val new = clone() as Calendar
-			new[Calendar.HOUR_OF_DAY] = hour
-			new[Calendar.MINUTE] = newMin
-			new[Calendar.SECOND] = 0
-			new[Calendar.MILLISECOND] = 0
-			if(nextDay || new <= this) new.add(Calendar.DAY_OF_YEAR, 1)
-			new.timeInMillis
-		},
-		intent
-	)
+	val newTime = Calendar.getInstance().run {
+		val newMin = if(isRandom) (min + random.nextInt(-5, 6)).coerceIn(0, 59) else min
+		val new = clone() as Calendar
+		new[Calendar.HOUR_OF_DAY] = hour
+		new[Calendar.MINUTE] = newMin
+		new[Calendar.SECOND] = 0
+		new[Calendar.MILLISECOND] = 0
+		if(nextDay || new <= this) new.add(Calendar.DAY_OF_YEAR, 1)
+		new
+	}
+	Log.i("SelfTestMacro", "scheduling next alarm at $newTime")
+	
+	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+	if(Build.VERSION.SDK_INT < 21) {
+		alarmManager.setExact(
+			AlarmManager.RTC_WAKEUP,
+			newTime.timeInMillis,
+			intent
+		)
+	} else {
+		alarmManager.setAlarmClock(
+			AlarmManager.AlarmClockInfo(
+				newTime.timeInMillis,
+				PendingIntent.getActivity(
+					this,
+					0,
+					Intent(this, MainActivity::class.java).also {
+						it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+					},
+					PendingIntent.FLAG_ONE_SHOT or (if(Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_IMMUTABLE else 0)
+				)
+			),
+			intent
+		)
+	}
+	
+	Log.i("SelfTestMacro", "scheduled next alarm")
+	
 }

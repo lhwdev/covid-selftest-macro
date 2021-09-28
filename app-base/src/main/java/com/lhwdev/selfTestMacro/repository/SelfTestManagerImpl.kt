@@ -44,6 +44,7 @@ private fun Context.createScheduleIntent(
 private fun userInfoKeyHash(userCode: String, instituteCode: String) =
 	userCode.hashCode() * 31 + instituteCode.hashCode()
 
+
 class SelfTestManagerImpl(
 	override var context: Context,
 	private val database: DatabaseManager,
@@ -79,35 +80,55 @@ class SelfTestManagerImpl(
 	private fun keyFor(user: DbUser) = keyFor(user.userCode, user.institute.code)
 	private fun keyFor(user: User) = keyFor(user.userCode, user.instituteCode)
 	
-	suspend fun loadSession(
-		usersIdentifier: UsersIdentifier,
+	private fun getSessionInfo(
 		userCode: String,
+		institute: InstituteInfo
+	): SessionManager.SessionInfo {
+		return SessionManager.sessionInfoFor(keyFor(userCode, institute.code))
+	}
+	
+	private fun getSessionInfo(group: DbUserGroup) = getSessionInfo(
+		userCode = with(database) { group.allUsers.first().userCode },
+		institute = group.institute
+	)
+	
+	private suspend fun loadSession(
+		info: SessionManager.SessionInfo,
+		usersIdentifier: UsersIdentifier,
 		password: String,
 		institute: InstituteInfo
-	): Pair<Session, UsersToken?> {
-		val info = SessionManager.sessionInfoFor(keyFor(userCode, institute.code))
-		if(!info.sessionFullyLoaded) try {
-			val result = tryAtMost(maxTrial = 2) {
+	): UsersToken? {
+		if(!info.sessionFullyLoaded) {
+			val result = tryAtMost(maxTrial = 3) {
 				info.session.validatePassword(institute, usersIdentifier.token, password)
 			}
 			if(result is UsersToken) {
 				apiLoginCache[usersIdentifier.token] = result
 				info.sessionFullyLoaded = true
-				return info.session to result
-			} else onError(Throwable(), "password wrong?")
-		} catch(th: Throwable) {
-			onError(th, "MainRepositoryImpl.sessionFor")
+				return result
+			} else context.onError(Throwable(), "password wrong?")
 		}
 		
-		return info.session to apiLoginCache[usersIdentifier.token]
+		return apiLoginCache[usersIdentifier.token]
 	}
 	
-	suspend fun loadSession(group: DbUserGroup) = loadSession(
-		group.usersIdentifier,
-		with(database) { group.allUsers.first().userCode },
-		group.password,
-		group.institute
+	private suspend fun loadSession(info: SessionManager.SessionInfo, group: DbUserGroup) = loadSession(
+		info = info,
+		usersIdentifier = group.usersIdentifier,
+		password = group.password,
+		institute = group.institute
 	)
+	
+	private suspend fun ensureSessionLoaded(group: DbUserGroup): Pair<Session, UsersToken> {
+		val info = getSessionInfo(group)
+		val token = loadSession(info, group)
+		if(token == null) {
+			val error = IllegalStateException("UserToken was not loaded")
+			context.onError(error, "SelfTestManagerImpl: apiUser // 2")
+			throw error
+		}
+		return info.session to token
+	}
 	
 	override suspend fun createSession(): TempSession = object : TempSession {
 		private val sessionInfo = SessionManager.newDetachedSessionInfo()
@@ -119,8 +140,6 @@ class SelfTestManagerImpl(
 		}
 	}
 	
-	override suspend fun sessionFor(group: DbUserGroup): Session = loadSession(group).first
-	
 	
 	suspend fun DbUser.apiUser(): User {
 		val key = keyFor(this)
@@ -130,11 +149,12 @@ class SelfTestManagerImpl(
 		
 		// 2. slow path
 		val group = with(database) { userGroup }
-		val (session, token) = loadSession(group)
-		token!!
+		
+		val (session, token) = ensureSessionLoaded(group)
 		
 		val users = session.getUserGroup(group.institute, token)
 		var result: User? = null
+		
 		users.forEach {
 			val userKey = keyFor(it)
 			apiUsersCache[userKey] = it
@@ -314,7 +334,7 @@ class SelfTestManagerImpl(
 	
 	override suspend fun getCurrentStatus(user: DbUser): Status? = with(database) {
 		try {
-			val session = sessionFor(user.userGroup)
+			val (session, _) = ensureSessionLoaded(user.userGroup)
 			Status(session.getUserInfo(user.usersInstitute, user.apiUser()))
 		} catch(th: Throwable) {
 			selfLog("getCurrentStatus: error")
@@ -326,36 +346,48 @@ class SelfTestManagerImpl(
 	
 	/// Core operations
 	
-	@OptIn(DangerousHcsApi::class)
-	private suspend fun DatabaseManager.submitSelfTest(
-		target: DbTestTarget,
-		surveyData: (DbUser) -> SurveyData
-	): List<SubmitResult> = try {
-		target.allUsers.map { user ->
+	/**
+	 * 자가진단이 실행될 가능성 높이기
+	 * - 와이파이를 통해 네트워크 연결에 실패할 경우 데이터로 재시도 (저희 집 와이파이가 이상해서 안된 적이 있답니다)
+	 * - VPN에 연결되어있으면 자동 접속해제
+	 * - 안되면 몇번 재시도
+	 * - 앱을 켜면 알림이 실행되지 않았는 적이 있는지 여부 확인 및 버그 제보 제안
+	 * - 백그라운드 업데이트(3.1.0에 구현 예정)
+	 */
+	private suspend fun DatabaseManager.submitSelfTest(user: DbUser): SubmitResult {
+		val group = user.userGroup
+		val info = getSessionInfo(group)
+		val session = tryAtMost(maxTrial = 3) {
+			loadSession(info, group)
+			info.session
+		}
+		val answer = user.answer
+		val surveyData = SurveyData(
+			questionSuspicious = answer.suspicious,
+			questionWaitingResult = answer.waitingResult,
+			questionQuarantined = answer.quarantined,
+			upperUserName = answer.message
+		)
+		
+		while(true) {
 			try {
-				val session = sessionFor(user.userGroup)
+				@OptIn(DangerousHcsApi::class)
 				val data = session.registerSurvey(
 					institute = user.usersInstitute,
 					user = user.apiUser(),
 					name = user.name,
-					surveyData = surveyData(user)
+					surveyData = surveyData
 				)
-				SubmitResult.Success(user, data.registerAt)
+				return SubmitResult.Success(user, data.registerAt)
 			} catch(th: Throwable) {
-				SubmitResult.Failed(user, "자가진단에 실패했어요.", th)
+				// handle error and retry if possible
+				return SubmitResult.Failed(user, "자가진단에 실패했어요.", th)
 			}
 		}
-		
-	} catch(th: Throwable) {
-		emptyList()
 	}
 	
 	
-	override suspend fun submitSelfTestNow(
-		context: UiContext,
-		target: DbTestTarget,
-		surveyData: (DbUser) -> SurveyData
-	): List<SubmitResult> {
+	override suspend fun submitSelfTestNow(context: UiContext, target: DbTestTarget): List<SubmitResult> {
 		return try {
 			if(!context.context.isNetworkAvailable) {
 				context.scope.launch {
@@ -363,7 +395,7 @@ class SelfTestManagerImpl(
 				}
 				return emptyList()
 			}
-			val result = database.submitSelfTest(target, surveyData)
+			val result = with(database) { target.allUsers }.map { database.submitSelfTest(it) }
 			if(result.isEmpty()) return result
 			
 			if(result.all { it is SubmitResult.Success }) context.scope.launch {

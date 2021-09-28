@@ -20,9 +20,16 @@ import java.io.File
 val Context.isDebugEnabled get() = BuildConfig.DEBUG || preferenceState.isDebugEnabled
 
 
-fun onError(th: Throwable, message: String) {
-	Log.e("SelfTestMacro", message, th)
-}
+// suspend fun onError(th: Throwable, message: String) {
+// 	Log.e("SelfTestMacro", message, th)
+//	
+// 	// in dev mode, usually ran with IDE; can check things with Logcat
+// 	if(App.flavor != "dev") writeErrorLog(info)
+// }
+
+// suspend fun onError(th: Throwable, message: String) {
+// 	Log.e("SelfTestMacro", message, th)
+// }
 
 
 fun selfLog(message: String) {
@@ -49,7 +56,10 @@ suspend fun Context.onError(error: Throwable, description: String = "???", force
 	Log.e("ERROR", description, error)
 	val info = getErrorInfo(error, description)
 	if(forceShow || isDebugEnabled) withContext(Dispatchers.Main) {
-		showErrorInfo(info)
+		try {
+			showErrorInfo(info)
+		} catch(th: Throwable) {
+		}
 	}
 	
 	// in dev mode, usually ran with IDE; can check things with Logcat

@@ -9,7 +9,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
 
-@RequiresOptIn(message = "This api is dangerous to use. You should get user information in 'right' and confirm user before calling this api.")
+@RequiresOptIn(message = "This api is dangerous to use. You should get user information in 'right' way and confirm user before calling this api.")
 public annotation class DangerousHcsApi
 
 

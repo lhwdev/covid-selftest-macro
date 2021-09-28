@@ -8,7 +8,6 @@ import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
-import com.lhwdev.selfTestMacro.database.DbUserGroup
 import com.lhwdev.selfTestMacro.ui.UiContext
 
 
@@ -37,7 +36,6 @@ interface SelfTestManager {
 	var context: Context
 	
 	suspend fun createSession(): TempSession
-	suspend fun sessionFor(group: DbUserGroup): Session
 	
 	suspend fun findSchool(regionCode: String?, schoolLevelCode: Int, name: String): List<InstituteInfo>
 	
@@ -66,11 +64,7 @@ interface SelfTestManager {
 	suspend fun getCurrentStatus(user: DbUser): Status?
 	
 	
-	suspend fun submitSelfTestNow(
-		context: UiContext,
-		target: DbTestTarget,
-		surveyData: (DbUser) -> SurveyData
-	): List<SubmitResult>
+	suspend fun submitSelfTestNow(context: UiContext, target: DbTestTarget): List<SubmitResult>
 	
 	fun updateSchedule(target: DbTestGroup, new: DbTestGroup)
 	fun onScheduleUpdated()

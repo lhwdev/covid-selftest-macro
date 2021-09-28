@@ -82,7 +82,8 @@ data class DbUser(
 data class Answer(
 	val suspicious: Boolean,
 	val waitingResult: Boolean,
-	val quarantined: Boolean
+	val quarantined: Boolean,
+	val message: String? = null
 )
 
 

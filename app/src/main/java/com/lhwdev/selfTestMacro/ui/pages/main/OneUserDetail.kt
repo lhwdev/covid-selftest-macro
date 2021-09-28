@@ -3,18 +3,24 @@ package com.lhwdev.selfTestMacro.ui.pages.main
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.ListItem
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.database.Answer
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.replacedValue
 import com.lhwdev.selfTestMacro.repository.Status
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.LocalPreference
+import com.lhwdev.selfTestMacro.ui.SelfTestQuestions
 import com.lhwdev.selfTestMacro.ui.TopAppBar
+import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.vanpra.composematerialdialogs.*
 
@@ -37,13 +43,13 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 			
 			if(status is Status.Submitted) {
 				ListItem {
-					Text("'1. 학생 본인이 코로나19가 의심되는 임상증상이 있나요?': ${if(status.questionSuspicious == true) "있음" else "없음"}")
+					Text("'1. ${SelfTestQuestions.suspicious}': ${if(status.questionSuspicious == true) "있음" else "없음"}")
 				}
 				ListItem {
-					Text("'2. 학생 본인 또는 동거인이 코로나19 진단검사를 받고 그 결과를 기다리고 있나요?': ${if(status.questionWaitingResult == true) "있음" else "없음"}")
+					Text("'2. ${SelfTestQuestions.waitingResult}': ${if(status.questionWaitingResult == true) "있음" else "없음"}")
 				}
 				ListItem {
-					Text("'3. 학생 본인 또는 동거인이 방역당국에 의해 현재 자가격리가 이루어지고 있나요?': ${if(status.questionQuarantined == true) "있음" else "없음"}")
+					Text("'3. ${SelfTestQuestions.quarantined}': ${if(status.questionQuarantined == true) "있음" else "없음"}")
 				}
 			}
 		}
@@ -52,16 +58,18 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 	Buttons {
 		Button(onClick = {
 			navigator.showFullDialogAsync { dismiss ->
-				ChangeAnswer(dismiss)
+				ChangeAnswer(user, dismiss)
 			}
 		}) { Text("응답 바꾸기") }
-		PositiveButton { Text("확인") }
+		PositiveButton(onClick = requestClose) { Text("확인") }
 	}
 }
 
 
 @Composable
-fun ChangeAnswer(dismiss: () -> Unit): Unit = AutoSystemUi { scrims ->
+fun FullMaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = AutoSystemUi { scrims ->
+	val pref = LocalPreference.current
+	
 	Scaffold(
 		topBar = {
 			TopAppBar(
@@ -69,12 +77,48 @@ fun ChangeAnswer(dismiss: () -> Unit): Unit = AutoSystemUi { scrims ->
 				navigationIcon = {
 					SimpleIconButton(icon = R.drawable.ic_clear_24, contentDescription = "닫기", onClick = dismiss)
 				},
-				statusBarScrim = scrims.statusBar
+				statusBarScrim = scrims.statusBar,
+				elevation = 0.dp
 			)
 		}
 	) {
+		
+		
+		val (a1, setA1) = remember { mutableStateOf(user.answer.suspicious) }
+		val (a2, setA2) = remember { mutableStateOf(user.answer.waitingResult) }
+		val (a3, setA3) = remember { mutableStateOf(user.answer.quarantined) }
+		
 		Column {
+			Divider()
 			
+			ListItem(icon = { Icon(painterResource(iconFor(user)), contentDescription = null) }) {
+				Text("${user.name} (${user.institute.name})")
+			}
+			
+			CheckBoxListItem(checked = a1, onCheckChanged = setA1) { Text(SelfTestQuestions.suspicious) }
+			CheckBoxListItem(checked = a2, onCheckChanged = setA2) { Text(SelfTestQuestions.waitingResult) }
+			CheckBoxListItem(checked = a3, onCheckChanged = setA3) { Text(SelfTestQuestions.quarantined) }
+			
+			Spacer(Modifier.weight(1f))
+			
+			this@ChangeAnswer.Buttons {
+				PositiveButton(onClick = {
+					val users = pref.db.users
+					val newAnswer = Answer(
+						suspicious = a1,
+						waitingResult = a2,
+						quarantined = a3
+					)
+					
+					pref.db.users = users.copy(
+						users = users.users.replacedValue(user, user.copy(answer = newAnswer))
+					)
+				}) { Text("확인") }
+				
+				NegativeButton(onClick = requestClose) { Text("취소") }
+			}
+			
+			scrims.navigationBar()
 		}
 	}
 }

@@ -18,10 +18,17 @@ object FirstInitialization {
 		sFetchInterceptors.addFirst(SelfTestHttpErrorRetryInterceptor)
 	}
 	
-	fun Context.initializeApplication(versionName: String, versionCode: Int) {
+	fun Context.initializeApplication(
+		versionName: String,
+		versionCode: Int,
+		flavor: String,
+		debug: Boolean
+	) {
 		AppInitializationInfo.versionCode = versionCode
 		AppInitializationInfo.versionName = versionName
 		AppInitializationInfo.githubRepo = Repository(sGithubInstanceDefault, "lhwdev", "covid-selftest-macro")
+		AppInitializationInfo.flavor = flavor
+		AppInitializationInfo.debug = debug
 		
 		val pref = preferenceState
 		

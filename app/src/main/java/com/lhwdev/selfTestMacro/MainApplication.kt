@@ -12,7 +12,14 @@ class MainApplication : Application() {
 	override fun onCreate() {
 		super.onCreate()
 		
-		with(FirstInitialization) { initializeApplication(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE) }
+		with(FirstInitialization) {
+			initializeApplication(
+				versionName = BuildConfig.VERSION_NAME,
+				versionCode = BuildConfig.VERSION_CODE,
+				flavor = BuildConfig.FLAVOR,
+				debug = BuildConfig.DEBUG
+			)
+		}
 		
 		// debug code
 		System.setProperty(

@@ -250,7 +250,7 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: 
 			}
 			
 			Buttons {
-				PositiveButton { Text("확인") }
+				PositiveButton(onClick = requestClose) { Text("확인") }
 			}
 		}
 	}

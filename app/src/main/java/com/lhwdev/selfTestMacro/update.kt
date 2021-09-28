@@ -22,10 +22,7 @@ import com.lhwdev.github.repo.getRelease
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.models.Version
 import com.lhwdev.selfTestMacro.navigation.Navigator
-import com.vanpra.composematerialdialogs.Buttons
-import com.vanpra.composematerialdialogs.Content
-import com.vanpra.composematerialdialogs.Title
-import com.vanpra.composematerialdialogs.showDialog
+import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -96,7 +93,7 @@ suspend fun Activity.askUpdate(navigator: Navigator, update: Release, requestCod
 		}
 		Buttons {
 			PositiveButton(onClick = { removeRoute(true) }) { Text("업데이트") }
-			NegativeButton { Text("취소") }
+			NegativeButton(onClick = requestClose) { Text("취소") }
 		}
 	}
 	if(result != true) return null

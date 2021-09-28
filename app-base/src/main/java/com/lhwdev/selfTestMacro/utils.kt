@@ -33,6 +33,13 @@ fun <K, V> Map<K, V>.added(key: K, value: V): Map<K, V> {
 	return newMap
 }
 
+fun <K, V> Map<K, V>.replaced(from: K, to: V): Map<K, V> = toMutableMap().also {
+	it[from] = to
+}
+
+fun <K, V> Map<K, V>.replacedValue(from: V, to: V): Map<K, V> =
+	mapValues { (_, value) -> if(value == from) to else value }
+
 fun <T> List<T>.replaced(from: T, to: T): List<T> = map { if(it == from) to else it }
 
 

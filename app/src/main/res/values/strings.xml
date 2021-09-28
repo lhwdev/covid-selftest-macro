@@ -1,3 +1,5 @@
 <resources>
 	<string name="app_name" translatable="false">자가진단 매크로</string>
+	<string name="app_name_preview" translatable="false">자가진단 매크로(프리뷰)</string>
+	<string name="app_name_dev" translatable="false">자가진단 매크로(빌드)</string>
 </resources>

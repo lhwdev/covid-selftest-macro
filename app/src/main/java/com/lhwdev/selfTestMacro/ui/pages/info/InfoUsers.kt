@@ -27,6 +27,7 @@ import com.lhwdev.fetch.toJson
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.onError
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.common.LinkedText
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
@@ -48,6 +49,7 @@ object InfoUserStructure {
 	data class Detail(
 		val name: String,
 		val profile: String? = null,
+		val profileBottomPadding: Float? = null,
 		val quote: String? = null,
 		val credit: String,
 		val links: List<Link>
@@ -109,9 +111,14 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 			if(detail.profile != null) {
 				val image by produceState<ImageBitmap?>(null) {
 					withContext(Dispatchers.IO) {
-						value = fetch(detail.profile).rawResponse.use {
-							BitmapFactory.decodeStream(it)
-						}.asImageBitmap()
+						value = try {
+							fetch(detail.profile).rawResponse.use {
+								BitmapFactory.decodeStream(it)
+							}.asImageBitmap()
+						} catch(th: Throwable) {
+							onError(th, "profile picture of ${detail.name} was not loaded")
+							null
+						}
 					}
 				}
 				
@@ -132,7 +139,7 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 		}
 		
 		
-		Spacer(Modifier.height(32.dp))
+		Spacer(Modifier.height((detail.profileBottomPadding ?: 32f).dp))
 		Text(detail.name, style = MaterialTheme.typography.h3)
 		Spacer(Modifier.height(16.dp))
 		

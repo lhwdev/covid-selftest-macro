@@ -28,10 +28,7 @@ import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.primaryActive
 import com.lhwdev.selfTestMacro.ui.utils.DropdownPicker
-import com.vanpra.composematerialdialogs.Buttons
-import com.vanpra.composematerialdialogs.FloatingMaterialDialogScope
-import com.vanpra.composematerialdialogs.Title
-import com.vanpra.composematerialdialogs.showDialogUnit
+import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
 
 
@@ -99,7 +96,7 @@ internal fun FloatingMaterialDialogScope.MultipleInstituteDialog(
 	}
 	
 	Buttons {
-		NegativeButton { Text("취소") }
+		NegativeButton(onClick = requestClose) { Text("취소") }
 	}
 }
 

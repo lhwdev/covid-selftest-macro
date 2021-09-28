@@ -74,7 +74,15 @@ data class DbUser(
 	val userCode: String,
 	val userBirth: String,
 	val institute: DbInstitute,
-	val userGroupId: Int
+	val userGroupId: Int,
+	val answer: Answer
+)
+
+@Serializable
+data class Answer(
+	val suspicious: Boolean,
+	val waitingResult: Boolean,
+	val quarantined: Boolean
 )
 
 

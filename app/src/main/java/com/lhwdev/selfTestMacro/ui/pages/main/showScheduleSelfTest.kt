@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -18,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestSchedule
-import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupInfo
@@ -27,12 +25,10 @@ import com.lhwdev.selfTestMacro.showToast
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
+import com.lhwdev.selfTestMacro.ui.common.TestTargetListItem
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
 import com.lhwdev.selfTestMacro.ui.utils.TimePickerDialog
-import com.vanpra.composematerialdialogs.Buttons
-import com.vanpra.composematerialdialogs.FullMaterialDialogScope
-import com.vanpra.composematerialdialogs.showDialogAsync
-import com.vanpra.composematerialdialogs.showFullDialogAsync
+import com.vanpra.composematerialdialogs.*
 
 
 internal fun Navigator.showScheduleSelfTest(
@@ -108,23 +104,7 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 			)
 		}
 		
-		ListItem(
-			icon = { Icon(painterResource(pref.db.iconFor(target)), contentDescription = null) },
-			text = {
-				val text = with(pref.db) {
-					when(target) {
-						is DbTestTarget.Group -> "${target.name} (${target.userIds.size})"
-						is DbTestTarget.Single -> target.name
-					}
-				}
-				Text(text)
-			},
-			secondaryText = if(target is DbTestTarget.Group) ({
-				val users = with(pref.db) { target.allUsers }.joinToString { it.name }
-				Text(users)
-			}) else null,
-			singleLineSecondaryText = false
-		)
+		TestTargetListItem(target)
 		
 		Spacer(Modifier.height(12.dp))
 		
@@ -299,7 +279,7 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 			
 			dismiss()
 		}) { Text("확인") }
-		NegativeButton { Text("취소") }
+		NegativeButton(onClick = requestClose) { Text("취소") }
 	}
 	
 	scrims.navigationBar()

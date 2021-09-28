@@ -59,14 +59,18 @@ android {
 	productFlavors {
 		register("stable") {
 			dimension = "lifecycle"
+			manifestPlaceholders["appLabel"] = "@string/app_name"
 		}
 		register("preview") {
 			dimension = "lifecycle"
 			applicationIdSuffix = ".preview"
+			manifestPlaceholders["appLabel"] = "@string/app_name_preview"
 		}
 		register("dev") {
 			dimension = "lifecycle"
+			isDefault = true
 			applicationIdSuffix = ".dev"
+			manifestPlaceholders["appLabel"] = "@string/app_name_dev"
 		}
 	}
 	

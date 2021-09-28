@@ -1,10 +1,7 @@
 package com.vanpra.composematerialdialogs
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,7 +24,21 @@ internal enum class MaterialDialogButtonTypes {
  * See [MaterialDialogButtonsScope] for more information about the content
  */
 @Composable
-fun MaterialDialogScope.Buttons(content: @Composable MaterialDialogButtonsScope.() -> Unit) {
+fun MaterialDialogScope.Buttons(content: @Composable FloatingMaterialDialogButtonsScope.() -> Unit) {
+	ButtonsBase {
+		FloatingMaterialDialogButtonsScope(requestClose).content()
+	}
+}
+
+@Composable
+fun MaterialDialogButtons(content: @Composable MaterialDialogButtonsScope.() -> Unit) {
+	ButtonsBase {
+		MaterialDialogButtonsScopeImpl.content()
+	}
+}
+
+@Composable
+private fun ButtonsBase(content: @Composable () -> Unit) {
 	val interButtonPadding = with(LocalDensity.current) { 12.dp.toPx().toInt() }
 	val defaultBoxHeight = with(LocalDensity.current) { 36.dp.toPx().toInt() }
 	val accessibilityPadding = with(LocalDensity.current) { 12.dp.toPx().toInt() }
@@ -39,7 +50,7 @@ fun MaterialDialogScope.Buttons(content: @Composable MaterialDialogButtonsScope.
 			.layoutId("buttons")
 	) {
 		Layout(
-			content = { content(MaterialDialogButtonsScope(this@Buttons)) },
+			content = { content() },
 			modifier = Modifier
 		)
 		{ measurables, constraints ->
@@ -88,94 +99,101 @@ fun MaterialDialogScope.Buttons(content: @Composable MaterialDialogButtonsScope.
 	}
 }
 
+
+@LayoutScopeMarker
+interface MaterialDialogButtonsScope
+
+class FloatingMaterialDialogButtonsScope(val requestClose: () -> Unit) : MaterialDialogButtonsScope
+
+private object MaterialDialogButtonsScopeImpl : MaterialDialogButtonsScope
+
+
 /**
- * A class used to build a buttons layout for a MaterialDialog. This should be used in conjunction
- * with the [MaterialDialogScope.Buttons] function
+ * Adds a button which is always enabled to the bottom of the dialog. This should
+ * only be used for neutral actions.
+ *
+ * @param onClick a callback which is called when the button is pressed
+ * @param button content shown in the button
  */
-class MaterialDialogButtonsScope(private val scope: MaterialDialogScope) {
-	/**
-	 * Adds a button which is always enabled to the bottom of the dialog. This should
-	 * only be used for neutral actions.
-	 *
-	 * @param onClick a callback which is called when the button is pressed
-	 * @param button content shown in the button
-	 */
-	@Composable
-	fun Button(
-		onClick: () -> Unit = {},
-		button: @Composable () -> Unit,
+@Suppress("unused")
+@Composable
+fun MaterialDialogButtonsScope.Button(
+	onClick: () -> Unit,
+	button: @Composable () -> Unit,
+) {
+	TextButton(
+		onClick = onClick,
+		modifier = Modifier.layoutId(MaterialDialogButtonTypes.Text),
 	) {
-		TextButton(
-			onClick = onClick,
-			modifier = Modifier.layoutId(MaterialDialogButtonTypes.Text),
-		) {
-			// ProvideTextStyle(TextStyle())
-			// TODO: uppercase
-			button()
-		}
+		// ProvideTextStyle(TextStyle())
+		// TODO: uppercase
+		button()
 	}
-	
-	/**
-	 * Adds a positive button to the dialog
-	 *
-	 * @param onClick a callback which is called when the button is pressed
-	 * @param content the content shown in the button
-	 */
-	@Composable
-	fun PositiveButton(
-		onClick: () -> Unit = scope.onCloseRequest,
-		content: @Composable () -> Unit
+}
+
+/**
+ * Adds a positive button to the dialog
+ *
+ * @param onClick a callback which is called when the button is pressed
+ * @param content the content shown in the button
+ */
+@Suppress("unused")
+@Composable
+fun MaterialDialogButtonsScope.PositiveButton(
+	onClick: () -> Unit,
+	content: @Composable () -> Unit
+) {
+	TextButton(
+		onClick = onClick,
+		modifier = Modifier.layoutId(MaterialDialogButtonTypes.Positive),
+		enabled = true
 	) {
-		TextButton(
-			onClick = onClick,
-			modifier = Modifier.layoutId(MaterialDialogButtonTypes.Positive),
-			enabled = true
-		) {
-			content()
-		}
+		content()
 	}
-	
-	/**
-	 * Adds a negative button to the dialog
-	 *
-	 * @param onClick a callback which is called when the button is pressed
-	 * @param content the content shown in the button
-	 * even if autoDismissing is disabled
-	 */
-	@Composable
-	fun NegativeButton(
-		onClick: () -> Unit = scope.onCloseRequest,
-		content: @Composable () -> Unit
+}
+
+/**
+ * Adds a negative button to the dialog
+ *
+ * @param onClick a callback which is called when the button is pressed
+ * @param content the content shown in the button
+ * even if autoDismissing is disabled
+ */
+@Suppress("unused")
+@Composable
+fun MaterialDialogButtonsScope.NegativeButton(
+	onClick: () -> Unit,
+	content: @Composable () -> Unit
+) {
+	TextButton(
+		onClick = onClick,
+		modifier = Modifier.layoutId(MaterialDialogButtonTypes.Negative)
 	) {
-		TextButton(
-			onClick = onClick,
-			modifier = Modifier.layoutId(MaterialDialogButtonTypes.Negative)
-		) {
-			content()
-		}
+		content()
 	}
-	
-	/**
-	 * Adds an accessibility button to the bottom left of the dialog
-	 *
-	 * @param onClick a callback which is called when the button is pressed
-	 * @param icon the icon to be shown on the button
-	 */
-	@Composable
-	fun AccessibilityButton(
-		onClick: () -> Unit,
-		icon: @Composable () -> Unit
+}
+
+/**
+ * Adds an accessibility button to the bottom left of the dialog
+ *
+ * @param onClick a callback which is called when the button is pressed
+ * @param icon the icon to be shown on the button
+ */
+@Suppress("unused")
+@Composable
+fun MaterialDialogButtonsScope.AccessibilityButton(
+	onClick: () -> Unit,
+	icon: @Composable () -> Unit
+) {
+	Box(
+		Modifier
+			.size(48.dp)
+			.layoutId(MaterialDialogButtonTypes.Accessibility)
+			.clickable(onClick = onClick),
+		contentAlignment = Alignment.Center
 	) {
-		Box(
-			Modifier
-				.size(48.dp)
-				.layoutId(MaterialDialogButtonTypes.Accessibility)
-				.clickable(onClick = onClick),
-			contentAlignment = Alignment.Center
-		) {
-			Box(Modifier.size(24.dp)) {
-				icon()
-			}
+		Box(Modifier.size(24.dp)) {
+			icon()
 		}
 	}
 }

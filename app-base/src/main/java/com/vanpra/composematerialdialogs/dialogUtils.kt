@@ -94,7 +94,7 @@ suspend fun Navigator.promptYesNoDialog(
 	
 	Buttons {
 		PositiveButton(onClick = { removeRoute(true) }, content = yesButton)
-		NegativeButton(content = noButton)
+		NegativeButton(onClick = requestClose, content = noButton)
 	}
 }
 

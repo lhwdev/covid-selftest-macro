@@ -22,10 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
 import com.lhwdev.selfTestMacro.api.SurveyData
-import com.lhwdev.selfTestMacro.database.DatabaseManager
-import com.lhwdev.selfTestMacro.database.DbTestGroup
-import com.lhwdev.selfTestMacro.database.DbTestTarget
-import com.lhwdev.selfTestMacro.database.allUserIds
+import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.navigation.showRouteAsync
@@ -100,12 +97,15 @@ fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 @DrawableRes
 fun DatabaseManager.iconFor(group: DbTestTarget): Int = when(group) {
 	is DbTestTarget.Group -> R.drawable.ic_group_24
-	is DbTestTarget.Single -> when(group.user.institute.type) {
-		InstituteType.school -> R.drawable.ic_school_24
-		InstituteType.university -> TODO()
-		InstituteType.academy -> TODO()
-		InstituteType.office -> TODO()
-	}
+	is DbTestTarget.Single -> iconFor(group.user)
+}
+
+@DrawableRes
+fun iconFor(user: DbUser): Int = when(user.institute.type) {
+	InstituteType.school -> R.drawable.ic_school_24
+	InstituteType.university -> TODO()
+	InstituteType.academy -> TODO()
+	InstituteType.office -> TODO()
 }
 
 

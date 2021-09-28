@@ -33,7 +33,7 @@ fun MaterialDialogBase(
 	val info = remember {
 		MaterialDialogInfo(onCloseRequest)
 	}
-	info.onCloseRequest = onCloseRequest
+	info.requestClose = onCloseRequest
 	
 	val focusManager = LocalFocusManager.current
 	
@@ -56,7 +56,7 @@ fun MaterialDialogBase(
 
 
 class MaterialDialogInfo(
-	var onCloseRequest: () -> Unit
+	var requestClose: () -> Unit
 ) {
 	var hasFocusOnShow: Boolean = false
 }
@@ -69,7 +69,7 @@ class MaterialDialogInfo(
 abstract class MaterialDialogScope(
 	private val info: MaterialDialogInfo
 ) {
-	val onCloseRequest: () -> Unit get() = info.onCloseRequest
+	val requestClose: () -> Unit get() = info.requestClose
 	
 	var hasFocusOnShow: Boolean
 		get() = info.hasFocusOnShow
@@ -165,7 +165,7 @@ fun FullMaterialDialogStub(
 	val info = remember {
 		MaterialDialogInfo(onCloseRequest)
 	}
-	info.onCloseRequest = onCloseRequest
+	info.requestClose = onCloseRequest
 	
 	
 	Column {

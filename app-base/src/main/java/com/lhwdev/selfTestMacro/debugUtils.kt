@@ -51,7 +51,9 @@ suspend fun Context.onError(error: Throwable, description: String = "???", force
 	if(forceShow || isDebugEnabled) withContext(Dispatchers.Main) {
 		showErrorInfo(info)
 	}
-	writeErrorLog(info)
+	
+	// in dev mode, usually ran with IDE; can check things with Logcat
+	if(App.flavor != "dev") writeErrorLog(info)
 }
 
 suspend fun Context.writeErrorLog(info: String) {

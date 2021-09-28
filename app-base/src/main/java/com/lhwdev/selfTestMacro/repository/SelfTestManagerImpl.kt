@@ -230,7 +230,12 @@ class SelfTestManagerImpl(
 						levelCode = user.info.schoolLevelCode,
 						sigCode = user.info.instituteSigCode
 					),
-					userGroupId = thisGroupId
+					userGroupId = thisGroupId,
+					answer = Answer(
+						suspicious = false,
+						waitingResult = false,
+						quarantined = false
+					)
 				)
 			}
 			newUsers += dbUsers
@@ -406,7 +411,7 @@ class SelfTestManagerImpl(
 					}
 				}
 				
-				Buttons { PositiveButton { Text("확인") } }
+				Buttons { PositiveButton(onClick = requestClose) { Text("확인") } }
 			}
 			result
 		} catch(th: Throwable) {

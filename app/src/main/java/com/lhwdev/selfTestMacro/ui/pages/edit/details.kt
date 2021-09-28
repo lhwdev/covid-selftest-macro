@@ -119,7 +119,7 @@ private fun EditUserDetail(
 						}
 					}
 					Buttons {
-						NegativeButton { Text("취소") }
+						NegativeButton(onClick = requestClose) { Text("취소") }
 					}
 				}
 				

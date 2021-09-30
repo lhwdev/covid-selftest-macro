@@ -9,7 +9,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import com.lhwdev.selfTestMacro.api.*
 import net.gotev.cookiestore.InMemoryCookieStore
 import java.net.CookieManager
@@ -40,6 +39,7 @@ suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) lis
 }
 
 suspend fun Context.submitSuspend(session: Session, notification: Boolean = true) {
+	selfLog("submitSuspend ${preferenceState.user?.identifier?.mainUserName}")
 	try {
 		tryAtMost(maxTrial = 3) trial@{
 			val institute = preferenceState.institute!!
@@ -69,7 +69,7 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 				SurveyData(userToken = user.token, upperUserName = user.name, rspns09 = if(isIsolated) "1" else "0")
 			)
 			
-			println("selfTestMacro: submitSuspend=success")
+			selfLog("submitSuspend success")
 			if(notification) showTestCompleteNotification(result.registerAt)
 			else {
 				showToastSuspendAsync("자가진단 제출 완료")
@@ -84,6 +84,8 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 fun Context.updateTime(intent: PendingIntent) {
 	val preferenceState = preferenceState
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+	if(Build.VERSION.SDK_INT >= 21)
+		selfLog("updateTime: lastAlarm= ${alarmManager.nextAlarmClock}")
 	alarmManager.cancel(intent)
 	if(preferenceState.isSchedulingEnabled)
 		scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min, isRandom = preferenceState.isRandomEnabled)
@@ -109,7 +111,7 @@ fun Context.scheduleNextAlarm(
 		if(nextDay || new <= this) new.add(Calendar.DAY_OF_YEAR, 1)
 		new
 	}
-	Log.i("SelfTestMacro", "scheduling next alarm at $newTime")
+	selfLog("scheduling next alarm at $newTime")
 	
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT < 21) {
@@ -135,6 +137,5 @@ fun Context.scheduleNextAlarm(
 		)
 	}
 	
-	Log.i("SelfTestMacro", "scheduled next alarm")
-	
+	selfLog("scheduled next alarm! next=${alarmManager.nextAlarmClock}")
 }

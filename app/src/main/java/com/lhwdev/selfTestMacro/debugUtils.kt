@@ -12,9 +12,37 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.Date
 
 val Context.isDebugEnabled get() = BuildConfig.DEBUG || preferenceState.isDebugEnabled
 
+private var logOutput: File? = null
+
+
+fun Context.selfLog(description: String, error: Throwable? = null) {
+	Log.i("SelfTestMacro", description, error)
+	if(!isDebugEnabled) return
+	
+	val log = logOutput ?: run {
+		val log = File(getExternalFilesDir(null)!!, "self_log.txt")
+		logOutput = log
+		log
+	}
+	
+	val text = buildString {
+		append(Date().toString())
+		append(": ")
+		append(description)
+		if(error != null) {
+			append('\n')
+			append(error.stackTraceToString())
+		}
+		append('\n')
+	}
+	try {
+		log.appendText(text)
+	} catch(th: Throwable) { Log.e("SelfTestMacro", "Error while logging '$description'", th) }
+}
 
 suspend fun Context.onErrorToast(error: Throwable, description: String = "???") {
 	showToastSuspendAsync("오류가 발생했습니다. ($description)")
@@ -79,6 +107,7 @@ private fun Context.showErrorInfo(info: String) {
 
 suspend fun getLogcat(): String = withContext(Dispatchers.IO) {
 	val command = arrayOf("logcat", "-d", "-v", "threadtime")
+	@Suppress("BlockingMethodInNonBlockingContext")
 	val process = Runtime.getRuntime().exec(command)
 	process.inputStream.reader().use { it.readText() }
 }

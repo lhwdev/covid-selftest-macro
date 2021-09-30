@@ -8,7 +8,8 @@
   **이 앱을 사용하여 생기는 모든 문제의 책임은 이 앱의 사용자인 여러분에게 있습니다.**
   건강상태가 좋지 않다면 매크로 예약을 취소해두고 공식 사이트나 앱에서 자가진단을 하시길 바랍니다.
 
-### [**📎 앱 다운로드 받기**](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)  
+**요즘 자가진단 예약 기능이 잘 작동하지 않는 경우가 있습니다. 버그를 고칠 때까지 기다려 주세요.**
+### [~~**📎 앱 다운로드 받기**~~](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)  
 - [개인정보 처리 방침](PRIVACY_POLICY.md)
 - 이 앱을 공유할 때는 위 링크보다 이 사이트의 주소를 공유해주세요. (위의 링크는 바뀔 수도)  
 - 자가진단 사이트의 구조가 바뀌어서 앱이 작동하지 않거나 업데이트가 있을 때 알림을 받으려면 [디스코드 서버](https://discord.gg/a2hNMF39AC)에 들어오세요.  

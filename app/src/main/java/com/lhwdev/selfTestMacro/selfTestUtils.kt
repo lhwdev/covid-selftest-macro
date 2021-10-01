@@ -14,6 +14,7 @@ import net.gotev.cookiestore.InMemoryCookieStore
 import java.net.CookieManager
 import java.net.CookiePolicy
 import java.util.Calendar
+import java.util.Date
 import kotlin.random.Random
 
 
@@ -111,7 +112,7 @@ fun Context.scheduleNextAlarm(
 		if(nextDay || new <= this) new.add(Calendar.DAY_OF_YEAR, 1)
 		new
 	}
-	selfLog("scheduling next alarm at $newTime")
+	selfLog("scheduling next alarm at ${Date.from(newTime.toInstant())}")
 	
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT < 21) {

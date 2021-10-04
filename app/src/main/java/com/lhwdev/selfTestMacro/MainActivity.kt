@@ -276,7 +276,7 @@ class MainActivity : AppCompatActivity() {
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		menuInflater.inflate(R.menu.menu_main, menu)
-		menu.add(Menu.NONE, R.id.share_log, Menu.NONE)
+		if(isDebugEnabled) menu.add(Menu.NONE, R.id.share_log, Menu.NONE, "로그 공유하기")
 		return true
 	}
 	

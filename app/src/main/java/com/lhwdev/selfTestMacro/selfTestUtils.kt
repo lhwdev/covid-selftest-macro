@@ -67,7 +67,7 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 			val result = session.registerSurvey(
 				preferenceState.institute!!,
 				user,
-				SurveyData(userToken = user.token, upperUserName = user.name, rspns09 = if(isIsolated) "1" else "0")
+				SurveyData(userToken = user.token, upperUserName = usersIdentifier.mainUserName, rspns09 = if(isIsolated) "1" else "0")
 			)
 			
 			selfLog("submitSuspend success")

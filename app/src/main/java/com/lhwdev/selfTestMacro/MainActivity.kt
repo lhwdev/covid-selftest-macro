@@ -276,6 +276,7 @@ class MainActivity : AppCompatActivity() {
 	override fun onCreateOptionsMenu(menu: Menu): Boolean {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		menuInflater.inflate(R.menu.menu_main, menu)
+		menu.add(Menu.NONE, R.id.share_log, Menu.NONE)
 		return true
 	}
 	
@@ -286,6 +287,21 @@ class MainActivity : AppCompatActivity() {
 		return when(item.itemId) {
 			R.id.action_settings -> {
 				startActivity(Intent(this, FirstActivity::class.java))
+				true
+			}
+			R.id.share_log -> {
+				AlertDialog.Builder(this).apply {
+					setTitle("로그 공유하기")
+					setItems(arrayOf("자가진단 기록", "오류 로그")) { _, index ->
+						val file = when(index) {
+							0 -> sSelfLog
+							1 -> sErrorLog
+							else -> error("unknown index")
+						}
+						
+						shareErrorLog(file)
+					}
+				}
 				true
 			}
 			R.id.info -> {

@@ -3,9 +3,11 @@ package com.lhwdev.selfTestMacro
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,13 +20,32 @@ val Context.isDebugEnabled get() = BuildConfig.DEBUG || preferenceState.isDebugE
 
 private var logOutput: File? = null
 
+internal const val sSelfLog = "log/self_log.txt"
+internal const val sErrorLog = "log/error_log.txt"
+
+
+fun Context.shareErrorLog(file: String) {
+	val uri = FileProvider.getUriForFile(
+		this,
+		"com.lhwdev.selfTestMacro.file_provider",
+		File(getExternalFilesDir(null)!!, file)
+	)
+	
+	val intent = Intent().apply {
+		action = Intent.ACTION_SEND
+		setDataAndType(uri, "text/plain")
+		addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+	}
+	val chooser = Intent.createChooser(intent, "로그 공유")
+	startActivity(chooser)
+}
 
 fun Context.selfLog(description: String, error: Throwable? = null) {
 	Log.i("SelfTestMacro", description, error)
 	if(!isDebugEnabled) return
 	
 	val log = logOutput ?: run {
-		val log = File(getExternalFilesDir(null)!!, "self_log.txt")
+		val log = File(getExternalFilesDir(null)!!, sSelfLog)
 		logOutput = log
 		log
 	}
@@ -70,7 +91,7 @@ suspend fun Context.onError(error: Throwable, description: String = "???", force
 suspend fun Context.writeErrorLog(info: String) {
 	try {
 		withContext(Dispatchers.IO) {
-			File(getExternalFilesDir(null)!!, "error_log.txt").appendText(info)
+			File(getExternalFilesDir(null)!!, sErrorLog).appendText(info)
 		}
 	} catch(e: Throwable) {
 		// ignore errors

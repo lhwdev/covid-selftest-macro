@@ -33,7 +33,8 @@ fun Context.shareErrorLog(file: String) {
 	
 	val intent = Intent().apply {
 		action = Intent.ACTION_SEND
-		setDataAndType(uri, "text/plain")
+		putExtra(Intent.EXTRA_STREAM, uri)
+		type = "text/plain"
 		addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 	}
 	val chooser = Intent.createChooser(intent, "로그 공유")

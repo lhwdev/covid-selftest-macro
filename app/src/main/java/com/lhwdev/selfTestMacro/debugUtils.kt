@@ -40,9 +40,9 @@ fun Context.shareErrorLog(file: String) {
 	startActivity(chooser)
 }
 
-fun Context.selfLog(description: String, error: Throwable? = null) {
+fun Context.selfLog(description: String, error: Throwable? = null, force: Boolean = false) {
 	Log.i("SelfTestMacro", description, error)
-	if(!isDebugEnabled) return
+	if(!force && !isDebugEnabled) return
 	
 	val log = logOutput ?: run {
 		val log = File(getExternalFilesDir(null)!!, sSelfLog)

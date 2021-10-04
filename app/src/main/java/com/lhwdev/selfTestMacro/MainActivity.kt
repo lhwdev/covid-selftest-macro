@@ -301,7 +301,8 @@ class MainActivity : AppCompatActivity() {
 						
 						shareErrorLog(file)
 					}
-				}
+					setNegativeButton("취소", null)
+				}.show()
 				true
 			}
 			R.id.info -> {
@@ -310,7 +311,11 @@ class MainActivity : AppCompatActivity() {
 					setTitle("자가진단 매크로 ${BuildConfig.VERSION_NAME}")
 					setMessage(
 						HtmlCompat.fromHtml(
-							"이현우 개발\n<a href='https://github.com/lhwdev/covid-selftest-macro'>자가진단 앱 웹사이트</a>",
+							"""
+								|이현우 개발
+								|<a href='https://github.com/lhwdev/covid-selftest-macro'>자가진단 앱 웹사이트</a>
+								|버그 제보 방법: 개발자 모드 (밑의 버튼) > 체크 박스 누르기 > 버그가 생길 때까지 기다리기
+							""".trimMargin(),
 							0
 						)
 					)

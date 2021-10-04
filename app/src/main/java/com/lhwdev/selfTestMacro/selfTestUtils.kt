@@ -70,7 +70,7 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 				SurveyData(userToken = user.token, upperUserName = usersIdentifier.mainUserName, rspns09 = if(isIsolated) "1" else "0")
 			)
 			
-			selfLog("submitSuspend success")
+			selfLog("submitSuspend success ${preferenceState.user?.identifier?.mainUserName} ${result.registerAt}", force = true)
 			if(notification) showTestCompleteNotification(result.registerAt)
 			else {
 				showToastSuspendAsync("자가진단 제출 완료")
@@ -86,7 +86,7 @@ fun Context.updateTime(intent: PendingIntent) {
 	val preferenceState = preferenceState
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT >= 21)
-		selfLog("updateTime: lastAlarm= ${alarmManager.nextAlarmClock}")
+		selfLog("updateTime: lastAlarm=${alarmManager.nextAlarmClock}")
 	alarmManager.cancel(intent)
 	if(preferenceState.isSchedulingEnabled)
 		scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min, isRandom = preferenceState.isRandomEnabled)
@@ -112,7 +112,7 @@ fun Context.scheduleNextAlarm(
 		if(nextDay || new <= this) new.add(Calendar.DAY_OF_YEAR, 1)
 		new
 	}
-	selfLog("scheduling next alarm at ${Date.from(newTime.toInstant())}")
+	selfLog("scheduling next alarm at ${Date.from(newTime.toInstant())}", force = true)
 	
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT < 21) {

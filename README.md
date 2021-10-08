@@ -84,4 +84,5 @@ git clone --recurse-submodules https://github.com/lhwdev/covid-selftest-macro
 ## 오픈소스 라이센스 & 기타
 - [mTranskey](https://github.com/Nua07/mTransKey)
 - Special thanks to [blluv](https://github.com/blluv), 이승수
+- App icon by Gradient
 

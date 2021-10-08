@@ -20,4 +20,4 @@ jobs:
           deno-version: v1.x
 
       - name: main
-        run: deno run --allow-net --location https://example.com --no-check auto-merge/mod.ts ${{ github.repository }} ${{ github.token }} ${{ github.event.number }}
+        run: deno run --allow-net --location https://example.com --no-check --quiet auto-merge/mod.ts ${{ github.repository }} ${{ github.token }} ${{ github.event.number }}

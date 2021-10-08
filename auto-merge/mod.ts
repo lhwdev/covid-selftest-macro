@@ -1,5 +1,6 @@
 // @deno-types=https://cdn.esm.sh/v53/@octokit/core@3.5.1/dist-types/index.d.ts
 import { Octokit } from "https://cdn.skypack.dev/@octokit/core";
+import config from "./config.ts";
 
 function failSecurity(): never {
   Deno.exit()
@@ -24,16 +25,11 @@ const pullInfo = await octokit.request("GET /repos/{owner}/{repo}/pulls/{pull_nu
   pull_number: pullNumber
 })
 
-// See http://caius.github.io/github_id
-const allowedUsers = [
-  36781325, // lhwdev
-  74242561, // cog25
-  87003194 // blluv
-]
+
 const id = pullInfo.data.user?.id
 if(id === undefined) failSecurity()
 
-const allowedUser = allowedUsers.includes(id)
+const allowedUser = config.allowedUsers.includes(id)
 if(!allowedUser) failSecurity()
 
 if(!pullInfo.data.body?.includes('automerge')) failCondition()
@@ -52,15 +48,15 @@ const pullFiles = await octokit.request("GET /repos/{owner}/{repo}/pulls/{pull_n
 })
 
 const files = pullFiles.data
-const allowedFiles = ["src/info/special-thanks.json"]
+
 if(files.length !== 1) {
-  await comment('❌ 오직 허용된 파일을 편집했을 때만 automerge를 사용할 수 있어요.\n 허용된 파일: ' + allowedFiles.map(s => '`' + s + '`').join(', '))
+  await comment('❌ 오직 허용된 파일을 편집했을 때만 automerge를 사용할 수 있어요.\n 허용된 파일: ' + config.allowedFiles.map(s => '`' + s + '`').join(', '))
   failIntendedSecurity()
 }
 
 const file = files[0]
-if(!allowedFiles.includes(file.filename)) {
-  await comment('❌ 오직 허용된 파일을 편집했을 때만 automerge를 사용할 수 있어요.\n 허용된 파일: ' + allowedFiles.map(s => '`' + s + '`').join(', '))
+if(!config.allowedFiles.includes(file.filename)) {
+  await comment('❌ 오직 허용된 파일을 편집했을 때만 automerge를 사용할 수 있어요.\n 허용된 파일: ' + config.allowedFiles.map(s => '`' + s + '`').join(', '))
   failIntendedSecurity()
 }
 

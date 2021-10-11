@@ -299,7 +299,12 @@ class MainActivity : AppCompatActivity() {
 							else -> error("unknown index")
 						}
 						
-						shareErrorLog(file)
+						AlertDialog.Builder(this@MainActivity).apply {
+							setTitle("개인정보 안내")
+							setMessage("이 로그를 공유하면 로그 안에 포함된 개인정보를 로그를 공유하는 대상에게 공개하는 것을 동의하게 됩니다.")
+							setPositiveButton("예") { _, _ -> shareErrorLog(file) }
+							setNegativeButton("취소", null)
+						}.show()
 					}
 					setNegativeButton("취소", null)
 				}.show()
@@ -312,9 +317,10 @@ class MainActivity : AppCompatActivity() {
 					setMessage(
 						HtmlCompat.fromHtml(
 							"""
-								|이현우 개발
-								|<a href='https://github.com/lhwdev/covid-selftest-macro'>자가진단 앱 웹사이트</a>
-								|버그 제보 방법: 개발자 모드 (밑의 버튼) > 체크 박스 누르기 > 버그가 생길 때까지 기다리기
+								|이현우 개발<br>
+								|<a href='https://github.com/lhwdev/covid-selftest-macro'>자가진단 앱 웹사이트</a><br><br>
+								|버그 제보 방법: 개발자 모드 (밑의 버튼) > 체크 박스 누르기 > 버그가 생길 때까지 기다리기 > ...에서 '로그 공유하기'
+								|(안뜨면 앱 나갔다 들어오기) > 공유하면 됨
 							""".trimMargin(),
 							0
 						)

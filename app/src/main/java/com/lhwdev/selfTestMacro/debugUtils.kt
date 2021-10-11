@@ -24,11 +24,22 @@ internal const val sSelfLog = "log/self_log.txt"
 internal const val sErrorLog = "log/error_log.txt"
 
 
-fun Context.shareErrorLog(file: String) {
+private fun File.beforeWrite(): File {
+	val p = parentFile ?: return this
+	if(!p.exists()) p.mkdirs()
+	return this
+}
+
+fun Context.shareErrorLog(path: String) {
+	val file = File(getExternalFilesDir(null)!!, path)
+	if(!file.exists()) {
+		showToast("로그 파일이 존재하지 않습니다.")
+		return
+	}
 	val uri = FileProvider.getUriForFile(
 		this,
 		"com.lhwdev.selfTestMacro.file_provider",
-		File(getExternalFilesDir(null)!!, file)
+		file
 	)
 	
 	val intent = Intent().apply {
@@ -46,7 +57,7 @@ fun Context.selfLog(description: String, error: Throwable? = null, force: Boolea
 	if(!force && !isDebugEnabled) return
 	
 	val log = logOutput ?: run {
-		val log = File(getExternalFilesDir(null)!!, sSelfLog)
+		val log = File(getExternalFilesDir(null)!!, sSelfLog).beforeWrite()
 		logOutput = log
 		log
 	}
@@ -92,7 +103,7 @@ suspend fun Context.onError(error: Throwable, description: String = "???", force
 suspend fun Context.writeErrorLog(info: String) {
 	try {
 		withContext(Dispatchers.IO) {
-			File(getExternalFilesDir(null)!!, sErrorLog).appendText(info)
+			File(getExternalFilesDir(null)!!, sErrorLog).beforeWrite().appendText(info)
 		}
 	} catch(e: Throwable) {
 		// ignore errors

@@ -109,7 +109,9 @@ fun Context.scheduleNextAlarm(
 		new[Calendar.MINUTE] = newMin
 		new[Calendar.SECOND] = 0
 		new[Calendar.MILLISECOND] = 0
-		if(nextDay || new <= this) new.add(Calendar.DAY_OF_YEAR, 1)
+		if(nextDay || new <= this || new[Calendar.DAY_OF_YEAR] == this[Calendar.DAY_OF_YEAR]) {
+			new.add(Calendar.DAY_OF_YEAR, 1)
+		}
 		new
 	}
 	selfLog("scheduling next alarm at ${Date.from(newTime.toInstant())}", force = true)

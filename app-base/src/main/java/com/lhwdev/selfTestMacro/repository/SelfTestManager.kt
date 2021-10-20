@@ -32,6 +32,12 @@ data class MasterUser(
 data class WizardUser(val user: User, val info: UserInfo, val master: MasterUser)
 
 
+enum class SelfTestInitiator(val isFromUi: Boolean) {
+	userClick(isFromUi = true),
+	alarm(isFromUi = false)
+}
+
+
 interface SelfTestManager {
 	var context: Context
 	
@@ -64,7 +70,11 @@ interface SelfTestManager {
 	suspend fun getCurrentStatus(user: DbUser): Status?
 	
 	
-	suspend fun submitSelfTestNow(context: UiContext, target: DbTestTarget): List<SubmitResult>
+	suspend fun submitSelfTestNow(
+		context: UiContext,
+		target: DbTestTarget,
+		initiator: SelfTestInitiator
+	): List<SubmitResult>
 	
 	fun updateSchedule(target: DbTestGroup, new: DbTestGroup)
 	fun onScheduleUpdated()

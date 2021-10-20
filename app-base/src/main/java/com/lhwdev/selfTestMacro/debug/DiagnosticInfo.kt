@@ -1,13 +1,16 @@
 package com.lhwdev.selfTestMacro.debug
 
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty0
 
 
 interface DiagnosticObject {
 	fun getDiagnosticInformation(): DiagnosticItem
 }
 
+
+fun DiagnosticItem.asObject(): DiagnosticObject = object : DiagnosticObject {
+	override fun getDiagnosticInformation(): DiagnosticItem = this@asObject
+}
 
 sealed interface DiagnosticItem {
 	val name: String
@@ -24,15 +27,6 @@ interface DiagnosticElement : DiagnosticItem {
 
 class SimpleDiagnosticElement(override val name: String, override val data: Any?, override val type: KClass<*>) :
 	DiagnosticElement
-
-private class PropertyDiagnosticElement<T>(val property: KProperty0<T>) : DiagnosticElement {
-	override val name: String
-		get() = property.name
-	override val data: Any?
-		get() = property.get()
-	override val type: KClass<*>?
-		get() = null
-}
 
 
 inline fun <reified T> diagnosticElement(name: String, data: T): SimpleDiagnosticElement =
@@ -51,3 +45,50 @@ class DiagnosticItemGroupBuilder {
 	
 	fun build(): List<DiagnosticElement> = list
 }
+
+object EmptyDiagnosticGroup : DiagnosticItemGroup {
+	override val name: String get() = "<empty>"
+	override val children: List<DiagnosticItem> = emptyList()
+}
+
+
+fun DiagnosticItem.dump(oneLine: Boolean): String = buildString {
+	fun dump(item: DiagnosticItem, depth: Int): Any = when(item) {
+		is DiagnosticElement -> {
+			append("  ".repeat(depth - 1))
+			if(depth != 0) append("|-")
+			append(" ")
+			append(item.name)
+			append(": ")
+			append(item.data)
+		}
+		is DiagnosticItemGroup -> {
+			append(item.name)
+			for(child in item.children) {
+				append('\n')
+				dump(child, depth + 1)
+			}
+		}
+	}
+	
+	fun dumpOneLine(item: DiagnosticItem): Any = when(item) {
+		is DiagnosticElement -> {
+			append(item.name)
+			append(": ")
+			append(item.data)
+		}
+		is DiagnosticItemGroup -> {
+			append(item.name)
+			append(": [ ")
+			for((index, child) in item.children.withIndex()) {
+				if(index != 0) append(", ")
+				dumpOneLine(child)
+			}
+			append(" ]")
+		}
+	}
+	
+	if(oneLine) dumpOneLine(this@dump)
+	else dump(this@dump, depth = 0)
+}
+

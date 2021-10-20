@@ -12,15 +12,13 @@ import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.getSystemService
+import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.http.Session
-import com.lhwdev.fetch.http.fetch
-import com.lhwdev.fetch.requireOk
-import com.lhwdev.fetch.use
+import com.lhwdev.fetch.isOk
 import com.lhwdev.selfTestMacro.android.utils.activeNetworkCommon
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.*
-import com.lhwdev.selfTestMacro.debug.onError
-import com.lhwdev.selfTestMacro.debug.selfLog
+import com.lhwdev.selfTestMacro.debug.*
 import com.lhwdev.selfTestMacro.replaced
 import com.lhwdev.selfTestMacro.tryAtMost
 import com.lhwdev.selfTestMacro.ui.Color
@@ -49,11 +47,267 @@ private fun userInfoKeyHash(userCode: String, instituteCode: String) =
 	userCode.hashCode() * 31 + instituteCode.hashCode()
 
 
+class HcsAppError(
+	message: String,
+	val isSerious: Boolean,
+	val causes: Set<ErrorCause>,
+	val target: Any? = null,
+	val diagnosticItem: SelfTestDiagnosticInfo,
+	cause: Throwable? = null
+) : RuntimeException(null, cause), DiagnosticObject {
+	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticItem
+	private val mMessage = message
+	private var cachedMessage: String? = null
+	
+	private fun createMessage() = buildString {
+		append(mMessage)
+		
+		if(target != null) {
+			append(" -> ")
+			append(target)
+		}
+		
+		append('\n')
+		append("원인: ")
+		causes.joinTo(this) { it.description }
+		
+		append("\n")
+		append("진단 정보: ")
+		diagnosticItem.dump(oneLine = true)
+	}
+	
+	override val message: String
+		get() = cachedMessage ?: run {
+			val m = createMessage()
+			cachedMessage = m
+			m
+		}
+	
+	enum class ErrorCause(
+		val description: String,
+		val detail: String?,
+		val parent: ErrorCause? = null,
+		val sure: ErrorCause? = null,
+		val action: Action? = null,
+		val category: SubmitResult.ErrorCategory
+	) {
+		repeated(description = "반복해서 일어난 오류", detail = null, category = SubmitResult.ErrorCategory.flag),
+		
+		noNetwork(
+			description = "네트워크 연결 없음",
+			detail = """
+				네트워크에 연결되어 있지 않습니다.
+				와이파이나 데이터 네트워크가 켜져있는지 확인하시고, 데이터만 켜져있을 경우 백그라운드 데이터 사용 제한을 해제하셨는지 확인해주세요.
+			""".trimIndent(),
+			action = Action.Notice("네트워크에 연결되어 있지 않아요."),
+			category = SubmitResult.ErrorCategory.network
+		),
+		
+		appBug(
+			description = "앱 자체 버그",
+			detail = """
+				자가진단 매크로 앱의 버그입니다.
+				오류정보를 복사해서 개발자에게 제보해주신다면 감사하겠습니다.
+			""".trimIndent(),
+			category = SubmitResult.ErrorCategory.bug
+		),
+		probableAppBug(
+			description = "앱 자체 버그(?)",
+			detail = """
+				자가진단 매크로 앱의 버그일 수도 있습니다.
+				만약 버그라고 생각되신다면 오류정보를 복사해서 개발자에게 제보해주신다면 감사하겠습니다.
+			""".trimIndent(),
+			sure = appBug,
+			category = SubmitResult.ErrorCategory.bug
+		),
+		
+		apiChange(
+			description = "교육청 건강상태 자가진단의 내부 구조 변화",
+			detail = """
+				교육청의 건강상태 자가진단 사이트 내부구조가 바뀌었습니다.
+				가능하다면 개발자에게 제보해주세요.
+			""".trimIndent(),
+			parent = appBug,
+			category = SubmitResult.ErrorCategory.bug
+		),
+		probableApiChange(
+			description = "교육청 건강상태 자가진단의 내부 구조 변화(?)",
+			detail = """
+				교육청의 건강상태 자가진단 사이트 내부구조가 바뀌었을 수 있습니다.
+				버그인 것 같다면 개발자에게 제보해주세요.
+			""".trimIndent(),
+			sure = apiChange,
+			category = SubmitResult.ErrorCategory.bug
+		),
+		
+		unresponsiveNetwork(
+			description = "네트워크 불안정",
+			detail = """
+				네트워크(와이파이, 데이터 네트워크 등)에 연결되어 있지만 인터넷에 연결할 수 없습니다.
+				네트워크 연결을 다시 확인해주세요.
+			""".trimIndent(),
+			category = SubmitResult.ErrorCategory.network
+		),
+		
+		hcsUnreachable(
+			description = "자가진단 사이트 접근 불가",
+			detail = """
+				네트워크에 연결되어 있고 인터넷에 연결할 수 있지만, 자가진단 사이트에 연결할 수 없습니다.
+				교육청 건강상태 자가진단 서버가 순간적으로 불안정해서 일어났을 수도 있습니다.
+				공식 자가진단 사이트나 앱에 들어가서 작동하는지 확인하고, 작동하는데도 이 에러가 뜬다면 버그를 제보해주세요.
+			""".trimIndent(),
+			category = SubmitResult.ErrorCategory.network
+		),
+		
+		vpn(
+			description = "VPN 사용 중..?",
+			detail = """
+				VPN을 사용하고 있다면 VPN을 끄고 다시 시도해보세요.
+				자가진단 서버는 해외에서 오는 연결을 싸그리 차단해버린답니다.
+			""".trimIndent(),
+			category = SubmitResult.ErrorCategory.network
+		);
+		
+		
+		sealed class Action {
+			class Notice(val message: String) : Action()
+		}
+	}
+}
+
+
 class SelfTestManagerImpl(
 	override var context: Context,
+	private val debugContext: DebugContext,
 	private val database: DatabaseManager,
 	val newAlarmIntent: (Context) -> Intent
 ) : SelfTestManager {
+	/// Error handling
+	private suspend fun <R> handleError(
+		operationName: String,
+		target: Any?,
+		isFromUi: Boolean,
+		onError: (HcsAppError) -> R,
+		operation: suspend () -> R
+	): R {
+		var lastCauses: Set<HcsAppError.ErrorCause>? = null
+		var trials = 0
+		val throwables = mutableListOf<Throwable>()
+		
+		try {
+			while(true) try {
+				trials++
+				
+				return operation()
+			} catch(th: Throwable) {
+				val causes = mutableSetOf<HcsAppError.ErrorCause>()
+				val diagnostic = SelfTestDiagnosticInfo()
+				var isSerious = false
+				
+				
+				// Possible reason:
+				// - internal API structure change
+				// - hcs maintenance
+				// - app bug
+				// - network not available
+				// - network not responsive
+				// - VPN
+				// - just luck
+				val conn = context.getSystemService<ConnectivityManager>()!!
+				
+				val network = conn.activeNetworkCommon
+				
+				
+				fun makeError(): HcsAppError {
+					diagnostic.networkInfo = network?.copy()
+					val error = HcsAppError(
+						message = "$operationName 실패",
+						isSerious = isSerious,
+						causes = causes,
+						target = target,
+						diagnosticItem = diagnostic
+					)
+					debugContext.onError(
+						message = "[handleError] $operationName: throwing $error",
+						throwable = error
+					)
+					
+					return error
+				}
+				
+				if(network?.isAvailable == true) {
+					isSerious = true
+					val fetchResult = fetch(url = "https://hcs.eduro.go.kr/")
+					
+					if(fetchResult.isOk) {
+						// Possible reason:
+						// - internal API structure change
+						// - app bug
+						// - just luck
+						
+						causes += listOf(HcsAppError.ErrorCause.appBug, HcsAppError.ErrorCause.apiChange)
+					} else {
+						diagnostic.hcsAccessible = false
+						causes += HcsAppError.ErrorCause.hcsUnreachable
+						// Possible reason:
+						// - network not responsive
+						// - VPN
+						// - just luck
+						
+						val isNetworkResponsive = pingNetwork()
+						
+						if(isNetworkResponsive) {
+							// Network responsive but cannot access hcs.eduro.go.kr
+							
+							// Possible reason:
+							// - VPN -> decided not to do something
+							// - just luck
+							
+							
+							if(network.isVpn) {
+								causes += HcsAppError.ErrorCause.vpn
+							} else {
+								causes += HcsAppError.ErrorCause.probableApiChange
+								causes += HcsAppError.ErrorCause.probableAppBug
+							}
+						} else {
+							// Network not responsive
+							causes += HcsAppError.ErrorCause.unresponsiveNetwork
+						}
+					}
+					
+				} else {
+					isSerious = isSerious && !isFromUi
+					// network?.isAvailable != true
+					causes += HcsAppError.ErrorCause.noNetwork
+				}
+				
+				// Fails when tried too much
+				if(trials >= 3) return onError(makeError())
+				
+				// Fails when repeated error happens
+				if(lastCauses == causes) {
+					causes += HcsAppError.ErrorCause.repeated
+					return onError(makeError())
+				}
+				
+				lastCauses = causes
+			}
+		} finally {
+			if(trials != 0) try {
+				// had any error
+				val messages = throwables.map { it.toString() }.toSet()
+				debugContext.onLightError(
+					"[handleError] $operationName: " + messages.joinToString(),
+					shortLog = true
+				)
+			} catch(th: Throwable) {
+				// holy
+			}
+		}
+	}
+	
+	
 	/// Session management
 	// TODO: persistence
 	
@@ -357,15 +611,16 @@ class SelfTestManagerImpl(
 	 * - 앱을 켜면 알림이 실행되지 않았는 적이 있는지 여부 확인 및 버그 제보 제안
 	 * - 백그라운드 업데이트(3.1.0에 구현 예정)
 	 */
-	private suspend fun DatabaseManager.submitSelfTest(user: DbUser): SubmitResult {
+	private suspend fun DatabaseManager.submitSelfTest(user: DbUser, isFromUi: Boolean): SubmitResult {
 		val group = user.userGroup
 		val info = getSessionInfo(group)
 		
-		val errors = mutableListOf<Set<SubmitResult.ErrorCause>>()
-		var trials = 0
-		
-		while(true) try {
-			trials++
+		return handleError(
+			operationName = "자가진단 제출",
+			isFromUi = isFromUi,
+			target = user,
+			onError = { SubmitResult.Failed(user, it.causes, it.diagnosticItem) }
+		) {
 			val session = tryAtMost(maxTrial = 3) {
 				loadSession(info, group)
 				info.session
@@ -387,91 +642,18 @@ class SelfTestManagerImpl(
 				surveyData = surveyData
 			)
 			
-			return SubmitResult.Success(user, data.registerAt)
-		} catch(th: Throwable) {
-			val error = mutableSetOf<SubmitResult.ErrorCause>()
-			val throwables = mutableListOf<Throwable>()
-			
-			val diagnostic = SelfTestDiagnosticInfo()
-			
-			
-			// Possible reason:
-			// - internal API structure change
-			// - app bug
-			// - network not available
-			// - network not responsive
-			// - VPN
-			// - just luck
-			val conn = context.getSystemService<ConnectivityManager>()!!
-			
-			val network = conn.activeNetworkCommon
-			
-			
-			fun makeError(): SubmitResult.Failed {
-				diagnostic.networkInfo = network?.copy()
-				return SubmitResult.Failed(target = user, cause = error, diagnostic = diagnostic)
-			}
-			
-			if(network?.isAvailable == true) {
-				try {
-					info.session.fetch(url = "https://hcs.eduro.go.kr/").use {
-						it.requireOk()
-					}
-					
-					// Possible reason:
-					// - internal API structure change
-					// - app bug
-					// - just luck
-					
-					error += listOf(SubmitResult.ErrorCause.appBug, SubmitResult.ErrorCause.apiChange)
-				} catch(th: Throwable) {
-					throwables += th
-					
-					// Possible reason:
-					// - network not responsive
-					// - VPN
-					// - just luck
-					
-					val isNetworkResponsive = pingNetwork()
-					
-					if(isNetworkResponsive) {
-						// Network responsive but cannot access hcs.eduro.go.kr
-						
-						// Possible reason:
-						// - VPN -> decided not to do something
-						// - just luck
-						
-						
-						if(network.isVpn) {
-							error += SubmitResult.ErrorCause.vpn
-						}
-					} else {
-						// Network not responsive
-					}
-				}
-				
-			}
-			
-			// Fails when tried too much
-			if(trials >= 3) return makeError()
-			
-			// Fails when repeated error happens
-			if(errors.lastOrNull() == error) {
-				error += SubmitResult.ErrorCause.repeated
-				return makeError()
-			}
+			SubmitResult.Success(user, data.registerAt)
 		}
 	}
 	
-	override suspend fun submitSelfTestNow(context: UiContext, target: DbTestTarget): List<SubmitResult> {
+	override suspend fun submitSelfTestNow(
+		context: UiContext,
+		target: DbTestTarget,
+		initiator: SelfTestInitiator
+	): List<SubmitResult> {
 		return try {
-			if(!context.context.isNetworkAvailable) {
-				context.scope.launch {
-					context.showMessage("네트워크에 연결되어 있지 않아요.", "확인")
-				}
-				return emptyList()
-			}
-			val result = with(database) { target.allUsers }.map { database.submitSelfTest(it) }
+			val result =
+				with(database) { target.allUsers }.map { database.submitSelfTest(it, isFromUi = initiator.isFromUi) }
 			if(result.isEmpty()) return result
 			
 			if(result.all { it is SubmitResult.Success }) context.scope.launch {

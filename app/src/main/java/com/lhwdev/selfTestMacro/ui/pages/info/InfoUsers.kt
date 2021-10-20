@@ -26,9 +26,9 @@ import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.toJson
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.R
-import com.lhwdev.selfTestMacro.debug.onError
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
+import com.lhwdev.selfTestMacro.ui.LocalDebugContext
 import com.lhwdev.selfTestMacro.ui.common.LinkedText
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.vanpra.composematerialdialogs.showDialogAsync
@@ -101,6 +101,7 @@ fun InfoUsers() {
 fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 	val navigator = LocalNavigator
 	val urlHandler = LocalUriHandler.current
+	val debug = LocalDebugContext.current
 	
 	Column(
 		horizontalAlignment = Alignment.CenterHorizontally,
@@ -116,7 +117,7 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 								BitmapFactory.decodeStream(it)
 							}.asImageBitmap()
 						} catch(th: Throwable) {
-							onError(th, "profile picture of ${detail.name} was not loaded")
+							debug.onError("profile picture of ${detail.name} was not loaded", th)
 							null
 						}
 					}

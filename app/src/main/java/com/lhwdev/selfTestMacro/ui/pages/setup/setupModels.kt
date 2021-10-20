@@ -6,7 +6,7 @@ import androidx.compose.runtime.*
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
 import com.lhwdev.selfTestMacro.database.DbTestGroup
-import com.lhwdev.selfTestMacro.onError
+import com.lhwdev.selfTestMacro.debug.onError
 import com.lhwdev.selfTestMacro.repository.WizardUser
 
 

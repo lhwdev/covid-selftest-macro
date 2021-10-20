@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.debug
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -8,8 +8,10 @@ import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.material.SnackbarHostState
 import androidx.core.content.getSystemService
+import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.packages.api_base.BuildConfig
+import com.lhwdev.selfTestMacro.showToastSuspendAsync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

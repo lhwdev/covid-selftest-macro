@@ -16,12 +16,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.lhwdev.selfTestMacro.*
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
+import com.lhwdev.selfTestMacro.debug.onError
+import com.lhwdev.selfTestMacro.debug.selfLog
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
+import com.lhwdev.selfTestMacro.sRegions
+import com.lhwdev.selfTestMacro.sSchoolLevels
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.TopAppBar

@@ -126,7 +126,6 @@ fun MaterialDialogButtonsScope.Button(
 		modifier = Modifier.layoutId(MaterialDialogButtonTypes.Text),
 	) {
 		// ProvideTextStyle(TextStyle())
-		// TODO: uppercase
 		button()
 	}
 }

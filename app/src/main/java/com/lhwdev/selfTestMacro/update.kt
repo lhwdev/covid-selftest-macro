@@ -20,6 +20,7 @@ import androidx.core.content.getSystemService
 import com.lhwdev.github.repo.Release
 import com.lhwdev.github.repo.getRelease
 import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.debug.onError
 import com.lhwdev.selfTestMacro.models.Version
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.vanpra.composematerialdialogs.*

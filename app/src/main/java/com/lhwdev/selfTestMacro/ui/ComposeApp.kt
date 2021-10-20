@@ -16,8 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.debug.DebugContext
+import com.lhwdev.selfTestMacro.debug.isDebugEnabled
 import com.lhwdev.selfTestMacro.navigation.ComposeNavigationHost
 import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.NavigatorImpl
@@ -39,9 +42,17 @@ fun SelfTestManager(context: Context, database: DatabaseManager): SelfTestManage
 @Composable
 fun ComposeApp(activity: Activity) {
 	val context = LocalContext.current
+	
 	val pref = remember(context) { context.preferenceState }
+	
 	val selfTestManager = remember { SelfTestManager(context.applicationContext, pref.db) }
 	selfTestManager.context = context.applicationContext
+	
+	val debugContext = DebugContext(
+		context = context,
+		debugEnabled = context.isDebugEnabled,
+		debuggableWithIde = App.flavor == "dev"
+	)
 	
 	val navigator = remember {
 		val navigator = NavigatorImpl()
@@ -62,26 +73,30 @@ fun ComposeApp(activity: Activity) {
 	}
 	
 	AppTheme {
-		CompositionLocalProvider(
-			LocalPreference provides pref,
-			LocalSelfTestManager provides selfTestManager
+		AppCompositionLocalsPack(
+			preference = pref,
+			debugContext = debugContext
 		) {
-			ProvideAutoWindowInsets {
-				Box {
-					if(pref.isVirtualServer) Text(
-						"가상 서버",
-						modifier = Modifier
-							.background(Color.Black.copy(alpha = .3f))
-							.align(Alignment.TopEnd)
-					)
-					
-					ComposeNavigationHost(navigator)
+			CompositionLocalProvider(
+				LocalSelfTestManager provides selfTestManager
+			) {
+				ProvideAutoWindowInsets {
+					Box {
+						if(pref.isVirtualServer) Text(
+							"가상 서버",
+							modifier = Modifier
+								.background(Color.Black.copy(alpha = .3f))
+								.align(Alignment.TopEnd)
+						)
+						
+						ComposeNavigationHost(navigator)
+					}
 				}
 			}
-		}
-		
-		BackHandler(navigator.size > 1) {
-			navigator.popLastRoute()
+			
+			BackHandler(navigator.size > 1) {
+				navigator.popLastRoute()
+			}
 		}
 	}
 }

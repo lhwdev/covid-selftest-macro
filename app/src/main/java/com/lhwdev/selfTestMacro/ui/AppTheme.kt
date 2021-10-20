@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 
 private val sLightColors = lightColors(
 	primary = Color(0xff2962ff),
-	primaryVariant = Color(0xff5000b3),
+	primaryVariant = Color(0xff0039cb),
 	onPrimary = Color(0xffffffff),
 	secondary = Color(0xff2962ff),
 	secondaryVariant = Color(0xff5000b3)

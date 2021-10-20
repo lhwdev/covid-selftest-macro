@@ -3,7 +3,7 @@
 package com.lhwdev.fetch
 
 import com.lhwdev.fetch.headers.contentType
-import com.lhwdev.fetch.http.runInterruptibleFork
+import com.lhwdev.fetch.http.runInterruptible
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
@@ -19,8 +19,15 @@ interface FetchResult : FetchHeaders {
 	val responseCodeMessage: String
 	val rawResponse: InputStream
 	
-	fun close()
+	suspend fun close()
 }
+
+suspend inline fun <R> FetchResult.use(block: (FetchResult) -> R): R = try {
+	block(this)
+} finally {
+	close()
+}
+
 
 val FetchResult.isOk: Boolean get() = responseCode in 200..299
 fun FetchResult.requireOk() {
@@ -41,10 +48,12 @@ suspend fun <T> FetchResult.toJson(
 	from.decodeFromString(serializer, getText(charset))
 }
 
-suspend fun FetchResult.getText(charset: Charset = this.charset): String = runInterruptibleFork(Dispatchers.IO) {
-	val value = rawResponse.reader(charset = charset).readText()
-	rawResponse.close()
-	value
+suspend fun FetchResult.getText(charset: Charset = this.charset): String = use {
+	runInterruptible(Dispatchers.IO) {
+		val value = rawResponse.reader(charset = charset).readText()
+		rawResponse.close()
+		value
+	}
 }
 
 

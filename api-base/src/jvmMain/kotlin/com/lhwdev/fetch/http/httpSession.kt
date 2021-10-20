@@ -1,7 +1,6 @@
 package com.lhwdev.fetch.http
 
-import com.lhwdev.fetch.DataBody
-import com.lhwdev.fetch.FetchResult
+import com.lhwdev.fetch.*
 import java.net.*
 
 
@@ -40,7 +39,26 @@ class Session(
 
 suspend inline fun Session.fetch(
 	url: URL,
-	method: HttpMethod = HttpMethod.get,
+	method: FetchMethod? = null,
+	headers: FetchHeadersBuilder,
+	body: FetchBody? = null
+): FetchResult = fetch(url, method, headers, this, body)
+
+suspend fun Session.fetch(
+	url: URL,
+	method: FetchMethod? = null,
 	headers: Map<String, String> = emptyMap(),
-	body: DataBody? = null
-): FetchResult = com.lhwdev.fetch.fetch(url, method, headers, this, body)
+	body: FetchBody? = null
+): FetchResult = fetch(url, method, headers, this, body)
+
+suspend inline fun Session.fetch(
+	url: String,
+	method: FetchMethod? = null, headers: FetchHeadersBuilder,
+	body: FetchBody? = null
+): FetchResult = fetch(url, method, headers, this, body)
+
+suspend inline fun Session.fetch(
+	url: String,
+	method: FetchMethod? = null, headers: Map<String, String> = emptyMap(),
+	body: FetchBody? = null
+): FetchResult = fetch(url, method, headers, this, body)

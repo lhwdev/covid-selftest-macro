@@ -3,9 +3,9 @@
 package com.lhwdev.fetch.http
 
 import com.lhwdev.fetch.*
+import kotlinx.coroutines.Dispatchers
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.Closeable
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -201,9 +201,7 @@ enum class HttpMethod(val requestName: String) : FetchMethod {
 }
 
 
-private class MapEntry<K, V>(override val key: K, override val value: V) : Map.Entry<K, V>
-
-private class HttpResultImpl(val connection: HttpURLConnection) : FetchResult, Closeable {
+private class HttpResultImpl(val connection: HttpURLConnection) : FetchResult {
 	override val interceptorDescription: String get() = "HTTP"
 	
 	override val responseCode get() = connection.responseCode
@@ -214,7 +212,7 @@ private class HttpResultImpl(val connection: HttpURLConnection) : FetchResult, C
 			return connection.inputStream
 		}
 	
-	override fun close() {
+	override suspend fun close(): Unit = runInterruptible(Dispatchers.IO) {
 		connection.disconnect()
 	}
 	

@@ -15,6 +15,14 @@ suspend fun <T> runInterruptibleFork(
 	runInterruptibleInExpectedContext(coroutineContext) { block() }
 }
 
+suspend fun <T> runInterruptible(
+	context: CoroutineContext = EmptyCoroutineContext,
+	block: () -> T
+): T = withContext(context) {
+	runInterruptibleInExpectedContext(coroutineContext) { block() }
+}
+
+
 private inline fun <T> CoroutineScope.runInterruptibleInExpectedContext(
 	coroutineContext: CoroutineContext,
 	block: CoroutineScope.() -> T

@@ -22,13 +22,17 @@ object FirstInitialization {
 		versionName: String,
 		versionCode: Int,
 		flavor: String,
-		debug: Boolean
+		debug: Boolean,
+		appIconForeground: Int,
+		appIcon: Int
 	) {
 		AppInitializationInfo.versionCode = versionCode
 		AppInitializationInfo.versionName = versionName
 		AppInitializationInfo.githubRepo = Repository(sGithubInstanceDefault, "lhwdev", "covid-selftest-macro")
 		AppInitializationInfo.flavor = flavor
 		AppInitializationInfo.debug = debug
+		AppInitializationInfo.appIconForeground = appIconForeground
+		AppInitializationInfo.appIcon = appIcon
 		
 		val pref = preferenceState
 		

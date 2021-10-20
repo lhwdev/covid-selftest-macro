@@ -4,20 +4,24 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.material.ListItem
 import androidx.compose.material.Text
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.getSystemService
 import com.lhwdev.fetch.http.Session
+import com.lhwdev.fetch.http.fetch
+import com.lhwdev.fetch.requireOk
+import com.lhwdev.fetch.use
+import com.lhwdev.selfTestMacro.android.utils.activeNetworkCommon
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.*
-import com.lhwdev.selfTestMacro.onError
+import com.lhwdev.selfTestMacro.debug.onError
+import com.lhwdev.selfTestMacro.debug.selfLog
 import com.lhwdev.selfTestMacro.replaced
-import com.lhwdev.selfTestMacro.selfLog
 import com.lhwdev.selfTestMacro.tryAtMost
 import com.lhwdev.selfTestMacro.ui.Color
 import com.lhwdev.selfTestMacro.ui.UiContext
@@ -50,7 +54,6 @@ class SelfTestManagerImpl(
 	private val database: DatabaseManager,
 	val newAlarmIntent: (Context) -> Intent
 ) : SelfTestManager {
-	
 	/// Session management
 	// TODO: persistence
 	
@@ -141,7 +144,7 @@ class SelfTestManagerImpl(
 	}
 	
 	
-	suspend fun DbUser.apiUser(): User {
+	private suspend fun DbUser.apiUser(): User {
 		val key = keyFor(this)
 		
 		// 1. fast path #1
@@ -170,7 +173,7 @@ class SelfTestManagerImpl(
 		regionCode: String?,
 		schoolLevelCode: Int,
 		name: String
-	): List<InstituteInfo> = SessionManager.anonymousSession.getSchoolData(
+	): List<InstituteInfo> = SessionManager.anySession.getSchoolData(
 		regionCode = regionCode,
 		schoolLevelCode = "$schoolLevelCode",
 		name = name
@@ -357,35 +360,108 @@ class SelfTestManagerImpl(
 	private suspend fun DatabaseManager.submitSelfTest(user: DbUser): SubmitResult {
 		val group = user.userGroup
 		val info = getSessionInfo(group)
-		val session = tryAtMost(maxTrial = 3) {
-			loadSession(info, group)
-			info.session
-		}
-		val answer = user.answer
-		val surveyData = SurveyData(
-			questionSuspicious = answer.suspicious,
-			questionWaitingResult = answer.waitingResult,
-			questionQuarantined = answer.quarantined,
-			upperUserName = answer.message
-		)
 		
-		while(true) {
-			try {
-				@OptIn(DangerousHcsApi::class)
-				val data = session.registerSurvey(
-					institute = user.usersInstitute,
-					user = user.apiUser(),
-					name = user.name,
-					surveyData = surveyData
-				)
-				return SubmitResult.Success(user, data.registerAt)
-			} catch(th: Throwable) {
-				// handle error and retry if possible
-				return SubmitResult.Failed(user, "자가진단에 실패했어요.", th)
+		val errors = mutableListOf<Set<SubmitResult.ErrorCause>>()
+		var trials = 0
+		
+		while(true) try {
+			trials++
+			val session = tryAtMost(maxTrial = 3) {
+				loadSession(info, group)
+				info.session
+			}
+			
+			val answer = user.answer
+			val surveyData = SurveyData(
+				questionSuspicious = answer.suspicious,
+				questionWaitingResult = answer.waitingResult,
+				questionQuarantined = answer.quarantined,
+				upperUserName = answer.message
+			)
+			
+			@OptIn(DangerousHcsApi::class)
+			val data = session.registerSurvey(
+				institute = user.usersInstitute,
+				user = user.apiUser(),
+				name = user.name,
+				surveyData = surveyData
+			)
+			
+			return SubmitResult.Success(user, data.registerAt)
+		} catch(th: Throwable) {
+			val error = mutableSetOf<SubmitResult.ErrorCause>()
+			val throwables = mutableListOf<Throwable>()
+			
+			val diagnostic = SelfTestDiagnosticInfo()
+			
+			
+			// Possible reason:
+			// - internal API structure change
+			// - app bug
+			// - network not available
+			// - network not responsive
+			// - VPN
+			// - just luck
+			val conn = context.getSystemService<ConnectivityManager>()!!
+			
+			val network = conn.activeNetworkCommon
+			
+			
+			fun makeError(): SubmitResult.Failed {
+				diagnostic.networkInfo = network?.copy()
+				return SubmitResult.Failed(target = user, cause = error, diagnostic = diagnostic)
+			}
+			
+			if(network?.isAvailable == true) {
+				try {
+					info.session.fetch(url = "https://hcs.eduro.go.kr/").use {
+						it.requireOk()
+					}
+					
+					// Possible reason:
+					// - internal API structure change
+					// - app bug
+					// - just luck
+					
+					error += listOf(SubmitResult.ErrorCause.appBug, SubmitResult.ErrorCause.apiChange)
+				} catch(th: Throwable) {
+					throwables += th
+					
+					// Possible reason:
+					// - network not responsive
+					// - VPN
+					// - just luck
+					
+					val isNetworkResponsive = pingNetwork()
+					
+					if(isNetworkResponsive) {
+						// Network responsive but cannot access hcs.eduro.go.kr
+						
+						// Possible reason:
+						// - VPN -> decided not to do something
+						// - just luck
+						
+						
+						if(network.isVpn) {
+							error += SubmitResult.ErrorCause.vpn
+						}
+					} else {
+						// Network not responsive
+					}
+				}
+				
+			}
+			
+			// Fails when tried too much
+			if(trials >= 3) return makeError()
+			
+			// Fails when repeated error happens
+			if(errors.lastOrNull() == error) {
+				error += SubmitResult.ErrorCause.repeated
+				return makeError()
 			}
 		}
 	}
-	
 	
 	override suspend fun submitSelfTestNow(context: UiContext, target: DbTestTarget): List<SubmitResult> {
 		return try {
@@ -421,13 +497,18 @@ class SelfTestManagerImpl(
 						is SubmitResult.Failed -> ListItem(
 							modifier = Modifier.clickable {
 								context.navigator.showDialogAsync {
-									Title { Text("${resultItem.target.name} (${resultItem.target.institute.name}): ${resultItem.message}") }
+									
+									Title { Text("오류 발생") }
 									
 									Content {
-										val stackTrace = remember(resultItem.error) {
-											resultItem.error.stackTraceToString()
+										resultItem.cause
+									}
+									
+									Buttons {
+										PositiveButton(onClick = requestClose) { Text("닫기") }
+										Button(onClick = {}) {
+											
 										}
-										Text(stackTrace)
 									}
 								}
 							}

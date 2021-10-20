@@ -67,4 +67,5 @@ object SessionManager {
 		}
 	
 	val anonymousSession: Session get() = anonymousSessionInfo.session
+	val anySession: Session get() = sessionMap.values.firstOrNull()?.session ?: anonymousSessionInfo.session
 }

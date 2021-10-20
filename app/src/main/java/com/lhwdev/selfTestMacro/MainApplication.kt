@@ -1,6 +1,8 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.Application
+import com.lhwdev.selfTestMacro.debug.getErrorInfo
+import com.lhwdev.selfTestMacro.debug.writeErrorLog
 import kotlinx.coroutines.DEBUG_PROPERTY_NAME
 import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_OFF
 import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_ON
@@ -17,7 +19,9 @@ class MainApplication : Application() {
 				versionName = BuildConfig.VERSION_NAME,
 				versionCode = BuildConfig.VERSION_CODE,
 				flavor = BuildConfig.FLAVOR,
-				debug = BuildConfig.DEBUG
+				debug = BuildConfig.DEBUG,
+				appIconForeground = R.mipmap.ic_launcher_foreground,
+				appIcon = R.mipmap.ic_launcher
 			)
 		}
 		

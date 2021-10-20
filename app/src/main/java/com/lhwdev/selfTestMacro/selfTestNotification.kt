@@ -1,43 +1,15 @@
 package com.lhwdev.selfTestMacro
 
-import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.TaskStackBuilder
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.DbTestTarget
-
-
-// TODO: setContentIntent
-
-
-open class AndroidNotificationChannel(
-	val channelId: String,
-	val name: String,
-	val description: String? = null,
-	val importance: Int,
-	val priority: Int
-) {
-	@RequiresApi(Build.VERSION_CODES.O)
-	open fun createNotificationChannel(): NotificationChannel = NotificationChannel(channelId, name, importance).also {
-		if(description != null) it.description = description
-	}
-	
-	@Suppress("ExplicitThis")
-	protected inline fun Context.buildNotification(block: NotificationCompat.Builder.() -> Unit): Notification =
-		NotificationCompat.Builder(this, channelId).also {
-			it.priority = priority
-			it.setSmallIcon(R.mipmap.ic_launcher_foreground)
-			it.block()
-		}.build()
-}
 
 
 fun Context.initializeNotificationChannel() {
@@ -55,27 +27,6 @@ fun Context.initializeNotificationChannel() {
 	}
 }
 
-
-private const val sNotificationPrefix = "com.lhwdev.selfTestMacro"
-
-object NotificationIds {
-	const val selfTestSuccess = 1
-	const val selfTestFailed = 2
-	const val updateAvailable = 3
-}
-
-
-// object BeforeTestNotification : AndroidNotificationEntry(
-// 	channelId = "com.lhwdev.selfTestMacro/beforeSelfTest",
-// 	name = "자가진단 예정",
-// 	description = "예약된 자가진단이 실행되기 몇십분 전에 소리없이 표시됩니다.",
-// 	importance = NotificationManagerCompat.IMPORTANCE_LOW,
-// 	priority = NotificationCompat.PRIORITY_LOW
-// ) {
-// 	fun notificationOf(context: Context) = context.buildNotification {
-// 		setContentTitle("자가진단")
-// 	}
-// }
 
 object SelfTestSuccessNotification : AndroidNotificationChannel(
 	channelId = "$sNotificationPrefix/selfTestSuccess",

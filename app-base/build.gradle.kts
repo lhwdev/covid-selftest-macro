@@ -8,19 +8,6 @@ plugins {
 android {
 	compileSdk = 31
 	
-	kotlinOptions {
-		freeCompilerArgs = freeCompilerArgs + listOf(
-			"-Xjvm-default=compatibility",
-			"-Xopt-in=" + listOf(
-				"kotlin.RequiresOptIn",
-				"androidx.compose.material.ExperimentalMaterialApi",
-				"androidx.compose.ui.ExperimentalComposeUiApi",
-				"androidx.compose.animation.ExperimentalAnimationApi"
-			).joinToString(separator = ",")
-		)
-		jvmTarget = "1.8"
-	}
-	
 	defaultConfig {
 		minSdk = 21
 		targetSdk = 30

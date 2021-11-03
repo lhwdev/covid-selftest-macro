@@ -3,6 +3,7 @@ import { copy } from "https://deno.land/std@0.107.0/fs/mod.ts";
 
 const input = resolve("src");
 const output = resolve("output");
+const outputSrc = join(output, "src"); // compatibility between meta and app-meta branch
 
 onDirectory(".");
 copy("public", output, { overwrite: true });
@@ -27,7 +28,7 @@ async function onFile(dir: string, entry: Deno.DirEntry) {
     case "json": {
       const string = await Deno.readTextFile(path);
       const result = JSON.stringify(JSON.parse(string));
-      const toDir = join(output, dir);
+      const toDir = join(outputSrc, dir);
       try {
         Deno.mkdir(toDir, { recursive: true });
       } catch (_) {

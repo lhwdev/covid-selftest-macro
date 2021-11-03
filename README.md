@@ -11,7 +11,9 @@
 [예시 PR](https://github.com/lhwdev/covid-selftest-macro/pull/13)
 
 실제로 앱에서 받는 데이터의 양을 줄이기 위해, json 파일들은 minify되어 `app-meta` 브랜치에서 불러옵니다.
-`app-meta` 브랜치는 Github Action를 통해 자동으로 업데이트되니, 해당 브랜치보다는 이 브랜치(`meta`)로 PR을 넣어주세요.
+`app-meta` 브랜치는 Github Action를 통해 자동으로 업데이트되니, 해당 브랜치보다는 이 브랜치(`meta`)로 PR을 넣어주세요.  
+다만 두 브랜치 사이에서 호환성이 유지되니 meta 브랜치에서 데이터를 블러오게 해도 아무 문제가 없습니다.
+그래서 이 브랜치를 fork해서 바로 meta url을 그걸로 설정해도 잘 작동됩니다.
 
 ## 프로젝트 구조
 - `src`: minify될 json 파일들이 있는 곳입니다.

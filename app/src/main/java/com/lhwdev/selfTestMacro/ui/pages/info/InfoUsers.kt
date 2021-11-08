@@ -64,7 +64,7 @@ object InfoUserStructure {
 fun InfoUsers() {
 	val navigator = LocalNavigator
 	val data = produceState<Any?>(null) {
-		withContext(Dispatchers.IO) {
+		withContext(Dispatchers.Default) {
 			value = try {
 				App.metaBranch.getContent(sInfoSpecialThanks)
 					.toJson(InfoUserStructure.Root.serializer(), anyContentType = true)
@@ -111,7 +111,7 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 		Box {
 			if(detail.profile != null) {
 				val image by produceState<ImageBitmap?>(null) {
-					withContext(Dispatchers.IO) {
+					withContext(Dispatchers.Default) {
 						value = try {
 							fetch(detail.profile).rawResponse.use {
 								BitmapFactory.decodeStream(it)

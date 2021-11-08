@@ -41,7 +41,7 @@ suspend fun <T> FetchResult.toJson(
 	from: Json = Json,
 	charset: Charset = this.charset,
 	anyContentType: Boolean = false
-): T = withContext(Dispatchers.IO) {
+): T = withContext(Dispatchers.Default) {
 	check(anyContentType || contentType?.mediaType == MediaTypes.json) {
 		"Content-Type of fetched resource is not application/json: $contentType"
 	}

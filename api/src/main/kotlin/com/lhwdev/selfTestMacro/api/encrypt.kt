@@ -18,6 +18,6 @@ private val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding").also {
 	it.init(Cipher.PUBLIC_KEY, KeyFactory.getInstance("RSA").generatePublic(key))
 }
 
-internal suspend fun encrypt(string: String): String = withContext(Dispatchers.IO) {
+internal suspend fun encrypt(string: String): String = withContext(Dispatchers.Default) {
 	encodeBase64(cipher.doFinal(string.toByteArray()))
 }

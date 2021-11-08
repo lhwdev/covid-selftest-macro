@@ -90,7 +90,7 @@ fun Info(): Unit = MaterialTheme(
 						"lhwdev (이현우)",
 						onClick = {
 							scope.launch {
-								val data = withContext(Dispatchers.IO) {
+								val data = withContext(Dispatchers.Default) {
 									try {
 										App.metaBranch.getContent(sInfoDeveloper)
 											.toJson(InfoUserStructure.Detail.serializer(), anyContentType = true)

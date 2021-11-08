@@ -3,7 +3,6 @@ package com.lhwdev.selfTestMacro.debug
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.os.Build
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.material.SnackbarHostState
@@ -17,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.coroutines.coroutineContext
 
 
 val Context.isDebugEnabled get() = BuildConfig.DEBUG || preferenceState.isDebugEnabled
@@ -43,14 +43,9 @@ suspend fun Context.onError(
 	message: String,
 	throwable: Throwable
 ) {
-	snackbarHostState.showSnackbar("오류: $message", "확인")
+	// this is for debugging; intentional
+	CoroutineScope(coroutineContext).launch { snackbarHostState.showSnackbar("오류: $message", "확인") }
 	onError(throwable, message)
-}
-
-
-suspend fun Context.onErrorToast(error: Throwable, description: String = "???") {
-	showToastSuspendAsync("오류가 발생했어요. ($description)")
-	onError(error, description)
 }
 
 
@@ -78,19 +73,6 @@ suspend fun Context.writeErrorLog(info: String) {
 	}
 }
 
-suspend fun getErrorInfo(error: Throwable, description: String) = """
-	$description
-	Android sdk version: ${Build.VERSION.SDK_INT}
-	Model: ${Build.DEVICE} / ${Build.PRODUCT}
-	Stacktrace:
-	${error.stackTraceToString()}
-	
-	Logcat:
-	${getLogcat()}
-	
-	------------------------------------------------------------------------------------------------
-	
-""".trimIndent()
 
 private suspend fun Context.showErrorInfo(info: String): Unit = withContext(Dispatchers.Main) {
 	AlertDialog.Builder(this@showErrorInfo).apply {
@@ -108,14 +90,6 @@ private suspend fun Context.showErrorInfo(info: String): Unit = withContext(Disp
 	}.show()
 }
 
-
-suspend fun getLogcat(): String = withContext(Dispatchers.IO) {
-	val command = arrayOf("logcat", "-d", "-v", "threadtime")
-	
-	@Suppress("BlockingMethodInNonBlockingContext")
-	val process = Runtime.getRuntime().exec(command)
-	process.inputStream.reader().use { it.readText() }
-}
 
 //	//Code here
 //	val log: StringBuilder

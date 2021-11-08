@@ -24,8 +24,6 @@ import com.lhwdev.selfTestMacro.debug.onError
 import com.lhwdev.selfTestMacro.models.Version
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.vanpra.composematerialdialogs.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.io.File
 
@@ -42,11 +40,11 @@ enum class UpdateResult { updated, alreadyLatest, error }
 
 
 // TODO: update components
-suspend fun Context.getUpdateAvailable(): LatestVersion.Entry? = withContext(Dispatchers.IO) {
+suspend fun Context.getUpdateAvailable(): LatestVersion.Entry? {
 	val pref = preferenceState
 	val updateChannel = pref.updateChannel
 	
-	try {
+	return try {
 		val latest = App.metaBranch.getContent("update/latest-$updateChannel.json")
 			.toJsonLoose(LatestVersion.Root.serializer())
 		

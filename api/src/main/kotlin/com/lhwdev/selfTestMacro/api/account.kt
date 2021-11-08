@@ -1,14 +1,9 @@
 package com.lhwdev.selfTestMacro.api
 
-import com.lhwdev.fetch.Bodies
-import com.lhwdev.fetch.getText
+import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.http.fetch
-import com.lhwdev.fetch.isOk
-import com.lhwdev.fetch.jsonObject
-import com.lhwdev.fetch.get
-import com.lhwdev.fetch.sDefaultFakeHeader
 
 
 // you must inform user when using this api: https://hcs.eduro.go.kr/agreement
@@ -38,16 +33,19 @@ public suspend fun Session.registerPassword(
 	password: String,
 	deviceUuid: String = "",
 	upperUserToken: UsersToken? = null
-): Boolean = fetch(
-	institute.requestUrl2["registerPassword"],
-	method = HttpMethod.post,
-	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
-	body = Bodies.jsonObject {
-		"password" set encrypt(password)
-		"deviceUuid" set deviceUuid
-		"upperToken" set upperUserToken?.token
-	}
-).getText().toBooleanStrict() // TODO: confirm this
+): Boolean {
+	val encryptedPassword = encrypt(password)
+	return fetch(
+		institute.requestUrl2["registerPassword"],
+		method = HttpMethod.post,
+		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
+		body = Bodies.jsonObject {
+			"password" set encryptedPassword
+			"deviceUuid" set deviceUuid
+			"upperToken" set upperUserToken?.token
+		}
+	).getText().toBooleanStrict()
+} // TODO: confirm this
 
 
 public enum class ChangePasswordResult { success, lastNotMatched, wrongNewPassword }
@@ -61,13 +59,16 @@ public suspend fun Session.changePassword(
 ): ChangePasswordResult {
 	if(newPassword.isBlank()) return ChangePasswordResult.wrongNewPassword
 	
+	val encryptedLast = encrypt(lastPassword)
+	val encryptedNew = encrypt(newPassword)
+	
 	val result = fetch(
 		institute.requestUrl2["changePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 		body = Bodies.jsonObject {
-			"password" set encrypt(lastPassword)
-			"newPassword" set encrypt(newPassword)
+			"password" set encryptedLast
+			"newPassword" set encryptedNew
 		}
 	)
 	

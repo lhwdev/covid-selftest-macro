@@ -59,9 +59,9 @@ val sFetchInterceptors = LinkedList<FetchInterceptor>(listOf(HttpInterceptorImpl
 interface FetchBody
 
 fun interface DataBody : FetchBody {
-	suspend fun write(out: OutputStream)
+	fun write(out: OutputStream)
 	
-	suspend fun writeDebug(out: OutputStream): Unit = error("debug not capable")
+	fun writeDebug(out: OutputStream): Unit = error("debug not capable")
 	val debugAvailable: Boolean get() = false
 	val contentType: String? get() = null
 }

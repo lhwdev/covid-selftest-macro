@@ -96,7 +96,13 @@ fun Version(string: String): Version {
 	}
 	
 	val split = version.split('.').map { it.toInt() }
-	return Version(split[0], split[1], split.getOrNull(2), preRelease?.let { PreRelease(it) })
+	return Version(
+		major = split[0],
+		minor = split[1],
+		patch = split.getOrNull(2),
+		preRelease = preRelease?.let { PreRelease(it) },
+		stringCache = string
+	)
 }
 
 fun PreRelease(string: String): PreRelease {

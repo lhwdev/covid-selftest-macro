@@ -21,6 +21,7 @@ import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.debug.DebugContext
 import com.lhwdev.selfTestMacro.debug.isDebugEnabled
+import com.lhwdev.selfTestMacro.debug.rememberDebugContext
 import com.lhwdev.selfTestMacro.navigation.ComposeNavigationHost
 import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.NavigatorImpl
@@ -32,27 +33,38 @@ import com.lhwdev.selfTestMacro.ui.pages.splash.Splash
 import kotlinx.coroutines.flow.collect
 
 
-fun SelfTestManager(context: Context, database: DatabaseManager): SelfTestManager = SelfTestManagerImpl(
+fun SelfTestManager(
+	context: Context,
+	database: DatabaseManager,
+	debugContext: DebugContext
+): SelfTestManager = SelfTestManagerImpl(
 	context = context,
 	database = database,
-	newAlarmIntent = { Intent(it, AlarmManager::class.java) }
+	newAlarmIntent = { Intent(it, AlarmManager::class.java) },
+	debugContext = debugContext
 )
 
 
 @Composable
 fun ComposeApp(activity: Activity) {
 	val context = LocalContext.current
+	val scope = rememberCoroutineScope()
 	
 	val pref = remember(context) { context.preferenceState }
 	
-	val selfTestManager = remember { SelfTestManager(context.applicationContext, pref.db) }
-	selfTestManager.context = context.applicationContext
-	
-	val debugContext = DebugContext(
-		context = context,
-		debugEnabled = context.isDebugEnabled,
-		debuggableWithIde = App.flavor == "dev"
+	val debugContext = rememberDebugContext(
+		flags = DebugContext.DebugFlags(
+			enabled = context.isDebugEnabled,
+			debuggingWithIde = App.flavor == "dev"
+		)
 	)
+	
+	val selfTestManager = remember {
+		SelfTestManager(
+			context.applicationContext, pref.db, debugContext
+		)
+	}
+	selfTestManager.context = context.applicationContext
 	
 	val navigator = remember {
 		val navigator = NavigatorImpl()

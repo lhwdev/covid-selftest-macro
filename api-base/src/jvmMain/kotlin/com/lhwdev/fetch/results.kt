@@ -3,8 +3,8 @@
 package com.lhwdev.fetch
 
 import com.lhwdev.fetch.headers.contentType
-import com.lhwdev.fetch.http.runInterruptible
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json

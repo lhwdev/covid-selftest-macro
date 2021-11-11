@@ -2,8 +2,11 @@
 
 package com.lhwdev.fetch
 
+import com.lhwdev.fetch.headers.ContentTypes
 import com.lhwdev.io.JsonObjectScope
-import com.lhwdev.io.jsonString
+import com.lhwdev.io.JsonObjectScopeImpl
+import com.lhwdev.io.JsonObjectScopeToString
+import com.lhwdev.io.jsonObjectStringScope
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.*
 import java.io.OutputStream
@@ -56,19 +59,20 @@ fun <T> Bodies.json(serializer: KSerializer<T>, value: T, json: Json = Json): Da
 		out.write(result)
 		println(result)
 	}
+	
 	override val debugAvailable: Boolean get() = true
 }
 
-fun Bodies.jsonObject(block: JsonObjectScope.() -> Unit): DataBody = object : WriterDataBody {
+
+fun Bodies.jsonObject(json: JsonObject): DataBody = object : WriterDataBody {
 	override fun write(out: Writer) {
-		out.write(jsonString { block() })
+		out.write(json.toString())
 	}
 	
-	override val contentType: String get() = "application/json;charset=utf-8"
+	override val contentType: String get() = ContentTypes.json
 	
 	override val debugAvailable: Boolean get() = true
 	override fun writeDebug(out: Writer) {
-		val json = com.lhwdev.io.jsonObject { block() }
 		out.write(json.toString())
 		fun dump(json: JsonElement, indent: String): Unit = when(json) {
 			JsonNull -> println("\u001b[96mnull\u001b[0m")
@@ -97,24 +101,50 @@ fun Bodies.jsonObject(block: JsonObjectScope.() -> Unit): DataBody = object : Wr
 	}
 }
 
-fun Bodies.form(block: FormScope.() -> Unit): DataBody = object : WriterDataBody {
+fun Bodies.jsonObject(json: String): DataBody = WriterDataBody { out -> out.write(json) }
+
+@PublishedApi
+internal fun jsonObjectOrStringScope(): JsonObjectScope = if(sDebugFetch) {
+	JsonObjectScopeImpl()
+} else {
+	jsonObjectStringScope()
+}
+
+@PublishedApi
+internal fun Bodies.jsonObject(scope: JsonObjectScope): DataBody = when(scope) {
+	is JsonObjectScopeImpl -> jsonObject(scope.build())
+	is JsonObjectScopeToString -> jsonObject(scope.build())
+	else -> error("???")
+}
+
+
+inline fun Bodies.jsonObject(block: JsonObjectScope.() -> Unit): DataBody {
+	val scope = jsonObjectOrStringScope()
+	scope.block()
+	return jsonObject(scope)
+}
+
+@PublishedApi
+internal fun Bodies.form(scope: FormScope): DataBody = object : WriterDataBody {
 	override fun write(out: Writer) {
-		out.write(FormScope().apply(block).build())
+		out.write(scope.build())
 	}
 	
 	override val contentType: String get() = "application/x-www-form-urlencoded;charset=utf-8"
 	
 	override fun writeDebug(out: Writer) {
-		val form = FormScope().apply(block)
-		out.write(form.build())
+		out.write(scope.build())
 		println("\u001b[90m(html form)")
-		for((key, value) in form.content) {
+		for((key, value) in scope.content) {
 			println("\u001b[91m$key\u001b[0m=\u001b[96m$value\u001b[0m")
 		}
 	}
 	
 	override val debugAvailable: Boolean get() = true
 }
+
+fun Bodies.form(block: FormScope.() -> Unit): DataBody =
+	form(FormScope().apply(block))
 
 @StructureBuilder
 class FormScope {

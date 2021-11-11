@@ -8,6 +8,11 @@ import com.lhwdev.selfTestMacro.splitTwo
 import java.nio.charset.Charset
 
 
+object ContentTypes {
+	const val json = "application/json;charset=utf-8"
+}
+
+
 val FetchHeaders.contentType: ContentType?
 	get() = this[ContentType.Key]
 

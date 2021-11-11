@@ -33,19 +33,16 @@ public suspend fun Session.registerPassword(
 	password: String,
 	deviceUuid: String = "",
 	upperUserToken: UsersToken? = null
-): Boolean {
-	val encryptedPassword = encrypt(password)
-	return fetch(
-		institute.requestUrl2["registerPassword"],
-		method = HttpMethod.post,
-		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
-		body = Bodies.jsonObject {
-			"password" set encryptedPassword
-			"deviceUuid" set deviceUuid
-			"upperToken" set upperUserToken?.token
-		}
-	).getText().toBooleanStrict()
-} // TODO: confirm this
+): Boolean = fetch(
+	institute.requestUrl2["registerPassword"],
+	method = HttpMethod.post,
+	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
+	body = Bodies.jsonObject {
+		"password" set encrypt(password)
+		"deviceUuid" set deviceUuid
+		"upperToken" set upperUserToken?.token
+	}
+).getText().toBooleanStrict() // TODO: confirm this
 
 
 public enum class ChangePasswordResult { success, lastNotMatched, wrongNewPassword }
@@ -59,16 +56,13 @@ public suspend fun Session.changePassword(
 ): ChangePasswordResult {
 	if(newPassword.isBlank()) return ChangePasswordResult.wrongNewPassword
 	
-	val encryptedLast = encrypt(lastPassword)
-	val encryptedNew = encrypt(newPassword)
-	
 	val result = fetch(
 		institute.requestUrl2["changePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 		body = Bodies.jsonObject {
-			"password" set encryptedLast
-			"newPassword" set encryptedNew
+			"password" set encrypt(lastPassword)
+			"newPassword" set encrypt(newPassword)
 		}
 	)
 	

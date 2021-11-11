@@ -35,8 +35,12 @@ fun rememberDebugContext(
 class ComposeDebugContext(
 	override var context: Context,
 	flags: DebugFlags,
-	val uiScope: CoroutineScope,
+	override val uiScope: CoroutineScope,
 	workScope: CoroutineScope
 ) : DebugContext(flags, workScope) {
 	override var contextName: String = ""
+	
+	override suspend fun onShowErrorInfo(info: ErrorInfo) {
+		
+	}
 }

@@ -363,7 +363,7 @@ class SelfTestManagerImpl(
 				apiLoginCache[usersIdentifier.token] = result
 				info.sessionFullyLoaded = true
 				return result
-			} else context.onError(Throwable(), "password wrong?")
+			} else debugContext.onLightError(message = "password wrong?")
 		}
 		
 		return apiLoginCache[usersIdentifier.token]
@@ -381,7 +381,7 @@ class SelfTestManagerImpl(
 		val token = loadSession(info, group)
 		if(token == null) {
 			val error = IllegalStateException("UserToken was not loaded")
-			context.onError(error, "SelfTestManagerImpl: apiUser // 2")
+			debugContext.onThrowError(message = "SelfTestManagerImpl: apiUser // 2", throwable = error)
 			throw error
 		}
 		return info.session to token

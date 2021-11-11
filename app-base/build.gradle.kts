@@ -36,8 +36,8 @@ android {
 	}
 	
 	composeOptions {
-		kotlinCompilerVersion = "1.5.21"
-		kotlinCompilerExtensionVersion = "1.0.2"
+		kotlinCompilerVersion = "1.5.31"
+		kotlinCompilerExtensionVersion = "1.0.4"
 	}
 }
 
@@ -53,22 +53,22 @@ dependencies {
 	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
 	
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.2")
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.0")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
 	
 	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
 	
-	val compose = "1.0.2" // also kotlinCompilerExtensionVersion, app-serialization/version, app-models
+	val compose = "1.0.4" // also kotlinCompilerExtensionVersion, app-serialization/version, app-models
 	implementation("androidx.compose.ui:ui:$compose")
 	implementation("androidx.compose.ui:ui-tooling:$compose")
 	implementation("androidx.compose.foundation:foundation:$compose")
 	implementation("androidx.compose.material:material:$compose")
 	
-	val accompanist = "0.12.0" // also in app-base
+	val accompanist = "0.20.2" // also in app-base
 	implementation("com.google.accompanist:accompanist-insets:$accompanist")
 	implementation("com.google.accompanist:accompanist-insets-ui:$accompanist")
 	implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanist")
 	
 	implementation("androidx.appcompat:appcompat:1.3.1")
-	implementation("androidx.core:core-ktx:1.6.0")
+	implementation("androidx.core:core-ktx:1.7.0")
 }

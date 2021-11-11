@@ -21,7 +21,7 @@ annotation class StructureBuilder
 object Bodies
 
 
-fun interface WriterDataBody : DataBody {
+interface WriterDataBody : DataBody {
 	override fun write(out: OutputStream) {
 		val writer = out.writer()
 		write(writer)
@@ -42,9 +42,22 @@ fun interface WriterDataBody : DataBody {
 	fun writeDebug(out: Writer): Unit = error("debug not provided")
 }
 
+inline fun WriterDataBody(
+	contentType: String?,
+	crossinline onWrite: (Writer) -> Unit
+): WriterDataBody = object : WriterDataBody {
+	override fun write(out: Writer) {
+		onWrite(out)
+	}
+	
+	override val contentType: String?
+		get() = contentType
+}
 
-fun Bodies.binary(array: ByteArray): DataBody = DataBody { it.write(array) }
-fun Bodies.text(text: String): DataBody = WriterDataBody { it.write(text) }
+
+
+fun Bodies.binary(array: ByteArray): DataBody = DataBody(contentType = ContentTypes.binary) { it.write(array) }
+fun Bodies.text(text: String): DataBody = WriterDataBody(contentType = ContentTypes.plainText) { it.write(text) }
 
 fun <T> Bodies.json(serializer: KSerializer<T>, value: T, json: Json = Json): DataBody = object : WriterDataBody {
 	override fun write(out: Writer) {
@@ -101,7 +114,9 @@ fun Bodies.jsonObject(json: JsonObject): DataBody = object : WriterDataBody {
 	}
 }
 
-fun Bodies.jsonObject(json: String): DataBody = WriterDataBody { out -> out.write(json) }
+fun Bodies.jsonObject(json: String): DataBody = WriterDataBody(contentType = ContentTypes.json) {
+	it.write(json)
+}
 
 @PublishedApi
 internal fun jsonObjectOrStringScope(): JsonObjectScope = if(sDebugFetch) {

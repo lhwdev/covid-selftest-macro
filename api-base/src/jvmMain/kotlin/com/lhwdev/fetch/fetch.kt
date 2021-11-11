@@ -58,12 +58,21 @@ val sFetchInterceptors = LinkedList<FetchInterceptor>(listOf(HttpInterceptorImpl
 
 interface FetchBody
 
-fun interface DataBody : FetchBody {
+interface DataBody : FetchBody {
 	fun write(out: OutputStream)
 	
 	fun writeDebug(out: OutputStream): Unit = error("debug not capable")
 	val debugAvailable: Boolean get() = false
-	val contentType: String? get() = null
+	val contentType: String?
+}
+
+inline fun DataBody(contentType: String?, crossinline onWrite: (OutputStream) -> Unit): DataBody = object : DataBody {
+	override fun write(out: OutputStream) {
+		onWrite(out)
+	}
+	
+	override val contentType: String?
+		get() = contentType
 }
 
 
@@ -129,11 +138,12 @@ class MutableFetchHeadersBuilder : MutableFetchHeaders {
 
 @Suppress("CanBeParameter", "MemberVisibilityCanBePrivate")
 class FetchIoException(
+	val debugInfo: String,
 	val interceptorDescription: String,
 	val responseCode: Int,
 	val responseMessage: String,
 	cause: Throwable? = null
-) : IOException("Fetch error($interceptorDescription) $responseCode $responseMessage", cause)
+) : IOException("Fetch error($interceptorDescription: $debugInfo) $responseCode $responseMessage", cause)
 
 
 var sDebugFetch = false

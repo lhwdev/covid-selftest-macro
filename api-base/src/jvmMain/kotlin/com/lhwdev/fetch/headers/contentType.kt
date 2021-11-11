@@ -9,6 +9,9 @@ import java.nio.charset.Charset
 
 
 object ContentTypes {
+	const val plainText = "text/plain;charset=utf-8"
+	const val binary = "application/octet-stream"
+	
 	const val json = "application/json;charset=utf-8"
 }
 

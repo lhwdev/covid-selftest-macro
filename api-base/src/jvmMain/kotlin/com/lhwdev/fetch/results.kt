@@ -13,6 +13,8 @@ import java.nio.charset.Charset
 
 
 interface FetchResult : FetchHeaders {
+	val debugInfo: String
+	
 	val interceptorDescription: String
 	
 	val responseCode: Int
@@ -31,7 +33,7 @@ suspend inline fun <R> FetchResult.use(block: (FetchResult) -> R): R = try {
 
 val FetchResult.isOk: Boolean get() = responseCode in 200..299
 fun FetchResult.requireOk() {
-	if(!isOk) throw FetchIoException(interceptorDescription, responseCode, responseCodeMessage)
+	if(!isOk) throw FetchIoException(debugInfo, interceptorDescription, responseCode, responseCodeMessage)
 }
 
 val FetchResult.charset: Charset get() = contentType?.charset ?: Charsets.UTF_8

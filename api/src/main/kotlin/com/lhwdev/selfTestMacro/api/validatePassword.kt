@@ -4,7 +4,7 @@ import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.http.fetch
-import com.lhwdev.io.jsonString
+import com.lhwdev.io.jsonObjectString
 import com.lhwdev.selfTestMacro.transkey.Transkey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -90,9 +90,9 @@ public suspend fun Session.validatePassword(
 	
 	val hm = transkey.hmacDigest(encrypted.toByteArray())
 	
-	val raonPassword = jsonString {
+	val raonPassword = jsonObjectString {
 		"raon" jsonArray {
-			addJsonObject {
+			addObject {
 				"id" set "password"
 				"enc" set encrypted
 				"hmac" set hm

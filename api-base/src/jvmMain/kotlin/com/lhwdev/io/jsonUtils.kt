@@ -132,7 +132,7 @@ class JsonArrayScopeImpl : JsonArrayScope() {
 	
 	override fun addArray(scope: JsonArrayScope) {
 		require(scope is JsonArrayScopeImpl)
-		content += scope.build()
+		content += scope.build() as JsonElement // because List<*> is treated iterator so overload ambiguity
 	}
 	
 	fun build(): JsonArray = JsonArray(content)
@@ -179,7 +179,7 @@ internal val ESCAPE_MARKERS: ByteArray = ByteArray(93).apply {
 	this[0x0c] = 'f'.code.toByte()
 }
 
-internal fun StringBuilder.printQuoted(value: String) {
+internal fun Appendable.printQuoted(value: String) {
 	append('"')
 	var lastPos = 0
 	for(i in value.indices) {
@@ -196,7 +196,7 @@ internal fun StringBuilder.printQuoted(value: String) {
 	append('"')
 }
 
-class JsonObjectScopeToString(val builder: StringBuilder) : JsonObjectScope() {
+class JsonObjectScopeToString(val builder: Appendable) : JsonObjectScope() {
 	private var isFirst = true
 	
 	
@@ -271,7 +271,7 @@ class JsonObjectScopeToString(val builder: StringBuilder) : JsonObjectScope() {
 	}
 }
 
-class JsonArrayScopeToString(val builder: StringBuilder) : JsonArrayScope() {
+class JsonArrayScopeToString(val builder: Appendable) : JsonArrayScope() {
 	private var isFirst = true
 	
 	private fun entry() {

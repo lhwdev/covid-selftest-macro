@@ -176,16 +176,14 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 			connection.connect()
 			
 			if(body != null) connection.outputStream.use { body.write(it) }
-			
 			val response = HttpResultImpl(connection)
 			response.responseCode // preload some so that it utilizes cookie manager
 			
 			response
 		} finally {
-			setThreadLocalCookieHandler(lastCookieManager)
+			if(session != null) setThreadLocalCookieHandler(lastCookieManager)
 		}
 	}
-	
 }
 
 
@@ -203,6 +201,7 @@ enum class HttpMethod(val requestName: String) : FetchMethod {
 
 
 private class HttpResultImpl(val connection: HttpURLConnection) : FetchResult {
+	override val debugInfo: String get() = "${connection.requestMethod} ${connection.url}"
 	override val interceptorDescription: String get() = "HTTP"
 	
 	override val responseCode get() = connection.responseCode

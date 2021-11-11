@@ -7,6 +7,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.lhwdev.selfTestMacro.database.PreferenceState
 import com.lhwdev.selfTestMacro.debug.DebugContext
+import com.lhwdev.selfTestMacro.debug.LocalDebugManager
 
 
 val LocalPreference = compositionLocalOf<PreferenceState> { error("not provided") }
@@ -28,6 +29,7 @@ fun AppCompositionLocalsPack(
 	CompositionLocalProvider(
 		LocalPreference provides preference,
 		LocalDebugContextGlobal provides debugContext,
+		LocalDebugManager provides debugContext.manager,
 		LocalDebugContext provides debugContext,
 		content = content
 	)

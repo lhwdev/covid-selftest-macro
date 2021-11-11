@@ -13,7 +13,11 @@ import kotlinx.coroutines.runBlocking
 class AlarmReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
 		val result = goAsync()
-		val selfTestManager = SelfTestManager(context, context.preferenceState.db)
+		val selfTestManager = SelfTestManager(
+			context,
+			context.preferenceState.db,
+			
+			)
 		
 		runBlocking { // TODO: is this okay?
 			with(selfTestManager) {

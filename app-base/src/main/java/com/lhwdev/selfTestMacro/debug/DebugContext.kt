@@ -1,59 +1,44 @@
 package com.lhwdev.selfTestMacro.debug
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.util.Log
-import androidx.appcompat.app.AlertDialog
-import androidx.core.content.getSystemService
 import com.lhwdev.selfTestMacro.App
-import com.lhwdev.selfTestMacro.showToastSuspendAsync
 import kotlinx.coroutines.*
 import java.io.File
 import java.lang.reflect.Method
 
 
-private val sTraceItemAnnotation = TraceItem::class.java
-
-
-abstract class DebugManager {
-	class PendingError(
-		val context: DebugContext,
-		val message: String,
-		val throwable: Throwable?,
-		val diagnostics: List<DiagnosticItem>,
-		val forceShow: Boolean,
-		val location: String,
-		val severity: DebugContext.Severity = DebugContext.Severity.significant
-	)
-	
-	
-	abstract val androidContext: Context
-	
-	abstract val workScope: CoroutineScope
-	
-	protected val pendingErrors = mutableMapOf<Any?, Job>()
-	
-	
-	open fun identifierOf(error: PendingError): Any? = error.throwable ?: Any() // Any(): not identifiable
-	
-	
-	open fun pendThrowingError(error: PendingError) {
-		pendError(afterMillis = 50, error = error)
-	}
-	
-	open fun pendError(afterMillis: Int, error: PendingError) {
-		workScope.launch {
-			delay(afterMillis.toLong())
-			
-		}
-	}
+private inline fun <T> T?.merge(other: T?, merger: (T, T) -> T): T? = when {
+	this == null -> other
+	other == null -> this
+	this == other -> this
+	else -> merger(this, other)
 }
+
+
+class ErrorInfo(
+	val message: String,
+	val throwable: Throwable?,
+	val diagnostics: List<DiagnosticItem>,
+	val location: String,
+	val severity: DebugContext.Severity
+) {
+	fun merge(other: ErrorInfo): ErrorInfo = ErrorInfo(
+		message = "(merged) $message // ${other.message}",
+		throwable = throwable.merge(other.throwable) { a, b -> a.addSuppressed(b); a },
+		diagnostics = diagnostics + other.diagnostics,
+		location = if(location == other.location) location else "(merged) $location, ${other.location}",
+		severity = if(severity > other.severity) severity else other.severity
+	)
+}
+
+
+private val sTraceItemAnnotation = TraceItem::class.java
 
 
 /**
  * DebugContext is a cheap class which describes 'where is this'.
  */
+@Suppress("NOTHING_TO_INLINE")
 abstract class DebugContext(
 	val flags: DebugFlags,
 	val manager: DebugManager
@@ -64,33 +49,6 @@ abstract class DebugContext(
 	)
 	
 	enum class Severity { light, significant, critical }
-	
-	class ErrorInfo(
-		val message: String,
-		val detailedMessage: String,
-		val throwable: Throwable?,
-		val diagnostics: List<DiagnosticItem>,
-		val severity: Severity
-	)
-	
-	companion object {
-		val ShowErrorDialog = { debugContext: ComposeDebugContext, errorInfo: ErrorInfo ->
-			val context = debugContext.context
-			AlertDialog.Builder(context).apply {
-				setTitle("오류 발생")
-				setMessage("* 복사된 오류정보는 기기의 정보 등 민감한 정보를 포함할 수 있어요.\n${errorInfo.detailedMessage}")
-				
-				setPositiveButton("오류정보 복사") { _, _ ->
-					CoroutineScope(Dispatchers.Main).launch {
-						context.getSystemService<ClipboardManager>()!!
-							.setPrimaryClip(ClipData.newPlainText("오류정보", errorInfo.detailedMessage))
-						context.showToastSuspendAsync("복사 완료")
-					}
-				}
-				setNegativeButton("취소", null)
-			}.show()
-		}
-	}
 	
 	
 	abstract val contextName: String
@@ -144,7 +102,7 @@ abstract class DebugContext(
 	}
 	
 	
-	fun onError(
+	inline fun onError(
 		message: String,
 		throwable: Throwable?,
 		diagnostics: List<DiagnosticItem> = emptyList(),
@@ -152,48 +110,26 @@ abstract class DebugContext(
 		location: String = invokeLocationDescription(depth = 1),
 		severity: Severity = Severity.significant
 	) {
-		
+		onError(ErrorInfo(message, throwable, diagnostics, location, severity), forceShow = forceShow)
+	}
+	
+	fun onError(error: ErrorInfo, forceShow: Boolean = false) {
 		manager.workScope.launch {
-			onErrorSuspend(message, throwable, diagnostics, forceShow, location)
+			onErrorSuspend(error, forceShow)
 		}
 	}
 	
 	// prevent duplicate error
-	fun onThrowError(
-		message: String,
-		throwable: Throwable?,
-		diagnostics: List<DiagnosticItem> = emptyList(),
-		forceShow: Boolean = false,
-		location: String = invokeLocationDescription(depth = 1),
-		severity: Severity = Severity.significant
-	) {
-		manager.pendThrowingError(
-			error = DebugManager.PendingError(
-				context = this,
-				message = message,
-				throwable = throwable,
-				diagnostics = diagnostics,
-				forceShow = forceShow,
-				location = location,
-				severity = severity
-			)
-		)
+	fun onThrowError(error: ErrorInfo, forceShow: Boolean = false) {
+		manager.pendThrowingError(DebugManager.PendingError(context = this, error = error))
 	}
 	
 	
-	
-	suspend fun onErrorSuspend(
-		message: String,
-		throwable: Throwable?,
-		diagnostics: List<DiagnosticItem> = emptyList(),
-		forceShow: Boolean = false,
-		location: String = invokeLocationDescription(depth = 1),
-		severity: Severity = Severity.significant
-	) {
-		Log.e("ERROR", "($location) $message", throwable)
-		val info = getErrorInfo(throwable, message, diagnostics, location)
+	suspend fun onErrorSuspend(error: ErrorInfo, forceShow: Boolean = false) {
+		Log.e("ERROR", "(${error.location}) ${error.message}", error.throwable)
+		val info = error.getInfo()
 		if(forceShow || flags.enabled) {
-			showErrorInfo(ErrorInfo(message, info, throwable, diagnostics, severity))
+			showErrorInfo(error, info)
 		}
 		
 		// in dev mode, usually ran with IDE; can check things with Logcat
@@ -203,7 +139,7 @@ abstract class DebugContext(
 	}
 	
 	
-	fun onLightError(
+	inline fun onLightError(
 		message: String,
 		throwable: Throwable? = null,
 		diagnostics: List<DiagnosticItem> = emptyList(),
@@ -211,33 +147,30 @@ abstract class DebugContext(
 		location: String = invokeLocationDescription(depth = 1),
 		severity: Severity = Severity.light
 	) {
+		onLightError(ErrorInfo(message, throwable, diagnostics, location, severity), shortLog = shortLog)
+	}
+	
+	fun onLightError(error: ErrorInfo, shortLog: Boolean = false) {
 		manager.workScope.launch {
-			onLightErrorSuspend(message, throwable, diagnostics, shortLog, location)
+			onLightErrorSuspend(error, shortLog)
 		}
 	}
 	
-	suspend fun onLightErrorSuspend(
-		message: String,
-		throwable: Throwable? = null,
-		diagnostics: List<DiagnosticItem> = emptyList(),
-		shortLog: Boolean = false,
-		location: String = invokeLocationDescription(depth = 1),
-		severity: Severity = Severity.light
-	) {
-		Log.e("ERROR", "($location) $message", throwable)
+	suspend fun onLightErrorSuspend(error: ErrorInfo, shortLog: Boolean) {
+		Log.e("ERROR", "(${error.location}) ${error.message}", error.throwable)
 		
-		val showInfo = severity > Severity.light
+		val showInfo = error.severity > Severity.light
 		
 		val info = if(flags.debuggingWithIde && showInfo) {
 			"(stub)" // Stub
 		} else if(shortLog) {
 			"[SelfTestMacro ${App.version}]"
 		} else {
-			getErrorInfo(throwable, message, diagnostics, location)
+			error.getInfo()
 		}
 		
 		if(showInfo) {
-			showErrorInfo(ErrorInfo(message, info, throwable, diagnostics, severity))
+			showErrorInfo(error, info)
 		}
 		
 		// in dev mode, usually ran with IDE; can check things with Logcat
@@ -247,15 +180,20 @@ abstract class DebugContext(
 	}
 	
 	
-	private suspend fun showErrorInfo(info: ErrorInfo): Unit = withContext(uiScope.coroutineContext) {
+	// Internals
+	
+	private suspend fun showErrorInfo(
+		info: ErrorInfo,
+		description: String
+	): Unit = withContext(uiScope.coroutineContext) {
 		try {
-			onShowErrorInfo(info)
+			onShowErrorInfo(info, description)
 		} catch(th: Throwable) {
 			onLightError("showErrorInfo failed", throwable = th)
 		}
 	}
 	
-	protected abstract suspend fun onShowErrorInfo(info: ErrorInfo)
+	protected abstract suspend fun onShowErrorInfo(info: ErrorInfo, description: String)
 	
 	
 	private suspend fun writeErrorLog(info: String) {
@@ -269,18 +207,13 @@ abstract class DebugContext(
 	}
 	
 	
-	private suspend fun getErrorInfo(
-		error: Throwable?,
-		description: String,
-		diagnostics: List<DiagnosticItem>,
-		location: String
-	) = """
-		[SelfTestMacro ${App.version}] $contextName: $description
+	private suspend fun ErrorInfo.getInfo() = """
+		[SelfTestMacro ${App.version}] $contextName: $message
 		Location: $location
 		Android sdk version: ${android.os.Build.VERSION.SDK_INT}
 		Model: ${android.os.Build.DEVICE} / ${android.os.Build.PRODUCT}
 		Stacktrace:
-		${error?.stackTraceToString()}
+		${throwable?.stackTraceToString()}
 		
 		Diagnostic:
 		${diagnostics.joinToString(separator = "\n") { it.dump(oneLine = false) }}

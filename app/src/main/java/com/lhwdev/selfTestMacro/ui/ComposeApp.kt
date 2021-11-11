@@ -20,6 +20,7 @@ import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.debug.DebugContext
+import com.lhwdev.selfTestMacro.debug.DefaultDebugManager
 import com.lhwdev.selfTestMacro.debug.isDebugEnabled
 import com.lhwdev.selfTestMacro.debug.rememberDebugContext
 import com.lhwdev.selfTestMacro.navigation.ComposeNavigationHost
@@ -30,6 +31,8 @@ import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.SelfTestManager
 import com.lhwdev.selfTestMacro.repository.SelfTestManagerImpl
 import com.lhwdev.selfTestMacro.ui.pages.splash.Splash
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 
 
@@ -56,7 +59,11 @@ fun ComposeApp(activity: Activity) {
 		flags = DebugContext.DebugFlags(
 			enabled = context.isDebugEnabled,
 			debuggingWithIde = App.flavor == "dev"
-		)
+		),
+		showErrorInfo = { debugContext, errorInfo, description ->
+			
+		},
+		manager = DefaultDebugManager(androidContext = context, workScope = CoroutineScope(Dispatchers.Default))
 	)
 	
 	val selfTestManager = remember {

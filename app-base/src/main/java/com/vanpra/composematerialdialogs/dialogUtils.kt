@@ -19,13 +19,15 @@ suspend inline fun <T> Navigator.showDialog(
 	maxHeight: Dp = FloatingDialogMaxHeight,
 	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
 	crossinline content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
-): T? = showRoute(routeFactory = routeFactory) { removeRoute ->
-	MaterialDialog(
-		onCloseRequest = { removeRoute(null) },
-		modifier = modifier,
-		properties = properties,
-		maxHeight = maxHeight
-	) { content(removeRoute) }
+): T? = showRouteFactory { removeRoute ->
+	routeFactory {
+		MaterialDialog(
+			onCloseRequest = { removeRoute(null) },
+			modifier = modifier,
+			properties = properties,
+			maxHeight = maxHeight
+		) { content(removeRoute) }
+	}
 }
 
 suspend inline fun Navigator.showDialogUnit(
@@ -50,33 +52,39 @@ inline fun Navigator.showDialogAsync(
 	routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
 	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
-	showRouteAsync(routeFactory) { removeRoute ->
-		MaterialDialog(
-			onCloseRequest = removeRoute,
-			modifier = modifier,
-			properties = properties,
-			maxHeight = maxHeight
-		) { content(removeRoute) }
+	showRouteFactoryAsync { removeRoute ->
+		routeFactory {
+			MaterialDialog(
+				onCloseRequest = removeRoute,
+				modifier = modifier,
+				properties = properties,
+				maxHeight = maxHeight
+			) { content(removeRoute) }
+		}
 	}
 }
 
 suspend inline fun <T> Navigator.showFullDialog(
 	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { FullDialogRoute(content = it) },
 	noinline content: @Composable (FullMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit)
-): T? = showRoute(routeFactory = routeFactory) { remoteRoute ->
-	FullMaterialDialogStub(
-		onCloseRequest = { remoteRoute(null) }
-	) { content(remoteRoute) }
+): T? = showRouteFactory { remoteRoute ->
+	routeFactory {
+		FullMaterialDialogStub(
+			onCloseRequest = { remoteRoute(null) }
+		) { content(remoteRoute) }
+	}
 }
 
 inline fun Navigator.showFullDialogAsync(
 	routeFactory: (content: @Composable () -> Unit) -> Route = { FullDialogRoute(content = it) },
 	noinline content: @Composable (FullMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
-	showRouteAsync(routeFactory = routeFactory) { remoteRoute ->
-		FullMaterialDialogStub(
-			onCloseRequest = { remoteRoute() }
-		) { content(remoteRoute) }
+	showRouteFactoryAsync { remoteRoute ->
+		routeFactory {
+			FullMaterialDialogStub(
+				onCloseRequest = { remoteRoute() }
+			) { content(remoteRoute) }
+		}
 	}
 }
 

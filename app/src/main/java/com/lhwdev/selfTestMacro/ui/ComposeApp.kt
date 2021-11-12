@@ -54,6 +54,7 @@ fun ComposeApp(activity: Activity) {
 	val pref = remember(context) { context.preferenceState }
 	
 	val debugContext = rememberRootDebugContext(
+		contextName = "ComposeApp",
 		flags = DebugContext.DebugFlags(
 			enabled = context.isDebugEnabled,
 			debuggingWithIde = App.debuggingWithIde
@@ -64,7 +65,9 @@ fun ComposeApp(activity: Activity) {
 	
 	val selfTestManager = remember {
 		SelfTestManager(
-			context.applicationContext, pref.db, debugContext
+			context = context.applicationContext,
+			database = pref.db,
+			debugContext = debugContext
 		)
 	}
 	selfTestManager.context = context.applicationContext

@@ -10,15 +10,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
-import com.lhwdev.selfTestMacro.navigation.replaceRoute
+import com.lhwdev.selfTestMacro.navigation.Route
+import com.lhwdev.selfTestMacro.navigation.copy
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
-import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
+import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
+
+
+val IntroRoute: Route = Route("Intro") { Intro() }
 
 
 @Composable
-fun Intro() {
+private fun Intro() {
 	val navigator = LocalNavigator
 	
 	Surface(color = MaterialTheme.colors.primary) {
@@ -53,10 +57,10 @@ fun Intro() {
 					TextButton(
 						onClick = {
 							navigator.replaceRoute(
-								transition = FadeRouteTransition(animationSpec = tween(durationMillis = 500))
-							) {
-								Setup()
-							}
+								SetupRoute().copy(
+									transition = FadeRouteTransition(animationSpec = tween(durationMillis = 500))
+								)
+							)
 						},
 						colors = ButtonDefaults.textButtonColors(contentColor = DefaultContentColor),
 						contentPadding = PaddingValues(all = 12.dp)

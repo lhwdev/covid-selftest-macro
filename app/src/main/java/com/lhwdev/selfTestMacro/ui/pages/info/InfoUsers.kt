@@ -26,9 +26,9 @@ import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.toJson
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.debug.LocalDebugContext
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
-import com.lhwdev.selfTestMacro.ui.LocalDebugContext
 import com.lhwdev.selfTestMacro.ui.common.LinkedText
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.vanpra.composematerialdialogs.showDialogAsync

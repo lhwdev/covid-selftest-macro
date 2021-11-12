@@ -14,15 +14,15 @@ import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.removeTestGroups
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
-import com.lhwdev.selfTestMacro.navigation.showRouteAsync
+import com.lhwdev.selfTestMacro.navigation.showRouteFactoryAsync
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.MediumContentColor
 import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.pages.main.iconFor
-import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupParameters
+import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
 import com.vanpra.composematerialdialogs.promptYesNoDialog
 import com.vanpra.composematerialdialogs.showDialogAsync
 import kotlinx.coroutines.launch
@@ -74,7 +74,7 @@ fun EditUsers() {
 							) {
 								DropdownMenuItem(onClick = {
 									showAddDialog = false
-									navigator.showRouteAsync { Setup(SetupParameters(endRoute = it)) }
+									navigator.showRouteFactoryAsync { SetupRoute(SetupParameters(endRoute = it)) }
 								}) {
 									Text("사용자 추가")
 								}
@@ -255,7 +255,9 @@ private fun EditUsersContent(
 			
 			ListItem(
 				icon = { Icon(painterResource(R.drawable.ic_add_24), contentDescription = null) },
-				modifier = Modifier.clickable { navigator.showRouteAsync { Setup(SetupParameters(endRoute = it)) } }
+				modifier = Modifier.clickable {
+					navigator.showRouteFactoryAsync { SetupRoute(SetupParameters(endRoute = it)) }
+				}
 			) {
 				Text("사용자 추가")
 			}

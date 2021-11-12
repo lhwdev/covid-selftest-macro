@@ -1,12 +1,10 @@
 package com.lhwdev.selfTestMacro.ui.pages.setup
 
-import android.content.Context
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
 import com.lhwdev.selfTestMacro.database.DbTestGroup
-import com.lhwdev.selfTestMacro.debug.onError
 import com.lhwdev.selfTestMacro.repository.WizardUser
 
 
@@ -38,10 +36,6 @@ internal class SetupModel {
 		actionLabel: String? = null,
 		duration: SnackbarDuration = SnackbarDuration.Short
 	): SnackbarResult = scaffoldState.snackbarHostState.showSnackbar(message, actionLabel, duration)
-	
-	suspend fun onError(context: Context, message: String, throwable: Throwable) {
-		context.onError(scaffoldState.snackbarHostState, message, throwable)
-	}
 }
 
 

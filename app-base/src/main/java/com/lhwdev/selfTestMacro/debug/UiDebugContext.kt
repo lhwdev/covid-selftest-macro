@@ -19,6 +19,7 @@ typealias ShowErrorInfo = (UiDebugContext, ErrorInfo, String) -> Unit
 class UiDebugContext(
 	manager: DebugManager,
 	var context: Context,
+	override var contextName: String,
 	flags: DebugFlags,
 	val uiContext: CoroutineContext,
 	val showErrorInfo: ShowErrorInfo
@@ -42,9 +43,6 @@ class UiDebugContext(
 		}
 	}
 	
-	
-	
-	override var contextName: String = ""
 	
 	override suspend fun onShowErrorInfo(info: ErrorInfo, description: String) = withContext(uiContext) {
 		showErrorInfo(this@UiDebugContext, info, description)

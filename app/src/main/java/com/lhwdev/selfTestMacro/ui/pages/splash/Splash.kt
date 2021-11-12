@@ -26,14 +26,14 @@ import com.lhwdev.selfTestMacro.lifecycle.Lifecycle
 import com.lhwdev.selfTestMacro.lifecycle.rememberLifecycle
 import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
-import com.lhwdev.selfTestMacro.navigation.Route
+import com.lhwdev.selfTestMacro.navigation.copy
 import com.lhwdev.selfTestMacro.showToast
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.pages.info.showDebugWindow
-import com.lhwdev.selfTestMacro.ui.pages.intro.Intro
-import com.lhwdev.selfTestMacro.ui.pages.main.Main
+import com.lhwdev.selfTestMacro.ui.pages.intro.IntroRoute
+import com.lhwdev.selfTestMacro.ui.pages.main.MainRoute
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
@@ -88,14 +88,14 @@ fun Splash() {
 		
 		val initialFirst = pref.isFirstTime
 		
-		val content: @Composable () -> Unit =
+		val route =
 			if(initialFirst || pref.db.testGroups.groups.isEmpty()) {
-				{ Intro() }
+				IntroRoute
 			} else {
-				{ Main() }
+				MainRoute
 			}
 		
-		navigator.replaceRoute(Route(transition = FadeRouteTransition(), content = content))
+		navigator.replaceRoute(route.copy(transition = FadeRouteTransition()))
 	}
 	
 }

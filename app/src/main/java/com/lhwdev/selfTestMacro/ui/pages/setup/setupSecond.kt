@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
-import com.lhwdev.selfTestMacro.debug.onError
+import com.lhwdev.selfTestMacro.debug.LocalDebugContext
 import com.lhwdev.selfTestMacro.debug.selfLog
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
@@ -115,6 +115,7 @@ internal fun ColumnScope.WizardSchoolInfo(
 	val context = LocalContext.current
 	val selfTestManager = LocalSelfTestManager.current
 	val navigator = LocalNavigator
+	val debugContext = LocalDebugContext.current
 	
 	var complete by remember { mutableStateOf(false) }
 	
@@ -136,7 +137,7 @@ internal fun ColumnScope.WizardSchoolInfo(
 				name = model.schoolName
 			)
 		}.getOrElse { exception ->
-			context.onError(snackbarHostState, "학교를 찾지 못했어요.", exception)
+			debugContext.onError("학교를 찾지 못했어요.", exception)
 			return@find
 		}
 		

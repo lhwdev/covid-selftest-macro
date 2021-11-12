@@ -8,6 +8,7 @@ import com.lhwdev.fetch.http.Session
 import com.lhwdev.github.repo.Repository
 import com.lhwdev.github.sGithubInstanceDefault
 import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.navigation.sDebugNavigation
 import com.lhwdev.selfTestMacro.ui.utils.sDebugAnimateListAsComposable
 import java.net.URL
 import javax.net.ssl.SSLHandshakeException
@@ -39,6 +40,7 @@ object FirstInitialization {
 		
 		if(pref.isDebugEnabled) {
 			sDebugFetch = pref.isDebugFetchEnabled
+			sDebugNavigation = pref.isNavigationDebugEnabled || true
 			sDebugAnimateListAsComposable = pref.isNavigationDebugEnabled
 		}
 	}

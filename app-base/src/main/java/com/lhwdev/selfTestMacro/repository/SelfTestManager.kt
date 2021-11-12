@@ -8,6 +8,7 @@ import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
+import com.lhwdev.selfTestMacro.debug.DebugContext
 import com.lhwdev.selfTestMacro.ui.UiContext
 
 
@@ -40,6 +41,7 @@ enum class SelfTestInitiator(val isFromUi: Boolean) {
 
 interface SelfTestManager {
 	var context: Context
+	val debugContext: DebugContext
 	
 	suspend fun createSession(): TempSession
 	

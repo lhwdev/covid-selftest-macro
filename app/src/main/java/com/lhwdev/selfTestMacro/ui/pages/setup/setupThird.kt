@@ -74,7 +74,7 @@ private suspend fun submitLogin(
 			loginType = instituteInfo.type.loginType
 		)
 	} catch(e: Throwable) {
-		model.onError(context, "사용자를 찾을 수 없어요.", e)
+		selfTestManager.debugContext.onError("사용자를 찾을 수 없어요.", e)
 		return false
 	}
 	
@@ -123,7 +123,7 @@ private suspend fun submitLogin(
 		selfLog("#3. 비밀번호 확인")
 		selfTestManager.validatePassword(session, institute, userId.token, password)
 	} catch(e: Throwable) {
-		model.onError(context, "로그인에 실패했어요.", e)
+		selfTestManager.debugContext.onError("로그인에 실패했어요.", e)
 		return false
 	}
 	
@@ -170,7 +170,7 @@ private suspend fun submitLogin(
 			
 			return true
 		} catch(e: Throwable) {
-			model.onError(context, "사용자 정보를 불러오지 못했어요.", e)
+			selfTestManager.debugContext.onError("사용자 정보를 불러오지 못했어요.", e)
 		}
 		
 	}

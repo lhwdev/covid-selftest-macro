@@ -39,10 +39,6 @@ class ErrorInfo(
 }
 
 
-private val sTraceItemAnnotation = TraceItem::class.java
-private val sTraceItemsAnnotation = TraceItems::class.java
-
-
 /**
  * DebugContext is a cheap class which describes 'where is this'.
  */
@@ -185,7 +181,7 @@ abstract class DebugContext(
 		${throwable?.stackTraceToString()}
 		
 		Diagnostic:
-		${diagnostics.joinToString(separator = "\n") { it.dump(oneLine = false) }}
+		${diagnostics.joinToString(separator = "\n") { it.dumpDebug(oneLine = false) }}
 		
 		Logcat:
 		${getLogcat()}

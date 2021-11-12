@@ -23,7 +23,7 @@ import com.lhwdev.selfTestMacro.repository.WizardUser
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
-import com.lhwdev.selfTestMacro.ui.pages.main.Main
+import com.lhwdev.selfTestMacro.ui.pages.main.MainRoute
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
 import kotlinx.coroutines.launch
@@ -91,7 +91,7 @@ internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, w
 						navigator.routes.size == 1 -> {
 							pref.isFirstTime = false
 							navigator.clearRoute()
-							navigator.pushRoute { Main() }
+							navigator.pushRoute(MainRoute)
 						}
 						else -> {
 							navigator.popRoute()

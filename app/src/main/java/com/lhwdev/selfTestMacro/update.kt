@@ -20,7 +20,7 @@ import androidx.core.content.getSystemService
 import com.lhwdev.github.repo.Release
 import com.lhwdev.github.repo.getRelease
 import com.lhwdev.selfTestMacro.database.preferenceState
-import com.lhwdev.selfTestMacro.debug.onError
+import com.lhwdev.selfTestMacro.debug.GlobalDebugContext
 import com.lhwdev.selfTestMacro.models.Version
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.vanpra.composematerialdialogs.*
@@ -50,7 +50,7 @@ suspend fun Context.getUpdateAvailable(): LatestVersion.Entry? {
 		
 		if(latest.appMain.version > App.version) latest.appMain else null
 	} catch(e: Throwable) {
-		onError(e, "getUpdateAvailable")
+		GlobalDebugContext.onLightError("getUpdateAvailable", e)
 		null
 	}
 }
@@ -64,7 +64,7 @@ suspend fun Context.checkAndNotifyUpdate() {
 			UpdateAvailableNotification.notificationOf(this, isRequired = false, toVersion = update.toString())
 		)
 	} catch(e: Throwable) {
-		onError(e, "checkUpdate")
+		GlobalDebugContext.onLightError("checkUpdate", e)
 	}
 }
 
@@ -74,7 +74,7 @@ suspend fun Activity.checkAndAskUpdate(navigator: Navigator, requestCode: Int): 
 		val release = App.githubRepo.getRelease(update.releaseId)
 		askUpdate(navigator, release, requestCode)
 	} catch(e: Throwable) {
-		onError(e, "checkAndAskUpdate")
+		GlobalDebugContext.onLightError("checkAndAskUpdate", e)
 		UpdateResult.error
 	}
 }
@@ -173,7 +173,7 @@ suspend fun Activity.performUpdate(update: Release, requestCode: Int): UpdateRes
 		
 		return UpdateResult.updated
 	} catch(e: Throwable) {
-		onError(e, "askUpdate")
+		GlobalDebugContext.onLightError("askUpdate", e)
 		return UpdateResult.error
 	}
 }

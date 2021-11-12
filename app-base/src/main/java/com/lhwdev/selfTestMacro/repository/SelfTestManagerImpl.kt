@@ -179,7 +179,7 @@ class HcsAppError(
 @TraceItems(requiredModifier = java.lang.reflect.Modifier.PUBLIC)
 class SelfTestManagerImpl(
 	override var context: Context,
-	private val debugContext: DebugContext,
+	override val debugContext: DebugContext,
 	private val database: DatabaseManager,
 	val newAlarmIntent: (Context) -> Intent
 ) : SelfTestManager {

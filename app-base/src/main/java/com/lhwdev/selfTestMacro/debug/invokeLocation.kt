@@ -3,6 +3,10 @@ package com.lhwdev.selfTestMacro.debug
 import java.lang.reflect.Method
 
 
+private val sTraceItemAnnotation = TraceItem::class.java
+private val sTraceItemsAnnotation = TraceItems::class.java
+
+
 /**
  * Getting invocation location is a quite slow job, getting all stacktrace and figuring out the original method.
  * Should be only used in error.

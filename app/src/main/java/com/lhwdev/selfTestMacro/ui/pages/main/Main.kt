@@ -21,29 +21,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
-import com.lhwdev.selfTestMacro.api.SurveyData
 import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.navigation.showRouteAsync
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
+import com.lhwdev.selfTestMacro.repository.SelfTestInitiator
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.icons.ExpandMore
 import com.lhwdev.selfTestMacro.ui.icons.Icons
 import com.lhwdev.selfTestMacro.ui.pages.edit.EditUsers
 import com.lhwdev.selfTestMacro.ui.pages.info.Info
-import com.lhwdev.selfTestMacro.ui.pages.setup.Setup
+import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.showFullDialogAsync
 import kotlinx.coroutines.launch
 
 
+val MainRoute: Route = Route("Main") { Main() }
+
+
 @Preview
 @Composable
-fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
+private fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 	val navigator = LocalNavigator
 	
 	AutoSystemUi(enabled = true) { scrims ->
@@ -177,7 +181,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 			Spacer(Modifier.height(32.dp))
 			RoundButton(
 				onClick = {
-					navigator.showRouteAsync { Setup() }
+					navigator.showRouteAsync(SetupRoute())
 				},
 				icon = { Icon(painterResource(R.drawable.ic_add_24), contentDescription = null) }
 			) {
@@ -301,9 +305,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 						scope = scope
 					),
 					target = selectedTestGroup.target,
-					surveyData = { // TODO
-						SurveyData()
-					}
+					initiator = SelfTestInitiator.userClick
 				)
 				
 				statusKey.value++

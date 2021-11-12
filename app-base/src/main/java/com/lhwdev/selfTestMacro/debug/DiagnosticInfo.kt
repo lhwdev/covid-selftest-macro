@@ -178,7 +178,7 @@ fun DiagnosticItem.dumpLocalized(oneLine: Boolean): String = buildString {
 		}
 	}
 	
-	fun dumpOneLine(item: DiagnosticItem): Any {
+	fun dumpOneLine(item: DiagnosticItem) {
 		when(item) {
 			is DiagnosticElement<*> -> if(item.localizedName != null) {
 				append(item.localizedName)

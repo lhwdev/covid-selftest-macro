@@ -11,7 +11,7 @@ import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.ui.LocalPreference
-import com.lhwdev.selfTestMacro.ui.pages.intro.Intro
+import com.lhwdev.selfTestMacro.ui.pages.intro.IntroRoute
 import com.vanpra.composematerialdialogs.ListContent
 import com.vanpra.composematerialdialogs.Title
 import com.vanpra.composematerialdialogs.showDialogAsync
@@ -37,7 +37,7 @@ fun Navigator.showDebugWindow() = showDialogAsync {
 			}) { Text("fetch 디버깅 ${if(pref.isDebugFetchEnabled) "끄기" else "켜기"}") }
 			
 			ListItem(modifier = Modifier.clickable {
-				navigator.pushRoute { Intro() }
+				navigator.pushRoute(IntroRoute)
 			}) { Text("인트로 보기") }
 			
 			ListItem(modifier = Modifier.clickable {

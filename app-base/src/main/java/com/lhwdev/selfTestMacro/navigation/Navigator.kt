@@ -1,5 +1,6 @@
 package com.lhwdev.selfTestMacro.navigation
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
 
 
@@ -23,7 +24,13 @@ fun Navigator.pushRoute(route: Route) {
 
 
 
-class RouteInstance(val route: Route)
+class RouteInstance(val route: Route) {
+	override fun toString(): String = route.toString()
+}
+
+
+@Stable
+var sDebugNavigation: Boolean = false
 
 
 class NavigatorImpl : Navigator {
@@ -34,11 +41,13 @@ class NavigatorImpl : Navigator {
 	
 	override fun pushRoute(route: RouteInstance) {
 		list.add(route)
+		if(sDebugNavigation) println("pushRoute $route")
 		if(route.route is RouteObserver) route.route.onRouteAdded(this)
 	}
 	
 	override fun popLastRoute(): Boolean {
 		val route = list.removeLastOrNull() ?: return false
+		if(sDebugNavigation) println("popLastRoute $route")
 		if(route.route is RouteObserver) route.route.onRouteRemoved(this)
 		return true
 	}

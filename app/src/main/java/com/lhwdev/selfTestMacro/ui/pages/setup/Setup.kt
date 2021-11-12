@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.ui.AutoScaffold
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.LocalPreference
@@ -25,6 +26,10 @@ import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import kotlinx.coroutines.launch
 import kotlin.math.max
+
+
+fun SetupRoute(parameters: SetupParameters = SetupParameters.Default): Route =
+	Route("Setup") { Setup(parameters) }
 
 
 @Composable

@@ -145,7 +145,7 @@ fun <T> AnimateListAsComposable(
 		}
 	}
 	
-	if(true || sDebugAnimateListAsComposable) {
+	if(sDebugAnimateListAsComposable) {
 		println(result)
 	}
 	

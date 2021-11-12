@@ -2,8 +2,6 @@ package com.lhwdev.selfTestMacro.debug
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 
 
 val LocalDebugContext: ProvidableCompositionLocal<UiDebugContext> =
@@ -12,20 +10,21 @@ val LocalDebugContext: ProvidableCompositionLocal<UiDebugContext> =
 
 @Composable
 fun rememberRootDebugContext(
+	contextName: String,
 	flags: DebugContext.DebugFlags,
 	manager: DebugManager = LocalContext.current.debugManager,
 	showErrorInfo: ShowErrorInfo
 ): UiDebugContext {
 	val androidContext = LocalContext.current
 	val uiScope = rememberCoroutineScope()
-	val workScope = remember { CoroutineScope(Dispatchers.Default) }
 	
 	val context = remember {
 		UiDebugContext(
+			manager = manager,
 			context = androidContext,
+			contextName = contextName,
 			flags = flags,
 			uiContext = uiScope.coroutineContext,
-			manager = manager,
 			showErrorInfo = showErrorInfo
 		)
 	}
@@ -35,6 +34,7 @@ fun rememberRootDebugContext(
 
 @Composable
 fun rememberDebugContext(
+	contextName: String,
 	flags: DebugContext.DebugFlags? = null,
 	showErrorInfo: ShowErrorInfo? = null
 ): UiDebugContext {
@@ -44,10 +44,11 @@ fun rememberDebugContext(
 	
 	val context = remember {
 		UiDebugContext(
+			manager = local.manager,
 			context = androidContext,
+			contextName = contextName,
 			flags = flags ?: local.flags,
 			uiContext = uiScope.coroutineContext,
-			manager = local.manager,
 			showErrorInfo = showErrorInfo ?: local.showErrorInfo
 		)
 	}

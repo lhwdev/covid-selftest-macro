@@ -2,9 +2,9 @@ package com.lhwdev.selfTestMacro.debug
 
 import android.util.Log
 import com.lhwdev.selfTestMacro.App
+import com.lhwdev.selfTestMacro.debuggingWithIde
 import kotlinx.coroutines.*
 import java.io.File
-import java.lang.reflect.Method
 
 
 private inline fun <T> T?.merge(other: T?, merger: (T, T) -> T): T? = when {
@@ -18,8 +18,8 @@ private inline fun <T> T?.merge(other: T?, merger: (T, T) -> T): T? = when {
 class ErrorInfo(
 	val message: String,
 	val throwable: Throwable?,
-	val diagnostics: List<DiagnosticItem>,
-	val location: String,
+	val diagnostics: List<DiagnosticItem> = emptyList(),
+	val location: String = invokeLocationDescription(depth = 1),
 	val severity: DebugContext.Severity
 ) {
 	fun merge(other: ErrorInfo): ErrorInfo = ErrorInfo(
@@ -33,6 +33,7 @@ class ErrorInfo(
 
 
 private val sTraceItemAnnotation = TraceItem::class.java
+private val sTraceItemsAnnotation = TraceItems::class.java
 
 
 /**
@@ -53,54 +54,6 @@ abstract class DebugContext(
 	
 	abstract val contextName: String
 	
-	abstract val uiScope: CoroutineScope
-	
-	
-	/**
-	 * Getting invocation location is a quite slow job, getting all stacktrace and figuring out the original method.
-	 * Should be only used in error.
-	 */
-	fun invokeLocationDescription(depth: Int): String {
-		val method = invokeLocation(depth = depth + 1)
-		
-		return if(method == null) {
-			"?"
-		} else {
-			"${method.declaringClass.name}.${method.name}"
-		}
-	}
-	
-	fun invokeLocation(depth: Int): Method? {
-		val realDepth = depth + 1
-		val trace = Throwable().stackTrace
-		
-		for(index in realDepth until trace.size) {
-			val element = trace[index] ?: continue
-			
-			val method = methodFromStackTrace(element, checkAnnotation = true)
-			if(method != null) {
-				return method
-			}
-		}
-		
-		return methodFromStackTrace(trace[realDepth], checkAnnotation = false)
-	}
-	
-	private fun methodFromStackTrace(element: StackTraceElement, checkAnnotation: Boolean): Method? = try {
-		val targetClass = DebugContext::class.java.classLoader.loadClass(element.className)
-		
-		if(checkAnnotation) {
-			targetClass.declaredMethods.find {
-				it.name == element.methodName &&
-					it.isAnnotationPresent(sTraceItemAnnotation)
-			}
-		} else {
-			targetClass.declaredMethods.find { it.name == element.methodName }
-		}
-	} catch(th: Throwable) {
-		null
-	}
-	
 	
 	inline fun onError(
 		message: String,
@@ -114,12 +67,21 @@ abstract class DebugContext(
 	}
 	
 	fun onError(error: ErrorInfo, forceShow: Boolean = false) {
-		manager.workScope.launch {
-			onErrorSuspend(error, forceShow)
-		}
+		manager.onErrorFromContext(this, error, forceShow)
 	}
 	
 	// prevent duplicate error
+	inline fun onThrowError(
+		message: String,
+		throwable: Throwable?,
+		diagnostics: List<DiagnosticItem> = emptyList(),
+		forceShow: Boolean = false,
+		location: String = invokeLocationDescription(depth = 1),
+		severity: Severity = Severity.significant
+	) {
+		onThrowError(ErrorInfo(message, throwable, diagnostics, location, severity), forceShow = forceShow)
+	}
+	
 	fun onThrowError(error: ErrorInfo, forceShow: Boolean = false) {
 		manager.pendThrowingError(DebugManager.PendingError(context = this, error = error))
 	}
@@ -185,7 +147,7 @@ abstract class DebugContext(
 	private suspend fun showErrorInfo(
 		info: ErrorInfo,
 		description: String
-	): Unit = withContext(uiScope.coroutineContext) {
+	) {
 		try {
 			onShowErrorInfo(info, description)
 		} catch(th: Throwable) {
@@ -199,7 +161,7 @@ abstract class DebugContext(
 	private suspend fun writeErrorLog(info: String) {
 		try {
 			withContext(Dispatchers.IO) {
-				File(manager.androidContext.getExternalFilesDir(null)!!, "error_log.txt").appendText(info)
+				File(manager.debugLogDirectory, "error_log.txt").appendText(info)
 			}
 		} catch(e: Throwable) {
 			// ignore errors
@@ -231,5 +193,20 @@ abstract class DebugContext(
 		@Suppress("BlockingMethodInNonBlockingContext")
 		val process = Runtime.getRuntime().exec(command)
 		process.inputStream.reader().use { it.readText() }
+	}
+}
+
+
+object GlobalDebugContext : DebugContext(
+	flags = DebugFlags(enabled = true, debuggingWithIde = App.debuggingWithIde),
+	manager = object : DebugManager() {
+		@OptIn(DelicateCoroutinesApi::class)
+		override val workScope: CoroutineScope = GlobalScope
+	}
+) {
+	override val contextName: String get() = "global"
+	
+	override suspend fun onShowErrorInfo(info: ErrorInfo, description: String) {
+		// no-op; not available
 	}
 }

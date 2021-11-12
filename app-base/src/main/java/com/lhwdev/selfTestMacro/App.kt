@@ -5,6 +5,7 @@ import com.lhwdev.github.repo.Repository
 import com.lhwdev.github.repo.branch
 import com.lhwdev.github.repo.defaultBranch
 import com.lhwdev.selfTestMacro.models.Version
+import java.io.File
 
 
 object AppInitializationInfo {
@@ -12,6 +13,7 @@ object AppInitializationInfo {
 	lateinit var versionName: String
 	lateinit var githubRepo: Repository
 	lateinit var flavor: String
+	lateinit var debugLogDirectory: File
 	var appIconForeground: Int = 0
 	var appIcon: Int = 0
 	var debug: Boolean = false
@@ -25,6 +27,8 @@ object App {
 	val flavor: String = AppInitializationInfo.flavor
 	val debug: Boolean = AppInitializationInfo.debug
 	
+	val debugLogDirectory: File = AppInitializationInfo.debugLogDirectory
+	
 	@DrawableRes
 	val appIconForeground: Int = AppInitializationInfo.appIconForeground
 	
@@ -35,3 +39,7 @@ object App {
 	val masterBranch = githubRepo.defaultBranch()
 	val metaBranch = githubRepo.branch("app-meta")
 }
+
+
+val App.debuggingWithIde: Boolean
+	get() = flavor == "dev"

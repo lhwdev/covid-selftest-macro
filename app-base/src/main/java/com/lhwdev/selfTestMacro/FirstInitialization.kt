@@ -33,6 +33,7 @@ object FirstInitialization {
 		AppInitializationInfo.debug = debug
 		AppInitializationInfo.appIconForeground = appIconForeground
 		AppInitializationInfo.appIcon = appIcon
+		AppInitializationInfo.debugLogDirectory = getExternalFilesDir(null)!!
 		
 		val pref = preferenceState
 		

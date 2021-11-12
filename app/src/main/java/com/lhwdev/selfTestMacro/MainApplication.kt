@@ -1,8 +1,9 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.Application
-import com.lhwdev.selfTestMacro.debug.getErrorInfo
-import com.lhwdev.selfTestMacro.debug.writeErrorLog
+import com.lhwdev.selfTestMacro.debug.DebugContext
+import com.lhwdev.selfTestMacro.debug.ErrorInfo
+import com.lhwdev.selfTestMacro.debug.GlobalDebugContext
 import kotlinx.coroutines.DEBUG_PROPERTY_NAME
 import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_OFF
 import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_ON
@@ -35,7 +36,13 @@ class MainApplication : Application() {
 		
 		if(!BuildConfig.DEBUG) Thread.setDefaultUncaughtExceptionHandler { thread, exception ->
 			runBlocking {
-				writeErrorLog(getErrorInfo(exception, "defaultUncaughtExceptionHandler"))
+				GlobalDebugContext.onErrorSuspend(
+					ErrorInfo(
+						message = "defaultUncaughtExceptionHandler",
+						throwable = exception,
+						severity = DebugContext.Severity.critical
+					)
+				)
 			}
 			lastHandler?.uncaughtException(thread, exception)
 		}

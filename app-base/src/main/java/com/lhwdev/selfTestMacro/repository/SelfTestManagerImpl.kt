@@ -176,6 +176,7 @@ class HcsAppError(
 }
 
 
+@TraceItems(requiredModifier = java.lang.reflect.Modifier.PUBLIC)
 class SelfTestManagerImpl(
 	override var context: Context,
 	private val debugContext: DebugContext,

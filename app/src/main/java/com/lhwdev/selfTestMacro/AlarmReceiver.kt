@@ -7,6 +7,9 @@ import com.lhwdev.selfTestMacro.database.PreferenceHolder
 import com.lhwdev.selfTestMacro.database.PreferenceState
 import com.lhwdev.selfTestMacro.database.prefMain
 import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.debug.BackgroundDebugContext
+import com.lhwdev.selfTestMacro.debug.DebugContext
+import com.lhwdev.selfTestMacro.debug.isDebugEnabled
 import com.lhwdev.selfTestMacro.ui.SelfTestManager
 import kotlinx.coroutines.runBlocking
 
@@ -16,8 +19,13 @@ class AlarmReceiver : BroadcastReceiver() {
 		val selfTestManager = SelfTestManager(
 			context,
 			context.preferenceState.db,
-			
+			BackgroundDebugContext(
+				flags = DebugContext.DebugFlags(
+					enabled = context.isDebugEnabled,
+					debuggingWithIde = App.debuggingWithIde
+				)
 			)
+		)
 		
 		runBlocking { // TODO: is this okay?
 			with(selfTestManager) {

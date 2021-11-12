@@ -19,10 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
-import com.lhwdev.selfTestMacro.debug.DebugContext
-import com.lhwdev.selfTestMacro.debug.DefaultDebugManager
-import com.lhwdev.selfTestMacro.debug.isDebugEnabled
-import com.lhwdev.selfTestMacro.debug.rememberDebugContext
+import com.lhwdev.selfTestMacro.debug.*
+import com.lhwdev.selfTestMacro.debuggingWithIde
 import com.lhwdev.selfTestMacro.navigation.ComposeNavigationHost
 import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.NavigatorImpl
@@ -55,14 +53,12 @@ fun ComposeApp(activity: Activity) {
 	
 	val pref = remember(context) { context.preferenceState }
 	
-	val debugContext = rememberDebugContext(
+	val debugContext = rememberRootDebugContext(
 		flags = DebugContext.DebugFlags(
 			enabled = context.isDebugEnabled,
-			debuggingWithIde = App.flavor == "dev"
+			debuggingWithIde = App.debuggingWithIde
 		),
-		showErrorInfo = { debugContext, errorInfo, description ->
-			
-		},
+		showErrorInfo = UiDebugContext::showErrorDialog,
 		manager = DefaultDebugManager(androidContext = context, workScope = CoroutineScope(Dispatchers.Default))
 	)
 	

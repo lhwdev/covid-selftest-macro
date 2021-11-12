@@ -3,4 +3,7 @@
 	<external-files-path
 		name="update"
 		path="update/" />
+	<external-files-path
+		name="log"
+		path="log/" />
 </paths>

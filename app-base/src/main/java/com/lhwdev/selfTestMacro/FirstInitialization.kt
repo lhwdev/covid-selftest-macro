@@ -40,7 +40,7 @@ object FirstInitialization {
 		
 		if(pref.isDebugEnabled) {
 			sDebugFetch = pref.isDebugFetchEnabled
-			sDebugNavigation = pref.isNavigationDebugEnabled || true
+			sDebugNavigation = pref.isNavigationDebugEnabled
 			sDebugAnimateListAsComposable = pref.isNavigationDebugEnabled
 		}
 	}

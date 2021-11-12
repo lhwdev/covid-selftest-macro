@@ -1,5 +1,6 @@
 package com.lhwdev.selfTestMacro.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Surface
@@ -37,8 +38,9 @@ fun RouteContent(route: RouteInstance) {
 			LocalSnackbarHost provides snackbarHostState,
 			LocalDebugContext provides debugContext
 		) {
-			SnackbarHost(snackbarHostState) {
+			Box {
 				route.route.content()
+				SnackbarHost(snackbarHostState)
 			}
 		}
 	}

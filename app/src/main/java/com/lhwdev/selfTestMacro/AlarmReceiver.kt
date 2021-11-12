@@ -3,6 +3,8 @@ package com.lhwdev.selfTestMacro
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.PowerManager
+import androidx.core.content.getSystemService
 import com.lhwdev.selfTestMacro.database.PreferenceHolder
 import com.lhwdev.selfTestMacro.database.PreferenceState
 import com.lhwdev.selfTestMacro.database.prefMain
@@ -18,6 +20,14 @@ import kotlinx.coroutines.runBlocking
 class AlarmReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
 		val result = goAsync()
+		
+		val lock = context.getSystemService<PowerManager>()!!
+			.newWakeLock(
+				PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+				"SelfTestMacro:AlarmReceiver"
+			)
+		lock.acquire(20000)
+		
 		val selfTestManager = SelfTestManager(
 			context,
 			context.preferenceState.db,
@@ -37,11 +47,12 @@ class AlarmReceiver : BroadcastReceiver() {
 				TODO()
 			}
 			context.checkAndNotifyUpdate()
-			
-			result.finish()
 		}
 		
 		val pref = PreferenceState(PreferenceHolder(context.prefMain()))
 		// context.scheduleNextAlarm(context.createIntent(), pref.hour, pref.min, true)
+		
+		lock.release()
+		result.finish()
 	}
 }

@@ -13,7 +13,7 @@ val LocalDebugContext: ProvidableCompositionLocal<UiDebugContext> =
 @Composable
 fun rememberRootDebugContext(
 	flags: DebugContext.DebugFlags,
-	manager: DebugManager = LocalContext.current.debugManag,
+	manager: DebugManager = LocalContext.current.debugManager,
 	showErrorInfo: ShowErrorInfo
 ): UiDebugContext {
 	val androidContext = LocalContext.current
@@ -24,7 +24,7 @@ fun rememberRootDebugContext(
 		UiDebugContext(
 			context = androidContext,
 			flags = flags,
-			uiScope = uiScope,
+			uiContext = uiScope.coroutineContext,
 			manager = manager,
 			showErrorInfo = showErrorInfo
 		)
@@ -46,7 +46,7 @@ fun rememberDebugContext(
 		UiDebugContext(
 			context = androidContext,
 			flags = flags ?: local.flags,
-			uiScope = uiScope,
+			uiContext = uiScope.coroutineContext,
 			manager = local.manager,
 			showErrorInfo = showErrorInfo ?: local.showErrorInfo
 		)

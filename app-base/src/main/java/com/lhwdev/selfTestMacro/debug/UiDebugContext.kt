@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 
 typealias ShowErrorInfo = (UiDebugContext, ErrorInfo, String) -> Unit
@@ -19,7 +20,7 @@ class UiDebugContext(
 	manager: DebugManager,
 	var context: Context,
 	flags: DebugFlags,
-	val uiScope: CoroutineScope,
+	val uiContext: CoroutineContext,
 	val showErrorInfo: ShowErrorInfo
 ) : DebugContext(flags = flags, manager = manager) {
 	companion object {
@@ -45,7 +46,7 @@ class UiDebugContext(
 	
 	override var contextName: String = ""
 	
-	override suspend fun onShowErrorInfo(info: ErrorInfo, description: String) = withContext(uiScope.coroutineContext) {
+	override suspend fun onShowErrorInfo(info: ErrorInfo, description: String) = withContext(uiContext) {
 		showErrorInfo(this@UiDebugContext, info, description)
 	}
 }

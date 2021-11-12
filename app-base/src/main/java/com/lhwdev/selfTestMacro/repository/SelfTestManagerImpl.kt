@@ -73,7 +73,7 @@ class HcsAppError(
 		
 		append("\n")
 		append("진단 정보: ")
-		diagnosticItem.dump(oneLine = true)
+		diagnosticItem.dumpLocalized(oneLine = true)
 	}
 	
 	override val message: String
@@ -186,7 +186,7 @@ class SelfTestManagerImpl(
 	/// Error handling
 	private suspend fun <R> handleError(
 		operationName: String,
-		target: Any?,
+		target: DiagnosticObject,
 		isFromUi: Boolean,
 		onError: (HcsAppError) -> R,
 		operation: suspend () -> R
@@ -228,8 +228,9 @@ class SelfTestManagerImpl(
 						target = target,
 						diagnosticItem = diagnostic
 					)
+					
 					debugContext.onError(
-						message = "[handleError] $operationName: throwing $error",
+						message = error.message,
 						throwable = error
 					)
 					

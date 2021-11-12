@@ -22,6 +22,13 @@ class ErrorInfo(
 	val location: String = invokeLocationDescription(depth = 1),
 	val severity: DebugContext.Severity
 ) {
+	val allDiagnostics: List<DiagnosticItem>
+		get() = if(throwable is DiagnosticObject) {
+			diagnostics + throwable.getDiagnosticInformation()
+		} else {
+			diagnostics
+		}
+	
 	fun merge(other: ErrorInfo): ErrorInfo = ErrorInfo(
 		message = "(merged) $message // ${other.message}",
 		throwable = throwable.merge(other.throwable) { a, b -> a.addSuppressed(b); a },

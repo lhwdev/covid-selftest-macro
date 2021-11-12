@@ -9,9 +9,11 @@ import com.lhwdev.selfTestMacro.database.prefMain
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.debug.BackgroundDebugContext
 import com.lhwdev.selfTestMacro.debug.DebugContext
+import com.lhwdev.selfTestMacro.debug.debugManager
 import com.lhwdev.selfTestMacro.debug.isDebugEnabled
 import com.lhwdev.selfTestMacro.ui.SelfTestManager
 import kotlinx.coroutines.runBlocking
+
 
 class AlarmReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
@@ -23,7 +25,9 @@ class AlarmReceiver : BroadcastReceiver() {
 				flags = DebugContext.DebugFlags(
 					enabled = context.isDebugEnabled,
 					debuggingWithIde = App.debuggingWithIde
-				)
+				),
+				manager = context.debugManager,
+				contextName = "AlarmReceiver"
 			)
 		)
 		

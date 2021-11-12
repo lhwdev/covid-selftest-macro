@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-private const val sInfoDeveloper = "info/developer.json"
+private const val sInfoDeveloper = "src/info/developer.json"
 
 
 @Composable

@@ -37,10 +37,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
 
-private const val sInfoSpecialThanks = "info/special-thanks.json"
+private const val sInfoSpecialThanks = "src/info/special-thanks.json"
 
 
-// https://github.com/lhwdev/covid-selftest-macro/blob/meta/info-users.json
+// Such as things in https://github.com/lhwdev/covid-selftest-macro/blob/meta/src/info
 object InfoUserStructure {
 	@Serializable
 	data class Root(val titles: List<List<String>>, val details: Map<String, Detail>)

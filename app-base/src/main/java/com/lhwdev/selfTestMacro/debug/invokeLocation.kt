@@ -51,7 +51,7 @@ private fun methodFromStackTrace(element: StackTraceElement, checkAnnotation: Bo
 		} else {
 			targetClass.declaredMethods.find {
 				it.name == element.methodName &&
-					classAnnotation.matches(it)
+					(it.isAnnotationPresent(sTraceItemAnnotation) || classAnnotation.matches(it))
 			}
 		}
 	} else {

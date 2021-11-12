@@ -48,10 +48,10 @@ dependencies {
 	implementation(project(":api"))
 	implementation(project(":utils"))
 	
-	implementation("net.gotev:cookie-store:1.3.5")
+	implementation("net.gotev:cookie-store:1.4.0")
 	
 	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
 	
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.0")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
@@ -63,6 +63,7 @@ dependencies {
 	implementation("androidx.compose.ui:ui-tooling:$compose")
 	implementation("androidx.compose.foundation:foundation:$compose")
 	implementation("androidx.compose.material:material:$compose")
+	implementation("androidx.activity:activity-compose:1.4.0")
 	
 	val accompanist = "0.20.2" // also in app-base
 	implementation("com.google.accompanist:accompanist-insets:$accompanist")

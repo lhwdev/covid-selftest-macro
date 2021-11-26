@@ -61,7 +61,7 @@ data class SurveyData(
 	val rspns05: String? = null,
 	val rspns06: String? = null,
 	val rspns07: String? = null,
-	val rspns08: String? = null,
+	val rspns08: String = "0",
 	val rspns09: String = "0",
 	val rspns10: String? = null,
 	val rspns11: String? = null,

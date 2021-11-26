@@ -40,14 +40,15 @@ suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) lis
 }
 
 suspend fun Context.submitSuspend(session: Session, notification: Boolean = true) {
-	selfLog("submitSuspend ${preferenceState.user?.identifier?.mainUserName}")
+	val pref = preferenceState
+	selfLog("submitSuspend ${pref.user?.identifier?.mainUserName}")
 	try {
 		tryAtMost(maxTrial = 3) trial@{
-			val institute = preferenceState.institute!!
+			val institute = pref.institute!!
 			val loginInfo: UserLoginInfo =
-				preferenceState.user!! // (not valid ->) // note: `preferenceStte.user` may change after val user = ...
+				pref.user!! // (not valid ->) // note: `preferenceStte.user` may change after val user = ...
 			
-			val isIsolated = preferenceState.isIsolated
+			val isIsolated = pref.isIsolated
 			
 			// val user = loginInfo.ensureTokenValid(
 			// 	session, institute,
@@ -65,12 +66,19 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 			val user = singleOfUserGroup(users) ?: return@trial
 			
 			val result = session.registerSurvey(
-				preferenceState.institute!!,
+				pref.institute!!,
 				user,
-				SurveyData(userToken = user.token, upperUserName = usersIdentifier.mainUserName, rspns09 = if(isIsolated) "1" else "0")
+				SurveyData(
+					userToken = user.token,
+					upperUserName = usersIdentifier.mainUserName,
+					rspns09 = if(isIsolated) "1" else "0"
+				)
 			)
 			
-			selfLog("submitSuspend success ${preferenceState.user?.identifier?.mainUserName} ${result.registerAt}", force = true)
+			pref.lastSubmitDay = millisToDaysCumulative(Date().time)
+			
+			selfLog("submitSuspend success ${pref.user?.identifier?.mainUserName} ${result.registerAt}", force = true)
+			
 			if(notification) showTestCompleteNotification(result.registerAt)
 			else {
 				showToastSuspendAsync("자가진단 제출 완료")
@@ -94,6 +102,10 @@ fun Context.updateTime(intent: PendingIntent) {
 
 private val random = Random
 
+private fun millisToDaysCumulative(millis: Long) =
+	// ms         s  min hour day
+	millis / 1000 / 60 / 60 / 24
+
 @SuppressLint("NewApi")
 fun Context.scheduleNextAlarm(
 	intent: PendingIntent,
@@ -102,6 +114,8 @@ fun Context.scheduleNextAlarm(
 	isRandom: Boolean,
 	nextDay: Boolean = false,
 ) {
+	val pref = preferenceState
+	
 	val newTime = Calendar.getInstance().run {
 		val newMin = if(isRandom) (min + random.nextInt(-5, 6)).coerceIn(0, 59) else min
 		val new = clone() as Calendar
@@ -109,12 +123,14 @@ fun Context.scheduleNextAlarm(
 		new[Calendar.MINUTE] = newMin
 		new[Calendar.SECOND] = 0
 		new[Calendar.MILLISECOND] = 0
-		if(nextDay || new <= this || new[Calendar.DAY_OF_YEAR] == this[Calendar.DAY_OF_YEAR]) {
+		
+		// Submitted today
+		if(nextDay || pref.lastSubmitDay == millisToDaysCumulative(new.timeInMillis)) {
 			new.add(Calendar.DAY_OF_YEAR, 1)
 		}
 		new
 	}
-	selfLog("scheduling next alarm at ${Date.from(newTime.toInstant())}", force = true)
+	selfLog("scheduling next alarm at ${Date(newTime.timeInMillis)}", force = true)
 	
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT < 21) {

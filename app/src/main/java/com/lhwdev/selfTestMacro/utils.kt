@@ -26,7 +26,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
 import java.util.WeakHashMap
 import kotlin.coroutines.resume
@@ -143,6 +142,12 @@ class PreferenceState(val pref: SharedPreferences) {
 	var setting: UserSetting?
 		by pref.preferenceSerialized("userSetting", UserSetting.serializer())
 	
+	var lastSubmitDay: Long
+		get() = pref.getLong("lastSubmitDay", Long.MIN_VALUE)
+		set(value) = pref.edit {
+			putLong("lastSubmitDay", value)
+		}
+	
 	var lastQuestion: String? by pref.preferenceString("lastQuestion")
 	
 	var shownNotices: Set<String>
@@ -214,7 +219,7 @@ fun SharedPreferences.preferenceString(key: String, defaultValue: String? = null
 fun <T> SharedPreferences.preferenceSerialized(
 	key: String,
 	serializer: KSerializer<T>,
-	formatter: StringFormat = Json
+	formatter: Json = Json
 ) = object : ReadWriteProperty<Any?, T?> {
 	var updated = false
 	var cache: T? = null

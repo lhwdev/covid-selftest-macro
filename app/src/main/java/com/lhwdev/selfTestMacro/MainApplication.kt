@@ -1,6 +1,8 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.Application
+import com.lhwdev.fetch.sDebugFetch
+import com.lhwdev.fetch.sFetchInterceptors
 import javax.net.ssl.SSLHandshakeException
 
 

@@ -19,6 +19,7 @@ import androidx.core.content.edit
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.setPadding
 import com.google.android.material.snackbar.Snackbar
+import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine

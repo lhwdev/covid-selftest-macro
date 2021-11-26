@@ -1,6 +1,6 @@
 @file:Suppress("NewApi")
 
-package com.lhwdev.selfTestMacro
+package com.lhwdev.io
 
 import java.util.Base64
 

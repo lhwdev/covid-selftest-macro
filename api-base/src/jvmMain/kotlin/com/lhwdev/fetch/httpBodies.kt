@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.lhwdev.selfTestMacro
+package com.lhwdev.fetch
 
 import kotlinx.serialization.json.*
 import java.io.OutputStream
@@ -12,10 +12,10 @@ import java.io.Writer
 annotation class StructureBuilder
 
 
-object HttpBodies
+object Bodies
 
 
-interface WriterHttpBody : HttpBody {
+interface WriterFetchBody : FetchBody {
 	override fun write(out: OutputStream) {
 		val writer = out.writer()
 		write(writer)
@@ -37,7 +37,7 @@ interface WriterHttpBody : HttpBody {
 }
 
 
-fun HttpBodies.jsonObject(block: JsonObjectScope.() -> Unit): HttpBody = object : WriterHttpBody {
+fun Bodies.jsonObject(block: JsonObjectScope.() -> Unit): FetchBody = object : WriterFetchBody {
 	override fun write(out: Writer) {
 		out.write(jsonString(block))
 	}
@@ -46,7 +46,7 @@ fun HttpBodies.jsonObject(block: JsonObjectScope.() -> Unit): HttpBody = object 
 	
 	override val debugAvailable: Boolean get() = true
 	override fun writeDebug(out: Writer) {
-		val json = com.lhwdev.selfTestMacro.jsonObject(block)
+		val json = com.lhwdev.fetch.jsonObject(block)
 		out.write(json.toString())
 		fun dump(json: JsonElement, indent: String): Unit = when(json) {
 			JsonNull -> println("\u001b[96mnull\u001b[0m")
@@ -75,7 +75,7 @@ fun HttpBodies.jsonObject(block: JsonObjectScope.() -> Unit): HttpBody = object 
 	}
 }
 
-fun HttpBodies.form(block: FormScope.() -> Unit): HttpBody = object : WriterHttpBody {
+fun Bodies.form(block: FormScope.() -> Unit): FetchBody = object : WriterFetchBody {
 	override fun write(out: Writer) {
 		out.write(FormScope().apply(block).build())
 	}

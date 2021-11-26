@@ -1,5 +1,8 @@
 package com.lhwdev.selfTestMacro.api
 
+import com.lhwdev.fetch.http.HttpMethod
+import com.lhwdev.fetch.http.Session
+import com.lhwdev.fetch.http.fetch
 import com.lhwdev.selfTestMacro.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

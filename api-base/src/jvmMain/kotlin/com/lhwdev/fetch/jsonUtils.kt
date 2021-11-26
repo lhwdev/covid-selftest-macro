@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.fetch
 
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -21,10 +21,10 @@ class JsonObjectScope {
 		content[this] = JsonPrimitive(value)
 	}
 	inline infix fun String.jsonObject(block: JsonObjectScope.() -> Unit) {
-		content[this] = com.lhwdev.selfTestMacro.jsonObject(block)
+		content[this] = com.lhwdev.fetch.jsonObject(block)
 	}
 	infix fun String.jsonArray(block: JsonArrayScope.() -> Unit) {
-		content[this] = com.lhwdev.selfTestMacro.jsonArray(block)
+		content[this] = com.lhwdev.fetch.jsonArray(block)
 	}
 	
 	fun build(): JsonObject = JsonObject(content)

@@ -1,6 +1,10 @@
 package com.lhwdev.selfTestMacro.api
 
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.fetch.*
+import com.lhwdev.fetch.http.HttpMethod
+import com.lhwdev.fetch.http.Session
+import com.lhwdev.fetch.http.fetch
+import com.lhwdev.selfTestMacro.sDefaultFakeHeader
 import com.lhwdev.selfTestMacro.transkey.Transkey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -121,7 +125,7 @@ suspend fun Session.validatePassword(
 			"Authorization" to userIdentifier.token.token,
 			"Accept" to "application/json, text/plain, */*"
 		),
-		body = HttpBodies.jsonObject {
+		body = Bodies.jsonObject {
 			"password" set raonPassword
 			"deviceUuid" set ""
 			"makeSession" set true

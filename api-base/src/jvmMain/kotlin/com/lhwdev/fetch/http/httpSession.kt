@@ -1,5 +1,7 @@
-package com.lhwdev.selfTestMacro
+package com.lhwdev.fetch.http
 
+import com.lhwdev.fetch.FetchBody
+import com.lhwdev.fetch.FetchResult
 import java.net.*
 
 
@@ -40,7 +42,7 @@ suspend inline fun Session.fetch(
 	url: URL,
 	method: HttpMethod = HttpMethod.get,
 	headers: Map<String, String> = emptyMap(),
-	body: HttpBody? = null
+	body: FetchBody? = null
 ): FetchResult = fetch(url, method, headers, this, body)
 
 suspend inline fun Session.fetch(

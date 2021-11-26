@@ -30,7 +30,7 @@ fun interface FetchInterceptor {
 val sFetchInterceptors = mutableListOf<FetchInterceptor>(HttpInterceptorImpl)
 
 
-interface FetchBody {
+fun interface FetchBody {
 	fun write(out: OutputStream)
 	
 	fun writeDebug(out: OutputStream): Unit = error("debug not capable")

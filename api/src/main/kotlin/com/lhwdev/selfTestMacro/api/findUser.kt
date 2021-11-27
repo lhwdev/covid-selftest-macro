@@ -2,11 +2,14 @@
 
 package com.lhwdev.selfTestMacro.api
 
+import com.lhwdev.fetch.get
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.http.fetch
 import com.lhwdev.io.encodeBase64
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.selfTestMacro.ContentTypes
+import com.lhwdev.selfTestMacro.sDefaultFakeHeader
+import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer

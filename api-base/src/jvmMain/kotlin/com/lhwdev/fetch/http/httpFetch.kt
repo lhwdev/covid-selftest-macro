@@ -1,5 +1,6 @@
 package com.lhwdev.fetch.http
 
+
 import com.lhwdev.fetch.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,7 +18,7 @@ fun interface HttpInterceptor : FetchInterceptor {
 		session: Session?,
 		body: FetchBody?
 	): FetchResult? {
-		if(method !is HttpMethod? || body !is FetchBody?) return null
+		if(method !is HttpMethod?) return null
 		if(url.protocol !in sHttpProtocols) return null
 		
 		return intercept(url, method ?: HttpMethod.get, headers, session, body)
@@ -228,8 +229,10 @@ suspend fun fetch(
 	headers: Map<String, String> = emptyMap(),
 	session: Session? = null,
 	body: String
-): FetchResult = fetch(url, method, headers, session, FetchBody {
-	val writer = it.bufferedWriter()
-	writer.write(body)
-	writer.flush()
+): FetchResult = fetch(url, method, headers, session, object : FetchBody {
+	override fun write(out: OutputStream) {
+		val writer = out.bufferedWriter()
+		writer.write(body)
+		writer.flush()
+	}
 })

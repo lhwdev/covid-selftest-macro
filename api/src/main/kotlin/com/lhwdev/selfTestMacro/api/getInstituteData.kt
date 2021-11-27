@@ -2,11 +2,14 @@
 
 package com.lhwdev.selfTestMacro.api
 
+import com.lhwdev.fetch.get
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.http.fetch
 import com.lhwdev.fetch.queryUrlParamsToString
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.selfTestMacro.sCommonUrl
+import com.lhwdev.selfTestMacro.sDefaultFakeHeader
+import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.net.URL

@@ -7,6 +7,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.lhwdev.selfTestMacro.database.DatabaseManager
+import com.lhwdev.selfTestMacro.database.DbTestTarget
 
 
 // TODO: setContentIntent
@@ -43,6 +45,41 @@ object NotificationIds {
 }
 
 
+object SelfTestSuccessNotification : AndroidNotificationChannel(
+	channelId = "$sNotificationPrefix/selfTestSuccess",
+	name = "자가진단 완료",
+	importance = NotificationManagerCompat.IMPORTANCE_LOW,
+	priority = NotificationCompat.PRIORITY_LOW
+) {
+	fun notificationOf(
+		context: Context,
+		target: DbTestTarget,
+		database: DatabaseManager,
+		time: String
+	) = context.buildNotification {
+		val targetName = with(database) { target.name }
+		setContentTitle("${targetName}의 건강상태 자가진단을 완료했어요.")
+		setContentText("제출 시간: $time") // TODO: suspicious/quarantined status view
+	}
+}
+
+object SelfTestFailedNotification : AndroidNotificationChannel(
+	channelId = "$sNotificationPrefix/selfTestFailed",
+	name = "자가진단 실패",
+	importance = NotificationManagerCompat.IMPORTANCE_MAX,
+	priority = NotificationCompat.PRIORITY_MAX
+) {
+	fun notificationOf(
+		context: Context,
+		target: DbTestTarget,
+		database: DatabaseManager,
+		message: String
+	) = context.buildNotification {
+		val targetName = with(database) { target.name }
+		setContentTitle("${targetName}의 건강상태 자가진단이 실패했습니다.")
+		setContentText(message)
+	}
+}
 
 object SelfTestScheduleNotification : AndroidNotificationChannel(
 	channelId = "$sNotificationPrefix/selfTestSchedule",

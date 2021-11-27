@@ -11,16 +11,16 @@ import androidx.compose.material.ListItem
 import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
 import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.isOk
+import com.lhwdev.selfTestMacro.*
 import com.lhwdev.selfTestMacro.android.utils.activeNetworkCommon
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.debug.*
-import com.lhwdev.selfTestMacro.replaced
-import com.lhwdev.selfTestMacro.tryAtMost
 import com.lhwdev.selfTestMacro.ui.Color
 import com.lhwdev.selfTestMacro.ui.UiContext
 import com.vanpra.composematerialdialogs.*
@@ -681,7 +681,6 @@ class SelfTestManagerImpl(
 						is SubmitResult.Failed -> ListItem(
 							modifier = Modifier.clickable {
 								context.navigator.showDialogAsync {
-									
 									Title { Text("오류 발생") }
 									
 									Content {
@@ -716,6 +715,58 @@ class SelfTestManagerImpl(
 		}
 	}
 	
+	override suspend fun onScheduledSubmitSelfTest(
+		target: DbTestTarget,
+		initiator: SelfTestInitiator
+	): List<SubmitResult> {
+		val allUsers = with(database) { target.allUsers }
+		
+		try {
+			val results = allUsers.map {
+				database.submitSelfTest(it, isFromUi = initiator.isFromUi)
+			}
+			
+			val notificationManager = NotificationManagerCompat.from(context)
+			
+			if(results.all { it is SubmitResult.Success }) {
+				notificationManager.notify(
+					NotificationIds.selfTestSuccess,
+					SelfTestSuccessNotification.notificationOf(
+						context, target = target, database = database,
+						time = (results.last() as SubmitResult.Success).at
+					)
+				)
+			} else {
+				var at = "???"
+				
+				val count = results.count {
+					if(it is SubmitResult.Success) {
+						at = it.at
+						true
+					} else {
+						false
+					}
+				}
+				
+				val size = results.size
+				
+				@Suppress("IntroduceWhenSubject")
+				notificationManager.notify(
+					NotificationIds.selfTestFailed,
+					SelfTestFailedNotification.notificationOf(
+						context, target = target, database = database,
+						message = when {
+							size == 1 -> "자세한 정보는 이 알림을 눌러주세요."
+							size == count -> "그룹에 있는 사용자의 자가진단을 모두 실패했습니다."
+							else -> "그룹에 있는 ${size}명 중에 ${size - count}명의 자가진단을 하지 못했습니다."
+						}
+					)
+				)
+			}
+		} catch(th: Throwable) {
+			return emptyList()
+		}
+	}
 	
 	/// Scheduling
 	

@@ -29,9 +29,9 @@ class AlarmReceiver : BroadcastReceiver() {
 		lock.acquire(20000)
 		
 		val selfTestManager = SelfTestManager(
-			context,
-			context.preferenceState.db,
-			BackgroundDebugContext(
+			context = context,
+			database = context.preferenceState.db,
+			debugContext = BackgroundDebugContext(
 				flags = DebugContext.DebugFlags(
 					enabled = context.isDebugEnabled,
 					debuggingWithIde = App.debuggingWithIde
@@ -42,10 +42,7 @@ class AlarmReceiver : BroadcastReceiver() {
 		)
 		
 		runBlocking { // TODO: is this okay?
-			with(selfTestManager) {
-				// context.submitSelfTestNow()
-				TODO()
-			}
+			
 			context.checkAndNotifyUpdate()
 		}
 		

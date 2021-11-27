@@ -78,6 +78,8 @@ interface SelfTestManager {
 		initiator: SelfTestInitiator
 	): List<SubmitResult>
 	
+	suspend fun onScheduledSubmitSelfTest(target: DbTestTarget, initiator: SelfTestInitiator): List<SubmitResult>
+	
 	fun updateSchedule(target: DbTestGroup, new: DbTestGroup)
 	fun onScheduleUpdated()
 }

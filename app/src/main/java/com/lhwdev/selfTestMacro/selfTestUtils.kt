@@ -116,14 +116,25 @@ fun Context.scheduleNextAlarm(
 	nextDay: Boolean = false,
 ) {
 	val pref = preferenceState
+	val currentTime: Long
 	
 	var newTime = Calendar.getInstance().run {
+		currentTime = timeInMillis
+		
 		val new = clone() as Calendar
 		
 		// Submitted today
 		val last = pref.lastSubmit
 		val lastDay = millisToDaysCumulative(last)
-		if(nextDay || lastDay == millisToDaysCumulative(new.timeInMillis) ||) {
+		
+		val targetMin = hour * 60 + min
+		val currentMin = this[Calendar.HOUR_OF_DAY] * 60 + this[Calendar.MINUTE]
+		
+		if(
+			nextDay ||
+			lastDay == millisToDaysCumulative(currentTime) ||
+			targetMin < currentMin - 5
+		) {
 			new.add(Calendar.DAY_OF_YEAR, 1)
 		}
 		
@@ -136,6 +147,10 @@ fun Context.scheduleNextAlarm(
 	
 	if(isRandom) {
 		newTime += 1000 * 60 * (Random.nextFloat() * 5).toInt()
+		if(newTime - currentTime < 10000) {
+			selfLog("scheduling: coerced time from $newTime")
+			newTime = currentTime + 10000
+		}
 	}
 	
 	selfLog("scheduling next alarm at ${Date(newTime)}", force = true)

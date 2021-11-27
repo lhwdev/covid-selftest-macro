@@ -76,7 +76,7 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 				)
 			)
 			
-			pref.lastSubmitDay = millisToDaysCumulative(Date().time)
+			pref.lastSubmit = Date().time
 			
 			selfLog("submitSuspend success ${pref.user?.identifier?.mainUserName} ${result.registerAt}", force = true)
 			
@@ -117,33 +117,40 @@ fun Context.scheduleNextAlarm(
 ) {
 	val pref = preferenceState
 	
-	val newTime = Calendar.getInstance().run {
-		val newMin = if(isRandom) (min + random.nextInt(-5, 6)).coerceIn(0, 59) else min
+	var newTime = Calendar.getInstance().run {
 		val new = clone() as Calendar
-		new[Calendar.HOUR_OF_DAY] = hour
-		new[Calendar.MINUTE] = newMin
-		new[Calendar.SECOND] = 0
-		new[Calendar.MILLISECOND] = 0
 		
 		// Submitted today
-		if(nextDay || pref.lastSubmitDay == millisToDaysCumulative(new.timeInMillis)) {
+		val last = pref.lastSubmit
+		val lastDay = millisToDaysCumulative(last)
+		if(nextDay || lastDay == millisToDaysCumulative(new.timeInMillis) ||) {
 			new.add(Calendar.DAY_OF_YEAR, 1)
 		}
+		
+		new[Calendar.HOUR_OF_DAY] = hour
+		new[Calendar.MINUTE] = min
+		new[Calendar.SECOND] = 0
+		new[Calendar.MILLISECOND] = 0
 		new
+	}.timeInMillis
+	
+	if(isRandom) {
+		newTime += 1000 * 60 * (Random.nextFloat() * 5).toInt()
 	}
-	selfLog("scheduling next alarm at ${Date(newTime.timeInMillis)}", force = true)
+	
+	selfLog("scheduling next alarm at ${Date(newTime)}", force = true)
 	
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT < 21) {
 		alarmManager.setExact(
 			AlarmManager.RTC_WAKEUP,
-			newTime.timeInMillis,
+			newTime,
 			intent
 		)
 	} else {
 		alarmManager.setAlarmClock(
 			AlarmManager.AlarmClockInfo(
-				newTime.timeInMillis,
+				newTime,
 				PendingIntent.getActivity(
 					this,
 					0,

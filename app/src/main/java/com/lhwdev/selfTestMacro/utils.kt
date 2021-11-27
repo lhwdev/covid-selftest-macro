@@ -143,10 +143,10 @@ class PreferenceState(val pref: SharedPreferences) {
 	var setting: UserSetting?
 		by pref.preferenceSerialized("userSetting", UserSetting.serializer())
 	
-	var lastSubmitDay: Long
-		get() = pref.getLong("lastSubmitDay", Long.MIN_VALUE)
+	var lastSubmit: Long
+		get() = pref.getLong("lastSubmit", Long.MIN_VALUE)
 		set(value) = pref.edit {
-			putLong("lastSubmitDay", value)
+			putLong("lastSubmit", value)
 		}
 	
 	var lastQuestion: String? by pref.preferenceString("lastQuestion")

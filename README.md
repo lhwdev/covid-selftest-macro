@@ -1,6 +1,6 @@
 # 코로나19 자가진단 매크로 앱 (안드로이드 전용)
 [![Download](https://img.shields.io/github/downloads/lhwdev/covid-selftest-macro/latest/total?label=%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C%20%EB%B0%9B%EA%B8%B0&style=for-the-badge)](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)
-[![Discord](https://img.shields.io/discord/868429217740783637?label=%EA%B3%B5%EC%8B%9D%20%EB%94%94%EC%BD%94%EB%B0%A9&style=for-the-badge&color=5865F2)](https://discord.gg/a2hNMF39AC)
+[![Discord](https://img.shields.io/discord/868429217740783637?label=%EA%B3%B5%EC%8B%9D%20%EB%94%94%EC%BD%94%EB%B0%A9&style=for-the-badge&color=5865F2)](https://discord.link/hcs)
 [![Email](https://img.shields.io/badge/%EC%9D%B4%EB%A9%94%EC%9D%BC-%EA%B0%9C%EC%9D%B8-orange?style=for-the-badge)](mailto:lhwdev6@outlook.com)
 [![covid-hcs](https://img.shields.io/badge/organization-covid--hcs-2962ff?style=for-the-badge)](https://github.com/covid-hcs)
 
@@ -13,7 +13,7 @@
 - 이 앱에 100% 의존하기보다는, 평상시에 일찍 일어나는 습관을 기르고(?), 가끔 늦게 일어나거나 까먹었을 때 대신 해주는 수단으로
   이용하는 게 안전합니다. 이 앱은 아무래도 매크로라는 특성 때문에 직접 자가진단하는 것보다 안정성이 떨어질 수 밖에 없습니다.
 - 이 앱을 공유할 때는 위 링크보다 이 사이트의 주소를 공유해주세요. (위의 링크는 바뀔 수도)  
-- 자가진단 사이트의 구조가 바뀌어서 앱이 작동하지 않거나 업데이트가 있을 때 알림을 받으려면 [디스코드 서버](https://discord.gg/a2hNMF39AC)에 들어오세요.  
+- 자가진단 사이트의 구조가 바뀌어서 앱이 작동하지 않거나 업데이트가 있을 때 알림을 받으려면 [디스코드 서버](https://discord.link/hcs)에 들어오세요.  
 
 오류가 생기면 보통 몇 시간 안에 패치합니다.  
 제작자 자신이 쓸려고 만든 앱이고 제작자의 지인들도 쓰고 있답니다.  

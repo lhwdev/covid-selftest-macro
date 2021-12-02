@@ -259,7 +259,7 @@
     "rspns05": null,
     "rspns06": null,
     "rspns07": null,
-    "rspns08": null,
+    "rspns08": "0",
     "rspns09": "0",
     "rspns10": null,
     "rspns11": null,

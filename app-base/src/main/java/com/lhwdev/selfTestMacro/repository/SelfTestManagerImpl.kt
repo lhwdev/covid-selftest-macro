@@ -763,6 +763,7 @@ class SelfTestManagerImpl(
 					)
 				)
 			}
+			return results
 		} catch(th: Throwable) {
 			return emptyList()
 		}

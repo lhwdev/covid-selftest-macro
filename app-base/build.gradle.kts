@@ -58,7 +58,7 @@ dependencies {
 	
 	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
 	
-	val compose = "1.0.6" // kotlinCompilerExtensionVersion, app-base
+	val compose = "1.0.5" // kotlinCompilerExtensionVersion, app-base
 	implementation("androidx.compose.ui:ui:$compose")
 	implementation("androidx.compose.ui:ui-tooling:$compose")
 	implementation("androidx.compose.foundation:foundation:$compose")

@@ -9,19 +9,21 @@ import androidx.compose.ui.graphics.Color
 
 
 private val sLightColors = lightColors(
-	primary = Color(0xff2962ff),
-	primaryVariant = Color(0xff0039cb),
+	primary = Color(0xff376cff),
+	primaryVariant = Color(0xff0044ff),
 	onPrimary = Color(0xffffffff),
-	secondary = Color(0xff2962ff),
-	secondaryVariant = Color(0xff5000b3)
+	secondary = Color(0xff55acff),
+	secondaryVariant = Color(0xff1a90ff),
+	onSecondary = Color(0x00000000)
 )
 
 private val sDarkColors = darkColors(
-	primary = Color(0xff2962ff),
-	primaryVariant = Color(0xff5000b3),
+	primary = Color(0xff376cff),
+	primaryVariant = Color(0xff0044ff),
 	onPrimary = Color(0xffffffff),
-	secondary = Color(0xff2962ff),
-	secondaryVariant = Color(0xff5000b3)
+	secondary = Color(0xff55acff),
+	secondaryVariant = Color(0xff1a90ff),
+	onSecondary = Color(0x00000000)
 )
 
 

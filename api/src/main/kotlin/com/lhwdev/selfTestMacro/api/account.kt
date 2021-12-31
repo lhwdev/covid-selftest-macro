@@ -10,7 +10,7 @@ import com.lhwdev.fetch.http.fetch
 @DangerousHcsApi
 public suspend fun Session.updateAgreement(institute: InstituteInfo, token: UsersIdToken) {
 	fetch(
-		institute.requestUrl2["updatePInfAgrmYn"],
+		institute.requestUrlV2["updatePInfAgrmYn"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 		body = Bodies.jsonObject {}
@@ -22,7 +22,7 @@ public suspend fun Session.hasPassword(
 	institute: InstituteInfo,
 	token: UsersIdToken
 ): Boolean = fetch(
-	institute.requestUrl2["hasPassword"],
+	institute.requestUrlV2["hasPassword"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token)
 ).getText().toBooleanStrict()
@@ -34,7 +34,7 @@ public suspend fun Session.registerPassword(
 	deviceUuid: String = "",
 	upperUserToken: UsersToken? = null
 ): Boolean = fetch(
-	institute.requestUrl2["registerPassword"],
+	institute.requestUrlV2["registerPassword"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 	body = Bodies.jsonObject {
@@ -57,7 +57,7 @@ public suspend fun Session.changePassword(
 	if(newPassword.isBlank()) return ChangePasswordResult.wrongNewPassword
 	
 	val result = fetch(
-		institute.requestUrl2["changePassword"],
+		institute.requestUrlV2["changePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 		body = Bodies.jsonObject {

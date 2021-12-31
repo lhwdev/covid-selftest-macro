@@ -4,6 +4,8 @@ package com.lhwdev.selfTestMacro.api
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.PrimitiveKind
 import java.net.URL
 
 
@@ -35,24 +37,14 @@ public enum class LoginType {
 	office
 }
 
-// {
-//      "orgCode": "D100000331",
-//      "kraOrgNm": "영남고등학교",
-//      "engOrgNm": "Yeungnam High School",
-//      "insttClsfCode": "5",
-//      "lctnScCode": "03",
-//      "lctnScNm": "대구광역시",
-//      "sigCode": "27290",
-//      "juOrgCode": "D100000001",
-//      "schulKndScCode": "04",
-//      "orgAbrvNm01": "영남고등학교",
-//      "orgAbrvNm02": "영남고등학교",
-//      "orgUon": "Y",
-//      "updid": "SYSTEM",
-//      "mdfcDtm": "2020-08-19 19:54:53.0",
-//      "atptOfcdcConctUrl": "dgehcs.eduro.go.kr",
-//      "addres": "(42748)대구광역시 달서구 월곡로 300 , 영남고등학교 (상인동)"
-// }
+/**
+ * The level of school.
+ * 유치원, 초등학교, 중학교, 고등학교. (대학교: seperate institute type)
+ */
+public enum class SchoolLevel {
+	pre, elementary, middle, high
+}
+
 /**
  * The information of institute that can be obtained from [getSchoolData], [getUniversityData], [getOfficeData],
  * or [getAcademyData].
@@ -61,6 +53,9 @@ public enum class LoginType {
  */
 @Serializable
 public data class InstituteInfo(
+	@Serializable(with = TypeSerializer::class)
+	@SerialName("insttClsfCode") val type: InstituteType,
+	
 	/**
 	 * The korean name of institute.
 	 */
@@ -84,24 +79,52 @@ public data class InstituteInfo(
 	@SerialName("addres") val address: String,
 	
 	/**
+	 * The level of the school if the [type] is [InstituteType.school].
+	 */
+	@Serializable(with = SchoolLevelSerializer::class)
+	@SerialName("schulKndScCode") val schoolLevel: SchoolLevel? = null,
+	
+	/**
 	 * The base url fraction for most hcs operations.
 	 * This property is commonly used to get `atptOfcdcConctUrl`. (url for Si/Do)
-	 * Note that this url does not include `https://`. Instead, use [requestUrl] or [requestUrl2].
+	 * Note that this url does not include `https://`. Instead, use [requestUrl] or [requestUrlV2].
 	 *
 	 * Normally form of `???hcs.eduro.go.kr` where `???` comes the code of Ministry of Education, i.e., 'sen', 'dge'.
 	 *
 	 * @see requestUrl
-	 * @see requestUrl2
+	 * @see requestUrlV2
 	 */
 	@SerialName("atptOfcdcConctUrl") val requestUrlBody: String
 ) {
+	public object TypeSerializer : PrimitiveMappingSerializer<InstituteType, String>(
+		rawSerializer = String.serializer(),
+		serialName = "com.lhwdev.selfTestMacro.api.InstituteInfo.type",
+		primitiveKind = PrimitiveKind.STRING,
+		
+		InstituteType.school to "5",
+		InstituteType.university to "7",
+		InstituteType.office to "4",
+		InstituteType.academy to "3"
+	)
+	
+	public object SchoolLevelSerializer : PrimitiveMappingSerializer<SchoolLevel, String>(
+		rawSerializer = String.serializer(),
+		serialName = "com.lhwdev.selfTestMacro.api.InstituteInfo.schoolLevel",
+		primitiveKind = PrimitiveKind.STRING,
+		
+		SchoolLevel.pre to "01",
+		SchoolLevel.elementary to "02",
+		SchoolLevel.middle to "03",
+		SchoolLevel.high to "04"
+	)
+	
 	/**
 	 * v2 url for request such as [findUser], [validatePassword], [getUserGroup], [getUserInfo].
 	 *
 	 * Normally form of `https://???hcs.eduro.go.kr/v2` where `???` comes the code of Ministry of Education, i.e.,
 	 * 'sen', 'dge'.
 	 */
-	val requestUrl2: URL get() = URL("https://$requestUrlBody/v2")
+	val requestUrlV2: URL get() = URL("https://$requestUrlBody/v2")
 	
 	/**
 	 * The base url for request such as [registerSurvey], [getClassList].
@@ -300,13 +323,19 @@ public data class UserInfo(
 		}
 	
 	
-	public val instituteStub: InstituteInfo = InstituteInfo(
-		name = instituteName,
-		englishName = instituteName,
-		code = instituteCode,
-		address = "???",
-		requestUrlBody = instituteRequestUrlBody
-	)
+	private var mInstituteStub: InstituteInfo? = null
+	public val instituteStub: InstituteInfo get() = mInstituteStub ?: run {
+		val stub = InstituteInfo(
+			type = instituteType,
+			name = instituteName,
+			englishName = instituteName,
+			code = instituteCode,
+			address = "???",
+			requestUrlBody = instituteRequestUrlBody
+		)
+		mInstituteStub = stub
+		stub
+	}
 	
 	// see getInstituteData.kt
 	public val instituteType: InstituteType = when { // TODO: needs verification

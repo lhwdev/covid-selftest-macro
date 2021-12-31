@@ -13,7 +13,7 @@ import com.lhwdev.selfTestMacro.toJsonLoose
 
 
 public suspend fun Session.getUserInfo(institute: InstituteInfo, user: User): UserInfo = fetch(
-	institute.requestUrl2["getUserInfo"],
+	institute.requestUrlV2["getUserInfo"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
 		"Authorization" to user.token.token

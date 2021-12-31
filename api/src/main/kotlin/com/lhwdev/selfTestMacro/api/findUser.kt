@@ -20,7 +20,7 @@ public suspend fun Session.findUser(
 	loginType: LoginType,
 	pageNumber: Int? = null
 ): UsersIdentifier = fetch(
-	institute.requestUrl2["findUser"],
+	institute.requestUrlV2["findUser"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader,
 	body = Bodies.jsonObject {

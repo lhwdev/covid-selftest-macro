@@ -107,7 +107,7 @@ public suspend fun Session.validatePassword(
 	}
 	
 	val result = fetch(
-		institute.requestUrl2["validatePassword"],
+		institute.requestUrlV2["validatePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf(
 			"Authorization" to token.token,

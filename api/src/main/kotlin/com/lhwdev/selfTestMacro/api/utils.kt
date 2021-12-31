@@ -37,3 +37,23 @@ public object IntAsStringSerializer : KSerializer<Int> {
 		encoder.encodeString(value.toString())
 	}
 }
+
+
+public open class PrimitiveMappingSerializer<Data, Raw>(
+	private val rawSerializer: KSerializer<Raw>,
+	serialName: String,
+	primitiveKind: PrimitiveKind,
+	private vararg val map: Pair<Data, Raw>
+) : KSerializer<Data> {
+	override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(serialName = serialName, kind = primitiveKind)
+	
+	override fun deserialize(decoder: Decoder): Data {
+		val raw = rawSerializer.deserialize(decoder)
+		return map.find { it.second == raw }!!.first
+	}
+	
+	override fun serialize(encoder: Encoder, value: Data) {
+		val raw = map.find { it.first == value }!!.second
+		rawSerializer.serialize(encoder, raw)
+	}
+}

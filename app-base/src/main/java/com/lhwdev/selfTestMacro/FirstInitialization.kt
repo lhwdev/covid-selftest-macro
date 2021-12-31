@@ -25,7 +25,8 @@ object FirstInitialization {
 		flavor: String,
 		debug: Boolean,
 		appIconForeground: Int,
-		appIcon: Int
+		appIcon: Int,
+		mainActivity: Class<*>
 	) {
 		AppInitializationInfo.versionCode = versionCode
 		AppInitializationInfo.versionName = versionName
@@ -35,6 +36,7 @@ object FirstInitialization {
 		AppInitializationInfo.appIconForeground = appIconForeground
 		AppInitializationInfo.appIcon = appIcon
 		AppInitializationInfo.debugLogDirectory = getExternalFilesDir(null)!!
+		AppInitializationInfo.mainActivity = mainActivity
 		
 		val pref = preferenceState
 		

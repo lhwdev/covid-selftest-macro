@@ -22,6 +22,9 @@ val DefaultContentColor: Color
 val MediumContentColor: Color
 	@Composable get() = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
 
+val DisabledContentColor: Color
+	@Composable get() = LocalContentColor.current.copy(alpha = ContentAlpha.disabled)
+
 
 @Suppress("ComposableNaming")
 @Composable

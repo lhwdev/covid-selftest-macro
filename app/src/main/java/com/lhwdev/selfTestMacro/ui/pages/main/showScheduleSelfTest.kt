@@ -142,20 +142,24 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 					// 	hour.coerceAtLeast(0), minute, false
 					// )
 					// dialog.show()
-					navigator.showDialogAsync {
+					navigator.showDialogAsync { dismiss ->
 						TimePickerDialog(
 							initialHour = if(hour == -1) 7 else hour,
 							initialMinute = minute,
-							dismiss = { h, m -> setTime(h, m) }
+							setTime = { h, m ->
+								setTime(h, m)
+								dismiss()
+							},
+							cancel = dismiss
 						)
 					}
 				}
 			) {
 				if(hour != -1) {
 					val text = buildAnnotatedString {
-						append(if(hour == 0) "12" else "$hour")
+						append(if(hour == 0) "12" else "$hour".padStart(2, padChar = '0'))
 						withStyle(SpanStyle(color = MediumContentColor)) { append(":") }
-						append("$minute")
+						append("$minute".padStart(2, padChar = '0'))
 					}
 					Text(text)
 				}

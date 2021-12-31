@@ -22,7 +22,8 @@ class MainApplication : Application() {
 				flavor = BuildConfig.FLAVOR,
 				debug = BuildConfig.DEBUG,
 				appIconForeground = R.mipmap.ic_launcher_foreground,
-				appIcon = R.mipmap.ic_launcher
+				appIcon = R.mipmap.ic_launcher,
+				mainActivity = MainApplication::class.java
 			)
 		}
 		

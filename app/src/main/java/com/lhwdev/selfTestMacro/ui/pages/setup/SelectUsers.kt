@@ -15,6 +15,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
@@ -157,7 +158,25 @@ private fun ColumnScope.WizardSelectUsersContent(
 		}
 	}
 	
-	val addSameInstituteText = when(model.instituteInfo?.type) {
+	val commonInstitute = remember(model.userList) {
+		var institute: InstituteInfo? = null
+		
+		for(user in model.userList) {
+			val last = institute
+			val now = user.info.instituteStub
+			
+			when {
+				last == null -> institute = now
+				last.code == user.info.instituteCode -> continue
+				else -> {
+					institute = null
+					break
+				}
+			}
+		}
+		institute
+	}
+	val addSameInstituteText = when(commonInstitute?.type) {
 		null -> null
 		InstituteType.school -> "같은 학교의 학생 추가"
 		InstituteType.university -> "같은 학교의 수강생 추가"

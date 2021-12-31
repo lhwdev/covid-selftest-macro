@@ -1,5 +1,7 @@
 package com.lhwdev.selfTestMacro
 
+import android.content.Context
+import android.content.Intent
 import androidx.annotation.DrawableRes
 import com.lhwdev.github.repo.Repository
 import com.lhwdev.github.repo.branch
@@ -14,6 +16,7 @@ object AppInitializationInfo {
 	lateinit var githubRepo: Repository
 	lateinit var flavor: String
 	lateinit var debugLogDirectory: File
+	lateinit var mainActivity: Class<*>
 	var appIconForeground: Int = 0
 	var appIcon: Int = 0
 	var debug: Boolean = false
@@ -28,6 +31,8 @@ object App {
 	val debug: Boolean = AppInitializationInfo.debug
 	
 	val debugLogDirectory: File = AppInitializationInfo.debugLogDirectory
+	
+	fun mainActivityIntent(context: Context): Intent = Intent(context, AppInitializationInfo.mainActivity)
 	
 	@DrawableRes
 	val appIconForeground: Int = AppInitializationInfo.appIconForeground

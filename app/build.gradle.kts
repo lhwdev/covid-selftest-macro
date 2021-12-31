@@ -54,7 +54,7 @@ android {
 	}
 	
 	
-	flavorDimensions("lifecycle")
+	flavorDimensions += listOf("lifecycle")
 	
 	productFlavors {
 		register("stable") {

@@ -14,6 +14,8 @@ import com.lhwdev.selfTestMacro.debug.DebugContext
 import com.lhwdev.selfTestMacro.debug.debugManager
 import com.lhwdev.selfTestMacro.debug.isDebugEnabled
 import com.lhwdev.selfTestMacro.ui.SelfTestManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
 
@@ -38,7 +40,8 @@ class AlarmReceiver : BroadcastReceiver() {
 				),
 				manager = context.debugManager,
 				contextName = "AlarmReceiver"
-			)
+			),
+			defaultCoroutineScope = CoroutineScope(Dispatchers.Default)
 		)
 		
 		runBlocking { // TODO: is this okay?

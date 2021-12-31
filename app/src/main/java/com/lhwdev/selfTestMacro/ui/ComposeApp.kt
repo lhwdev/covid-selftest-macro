@@ -3,7 +3,6 @@
 package com.lhwdev.selfTestMacro.ui
 
 import android.app.Activity
-import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
@@ -11,11 +10,15 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.lhwdev.selfTestMacro.AlarmReceiver
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
@@ -31,18 +34,19 @@ import com.lhwdev.selfTestMacro.repository.SelfTestManagerImpl
 import com.lhwdev.selfTestMacro.ui.pages.splash.Splash
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 
 
 fun SelfTestManager(
 	context: Context,
 	database: DatabaseManager,
-	debugContext: DebugContext
+	debugContext: DebugContext,
+	defaultCoroutineScope: CoroutineScope
 ): SelfTestManager = SelfTestManagerImpl(
 	context = context,
 	database = database,
-	newAlarmIntent = { Intent(it, AlarmManager::class.java) },
-	debugContext = debugContext
+	newAlarmIntent = { Intent(it, AlarmReceiver::class.java) },
+	debugContext = debugContext,
+	defaultCoroutineScope = defaultCoroutineScope
 )
 
 
@@ -67,7 +71,8 @@ fun ComposeApp(activity: Activity) {
 		SelfTestManager(
 			context = context.applicationContext,
 			database = pref.db,
-			debugContext = debugContext
+			debugContext = debugContext,
+			defaultCoroutineScope = CoroutineScope(Dispatchers.Default)
 		)
 	}
 	selfTestManager.context = context.applicationContext
@@ -80,14 +85,6 @@ fun ComposeApp(activity: Activity) {
 		) { Splash() }
 		
 		navigator
-	}
-	
-	LaunchedEffect(pref) {
-		snapshotFlow {
-			pref.db.testGroups
-		}.collect {
-			selfTestManager.onScheduleUpdated()
-		}
 	}
 	
 	AppTheme {

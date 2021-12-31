@@ -12,15 +12,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.toJson
 import com.lhwdev.selfTestMacro.App
-import com.lhwdev.selfTestMacro.BuildConfig
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.openWebsite
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.LocalPreference
-import com.lhwdev.selfTestMacro.ui.MediumContentColor
-import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.LinkedText
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.pages.intro.showPrivacyPolicy
@@ -74,11 +70,22 @@ fun Info(): Unit = MaterialTheme(
 				Text("자가진단 매크로", style = MaterialTheme.typography.h3)
 				Spacer(Modifier.height(12.dp))
 				
-				Text(
-					BuildConfig.VERSION_NAME,
-					style = MaterialTheme.typography.h5,
-					color = MediumContentColor
-				)
+				Row(
+					verticalAlignment = Alignment.CenterVertically,
+					horizontalArrangement = Arrangement.spacedBy(8.dp)
+				) {
+					Text(
+						App.version.toString(),
+						style = MaterialTheme.typography.h5,
+						color = MediumContentColor
+					)
+					
+					Text(
+						App.flavor,
+						style = MaterialTheme.typography.h6,
+						color = DisabledContentColor
+					)
+				}
 				
 				Spacer(Modifier.weight(1f))
 				

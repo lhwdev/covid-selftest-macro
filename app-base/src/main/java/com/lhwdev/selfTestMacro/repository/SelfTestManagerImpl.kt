@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.material.ListItem
 import androidx.compose.material.Text
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.app.NotificationManagerCompat
@@ -24,7 +25,11 @@ import com.lhwdev.selfTestMacro.debug.*
 import com.lhwdev.selfTestMacro.ui.Color
 import com.lhwdev.selfTestMacro.ui.UiContext
 import com.vanpra.composematerialdialogs.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import kotlin.random.Random
 
@@ -181,8 +186,22 @@ class SelfTestManagerImpl(
 	override var context: Context,
 	override val debugContext: DebugContext,
 	private val database: DatabaseManager,
-	val newAlarmIntent: (Context) -> Intent
+	val newAlarmIntent: (Context) -> Intent,
+	val defaultCoroutineScope: CoroutineScope
 ) : SelfTestManager {
+	init {
+		defaultCoroutineScope.launch {
+			val pref = withContext(Dispatchers.Main) { context.preferenceState }
+			
+			snapshotFlow {
+				pref.db.testGroups
+			}.collect {
+				onScheduleUpdated()
+			}
+		}
+	}
+	
+	
 	/// Error handling
 	private suspend fun <R> handleError(
 		operationName: String,
@@ -756,7 +775,7 @@ class SelfTestManagerImpl(
 					SelfTestFailedNotification.notificationOf(
 						context, target = target, database = database,
 						message = when {
-							size == 1 -> "자세한 정보는 이 알림을 눌러주세요."
+							size == 1 -> "자세한 정보는 이 알림을 눌러주세요." // TODO: implement this message
 							size == count -> "그룹에 있는 사용자의 자가진단을 모두 실패했습니다."
 							else -> "그룹에 있는 ${size}명 중에 ${size - count}명의 자가진단을 하지 못했습니다."
 						}
@@ -827,9 +846,33 @@ class SelfTestManagerImpl(
 	
 	private fun setSchedule(alarmManager: AlarmManager, target: DbTestGroup) {
 		val time = target.nextTime()
+		val intent = intentCache(id = target.id)
+		
 		
 		if(time != -1L) {
-			alarmManager.setExact(AlarmManager.RTC_WAKEUP, time, intentCache(id = target.id))
+			if(Build.VERSION.SDK_INT < 21) {
+				alarmManager.setExact(
+					AlarmManager.RTC_WAKEUP,
+					time,
+					intent
+				)
+			} else {
+				alarmManager.setAlarmClock(
+					AlarmManager.AlarmClockInfo(
+						time,
+						PendingIntent.getActivity(
+							context,
+							0,
+							App.mainActivityIntent(context).also {
+								it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+							},
+							PendingIntent.FLAG_ONE_SHOT or (if(Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_IMMUTABLE else 0)
+						)
+					),
+					intent
+				)
+			}
+			// alarmManager.setExact(AlarmManager.RTC_WAKEUP, time, )
 		}
 	}
 	
@@ -840,10 +883,13 @@ class SelfTestManagerImpl(
 		alarmManager.cancel(intentCache(target.id))
 		
 		
-		// change testGroups -> preferenceState.cache updated -> state update -> snapshot mutation -> snapshotFlow(see ComposeApp.kt) -> call onScheduleUpdated
+		// change testGroups -> preferenceState.cache updated -> snapshotFlow(see above) -> call onScheduleUpdated
 		disableOnScheduleUpdated = true
-		database.testGroups = testGroups.copy(groups = testGroups.groups.replaced(from = target, to = new))
-		disableOnScheduleUpdated = false
+		try {
+			database.testGroups = testGroups.copy(groups = testGroups.groups.replaced(from = target, to = new))
+		} finally {
+			disableOnScheduleUpdated = false
+		}
 		
 		setSchedule(alarmManager, new)
 	}

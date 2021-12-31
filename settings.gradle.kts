@@ -11,7 +11,7 @@ pluginManagement {
 	resolutionStrategy.eachPlugin {
 		when(requested.id.id) {
 			"com.android.application", "com.android.library" ->
-				useModule("com.android.tools.build:gradle:7.0.0")
+				useModule("com.android.tools.build:gradle:7.0.1")
 			
 			else -> Unit
 		}

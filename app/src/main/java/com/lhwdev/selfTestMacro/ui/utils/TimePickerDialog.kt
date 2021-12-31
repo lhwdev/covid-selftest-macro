@@ -23,8 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.LocalWindowInsets
-import com.vanpra.composematerialdialogs.FloatingMaterialDialogScope
-import com.vanpra.composematerialdialogs.Title
+import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.drop
 
@@ -95,7 +94,8 @@ private fun DefaultNumberPicker(value: Int, setValue: (Int) -> Unit, range: IntR
 fun FloatingMaterialDialogScope.TimePickerDialog(
 	initialHour: Int,
 	initialMinute: Int,
-	dismiss: (hour: Int, minute: Int) -> Unit
+	setTime: (hour: Int, minute: Int) -> Unit,
+	cancel: () -> Unit
 ) {
 	var hour by remember { mutableStateOf(initialHour) }
 	var minute by remember { mutableStateOf(initialMinute) }
@@ -118,5 +118,10 @@ fun FloatingMaterialDialogScope.TimePickerDialog(
 			range = 0..59
 		)
 		Text("분", style = MaterialTheme.typography.h5)
+	}
+	
+	Buttons {
+		PositiveButton(onClick = { setTime(hour, minute) }) { Text("확인") }
+		NegativeButton(onClick = cancel) { Text("취소") }
 	}
 }

@@ -1,7 +1,7 @@
 plugins {
 	val kotlinVersion = "1.5.31" // compose + serialization
 	
-	id("com.android.application") version "4.2.2" apply false
+	id("com.android.application") version "7.0.1" apply false
 	
 	kotlin("multiplatform") version kotlinVersion apply false
 	kotlin("jvm") version kotlinVersion apply false

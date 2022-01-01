@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
@@ -54,7 +53,7 @@ fun Splash() {
 	
 	Surface(color = MaterialTheme.colors.primarySurface) {
 		AutoSystemUi(
-			onScreenMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
+			onScreenMode = OnScreenSystemUiMode.Immersive()
 		) { scrims ->
 			scrims.statusBar()
 			

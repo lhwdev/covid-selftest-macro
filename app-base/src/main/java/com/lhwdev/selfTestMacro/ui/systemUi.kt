@@ -45,16 +45,15 @@ fun ProvideAppliedUiPaddings(paddings: AppliedUiPaddings, content: @Composable (
 }
 
 
-val ScrimDarkColor = Color.Black.copy(alpha = 0.1f)
-val ScrimLightColor = Color.White.copy(alpha = 0.4f)
-val ScrimNavLightColor = Color.White.copy(alpha = 0.7f)
+val ScrimNavSurfaceColor
+	@Composable get() = MaterialTheme.colors.surface.copy(alpha = 0.7f)
 
 sealed interface SystemUiMode {
 	object Default : SystemUiMode
 }
 
 sealed interface OnScreenSystemUiMode : SystemUiMode {
-	class Immersive(val scrimColor: Color = ScrimDarkColor) : OnScreenSystemUiMode
+	class Immersive(val scrimColor: Color = Color.Transparent) : OnScreenSystemUiMode
 	class Opaque(val scrimColor: Color = Color.Black) : OnScreenSystemUiMode
 }
 
@@ -73,7 +72,8 @@ private fun Color.isDarkColor(): Boolean = luminance() < 0.5f
 fun rememberPreviewUiController(): SystemUiController = LocalPreviewUiController.current
 
 
-val isSystemUiDarkContentAvailable: Boolean = Build.VERSION.SDK_INT >= 23
+// @ChecksSdkIntAtLeast(api = 23)
+// val isSystemUiDarkContentAvailable: Boolean = Build.VERSION.SDK_INT >= 23
 
 
 @Composable

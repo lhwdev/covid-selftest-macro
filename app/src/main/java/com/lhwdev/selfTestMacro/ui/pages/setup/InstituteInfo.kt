@@ -12,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -46,7 +45,7 @@ internal fun WizardInstituteInfo(
 	
 	AutoSystemUi(
 		enabled = wizard.isCurrent,
-		navigationBarMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
+		navigationBarMode = OnScreenSystemUiMode.Immersive()
 	) { scrims ->
 		Scaffold(
 			topBar = {

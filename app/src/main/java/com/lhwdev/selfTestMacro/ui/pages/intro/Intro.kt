@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,7 +33,7 @@ private fun Intro() {
 	val navigator = LocalNavigator
 	
 	Surface(color = MaterialTheme.colors.primary) {
-		AutoSystemUi(onScreenMode = OnScreenSystemUiMode.Immersive(Color.Transparent)) { scrims ->
+		AutoSystemUi(onScreenMode = OnScreenSystemUiMode.Immersive()) { scrims ->
 			scrims.statusBar()
 			
 			Column(Modifier.weight(1f).padding(32.dp)) {

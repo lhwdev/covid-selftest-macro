@@ -227,7 +227,7 @@ private fun WizardStudentInfo(
 	Surface(color = if(colors.isLight) Color(0xffb4fce3) else colors.surface) {
 		AutoSystemUi(
 			enabled = wizard.isCurrent,
-			onScreenMode = OnScreenSystemUiMode.Immersive(scrimColor = Color.Transparent)
+			onScreenMode = OnScreenSystemUiMode.Immersive()
 		) { scrims ->
 			scrims.statusBar()
 			if(parameters.endRoute != null) IconOnlyTopAppBar(

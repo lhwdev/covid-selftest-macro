@@ -76,7 +76,7 @@ fun OpenSources() {
 	}
 	
 	AutoSystemUi(
-		navigationBarMode = OnScreenSystemUiMode.Immersive(scrimColor = ScrimNavLightColor)
+		navigationBarMode = OnScreenSystemUiMode.Immersive(ScrimNavSurfaceColor)
 	) { scrims ->
 		Scaffold(
 			topBar = {

@@ -9,19 +9,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.lhwdev.fetch.getText
 import com.lhwdev.github.repo.GithubContentType
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.navigation.Navigator
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
-import com.lhwdev.selfTestMacro.ui.ScrimNavLightColor
-import com.lhwdev.selfTestMacro.ui.TopAppBar
+import com.lhwdev.selfTestMacro.ui.*
 import com.vanpra.composematerialdialogs.showFullDialogAsync
 
 
@@ -31,7 +31,7 @@ private const val sPrivacyPolicyLink = "https://github.com/lhwdev/covid-selftest
 
 fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
 	AutoSystemUi(
-		navigationBarMode = OnScreenSystemUiMode.Immersive(ScrimNavLightColor)
+		navigationBarMode = OnScreenSystemUiMode.Immersive(ScrimNavSurfaceColor)
 	) { scrims ->
 		Scaffold(
 			topBar = { TopAppBar(title = { Text("개인정보 처리 방침") }, statusBarScrim = scrims.statusBar) }
@@ -45,12 +45,31 @@ fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
 			
 			Box(Modifier.fillMaxSize()) {
 				if(data != null) Column(Modifier.verticalScroll(rememberScrollState()).fillMaxSize()) {
+					val uriHandler = LocalUriHandler.current
+					TextButton(onClick = { uriHandler.openUri(sPrivacyPolicyLink) }) { Text("웹에서 보기") }
+					
+					val foreground = DefaultContentColor
+					
 					AndroidView(
 						factory = {
 							WebView(it).apply {
+								setBackgroundColor(0x00000000)
+								
+								// eew, dirty
 								loadDataWithBaseURL(
 									sPrivacyPolicyLink,
-									"<html><body>$data</body></html>",
+									"""
+										<html>
+										<head>
+											<style>
+												body {
+													color: #${foreground.toArgb().toString().padStart(8, '0')};
+												}
+											</style>
+										</head>
+										<body>$data</body>
+										</html>
+									""",
 									"text/html",
 									"utf-8",
 									sPrivacyPolicyLink

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
@@ -15,10 +16,17 @@ import com.lhwdev.selfTestMacro.navigation.copy
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.PreviewBase
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
 
 
 val IntroRoute: Route = Route("Intro") { Intro() }
+
+@Preview
+@Composable
+fun IntroPreview() {
+	PreviewBase { Intro() }
+}
 
 
 @Composable

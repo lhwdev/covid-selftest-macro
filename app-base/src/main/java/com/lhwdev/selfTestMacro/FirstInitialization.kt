@@ -10,6 +10,7 @@ import com.lhwdev.github.sGithubInstanceDefault
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.navigation.sDebugNavigation
 import com.lhwdev.selfTestMacro.ui.utils.sDebugAnimateListAsComposable
+import java.io.File
 import java.net.URL
 import javax.net.ssl.SSLHandshakeException
 
@@ -33,9 +34,13 @@ object FirstInitialization {
 		AppInitializationInfo.githubRepo = Repository(sGithubInstanceDefault, "lhwdev", "covid-selftest-macro")
 		AppInitializationInfo.flavor = flavor
 		AppInitializationInfo.debug = debug
+		
 		AppInitializationInfo.appIconForeground = appIconForeground
 		AppInitializationInfo.appIcon = appIcon
-		AppInitializationInfo.debugLogDirectory = getExternalFilesDir(null)!!
+		
+		// As it errors in inspection mode
+		AppInitializationInfo.debugLogDirectory = getExternalFilesDir(null) ?: File("")
+		
 		AppInitializationInfo.mainActivity = mainActivity
 		
 		val pref = preferenceState

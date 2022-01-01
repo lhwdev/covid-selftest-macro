@@ -62,6 +62,7 @@ data class Version(
 data class PreRelease(val name: Kind, val version: Int) : Comparable<PreRelease> {
 	enum class Kind { // See https://en.wikipedia.org/wiki/Software_release_life_cycle.
 		// pre-alpha
+		preview, // Preview: from Compose inspection mode
 		build, // Build: just nothing
 		dev, // Dev: just nothing with different name
 		test, // Test: just nothing but for test

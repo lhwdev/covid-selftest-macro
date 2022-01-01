@@ -17,7 +17,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
@@ -45,7 +44,6 @@ import kotlinx.coroutines.launch
 val MainRoute: Route = Route("Main") { Main() }
 
 
-@Preview
 @Composable
 private fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 	val navigator = LocalNavigator

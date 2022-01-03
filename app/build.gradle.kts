@@ -15,12 +15,12 @@ licensee {
 	// allow("MIT")
 	
 	// see https://github.com/airbnb/lottie-android/issues/1865
-	allowDependency(groupId = "com.airbnb.android", artifactId = "lottie", version = "4.1.0")
-	allowDependency(groupId = "com.airbnb.android", artifactId = "lottie-compose", version = "4.1.0")
+	allowDependency(groupId = "com.airbnb.android", artifactId = "lottie", version = "4.2.2")
+	allowDependency(groupId = "com.airbnb.android", artifactId = "lottie-compose", version = "4.2.2")
 }
 
 tasks.register<Copy>("updateLicenses") {
-	dependsOn("licenseeRelease")
+	dependsOn("licenseeStableRelease")
 	from(File(project.buildDir, "reports/licensee/release/artifacts.json"))
 	into(project.file("src/main/res/raw"))
 	rename { "open_source_license.json" }

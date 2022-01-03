@@ -68,6 +68,14 @@ fun PreferenceHolder.preferenceInt(
 	write = { pref, value -> pref.edit { putInt(key, value) } }
 )
 
+fun PreferenceHolder.preferenceLong(
+	key: String, defaultValue: Long
+): MutableState<Long> = preferenceState(
+	key = key,
+	read = { pref -> pref.getLong(key, defaultValue) },
+	write = { pref, value -> pref.edit { putLong(key, value) } }
+)
+
 fun PreferenceHolder.preferenceBoolean(
 	key: String, defaultValue: Boolean
 ): MutableState<Boolean> = preferenceState(

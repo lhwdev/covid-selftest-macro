@@ -2,19 +2,20 @@ package com.lhwdev.selfTestMacro.repository
 
 import com.lhwdev.selfTestMacro.utils.DynamicSerializable
 import kotlinx.serialization.Serializable
-import kotlin.random.Random
 
 
 @Serializable
 class TaskItem<T : Any>(
 	val task: DynamicSerializable<T>,
 	val timeMillis: Long,
-	val taskId: Long = Random.nextLong()
+	val taskId: Long
 )
 
 
 interface TaskScheduler<T : Any> {
-	fun queueTasks(tasks: List<TaskItem<T>>)
+	val allTasks: List<TaskItem<T>>
 	
-	fun cancelTask(id: Long)
+	fun updateTasks(tasks: List<TaskItem<T>>)
+	
+	fun nextTaskId(): Long
 }

@@ -1,12 +1,12 @@
 package com.lhwdev.selfTestMacro.ui.pages.info
 
+import androidx.annotation.RawRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,41 +25,65 @@ import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 
 
 @Serializable
-data class LicenseItem(
+class LicenseItem(
 	val groupId: String,
 	val artifactId: String,
 	val version: String,
-	val spdxLicenses: List<SpdxLicense>? = null,
-	val unknownLicenses: List<UnknownLicense>? = null,
-	val scm: ScmItem
+	val spdxLicenses: List<OpenSourceLicense.SpdxLicense>? = null,
+	val unknownLicenses: List<OpenSourceLicense.UnknownLicense>? = null,
+	val scm: OpenSourceLicense.ScmItem
 )
 
 sealed interface OpenSourceLicense {
 	val name: String
 	val url: String
+	
+	@Serializable
+	class SpdxLicense(
+		val identifier: String,
+		override val name: String,
+		override val url: String
+	) : OpenSourceLicense
+	
+	@Serializable
+	class UnknownLicense(
+		override val name: String,
+		override val url: String
+	) : OpenSourceLicense
+	
+	@Serializable
+	class ScmItem(val url: String)
 }
 
 @Serializable
-data class SpdxLicense(
-	val identifier: String,
-	override val name: String,
-	override val url: String
-) : OpenSourceLicense
+class OpenSourceExtra(val comment: String)
 
-@Serializable
-data class UnknownLicense(
-	override val name: String,
-	override val url: String
-) : OpenSourceLicense
 
-@Serializable
-data class ScmItem(val url: String)
+@OptIn(ExperimentalSerializationApi::class)
+@Composable
+private fun <T> jsonRawResource(
+	@RawRes id: Int,
+	serializer: DeserializationStrategy<T>
+): T? {
+	val context = LocalContext.current
+	return lazyState(defaultValue = null) {
+		val input = context.resources.openRawResource(id)
+		withContext(Dispatchers.IO) {
+			input.use { Json.decodeFromStream(serializer, it) }
+		}
+	}.value
+}
 
 
 @Composable
@@ -67,13 +91,14 @@ fun OpenSources() {
 	val context = LocalContext.current
 	val navigator = LocalNavigator
 	
-	val items by lazyState(defaultValue = null) {
-		val input = context.resources.openRawResource(R.raw.open_source_license)
-		withContext(Dispatchers.IO) {
-			val text = input.reader().readText()
-			Json.decodeFromString(ListSerializer(LicenseItem.serializer()), text)
-		}
-	}
+	val items = jsonRawResource(
+		R.raw.open_source_license,
+		ListSerializer(LicenseItem.serializer())
+	)
+	val extras = jsonRawResource(
+		R.raw.open_source_extra,
+		MapSerializer(String.serializer(), OpenSourceExtra.serializer())
+	)
 	
 	AutoSystemUi(
 		navigationBarMode = OnScreenSystemUiMode.Immersive(ScrimNavSurfaceColor)
@@ -92,8 +117,8 @@ fun OpenSources() {
 				)
 			}
 		) {
-			if(items != null) Box(Modifier.fillMaxSize()) {
-				OpenSourcesContent(items!!, scrims.navigationBarSpacer)
+			if(items != null && extras != null) Box(Modifier.fillMaxSize()) {
+				OpenSourcesContent(items!!, extras!!, scrims.navigationBarSpacer)
 				
 				Box(Modifier.align(Alignment.BottomCenter)) {
 					scrims.navigationBar()
@@ -117,6 +142,7 @@ fun OpenSources() {
 @Composable
 fun OpenSourcesContent(
 	itemList: List<LicenseItem>,
+	extras: Map<String, OpenSourceExtra>,
 	navigationBarSpacer: @Composable () -> Unit
 ) {
 	val navigator = LocalNavigator
@@ -152,7 +178,7 @@ fun OpenSourcesContent(
 				modifier = Modifier.clickable {
 					navigator.pushRoute {
 						if(items.size == 1) OpenSourcesDetail(items[0])
-						else OpenSourcesList(groupId, items)
+						else OpenSourcesList(groupId, items, extras[groupId])
 					}
 				}
 			) {
@@ -168,7 +194,7 @@ fun OpenSourcesContent(
 
 
 @Composable
-fun OpenSourcesList(groupId: String, items: List<LicenseItem>) {
+fun OpenSourcesList(groupId: String, items: List<LicenseItem>, extra: OpenSourceExtra?) {
 	val navigator = LocalNavigator
 	
 	AutoSystemUi { scrims ->
@@ -204,6 +230,11 @@ fun OpenSourcesList(groupId: String, items: List<LicenseItem>) {
 								navigator.pushRoute { OpenSourcesDetail(item) }
 							}
 						) { Text(text) }
+					}
+					
+					if(extra != null) item {
+						Spacer(Modifier.height(30.dp))
+						Text(extra.comment, modifier = Modifier.padding(16.dp))
 					}
 				}
 				

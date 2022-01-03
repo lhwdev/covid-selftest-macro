@@ -7,6 +7,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -67,24 +68,19 @@ fun Info(): Unit = MaterialTheme(
 			) {
 				Spacer(Modifier.weight(4f))
 				
-				Text("자가진단 매크로", style = MaterialTheme.typography.h3)
+				Text(
+					"자가진단 매크로",
+					style = MaterialTheme.typography.h3,
+					color = with(MaterialTheme.colors) { if(isLight) onPrimary else lerp(onSurface, primary, .2f) }
+				)
 				Spacer(Modifier.height(12.dp))
 				
 				Row(
 					verticalAlignment = Alignment.CenterVertically,
 					horizontalArrangement = Arrangement.spacedBy(8.dp)
 				) {
-					Text(
-						App.version.toString(),
-						style = MaterialTheme.typography.h5,
-						color = MediumContentColor
-					)
-					
-					Text(
-						App.flavor,
-						style = MaterialTheme.typography.h6,
-						color = DisabledContentColor
-					)
+					Text(App.version.toString(), style = MaterialTheme.typography.h5, color = MediumContentColor)
+					Text(App.flavor, style = MaterialTheme.typography.h6, color = MediumContentColor)
 				}
 				
 				Spacer(Modifier.weight(1f))

@@ -1,6 +1,7 @@
 package com.lhwdev.selfTestMacro.ui.pages.setup
 
 import android.content.Context
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -21,6 +22,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.insets.LocalWindowInsets
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.PasswordWrong
 import com.lhwdev.selfTestMacro.api.UsersToken
@@ -31,10 +33,7 @@ import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.MasterUser
 import com.lhwdev.selfTestMacro.repository.SelfTestManager
 import com.lhwdev.selfTestMacro.repository.WizardUser
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.EmptyRestartable
-import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
-import com.lhwdev.selfTestMacro.ui.isImeVisible
+import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.vanpra.composematerialdialogs.*
@@ -224,18 +223,12 @@ private fun WizardStudentInfo(
 	}
 	
 	
-	Surface(color = if(colors.isLight) Color(0xffb4fce3) else colors.surface) {
+	val blendSurface = if(colors.isLight) Color(0xffb4fce3) else colors.surface
+	Surface(color = blendSurface) {
 		AutoSystemUi(
 			enabled = wizard.isCurrent,
 			onScreenMode = OnScreenSystemUiMode.Immersive()
 		) { scrims ->
-			scrims.statusBar()
-			if(parameters.endRoute != null) IconOnlyTopAppBar(
-				navigationIcon = painterResource(R.drawable.ic_clear_24),
-				contentDescription = "닫기",
-				onClick = parameters.endRoute
-			) else Spacer(Modifier.height(AppBarHeight))
-			
 			val addingSameInstituteUser = model.addingSameInstituteUser
 			
 			WizardCommon(
@@ -271,82 +264,113 @@ private fun WizardStudentInfo(
 				modifier = Modifier.weight(1f)
 			) {
 				Column(
-					modifier = Modifier
-						.padding(horizontal = 12.dp)
-						.verticalScroll(rememberScrollState())
+					modifier = Modifier.verticalScroll(rememberScrollState())
 				) {
 					val focusManager = LocalFocusManager.current
 					
 					// header
-					Column(
-						modifier = Modifier
-							.padding(28.dp)
-							.fillMaxWidth(),
-						horizontalAlignment = Alignment.CenterHorizontally
+					AnimatedContent(
+						targetState = LocalWindowInsets.current.ime.isVisible
 					) {
-						Icon(
-							painterResource(R.drawable.ic_school_24),
-							contentDescription = null, // not that important
-							tint = Color.Black,
-							modifier = Modifier
-								.padding(12.dp)
-								.size(72.dp)
-						)
-						
-						Text(
-							"학생 정보 입력",
-							style = MaterialTheme.typography.h4,
-							modifier = Modifier.padding(8.dp)
-						)
-						
-						Text(
-							model.instituteInfo?.institute?.name ?: "학교",
-							style = MaterialTheme.typography.h6,
-							color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
-						)
+						if(it) {
+							TopAppBar(
+								title = { Text("학생 정보 입력") },
+								navigationIcon = if(parameters.endRoute == null) null else ({
+									IconButton(onClick = parameters.endRoute) {
+										Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")
+									}
+								}),
+								backgroundColor = MaterialTheme.colors.surface,
+								statusBarScrim = scrims.statusBar
+							)
+						} else Column {
+							if(parameters.endRoute != null) IconOnlyTopAppBar(
+								navigationIcon = painterResource(R.drawable.ic_clear_24),
+								contentDescription = "닫기",
+								onClick = parameters.endRoute
+							) else scrims.statusBar()
+							
+							Spacer(Modifier.height(40.dp))
+							
+							StudentInfoHeader(model)
+						}
 					}
 					
-					OutlinedTextField(
-						model.userName,
-						onValueChange = {
-							model.userName = it
-							notFulfilled = -1
-							complete = false
-						},
-						label = { Text("사용자 이름") },
-						keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-						keyboardActions = KeyboardActions { focusManager.moveFocus(FocusDirection.Down) },
-						isError = notFulfilled == 0,
-						singleLine = true,
-						modifier = commonModifier.focusRequester(nameRef)
-					)
-					
-					val isBirthWrong = model.userBirth.length > 6
-					OutlinedTextField(
-						model.userBirth,
-						onValueChange = {
-							model.userBirth = it
-							notFulfilled = -1
-							complete = false
-						},
-						label = { Text("생년월일(6글자)") },
-						placeholder = {
-							@Suppress("SpellCheckingInspection")
-							(Text("YYMMDD"))
-						},
-						keyboardOptions = KeyboardOptions(
-							imeAction = ImeAction.Go,
-							keyboardType = KeyboardType.Number
-						),
-						isError = isBirthWrong || notFulfilled == 1,
-						keyboardActions = KeyboardActions { submit() },
-						singleLine = true,
-						modifier = commonModifier
-					)
+					Column(Modifier.padding(horizontal = 12.dp)) {
+						OutlinedTextField(
+							model.userName,
+							onValueChange = {
+								model.userName = it
+								notFulfilled = -1
+								complete = false
+							},
+							label = { Text("사용자 이름") },
+							keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+							keyboardActions = KeyboardActions { focusManager.moveFocus(FocusDirection.Down) },
+							isError = notFulfilled == 0,
+							singleLine = true,
+							modifier = commonModifier.focusRequester(nameRef)
+						)
+						
+						val isBirthWrong = model.userBirth.length > 6
+						OutlinedTextField(
+							model.userBirth,
+							onValueChange = {
+								model.userBirth = it
+								notFulfilled = -1
+								complete = false
+							},
+							label = { Text("생년월일(6글자)") },
+							placeholder = {
+								@Suppress("SpellCheckingInspection")
+								(Text("YYMMDD"))
+							},
+							keyboardOptions = KeyboardOptions(
+								imeAction = ImeAction.Go,
+								keyboardType = KeyboardType.Number
+							),
+							isError = isBirthWrong || notFulfilled == 1,
+							keyboardActions = KeyboardActions { submit() },
+							singleLine = true,
+							modifier = commonModifier
+						)
+					}
 				}
 			}
 			
 			scrims.navigationBar()
 		}
+	}
+}
+
+
+@Composable
+private fun StudentInfoHeader(model: SetupModel) {
+	Column(
+		modifier = Modifier
+			.padding(vertical = 28.dp)
+			.fillMaxWidth(),
+		horizontalAlignment = Alignment.CenterHorizontally
+	) {
+		Icon(
+			painterResource(R.drawable.ic_school_24),
+			contentDescription = null, // not that important
+			tint = DefaultContentColor,
+			modifier = Modifier
+				.padding(12.dp)
+				.size(72.dp)
+		)
+		
+		Text(
+			"학생 정보 입력",
+			style = MaterialTheme.typography.h4,
+			modifier = Modifier.padding(8.dp)
+		)
+		
+		Text(
+			model.instituteInfo?.institute?.name ?: "학교",
+			style = MaterialTheme.typography.h6,
+			color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
+		)
 	}
 }

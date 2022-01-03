@@ -112,14 +112,15 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 			if(detail.profile != null) {
 				val image by produceState<ImageBitmap?>(null) {
 					withContext(Dispatchers.Default) {
-						value = try {
-							fetch(detail.profile).rawResponse.use {
-								BitmapFactory.decodeStream(it)
-							}.asImageBitmap()
-						} catch(th: Throwable) {
-							debug.onError("profile picture of ${detail.name} was not loaded", th)
-							null
-						}
+						value =
+							try { // I know, this would be insane, but putting Glide or Coil is overkill for only this
+								fetch(detail.profile).rawResponse.use {
+									BitmapFactory.decodeStream(it)
+								}.asImageBitmap()
+							} catch(th: Throwable) {
+								debug.onError("profile picture of ${detail.name} was not loaded", th)
+								null
+							}
 					}
 				}
 				

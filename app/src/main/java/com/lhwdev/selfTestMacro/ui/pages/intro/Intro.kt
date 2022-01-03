@@ -12,10 +12,7 @@ import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.navigation.copy
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.DefaultContentColor
-import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
-import com.lhwdev.selfTestMacro.ui.PreviewBase
+import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
 
 
@@ -32,7 +29,10 @@ fun IntroPreview() {
 private fun Intro() {
 	val navigator = LocalNavigator
 	
-	Surface(color = MaterialTheme.colors.primary) {
+	Surface(
+		color = MaterialTheme.colors.primarySurfaceColored,
+		contentColor = contentColorFor(MaterialTheme.colors.primary)
+	) {
 		AutoSystemUi(onScreenMode = OnScreenSystemUiMode.Immersive()) { scrims ->
 			scrims.statusBar()
 			

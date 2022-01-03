@@ -6,13 +6,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 
 
+val Colors.primarySurfaceColored: Color
+	@Composable get() = if(isLight) primary else lerp(primary, surface, .7f)
+
 val Colors.primaryActive: Color
 	@Composable get() = primaryActive(1f)
 
 @Composable // friction + -> more primary
 fun Colors.primaryActive(friction: Float): Color = when(val contentColor = LocalContentColor.current) {
 	onSurface, onBackground -> lerp(contentColor, primary, friction)
-	else -> lerp(primary, contentColor, friction * 0.5f + 0.5f) // to ensure legibility
+	else -> lerp(primary, contentColor, friction * .5f + .5f)
 }
 
 val DefaultContentColor: Color

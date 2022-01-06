@@ -4,7 +4,6 @@ package com.lhwdev.selfTestMacro.ui
 
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -18,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.lhwdev.selfTestMacro.AlarmReceiver
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
@@ -44,7 +42,6 @@ fun SelfTestManager(
 ): SelfTestManager = SelfTestManagerImpl(
 	context = context,
 	database = database,
-	newAlarmIntent = { Intent(it, AlarmReceiver::class.java) },
 	debugContext = debugContext,
 	defaultCoroutineScope = defaultCoroutineScope
 )

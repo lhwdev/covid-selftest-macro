@@ -26,6 +26,27 @@ tasks.register<Copy>("updateLicenses") {
 	rename { "open_source_license.json" }
 }
 
+// tasks.named("licenseeStableRelease") {
+// 	val dummyForLicensee = configurations.create("dummyForLicensee") {
+// 		isCanBeConsumed = false
+// 	}
+//	
+// 	// var configuration: Configuration by Delegates.notNull()
+// 	@Suppress("UNCHECKED_CAST")
+// 	val configuration = this::class.memberProperties.find { it.name == "configuration" }!!
+// 		as KMutableProperty1<Task, Configuration>
+// 	configuration.isAccessible = true
+//	
+// 	// fun setClasspath(configuration: Configuration, usage: String)
+// 	val setClasspath = this::class.memberFunctions.find { it.name == "setClasspath" }!!
+//	
+// 	val last = configuration.get(this)
+// 	val files = dependencies.factory(last.resolve())
+// 	last.dependencies
+//	
+// 	setClasspath.call(this, dummyForLicensee, "android-classes")
+// }
+
 android {
 	compileSdk = 31
 	
@@ -128,7 +149,6 @@ dependencies {
 	// implementation("androidx.compose.animation:animation-graphics:$compose")
 	implementation("androidx.compose.material:material:$compose")
 	implementation("androidx.activity:activity-compose:1.4.0")
-	
 	val accompanist = "0.20.3" // also in app-base
 	implementation("com.google.accompanist:accompanist-insets:$accompanist")
 	implementation("com.google.accompanist:accompanist-insets-ui:$accompanist")

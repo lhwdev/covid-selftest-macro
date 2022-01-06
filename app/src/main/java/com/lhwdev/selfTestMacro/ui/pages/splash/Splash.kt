@@ -46,7 +46,10 @@ fun Splash() {
 	
 	
 	val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.splash_animation))
-	val progress = animateLottieCompositionAsState(composition)
+	val progress = animateLottieCompositionAsState(
+		composition = composition,
+		speed = 1.3f
+	)
 	
 	val lifecycle by rememberLifecycle()
 	
@@ -79,7 +82,7 @@ fun Splash() {
 	}
 	
 	LaunchedEffect(Unit) {
-		delay(2000)
+		delay(1300)
 		
 		snapshotFlow { navigator.isTop && lifecycle >= Lifecycle.resumed }
 			.takeWhile { !it }

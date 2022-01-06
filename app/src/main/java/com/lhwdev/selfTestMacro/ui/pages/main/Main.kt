@@ -387,7 +387,6 @@ fun UserListItem(group: DbTestGroup, onClick: () -> Unit) {
 		icon = { Icon(icon, contentDescription = null) },
 		text = { Text(with(pref.db) { target.name }) },
 		secondaryText = if(secondary == null) null else ({ Text(secondary) }),
-		singleLineSecondaryText = false,
 		modifier = Modifier.clickable(onClick = onClick)
 	)
 }

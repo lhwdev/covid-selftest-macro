@@ -271,8 +271,8 @@ private fun WizardStudentInfo(
 					// header
 					AnimatedContent(
 						targetState = LocalWindowInsets.current.ime.isVisible
-					) {
-						if(it) {
+					) { // For legibility: ime may hide TextField
+						if(it) Column {
 							TopAppBar(
 								title = { Text("학생 정보 입력") },
 								navigationIcon = if(parameters.endRoute == null) null else ({
@@ -280,14 +280,16 @@ private fun WizardStudentInfo(
 										Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")
 									}
 								}),
-								backgroundColor = MaterialTheme.colors.surface,
+								backgroundColor = Color.Transparent,
+								elevation = 0.dp,
 								statusBarScrim = scrims.statusBar
 							)
 						} else Column {
 							if(parameters.endRoute != null) IconOnlyTopAppBar(
 								navigationIcon = painterResource(R.drawable.ic_clear_24),
 								contentDescription = "닫기",
-								onClick = parameters.endRoute
+								onClick = parameters.endRoute,
+								statusBarScrim = scrims.statusBar
 							) else scrims.statusBar()
 							
 							Spacer(Modifier.height(40.dp))

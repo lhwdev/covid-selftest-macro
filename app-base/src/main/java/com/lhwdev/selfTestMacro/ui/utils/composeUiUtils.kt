@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
+import com.lhwdev.selfTestMacro.ui.TopAppBar
 import kotlinx.coroutines.launch
 
 
@@ -130,7 +131,8 @@ fun IconOnlyTopAppBar(
 	navigationIcon: Painter,
 	contentDescription: String,
 	onClick: () -> Unit,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
+	statusBarScrim: @Composable () -> Unit = {}
 ) {
 	TopAppBar(
 		title = {},
@@ -140,7 +142,8 @@ fun IconOnlyTopAppBar(
 			}
 		},
 		elevation = 0.dp,
-		backgroundColor = Color.Transparent
+		backgroundColor = Color.Transparent,
+		statusBarScrim = statusBarScrim
 	)
 }
 

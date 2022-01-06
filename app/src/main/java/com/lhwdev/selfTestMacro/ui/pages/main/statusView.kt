@@ -180,8 +180,20 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: 
 		Spacer(Modifier.height(12.dp))
 		
 		var showDetails by remember { mutableStateOf(false) }
-		TextButton(onClick = { showDetails = true }) {
-			Text("자세히 보기")
+		Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+			TextButton(onClick = { showDetails = true }) {
+				Text("자세히 보기")
+			}
+			
+			TextButton(onClick = {
+				if(users.size == 1) {
+					navigator.showChangeAnswerDialog(users[0])
+				} else {
+					
+				}
+			}) {
+				Text("응답 수정")
+			}
 		}
 		
 		if(showDetails) MaterialDialog(onCloseRequest = { showDetails = false }) {

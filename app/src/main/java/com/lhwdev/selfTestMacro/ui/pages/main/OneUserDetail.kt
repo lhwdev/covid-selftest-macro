@@ -14,6 +14,7 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.Answer
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.replacedValue
 import com.lhwdev.selfTestMacro.repository.Status
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
@@ -57,17 +58,19 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 	
 	Buttons {
 		Button(onClick = {
-			navigator.showFullDialogAsync { dismiss ->
-				ChangeAnswer(user, dismiss)
-			}
+			navigator.showChangeAnswerDialog(user)
 		}) { Text("응답 바꾸기") }
 		PositiveButton(onClick = requestClose) { Text("확인") }
 	}
 }
 
 
+fun Navigator.showChangeAnswerDialog(user: DbUser) = showDialogAsync { dismiss ->
+	ChangeAnswer(user, dismiss)
+}
+
 @Composable
-fun FullMaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = AutoSystemUi { scrims ->
+fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = AutoSystemUi { scrims ->
 	val pref = LocalPreference.current
 	
 	Scaffold(

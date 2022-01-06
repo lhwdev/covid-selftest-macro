@@ -1,21 +1,19 @@
 package com.lhwdev.selfTestMacro.repository
 
-import com.lhwdev.selfTestMacro.utils.DynamicSerializable
-import kotlinx.serialization.Serializable
 
-
-@Serializable
-class TaskItem<T : Any>(
-	val task: DynamicSerializable<T>,
-	val timeMillis: Long,
-	val taskId: Long
-)
-
-
-interface TaskScheduler<T : Any> {
-	val allTasks: List<TaskItem<T>>
+interface TaskItem {
+	val timeMillis: Long
 	
-	fun updateTasks(tasks: List<TaskItem<T>>)
+	fun onScheduled(debugData: Any) {
+		println("$this -> $debugData")
+	}
+}
+
+
+interface TaskScheduler<T : TaskItem> {
+	val allTasks: List<T>
+	
+	fun updateTasks(tasks: List<T>)
 	
 	fun nextTaskId(): Long
 }

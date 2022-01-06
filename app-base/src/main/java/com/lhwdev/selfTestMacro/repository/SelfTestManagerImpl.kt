@@ -2,6 +2,7 @@ package com.lhwdev.selfTestMacro.repository
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
@@ -30,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import java.util.Calendar
 import kotlin.random.Random
 
@@ -181,14 +183,30 @@ class HcsAppError(
 }
 
 
+class AlarmBroadcastReceiver : BroadcastReceiver() {
+	override fun onReceive(context: Context, intent: Intent) {
+	}
+}
+
+
 @TraceItems(requiredModifier = java.lang.reflect.Modifier.PUBLIC)
 class SelfTestManagerImpl(
 	override var context: Context,
 	override val debugContext: DebugContext,
 	private val database: DatabaseManager,
-	val newAlarmIntent: (Context) -> Intent,
 	val defaultCoroutineScope: CoroutineScope
 ) : SelfTestManager {
+	@Serializable
+	private class SelfTestTask(val testGroupId: Int, override val timeMillis: Long) : TaskItem
+	
+	private val scheduler = AlarmManagerTaskScheduler<SelfTestTask>(
+		context = context,
+		taskSerializer = SelfTestTask.serializer(),
+		holder = database.holder,
+		scheduleIntent = Intent(context, AlarmBroadcastReceiver::class.java)
+	)
+	
+	
 	init {
 		defaultCoroutineScope.launch {
 			val pref = withContext(Dispatchers.Main) { context.preferenceState }
@@ -792,11 +810,6 @@ class SelfTestManagerImpl(
 	
 	private val random = Random(System.currentTimeMillis())
 	private val lastGroups = database.testGroups.groups
-	private val intentCache = mutableMapOf<Int, PendingIntent>()
-	
-	private fun intentCache(id: Int) = intentCache.getOrPut(id) {
-		context.createScheduleIntent(id, newAlarmIntent)
-	}
 	
 	
 	private fun DbTestGroup.nextTime(): Long {
@@ -821,7 +834,7 @@ class SelfTestManagerImpl(
 				val to = calendarFor(schedule.to).timeInMillis
 				random.nextLong(from = from, until = to + 1)
 			}
-			DbTestSchedule.None -> return -1L
+			DbTestSchedule.None -> error("Oh no")
 		}
 		
 		if(excludeWeekend) {
@@ -845,43 +858,14 @@ class SelfTestManagerImpl(
 	}
 	
 	private fun setSchedule(alarmManager: AlarmManager, target: DbTestGroup) {
-		val time = target.nextTime()
-		val intent = intentCache(id = target.id)
-		
-		
-		if(time != -1L) {
-			if(Build.VERSION.SDK_INT < 21) {
-				alarmManager.setExact(
-					AlarmManager.RTC_WAKEUP,
-					time,
-					intent
-				)
-			} else {
-				alarmManager.setAlarmClock(
-					AlarmManager.AlarmClockInfo(
-						time,
-						PendingIntent.getActivity(
-							context,
-							0,
-							App.mainActivityIntent(context).also {
-								it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-							},
-							PendingIntent.FLAG_ONE_SHOT or (if(Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_IMMUTABLE else 0)
-						)
-					),
-					intent
-				)
-			}
-			// alarmManager.setExact(AlarmManager.RTC_WAKEUP, time, )
-		}
+		return
+		TODO()
 	}
 	
 	override fun updateSchedule(target: DbTestGroup, new: DbTestGroup) {
 		val testGroups = database.testGroups
-		
-		val alarmManager = context.getSystemService<AlarmManager>()!!
-		alarmManager.cancel(intentCache(target.id))
-		
+		return
+		TODO()
 		
 		// change testGroups -> preferenceState.cache updated -> snapshotFlow(see above) -> call onScheduleUpdated
 		disableOnScheduleUpdated = true
@@ -891,7 +875,7 @@ class SelfTestManagerImpl(
 			disableOnScheduleUpdated = false
 		}
 		
-		setSchedule(alarmManager, new)
+		// setSchedule(alarmManager, new)
 	}
 	
 	private var disableOnScheduleUpdated: Boolean = false
@@ -907,8 +891,8 @@ class SelfTestManagerImpl(
 		
 		val alarmManager = context.getSystemService<AlarmManager>()!!
 		for(group in removed) {
-			val intent = intentCache(id = group.id)
-			alarmManager.cancel(intent)
+			println("TODO")
+			// TODO
 		}
 		
 		for(group in added) {

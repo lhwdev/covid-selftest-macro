@@ -287,12 +287,17 @@ public data class UserInfo(
 	
 	@SerialName("isHealthy") val isHealthy: Boolean? = null,
 	
+	@Serializable(with = Rspns1Serializer::class)
+	@SerialName("rspns01") val questionSuspicious: Boolean? = null,
 	
-	@SerialName("rspns01") val rspns01: String? = null,
+	@Serializable(with = Rspns2Serializer::class)
+	@SerialName("rspns02") val questionWaitingResult: Boolean? = null,
 	
-	@SerialName("rspns02") val rspns02: String? = null,
+	@Serializable(with = Rspns34Serializer::class)
+	@SerialName("rspns09") val questionQuarantined: Boolean? = null,
 	
-	@SerialName("rspns09") val rspns03: String? = null,
+	@Serializable(with = Rspns34Serializer::class)
+	@SerialName("rspns08") val questionHouseholdInfected: Boolean? = null,
 	
 	// etc
 	@SerialName("newNoticeCount") val newNoticeCount: Int,
@@ -302,35 +307,34 @@ public data class UserInfo(
 	
 	@SerialName("deviceUuid") val deviceUuid: String? = null
 ) {
-	val questionSuspicious: Boolean? get() = when(rspns01) {
-		"2" -> true
-		"1" -> false
-		else -> null
-	}
+	public object Rspns1Serializer : PrimitiveMappingSerializer<Boolean, String>(
+		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns1",
+		primitiveKind = PrimitiveKind.STRING,
+		false to "1", true to "2"
+	)
 	
-	val questionWaitingResult: Boolean?
-		get() = when(rspns02) {
-			"0" -> true
-			"1" -> false
-			else -> null
-		}
+	public object Rspns2Serializer : PrimitiveMappingSerializer<Boolean, String>(
+		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns2",
+		primitiveKind = PrimitiveKind.STRING,
+		false to "1", true to "0"
+	)
 	
-	val questionQuarantined: Boolean?
-		get() = when(rspns03) {
-			"1" -> true
-			"0" -> false
-			else -> null
-		}
+	public object Rspns34Serializer : PrimitiveMappingSerializer<Boolean, String>(
+		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns34",
+		primitiveKind = PrimitiveKind.STRING,
+		false to "0", true to "1"
+	)
 	
 	
 	private var mInstituteStub: InstituteInfo? = null
-	public val instituteStub: InstituteInfo get() = mInstituteStub ?: run {
-		val stub = InstituteInfo(
-			type = instituteType,
-			name = instituteName,
-			englishName = instituteName,
-			code = instituteCode,
-			address = "???",
+	public val instituteStub: InstituteInfo
+		get() = mInstituteStub ?: run {
+			val stub = InstituteInfo(
+				type = instituteType,
+				name = instituteName,
+				englishName = instituteName,
+				code = instituteCode,
+				address = "???",
 			requestUrlBody = instituteRequestUrlBody
 		)
 		mInstituteStub = stub

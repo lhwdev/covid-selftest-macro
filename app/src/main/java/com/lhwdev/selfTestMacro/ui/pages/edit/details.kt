@@ -3,7 +3,10 @@ package com.lhwdev.selfTestMacro.ui.pages.edit
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -55,7 +58,7 @@ internal suspend fun showDetailsFor(
 			}
 		}
 	) {
-		EditUserDetail(removeRoute = removeRoute, target = target, group = group)
+		EditUserDetail(removeRoute = removeRoute, target = target, group = group, parentScope = scope)
 	}
 }
 
@@ -63,16 +66,16 @@ internal suspend fun showDetailsFor(
 private fun EditUserDetail(
 	removeRoute: () -> Unit,
 	target: DbTestTarget,
-	group: DbTestGroup
+	group: DbTestGroup,
+	parentScope: CoroutineScope
 ) {
 	val navigator = LocalNavigator
 	val pref = LocalPreference.current
-	val scope = rememberCoroutineScope()
 	val groupName = with(pref.db) { target.name }
 	
 	fun Modifier.clickAction(block: suspend () -> Unit): Modifier = clickable {
 		removeRoute()
-		scope.launch { block() }
+		parentScope.launch { block() }
 	}
 	
 	when(target) {
@@ -104,18 +107,16 @@ private fun EditUserDetail(
 				val moveTarget = navigator.showDialog<DbTestGroup> { removeRoute ->
 					Title { Text("이동할 그룹 선택") }
 					ListContent {
-						Column {
-							for(item in list) {
-								val itemTarget = item.target as DbTestTarget.Group
-								ListItem(
-									text = { Text(itemTarget.name) },
-									secondaryText = { Text(with(pref.db) { itemTarget.allUsers.joinToString { it.name } }) },
-									singleLineSecondaryText = false,
-									modifier = Modifier.clickable {
-										removeRoute(item)
-									}
-								)
-							}
+						for(item in list) {
+							val itemTarget = item.target as DbTestTarget.Group
+							ListItem(
+								text = { Text(itemTarget.name) },
+								secondaryText = { Text(with(pref.db) { itemTarget.allUsers.joinToString { it.name } }) },
+								singleLineSecondaryText = false,
+								modifier = Modifier.clickable {
+									removeRoute(item)
+								}
+							)
 						}
 					}
 					Buttons {

@@ -2,8 +2,6 @@ package com.lhwdev.selfTestMacro.ui.pages.main
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,15 +21,18 @@ import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.Status
 import com.lhwdev.selfTestMacro.repository.SuspiciousKind
 import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.lhwdev.selfTestMacro.ui.utils.SmallIconButton
 import com.vanpra.composematerialdialogs.*
+import kotlinx.coroutines.launch
 
 
-private val SuspiciousKind?.displayText get() = when(this) {
-	null -> "정상"
-	SuspiciousKind.quarantined -> "자가격리 중"
-	SuspiciousKind.symptom -> "의심증상 있음"
-}
+private val SuspiciousKind?.displayText
+	get() = when(this) {
+		null -> "정상"
+		SuspiciousKind.quarantined -> "자가격리 중"
+		SuspiciousKind.symptom -> "의심증상 있음"
+	}
 
 @Composable
 internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
@@ -89,6 +90,7 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: 
 	val selfTestManager = LocalSelfTestManager.current
 	val navigator = LocalNavigator
 	val users = with(pref.db) { target.allUsers }
+	val scope = rememberCoroutineScope()
 	
 	var allStatus by remember { mutableStateOf<Map<DbUser, Status>>(emptyMap()) } // stub
 	var forceAllowInit by remember { mutableStateOf(false) }
@@ -180,18 +182,31 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: 
 		Spacer(Modifier.height(12.dp))
 		
 		var showDetails by remember { mutableStateOf(false) }
-		Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-			TextButton(onClick = { showDetails = true }) {
+		Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+			RoundButton(
+				onClick = { showDetails = true },
+				colors = ButtonDefaults.textButtonColors()
+			) {
 				Text("자세히 보기")
 			}
 			
-			TextButton(onClick = {
-				if(users.size == 1) {
-					navigator.showChangeAnswerDialog(users[0])
-				} else {
-					
-				}
-			}) {
+			RoundButton(
+				onClick = {
+					if(users.size == 1) {
+						navigator.showChangeAnswerDialog(users[0])
+					} else scope.launch {
+						val changeTarget = navigator.promptSelectDialog(
+							title = { Text("응답을 수정할 대상 선택") },
+							items = users,
+							itemToContent = { Text(it.name) }
+						)
+						if(changeTarget != null) {
+							navigator.showChangeAnswerDialog(changeTarget)
+						}
+					}
+				},
+				colors = ButtonDefaults.textButtonColors()
+			) {
 				Text("응답 수정")
 			}
 		}
@@ -199,64 +214,62 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: 
 		if(showDetails) MaterialDialog(onCloseRequest = { showDetails = false }) {
 			Title { Text("${target.name}의 자가진단 현황") }
 			ListContent {
-				Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-					for((user, status) in allStatus) ListItem(
-						icon = {
-							val icon = when(status) {
-								is Status.Submitted -> if(status.suspicious == null) {
-									R.drawable.ic_check_24
-								} else {
-									R.drawable.ic_warning_24
-								}
-								Status.NotSubmitted -> R.drawable.ic_clear_24
+				for((user, status) in allStatus) ListItem(
+					icon = {
+						val icon = when(status) {
+							is Status.Submitted -> if(status.suspicious == null) {
+								R.drawable.ic_check_24
+							} else {
+								R.drawable.ic_warning_24
 							}
-							
-							Icon(painterResource(icon), contentDescription = null)
-						},
-						trailing = { Icon(painterResource(R.drawable.ic_arrow_right_24), contentDescription = null) },
-						modifier = Modifier.clickable {
-							navigator.showDialogAsync { OneUserDetail(user, status) }
+							Status.NotSubmitted -> R.drawable.ic_clear_24
 						}
-					) {
-						Row {
-							val text = buildAnnotatedString {
-								append(user.name)
-								append(" ")
-								withStyle(SpanStyle(color = MediumContentColor)) {
-									append("(${user.institute.name})")
-								}
-								append(": ")
-								
-								when(status) {
-									is Status.Submitted -> if(status.suspicious == null) withStyle(
-										SpanStyle(
-											color = Color(
-												onLight = Color(0xff285db9),
-												onDark = Color(0xffadcbff)
-											)
+						
+						Icon(painterResource(icon), contentDescription = null)
+					},
+					// trailing = { Icon(painterResource(R.drawable.ic_arrow_right_24), contentDescription = null) },
+					modifier = Modifier.clickable {
+						navigator.showDialogAsync { OneUserDetail(user, status) }
+					}
+				) {
+					Row {
+						val text = buildAnnotatedString {
+							append(user.name)
+							append(" ")
+							withStyle(SpanStyle(color = MediumContentColor)) {
+								append("(${user.institute.name})")
+							}
+							append(": ")
+							
+							when(status) {
+								is Status.Submitted -> if(status.suspicious == null) withStyle(
+									SpanStyle(
+										color = Color(
+											onLight = Color(0xff285db9),
+											onDark = Color(0xffadcbff)
 										)
-									) {
-										append("정상")
-									} else withStyle(
-										SpanStyle(
-											color = Color(
-												onLight = Color(0xfffd2f5f),
-												onDark = Color(0xffffa6aa)
-											)
+									)
+								) {
+									append("정상")
+								} else withStyle(
+									SpanStyle(
+										color = Color(
+											onLight = Color(0xfffd2f5f),
+											onDark = Color(0xffffa6aa)
 										)
-									) {
-										append(status.suspicious.displayText)
-									}
-									
-									Status.NotSubmitted -> withStyle(SpanStyle(MediumContentColor)) {
-										append("미제출")
-									}
+									)
+								) {
+									append(status.suspicious.displayText)
 								}
 								
+								Status.NotSubmitted -> withStyle(SpanStyle(MediumContentColor)) {
+									append("미제출")
+								}
 							}
 							
-							Text(text)
 						}
+						
+						Text(text)
 					}
 				}
 			}

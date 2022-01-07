@@ -30,6 +30,6 @@ fun TestTargetListItem(
 			val users = with(pref.db) { target.allUsers }.joinToString { it.name }
 			Text(users)
 		}) else null,
-		singleLineSecondaryText = false
+		singleLineSecondaryText = true
 	)
 }

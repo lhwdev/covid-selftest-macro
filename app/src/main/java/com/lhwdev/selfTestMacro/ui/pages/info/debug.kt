@@ -1,9 +1,6 @@
 package com.lhwdev.selfTestMacro.ui.pages.info
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ListItem
 import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
@@ -23,28 +20,26 @@ fun Navigator.showDebugWindow() = showDialogAsync {
 	
 	Title { Text("개발자 모드") }
 	ListContent {
-		Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-			ListItem(modifier = Modifier.clickable {
-				pref.isDebugEnabled = false
-			}) { Text("개발자 모드 끄기") }
-			
-			ListItem(modifier = Modifier.clickable {
-				pref.isVirtualServer = !pref.isVirtualServer
-			}) { Text("가상 서버 ${if(pref.isVirtualServer) "끄기" else "켜기"}") }
-			
-			ListItem(modifier = Modifier.clickable {
-				pref.isDebugFetchEnabled = !pref.isDebugFetchEnabled
-			}) { Text("fetch 디버깅 ${if(pref.isDebugFetchEnabled) "끄기" else "켜기"}") }
-			
-			ListItem(modifier = Modifier.clickable {
-				navigator.pushRoute(IntroRoute)
-			}) { Text("인트로 보기") }
-			
-			ListItem(modifier = Modifier.clickable {
-				pref.isNavigationDebugEnabled = !pref.isNavigationDebugEnabled
-			}) { Text("AnimateListAsComposable & navigation 디버깅 ${if(pref.isNavigationDebugEnabled) "끄기" else "켜기"}") }
-			
-			ListItem { Text("에러 로깅 활성화됨") }
-		}
+		ListItem(modifier = Modifier.clickable {
+			pref.isDebugEnabled = false
+		}) { Text("개발자 모드 끄기") }
+		
+		ListItem(modifier = Modifier.clickable {
+			pref.isVirtualServer = !pref.isVirtualServer
+		}) { Text("가상 서버 ${if(pref.isVirtualServer) "끄기" else "켜기"}") }
+		
+		ListItem(modifier = Modifier.clickable {
+			pref.isDebugFetchEnabled = !pref.isDebugFetchEnabled
+		}) { Text("fetch 디버깅 ${if(pref.isDebugFetchEnabled) "끄기" else "켜기"}") }
+		
+		ListItem(modifier = Modifier.clickable {
+			navigator.pushRoute(IntroRoute)
+		}) { Text("인트로 보기") }
+		
+		ListItem(modifier = Modifier.clickable {
+			pref.isNavigationDebugEnabled = !pref.isNavigationDebugEnabled
+		}) { Text("AnimateListAsComposable & navigation 디버깅 ${if(pref.isNavigationDebugEnabled) "끄기" else "켜기"}") }
+		
+		ListItem { Text("에러 로깅 활성화됨") }
 	}
 }

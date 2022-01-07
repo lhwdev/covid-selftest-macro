@@ -21,7 +21,7 @@ fun CheckBoxListItem(
 		icon = {
 			Checkbox(checked = checked, onCheckedChange = null)
 		},
-		modifier = Modifier.clickable { onCheckChanged(!checked) },
+		modifier = Modifier.clickable { onCheckChanged(!checked) }.then(modifier),
 		secondaryText = secondaryText,
 		singleLineSecondaryText = singleLineSecondaryText,
 		overlineText = overlineText,

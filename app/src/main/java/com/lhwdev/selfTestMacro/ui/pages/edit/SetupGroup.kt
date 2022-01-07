@@ -51,32 +51,30 @@ fun FloatingMaterialDialogScope.SetupGroup(
 	}
 	
 	fun selectGroupMember() = navigator.showDialogAsync {
-		Title { Text("사용자 추가") }
+		Title { Text("사용자 선택") }
 		ListContent {
-			Column {
-				for((index, user) in existing.withIndex()) ListItem(
-					icon = {
-						Checkbox(
-							checked = oldSelection[index],
-							onCheckedChange = null
-						)
-					},
-					modifier = Modifier.clickable { oldSelection[index] = !oldSelection[index] }
-				) {
-					Text(user.name)
-				}
-				
-				for((index, user) in users.withIndex()) ListItem(
-					icon = {
-						Checkbox(
-							checked = newSelection[index],
-							onCheckedChange = null
-						)
-					},
-					modifier = Modifier.clickable { newSelection[index] = !newSelection[index] }
-				) {
-					Text(with(pref.db) { (user.target as DbTestTarget.Single).user.name })
-				}
+			for((index, user) in existing.withIndex()) ListItem(
+				icon = {
+					Checkbox(
+						checked = oldSelection[index],
+						onCheckedChange = null
+					)
+				},
+				modifier = Modifier.clickable { oldSelection[index] = !oldSelection[index] }
+			) {
+				Text(user.name)
+			}
+			
+			for((index, user) in users.withIndex()) ListItem(
+				icon = {
+					Checkbox(
+						checked = newSelection[index],
+						onCheckedChange = null
+					)
+				},
+				modifier = Modifier.clickable { newSelection[index] = !newSelection[index] }
+			) {
+				Text(with(pref.db) { (user.target as DbTestTarget.Single).user.name })
 			}
 		}
 		

@@ -26,7 +26,7 @@ import com.google.accompanist.insets.LocalWindowInsets
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.PasswordWrong
 import com.lhwdev.selfTestMacro.api.UsersToken
-import com.lhwdev.selfTestMacro.debug.selfLog
+import com.lhwdev.selfTestMacro.debug.log
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
@@ -65,7 +65,7 @@ private suspend fun submitLogin(
 	val session = sessionInfo.session
 	
 	val userId = try {
-		selfLog("#2. 사용자 찾기")
+		log("#2. 사용자 찾기")
 		selfTestManager.findUser(
 			session = session,
 			institute = institute,
@@ -79,7 +79,7 @@ private suspend fun submitLogin(
 	
 	// user agreement
 	if(!userId.agreement) {
-		selfLog("약관 동의 필요!")
+		log("약관 동의 필요!")
 		navigator.showDialogUnit {
 			Title { Text("알림") }
 			Content { Text("공식 자가진단 사이트나 앱에서 로그인한 후 약관에 동의해 주세요.") }
@@ -119,14 +119,14 @@ private suspend fun submitLogin(
 	
 	// validate & login with password
 	val result = try {
-		selfLog("#3. 비밀번호 확인")
+		log("#3. 비밀번호 확인")
 		selfTestManager.validatePassword(session, institute, userId.token, password)
 	} catch(e: Throwable) {
 		selfTestManager.debugContext.onError("로그인에 실패했어요.", e)
 		return false
 	}
 	
-	selfLog("#4. 비밀번호 결과")
+	log("#4. 비밀번호 결과")
 	
 	when(result) {
 		is PasswordWrong -> navigator.showDialogUnit {

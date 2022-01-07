@@ -19,7 +19,7 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
 import com.lhwdev.selfTestMacro.debug.LocalDebugContext
-import com.lhwdev.selfTestMacro.debug.selfLog
+import com.lhwdev.selfTestMacro.debug.log
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.sRegions
@@ -129,7 +129,7 @@ internal fun ColumnScope.WizardSchoolInfo(
 		val snackbarHostState = setupModel.scaffoldState.snackbarHostState
 		
 		val schools = runCatching {
-			selfLog("#1. 학교 정보 찾기")
+			log("#1. 학교 정보 찾기")
 			selfTestManager.findSchool(
 				regionCode = model.regionCode,
 				schoolLevelCode = model.schoolLevel,

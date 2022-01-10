@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.*
+import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
@@ -41,11 +42,16 @@ enum class SelfTestInitiator(val isFromUi: Boolean) {
 
 interface SelfTestManager {
 	var context: Context
+	val database: DatabaseManager
 	val debugContext: DebugContext
 	
 	suspend fun createSession(): TempSession
 	
-	suspend fun findSchool(regionCode: String?, schoolLevelCode: Int, name: String): List<InstituteInfo>
+	suspend fun findSchool(
+		regionCode: String?,
+		schoolLevelCode: Int,
+		name: String
+	): List<InstituteInfo>
 	
 	suspend fun findUser(
 		session: Session,
@@ -62,9 +68,17 @@ interface SelfTestManager {
 		password: String
 	): PasswordResult
 	
-	suspend fun getUserGroup(session: Session, institute: InstituteInfo, token: UsersToken): List<User>
+	suspend fun getUserGroup(
+		session: Session,
+		institute: InstituteInfo,
+		token: UsersToken
+	): List<User>
 	
-	suspend fun getUserInfo(session: Session, institute: InstituteInfo, user: User): UserInfo
+	suspend fun getUserInfo(
+		session: Session,
+		institute: InstituteInfo,
+		user: User
+	): UserInfo
 	
 	fun addTestGroupToDb(usersToAdd: List<WizardUser>, targetGroup: DbTestGroup?, isAllGrouped: Boolean)
 	
@@ -75,10 +89,13 @@ interface SelfTestManager {
 	suspend fun submitSelfTestNow(
 		context: UiContext,
 		target: DbTestTarget,
-		initiator: SelfTestInitiator
+		users: List<DbUser> = with(database) { target.allUsers }
 	): List<SubmitResult>
 	
-	suspend fun onScheduledSubmitSelfTest(target: DbTestTarget, initiator: SelfTestInitiator): List<SubmitResult>
+	suspend fun onScheduledSubmitSelfTest(
+		group: DbTestGroup,
+		user: DbUser
+	): List<SubmitResult>
 	
 	fun updateSchedule(target: DbTestGroup, new: DbTestGroup)
 	fun onScheduleUpdated()

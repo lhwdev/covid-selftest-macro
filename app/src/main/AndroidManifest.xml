@@ -47,8 +47,6 @@
 		
 		<activity android:name=".DebugActivity" />
 		
-		<receiver android:name=".AlarmReceiver" />
-		
 		<receiver
 			android:name=".BootReceiver"
 			android:enabled="true"

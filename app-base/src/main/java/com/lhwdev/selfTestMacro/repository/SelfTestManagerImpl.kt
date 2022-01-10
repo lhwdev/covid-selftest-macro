@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.os.Build
+import android.os.PowerManager
 import androidx.compose.foundation.clickable
 import androidx.compose.material.ListItem
 import androidx.compose.material.Text
@@ -33,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.util.Calendar
+import java.util.WeakHashMap
 import kotlin.random.Random
 
 
@@ -183,8 +185,44 @@ class HcsAppError(
 }
 
 
-class AlarmBroadcastReceiver : BroadcastReceiver() {
+@PublishedApi
+internal val sSelfTestManagerMap = WeakHashMap<Context, SelfTestManager>()
+
+inline fun Context.defaultSelfTestManager(create: (Context) -> SelfTestManager): SelfTestManager {
+	val context = applicationContext
+	return sSelfTestManagerMap.getOrPut(context) { create(context) }
+}
+
+
+fun Context.createDefaultSelfTestManager(debugContext: DebugContext): SelfTestManagerImpl = SelfTestManagerImpl(
+	context = applicationContext,
+	database = preferenceState.db,
+	debugContext = debugContext,
+	defaultCoroutineScope = CoroutineScope(Dispatchers.Default)
+)
+
+
+class AlarmReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
+		val lock = context.getSystemService<PowerManager>()!!
+			.newWakeLock(
+				PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+				"SelfTestMacro:AlarmReceiver"
+			)
+		lock.acquire(20000)
+		
+		val selfTestManager = context.defaultSelfTestManager {
+			it.createDefaultSelfTestManager(
+				debugContext = BackgroundDebugContext(
+					flags = DebugContext.DebugFlags(
+						enabled = context.isDebugEnabled,
+						debuggingWithIde = App.debuggingWithIde
+					),
+					manager = context.debugManager,
+					contextName = "AlarmReceiver"
+				)
+			)
+		}
 	}
 }
 
@@ -193,18 +231,34 @@ class AlarmBroadcastReceiver : BroadcastReceiver() {
 class SelfTestManagerImpl(
 	override var context: Context,
 	override val debugContext: DebugContext,
-	private val database: DatabaseManager,
+	override val database: DatabaseManager,
 	val defaultCoroutineScope: CoroutineScope
 ) : SelfTestManager {
 	@Serializable
-	private class SelfTestTask(val testGroupId: Int, override val timeMillis: Long) : TaskItem
+	private class SelfTestTask(val testGroupId: Int, val userId: Int, override val timeMillis: Long) : TaskItem
 	
-	private val scheduler = AlarmManagerTaskScheduler<SelfTestTask>(
+	private val scheduler = object : AlarmManagerTaskScheduler<SelfTestTask>(
 		context = context,
 		taskSerializer = SelfTestTask.serializer(),
 		holder = database.holder,
-		scheduleIntent = Intent(context, AlarmBroadcastReceiver::class.java)
-	)
+		scheduleIntent = Intent(context, AlarmReceiver::class.java)
+	) {
+		override suspend fun onTask(task: SelfTestTask) {
+			val group = database.testGroups.groups[task.testGroupId]
+			if(group == null) {
+				log("[SelfTestManager] AlarmManagerTaskScheduler.onTask: no DbTestGroup with (id=${task.testGroupId})")
+				return
+			}
+			
+			val user = database.users.users[task.userId]
+			if(user == null) {
+				log("[SelfTestManager] AlarmManagerTaskScheduler.onTask: no User with (userId=${task.userId})")
+				return
+			}
+			
+			onScheduledSubmitSelfTest(group, user)
+		}
+	}
 	
 	
 	init {
@@ -550,7 +604,8 @@ class SelfTestManagerImpl(
 					answer = Answer(
 						suspicious = false,
 						waitingResult = false,
-						quarantined = false
+						quarantined = false,
+						housemateInfected = false
 					)
 				)
 			}
@@ -603,7 +658,7 @@ class SelfTestManagerImpl(
 				val id = ids.nextTestGroupId()
 				ids += id
 				DbTestGroup(id = id, target = target)
-			}
+			}.associateBy { it.id }
 			
 			database.testGroups = previousTestGroups.copy(
 				groups = previousTestGroups.groups + newTestGroups,
@@ -611,17 +666,16 @@ class SelfTestManagerImpl(
 			)
 		} else {
 			// add to existing group
-			val testGroups = database.testGroups.groups.toMutableList()
+			val testGroups = database.testGroups.groups.toMutableMap()
 			
-			val targetIndex = testGroups.indexOf(targetGroup)
-			if(targetIndex == -1) error("what the...?") // what the error
+			if(targetGroup.id !in testGroups) error("what the...?") // what the error
 			
 			val testTarget = targetGroup.target as DbTestTarget.Group
 			val added = testTarget.copy(
 				userIds = testTarget.userIds + newUsers.map { it.id }
 			)
 			
-			testGroups[targetIndex] = targetGroup.copy(target = added)
+			testGroups[targetGroup.id] = targetGroup.copy(target = added)
 			database.testGroups = database.testGroups.copy(groups = testGroups)
 		}
 	}
@@ -633,7 +687,7 @@ class SelfTestManagerImpl(
 			val (session, _) = ensureSessionLoaded(user.userGroup)
 			Status(session.getUserInfo(user.usersInstitute, user.apiUser()))
 		} catch(th: Throwable) {
-			selfLog("getCurrentStatus: error")
+			log("getCurrentStatus: error")
 			th.printStackTrace()
 			null
 		}
@@ -688,11 +742,10 @@ class SelfTestManagerImpl(
 	override suspend fun submitSelfTestNow(
 		context: UiContext,
 		target: DbTestTarget,
-		initiator: SelfTestInitiator
+		users: List<DbUser>
 	): List<SubmitResult> {
 		return try {
-			val result =
-				with(database) { target.allUsers }.map { database.submitSelfTest(it, isFromUi = initiator.isFromUi) }
+			val result = users.map { database.submitSelfTest(it, isFromUi = initiator.isFromUi) }
 			if(result.isEmpty()) return result
 			
 			if(result.all { it is SubmitResult.Success }) context.scope.launch {
@@ -753,15 +806,11 @@ class SelfTestManagerImpl(
 	}
 	
 	override suspend fun onScheduledSubmitSelfTest(
-		target: DbTestTarget,
-		initiator: SelfTestInitiator
+		group: DbTestGroup,
+		user: DbUser
 	): List<SubmitResult> {
-		val allUsers = with(database) { target.allUsers }
-		
 		try {
-			val results = allUsers.map {
-				database.submitSelfTest(it, isFromUi = initiator.isFromUi)
-			}
+			val result = database.submitSelfTest(user, isFromUi = false)
 			
 			val notificationManager = NotificationManagerCompat.from(context)
 			
@@ -870,7 +919,7 @@ class SelfTestManagerImpl(
 		// change testGroups -> preferenceState.cache updated -> snapshotFlow(see above) -> call onScheduleUpdated
 		disableOnScheduleUpdated = true
 		try {
-			database.testGroups = testGroups.copy(groups = testGroups.groups.replaced(from = target, to = new))
+			database.testGroups = testGroups.copy(groups = testGroups.groups.replaced(from = target.id, to = new))
 		} finally {
 			disableOnScheduleUpdated = false
 		}
@@ -886,8 +935,8 @@ class SelfTestManagerImpl(
 		val newGroups = database.testGroups.groups
 		if(lastGroups == newGroups) return
 		
-		val added = newGroups - lastGroups
-		val removed = lastGroups - newGroups
+		val added = newGroups - lastGroups.keys
+		val removed = lastGroups - newGroups.keys
 		
 		val alarmManager = context.getSystemService<AlarmManager>()!!
 		for(group in removed) {
@@ -895,7 +944,7 @@ class SelfTestManagerImpl(
 			// TODO
 		}
 		
-		for(group in added) {
+		for(group in added.values) {
 			setSchedule(alarmManager, group)
 		}
 	}

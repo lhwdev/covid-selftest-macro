@@ -3,7 +3,6 @@
 package com.lhwdev.selfTestMacro.ui
 
 import android.app.Activity
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -18,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.lhwdev.selfTestMacro.App
-import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.debug.*
 import com.lhwdev.selfTestMacro.debuggingWithIde
@@ -27,24 +25,11 @@ import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.NavigatorImpl
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
-import com.lhwdev.selfTestMacro.repository.SelfTestManager
-import com.lhwdev.selfTestMacro.repository.SelfTestManagerImpl
+import com.lhwdev.selfTestMacro.repository.createDefaultSelfTestManager
+import com.lhwdev.selfTestMacro.repository.defaultSelfTestManager
 import com.lhwdev.selfTestMacro.ui.pages.splash.Splash
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-
-
-fun SelfTestManager(
-	context: Context,
-	database: DatabaseManager,
-	debugContext: DebugContext,
-	defaultCoroutineScope: CoroutineScope
-): SelfTestManager = SelfTestManagerImpl(
-	context = context,
-	database = database,
-	debugContext = debugContext,
-	defaultCoroutineScope = defaultCoroutineScope
-)
 
 
 @Composable
@@ -65,12 +50,9 @@ fun ComposeApp(activity: Activity) {
 	)
 	
 	val selfTestManager = remember {
-		SelfTestManager(
-			context = context.applicationContext,
-			database = pref.db,
-			debugContext = debugContext,
-			defaultCoroutineScope = CoroutineScope(Dispatchers.Default)
-		)
+		context.defaultSelfTestManager {
+			it.createDefaultSelfTestManager(debugContext = debugContext)
+		}
 	}
 	selfTestManager.context = context.applicationContext
 	

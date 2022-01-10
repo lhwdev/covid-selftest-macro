@@ -37,8 +37,8 @@ fun EditUsers() {
 	val selection = remember { mutableStateListOf<DbTestGroup>() }
 	
 	val groups = pref.db.testGroups.groups
-	if(!groups.containsAll(selection)) {
-		val filtered = selection.filter { it in groups }
+	if(!groups.keys.containsAll(selection.map { it.id })) {
+		val filtered = selection.filter { it.id in groups }
 		selection.clear()
 		selection.addAll(filtered)
 	}
@@ -189,7 +189,7 @@ private fun EditUsersContent(
 	val scope = rememberCoroutineScope()
 	
 	with(pref.db) {
-		val groups = testGroups.groups
+		val groups = testGroups.groups.values
 		
 		Column(
 			modifier = Modifier.verticalScroll(rememberScrollState())

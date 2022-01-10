@@ -8,20 +8,20 @@ import com.lhwdev.selfTestMacro.api.InstituteInfo
 
 val DbTestGroups.ids: MutableList<Int> get() = groups.map { it.id }.toMutableList()
 
-class DatabaseManager(pref: PreferenceHolder) {
-	var testGroups: DbTestGroups by pref.preferenceSerialized(
+class DatabaseManager(val holder: PreferenceHolder) {
+	var testGroups: DbTestGroups by holder.preferenceSerialized(
 		key = "testGroups",
 		serializer = DbTestGroups.serializer(),
 		defaultValue = DbTestGroups()
 	)
 	
-	var userGroups: DbUserGroups by pref.preferenceSerialized(
+	var userGroups: DbUserGroups by holder.preferenceSerialized(
 		key = "userGroups",
 		serializer = DbUserGroups.serializer(),
 		defaultValue = DbUserGroups()
 	)
 	
-	var users: DbUsers by pref.preferenceSerialized(
+	var users: DbUsers by holder.preferenceSerialized(
 		key = "users",
 		serializer = DbUsers.serializer(),
 		defaultValue = DbUsers()
@@ -31,7 +31,6 @@ class DatabaseManager(pref: PreferenceHolder) {
 		get() = object : LazyListBase<DbUser>(userIds.size) {
 			override fun createAt(index: Int): DbUser = users.users.getValue(userIds[index])
 			override fun contains(element: DbUser): Boolean = element.id in userIds
-			
 		}
 	
 	val DbTestTarget.Single.user: DbUser get() = users.users.getValue(userId)

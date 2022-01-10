@@ -27,7 +27,6 @@ import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.navigation.showRouteAsync
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
-import com.lhwdev.selfTestMacro.repository.SelfTestInitiator
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.icons.ExpandMore
@@ -66,6 +65,13 @@ private fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 							expanded = showMoreActions,
 							onDismissRequest = { showMoreActions = false }
 						) {
+							DropdownMenuItem(onClick = {
+								showMoreActions = false
+								navigator.pushRoute { LogView() }
+							}) {
+								Text("자가진단 기록")
+							}
+							
 							DropdownMenuItem(onClick = {
 								showMoreActions = false
 								navigator.pushRoute { Info() }
@@ -127,7 +133,7 @@ private fun GroupInfo(group: DbTestGroup): GroupInfo {
 }
 
 
-private fun resolveNewGroup(last: DbTestGroup, groups: List<DbTestGroup>): DbTestGroup {
+private fun resolveNewGroup(last: DbTestGroup, groups: Collection<DbTestGroup>): DbTestGroup {
 	// groups changed:
 	if(last in groups) {
 		return last
@@ -190,9 +196,9 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 	}
 	
 	var selectedTestGroup by remember {
-		mutableStateOf(groups.getOrElse(pref.headUser) { groups.first() })
+		mutableStateOf(groups.getOrElse(pref.headUser) { groups.values.first() })
 	}
-	if(changed(groups)) selectedTestGroup = resolveNewGroup(selectedTestGroup, groups)
+	if(changed(groups)) selectedTestGroup = resolveNewGroup(selectedTestGroup, groups.values)
 	
 	val selectedGroup = GroupInfo(selectedTestGroup)
 	
@@ -302,8 +308,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 						},
 						scope = scope
 					),
-					target = selectedTestGroup.target,
-					initiator = SelfTestInitiator.userClick
+					target = selectedTestGroup.target
 				)
 				
 				statusKey.value++

@@ -8,6 +8,7 @@ import com.lhwdev.fetch.http.Session
 import com.lhwdev.github.repo.Repository
 import com.lhwdev.github.sGithubInstanceDefault
 import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.debug.logOutput
 import com.lhwdev.selfTestMacro.navigation.sDebugNavigation
 import com.lhwdev.selfTestMacro.ui.utils.sDebugAnimateListAsComposable
 import java.io.File
@@ -49,6 +50,8 @@ object FirstInitialization {
 			sDebugFetch = pref.isDebugFetchEnabled
 			sDebugNavigation = pref.isNavigationDebugEnabled
 			sDebugAnimateListAsComposable = pref.isNavigationDebugEnabled
+			
+			logOutput = getExternalFilesDir(null)!!.bufferedWriter()
 		}
 	}
 }

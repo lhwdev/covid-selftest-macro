@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.ui.utils
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -32,7 +31,6 @@ import kotlinx.coroutines.launch
 fun AnimateHeight(
 	visible: Boolean,
 	modifier: Modifier = Modifier,
-	animationSpec: AnimationSpec<Float> = spring(),
 	content: @Composable () -> Unit
 ) {
 	val scope = rememberCoroutineScope()
@@ -50,7 +48,7 @@ fun AnimateHeight(
 		val target = targetInt.toFloat()
 		if(heightValue == -1) scope.launch { height.snapTo(target) }
 		if(target != height.targetValue) scope.launch {
-			height.animateTo(target, animationSpec)
+			height.animateTo(target, spring())
 		}
 		
 		layout(placeable.width, if(heightValue == -1) targetInt else heightValue) {
@@ -143,7 +141,8 @@ fun IconOnlyTopAppBar(
 		},
 		elevation = 0.dp,
 		backgroundColor = Color.Transparent,
-		statusBarScrim = statusBarScrim
+		statusBarScrim = statusBarScrim,
+		modifier = modifier
 	)
 }
 

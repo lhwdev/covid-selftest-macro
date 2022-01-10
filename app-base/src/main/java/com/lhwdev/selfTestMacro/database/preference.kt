@@ -10,7 +10,7 @@ import com.lhwdev.selfTestMacro.App
 import java.util.WeakHashMap
 
 
-class PreferenceState(pref: PreferenceHolder) {
+class PreferenceState(val pref: PreferenceHolder) {
 	init {
 		val p = pref.pref
 		// version migration

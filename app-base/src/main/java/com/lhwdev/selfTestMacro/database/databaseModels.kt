@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DbTestGroups(
-	val groups: List<DbTestGroup> = emptyList(),
+	val groups: Map<Int, DbTestGroup> = emptyMap(),
 	val maxGroupGeneratedNameIndex: Int = 0
 )
 
@@ -112,12 +112,14 @@ data class Answer(
 	val suspicious: Boolean,
 	val waitingResult: Boolean,
 	val quarantined: Boolean,
+	val housemateInfected: Boolean,
 	val message: String? = null
 ) : DiagnosticObject {
 	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticGroup("Answer", "자가진단 제출 질문") {
 		"suspicious" set suspicious localized "의심증상 여부"
 		"waitingResult" set waitingResult localized "검사결과 대기 중"
 		"quarantined" set quarantined localized "자가격리 중"
+		"housemateInfected" set housemateInfected localized "동거인 확진"
 	}
 }
 

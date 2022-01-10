@@ -7,4 +7,4 @@ annotation class TraceItem
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class TraceItems(val requiredModifier: Int)
+annotation class TraceItems(val requiredModifier: Int = 0)

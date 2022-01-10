@@ -1,6 +1,10 @@
 package com.lhwdev.selfTestMacro.repository
 
 import com.lhwdev.selfTestMacro.debug.TraceItems
+import com.lhwdev.selfTestMacro.debug.log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 /*
@@ -33,6 +37,9 @@ abstract class GroupTaskScheduler<T : TaskItem> : TaskScheduler<T> {
 	override fun nextTaskId(): Long = taskId++
 	
 	
+	/**
+	 * This should be sorted by [TaskItem.timeMillis].
+	 */
 	protected abstract var tasks: List<T>
 	
 	override val allTasks: List<T> get() = tasks
@@ -91,12 +98,37 @@ abstract class GroupTaskScheduler<T : TaskItem> : TaskScheduler<T> {
 		schedules = newSchedules
 	}
 	
-	protected open fun onTaskScheduled(task: T, schedule: TaskSchedule) {
-		task.onScheduled(schedule)
+	protected open fun onTaskScheduled(task: T, schedule: TaskSchedule) {}
+	
+	protected abstract suspend fun onTask(task: T)
+	
+	protected suspend fun onSchedule(schedule: TaskSchedule, coroutineScope: CoroutineScope) {
+		val index = tasks.indexOfFirst { it.timeMillis >= schedule.timeMillis }
+		if(index != 0) {
+			error("[GroupTaskScheduler] onSchedule: schedule order miss: target task $index != 0")
+		}
+		val currentTasks = tasks.takeWhile { canTaskScheduled(it, schedule) }
+		
+		if(currentTasks.isEmpty()) {
+			log("[GroupTaskScheduler] onSchedule: currentTasks is empty")
+			return
+		}
+		
+		var last = currentTasks.first()
+		for(task in currentTasks) {
+			val interval = task.timeMillis - last.timeMillis
+			delay(interval)
+			
+			coroutineScope.launch { onTask(task) }
+			
+			last = task
+		}
+		
+		tasks = tasks.drop(currentTasks.size)
 	}
 	
 	/**
-	 * Note
+	 * Note: this should be fast, stateless.
 	 */
 	protected abstract fun canTaskScheduled(task: T, schedule: TaskSchedule): Boolean
 	

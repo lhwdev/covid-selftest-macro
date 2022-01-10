@@ -25,7 +25,7 @@ private fun Context.defaultPreferenceHolder() = PreferenceHolder(
 )
 
 
-class AlarmManagerTaskScheduler<T : TaskItem>(
+abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 	val context: Context,
 	val scheduleIntent: Intent,
 	val holder: PreferenceHolder = context.defaultPreferenceHolder(),

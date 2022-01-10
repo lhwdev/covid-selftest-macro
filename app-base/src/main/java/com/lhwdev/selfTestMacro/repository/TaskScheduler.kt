@@ -3,10 +3,6 @@ package com.lhwdev.selfTestMacro.repository
 
 interface TaskItem {
 	val timeMillis: Long
-	
-	fun onScheduled(debugData: Any) {
-		println("$this -> $debugData")
-	}
 }
 
 

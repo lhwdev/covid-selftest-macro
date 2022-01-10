@@ -2,6 +2,8 @@
 
 package com.vanpra.composematerialdialogs
 
+import androidx.compose.foundation.clickable
+import androidx.compose.material.ListItem
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -103,6 +105,25 @@ suspend fun Navigator.promptYesNoDialog(
 	Buttons {
 		PositiveButton(onClick = { removeRoute(true) }, content = yesButton)
 		NegativeButton(onClick = requestClose, content = noButton)
+	}
+}
+
+suspend fun <T> Navigator.promptSelectDialog(
+	title: @Composable () -> Unit,
+	items: List<T>,
+	itemToContent: @Composable (T) -> Unit,
+	properties: DialogProperties = FloatingDialogProperties
+): T? = showDialog(properties = properties) { removeRoute ->
+	Title { title() }
+	
+	ListContent {
+		for(item in items) ListItem(
+			modifier = Modifier.clickable { removeRoute(item) }
+		) { itemToContent(item) }
+	}
+	
+	Buttons {
+		NegativeButton(onClick = requestClose) { Text("취소") }
 	}
 }
 

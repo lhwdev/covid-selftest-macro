@@ -70,12 +70,21 @@ fun FloatingMaterialDialogScope.IconTitle(
  * @param content the content of the view
  */
 @Composable
-fun FloatingMaterialDialogScope.Content(content: @Composable () -> Unit) {
+fun FloatingMaterialDialogScope.Content(
+	modifier: Modifier = Modifier,
+	verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+	horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+	content: @Composable ColumnScope.() -> Unit
+) {
 	CompositionLocalProvider(
 		LocalContentColor provides MaterialTheme.colors.onSurface
 	) {
 		ProvideTextStyle(MaterialTheme.typography.body1) {
-			Box(modifier = Modifier.padding(bottom = 28.dp, start = 24.dp, end = 24.dp)) {
+			Column(
+				modifier = modifier.padding(bottom = 28.dp, start = 24.dp, end = 24.dp),
+				verticalArrangement = verticalArrangement,
+				horizontalAlignment = horizontalAlignment
+			) {
 				content()
 			}
 		}

@@ -3,6 +3,8 @@
 package com.vanpra.composematerialdialogs
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -20,18 +22,24 @@ val bottomPadding = Modifier.padding(bottom = 8.dp)
  */
 @Composable
 fun MaterialDialogScope.ListContent(
-	content: @Composable () -> Unit
+	modifier: Modifier = Modifier,
+	verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+	horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+	content: @Composable ColumnScope.() -> Unit
 ) {
 	BoxWithConstraints {
 		CompositionLocalProvider(
 			LocalContentColor provides MaterialTheme.colors.onSurface
 		) {
 			ProvideTextStyle(MaterialTheme.typography.body1) {
-				Box(
-					Modifier
+				Column(
+					modifier
 						.heightIn(max = maxHeight * listRatio)
 						.padding(bottom = 8.dp)
 						.wrapContentWidth(Alignment.Start)
+						.verticalScroll(rememberScrollState()),
+					verticalArrangement = verticalArrangement,
+					horizontalAlignment = horizontalAlignment
 				) {
 					content()
 				}

@@ -83,8 +83,8 @@ object SelfTestFailedNotification : AndroidNotificationChannel(
 
 object SelfTestScheduleNotification : AndroidNotificationChannel(
 	channelId = "$sNotificationPrefix/selfTestSchedule",
-	name = "자가진단 예약 안내",
-	description = "자가진단 예약을 실행하면서 어떤 일이 있었다면 알려줘요.",
+	name = "자가진단 실행 현황",
+	description = "자가진단 예약을 실행하는 중에 현황을 알려줘요.",
 	importance = NotificationManagerCompat.IMPORTANCE_LOW,
 	priority = NotificationCompat.PRIORITY_LOW
 ) {

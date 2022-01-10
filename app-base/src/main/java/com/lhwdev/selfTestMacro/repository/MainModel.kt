@@ -57,7 +57,8 @@ sealed class Status {
 		
 		val questionSuspicious: Boolean?,
 		val questionWaitingResult: Boolean?,
-		val questionQuarantined: Boolean?
+		val questionQuarantined: Boolean?,
+		val questionHousemateInfected: Boolean?
 	) : Status()
 	
 	object NotSubmitted : Status()
@@ -83,7 +84,9 @@ val UserInfo.suspiciousKind: SuspiciousKind?
 	get() = when {
 		isHealthy == true -> null
 		questionSuspicious == true -> SuspiciousKind.symptom
-		questionWaitingResult == true || questionQuarantined == true -> SuspiciousKind.quarantined
+		questionWaitingResult == true ||
+			questionQuarantined == true ||
+			questionHouseholdInfected == true -> SuspiciousKind.quarantined
 		else -> null
 	}
 
@@ -95,7 +98,8 @@ fun Status(info: UserInfo): Status = when {
 			
 			questionSuspicious = info.questionSuspicious,
 			questionWaitingResult = info.questionWaitingResult,
-			questionQuarantined = info.questionQuarantined
+			questionQuarantined = info.questionQuarantined,
+			questionHousemateInfected = info.questionHouseholdInfected
 		)
 	else -> Status.NotSubmitted
 }

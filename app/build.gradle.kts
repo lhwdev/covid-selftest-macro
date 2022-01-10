@@ -55,7 +55,7 @@ android {
 		minSdk = 21
 		targetSdk = 30
 		versionCode = 3000
-		versionName = "3.0.0-build02"
+		versionName = "3.0.0-build03"
 		
 		// multiDexEnabled = true
 		

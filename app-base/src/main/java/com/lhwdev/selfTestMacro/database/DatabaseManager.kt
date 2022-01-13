@@ -6,8 +6,6 @@ import com.lhwdev.selfTestMacro.LazyListBase
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 
 
-val DbTestGroups.ids: MutableList<Int> get() = groups.map { it.id }.toMutableList()
-
 class DatabaseManager(val holder: PreferenceHolder) {
 	var testGroups: DbTestGroups by holder.preferenceSerialized(
 		key = "testGroups",

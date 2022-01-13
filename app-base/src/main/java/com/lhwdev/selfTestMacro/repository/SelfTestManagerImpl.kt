@@ -653,7 +653,7 @@ class SelfTestManagerImpl(
 				DbTestTarget.Single(it.id)
 			}
 			
-			val ids = previousTestGroups.ids
+			val ids = previousTestGroups.groups.keys.toMutableList()
 			val newTestGroups = testTargets.map { target ->
 				val id = ids.nextTestGroupId()
 				ids += id
@@ -745,7 +745,7 @@ class SelfTestManagerImpl(
 		users: List<DbUser>
 	): List<SubmitResult> {
 		return try {
-			val result = users.map { database.submitSelfTest(it, isFromUi = initiator.isFromUi) }
+			val result = users.map { database.submitSelfTest(it, isFromUi = true) }
 			if(result.isEmpty()) return result
 			
 			if(result.all { it is SubmitResult.Success }) context.scope.launch {

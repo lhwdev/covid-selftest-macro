@@ -36,7 +36,7 @@ fun FloatingMaterialDialogScope.SetupGroup(
 	}
 	
 	val users = remember {
-		pref.db.testGroups.groups.filter { it.target is DbTestTarget.Single }
+		pref.db.testGroups.groups.values.filter { it.target is DbTestTarget.Single }
 	}
 	
 	val oldSelection = remember {
@@ -141,7 +141,7 @@ fun FloatingMaterialDialogScope.SetupGroup(
 	
 	Buttons {
 		PositiveButton(onClick = {
-			val realUsers = users.values.filterIndexed { index, _ -> newSelection[index] }
+			val realUsers = users.filterIndexed { index, _ -> newSelection[index] }
 			
 			val ids = pref.db.testGroups.groups.keys.toMutableList()
 			

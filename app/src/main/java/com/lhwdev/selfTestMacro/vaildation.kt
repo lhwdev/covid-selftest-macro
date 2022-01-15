@@ -57,7 +57,7 @@ fun DatabaseManager.validateAndFixDb() {
 				is DbTestTarget.Single -> DbTestTarget.Single(map(target.userId))
 			}
 			
-			val newGroups = testGroups.groups.map { group ->
+			val newGroups = testGroups.groups.mapValues { (_, group) ->
 				group.copy(target = map(group.target))
 			}
 			

@@ -99,7 +99,7 @@ private fun EditUserDetail(
 				if(doDelete == true) pref.db.removeTestGroup(group)
 			}) { Text("사용자 삭제") }
 			
-			val list = pref.db.testGroups.groups.filter {
+			val list = pref.db.testGroups.groups.values.filter {
 				it.target is DbTestTarget.Group
 			}
 			

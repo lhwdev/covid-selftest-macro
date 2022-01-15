@@ -121,7 +121,7 @@ fun EditUsers() {
 									onDismissRequest = { moreActions = false }
 								) {
 									DropdownMenuItem(onClick = clickAction {
-										groups.forEach {
+										groups.values.forEach {
 											if(it !in selection) selection += it
 										}
 									}) { Text("모두 선택") }

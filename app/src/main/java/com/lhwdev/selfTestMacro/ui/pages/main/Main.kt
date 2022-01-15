@@ -300,7 +300,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 		onClick = {
 			scope.launch {
 				selfTestManager.submitSelfTestNow(
-					context = UiContext(
+					uiContext = UiContext(
 						context = context,
 						navigator = navigator,
 						showMessage = { message, action ->
@@ -350,7 +350,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 						.verticalScroll(rememberScrollState())
 						.weight(1f)
 				) {
-					for(group in groups) UserListItem(
+					for(group in groups.values) UserListItem(
 						group = group,
 						onClick = {
 							selectedTestGroup = group

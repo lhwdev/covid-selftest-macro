@@ -118,7 +118,7 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 									BitmapFactory.decodeStream(it)
 								}.asImageBitmap()
 							} catch(th: Throwable) {
-								debug.onError("profile picture of ${detail.name} was not loaded", th)
+								debug.onError("${detail.name}의 프로필 사진이 로딩되지 못했어요.", th)
 								null
 							}
 					}

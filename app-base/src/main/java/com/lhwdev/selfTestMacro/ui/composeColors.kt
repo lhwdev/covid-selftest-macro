@@ -9,6 +9,10 @@ import androidx.compose.ui.graphics.lerp
 val Colors.primarySurfaceColored: Color
 	@Composable get() = if(isLight) primary else lerp(primary, surface, .7f)
 
+/**
+ * A color that is used for texts, icons, and small elements on the background or surface.
+ * This color is primary in light mode, and brightened primary color in dark mode.
+ */
 val Colors.primaryActive: Color
 	@Composable get() = primaryActive(1f)
 

@@ -2,6 +2,8 @@ package com.vanpra.composematerialdialogs
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -10,6 +12,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.lhwdev.selfTestMacro.ui.primaryActive
 
 internal enum class MaterialDialogButtonTypes {
 	Text,
@@ -108,6 +111,20 @@ class FloatingMaterialDialogButtonsScope(val requestClose: () -> Unit) : Materia
 private object MaterialDialogButtonsScopeImpl : MaterialDialogButtonsScope
 
 
+@Composable
+private fun ButtonBase(
+	onClick: () -> Unit,
+	layoutId: MaterialDialogButtonTypes,
+	content: @Composable () -> Unit
+) {
+	TextButton(
+		onClick = onClick,
+		modifier = Modifier.layoutId(layoutId),
+		colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colors.primaryActive)
+	) { content() }
+}
+
+
 /**
  * Adds a button which is always enabled to the bottom of the dialog. This should
  * only be used for neutral actions.
@@ -121,9 +138,9 @@ fun MaterialDialogButtonsScope.Button(
 	onClick: () -> Unit,
 	button: @Composable () -> Unit,
 ) {
-	TextButton(
+	ButtonBase(
 		onClick = onClick,
-		modifier = Modifier.layoutId(MaterialDialogButtonTypes.Text),
+		layoutId = MaterialDialogButtonTypes.Text
 	) {
 		// ProvideTextStyle(TextStyle())
 		button()
@@ -142,10 +159,9 @@ fun MaterialDialogButtonsScope.PositiveButton(
 	onClick: () -> Unit,
 	content: @Composable () -> Unit
 ) {
-	TextButton(
+	ButtonBase(
 		onClick = onClick,
-		modifier = Modifier.layoutId(MaterialDialogButtonTypes.Positive),
-		enabled = true
+		layoutId = MaterialDialogButtonTypes.Positive
 	) {
 		content()
 	}
@@ -164,9 +180,9 @@ fun MaterialDialogButtonsScope.NegativeButton(
 	onClick: () -> Unit,
 	content: @Composable () -> Unit
 ) {
-	TextButton(
+	ButtonBase(
 		onClick = onClick,
-		modifier = Modifier.layoutId(MaterialDialogButtonTypes.Negative)
+		layoutId = MaterialDialogButtonTypes.Negative
 	) {
 		content()
 	}

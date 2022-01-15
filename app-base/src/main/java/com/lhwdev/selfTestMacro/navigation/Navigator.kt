@@ -15,6 +15,7 @@ interface Navigator {
 	fun popLastRoute(): Boolean
 	fun removeRoute(route: Route): Boolean
 	fun removeRoute(route: RouteInstance): Boolean
+	fun removeRoutes(startIndex: Int): Boolean
 	fun clearRoute()
 }
 
@@ -53,15 +54,15 @@ class NavigatorImpl : Navigator {
 	}
 	
 	override fun removeRoute(route: Route): Boolean =
-		removeRouteAt(list.indexOfLast { it.route === route })
+		removeRoutes(list.indexOfLast { it.route === route })
 	
 	override fun removeRoute(route: RouteInstance): Boolean =
-		removeRouteAt(list.lastIndexOf(route))
+		removeRoutes(list.lastIndexOf(route))
 	
-	private fun removeRouteAt(index: Int): Boolean {
-		if(index == -1) return false
+	override fun removeRoutes(startIndex: Int): Boolean {
+		if(startIndex == -1) return false
 		
-		repeat(list.size - index) {
+		repeat(list.size - startIndex) {
 			popLastRoute()
 		}
 		
@@ -75,9 +76,27 @@ class NavigatorImpl : Navigator {
 	}
 }
 
-class CurrentNavigator(navigator: Navigator, val currentRoute: RouteInstance) : Navigator by navigator {
+class CurrentNavigator(val rootNavigator: Navigator, val currentRoute: RouteInstance) : Navigator by rootNavigator {
 	val isRoot: Boolean get() = routes.firstOrNull() == currentRoute
 	val isTop: Boolean get() = routes.last() == currentRoute
+	
+	val index: Int get() = routes.indexOf(currentRoute)
+	
+	val parent: CurrentNavigator?
+		get() = routes.getOrNull(index - 1)?.let {
+			CurrentNavigator(rootNavigator = rootNavigator, currentRoute = it)
+		}
+	
+	val opaqueParent: CurrentNavigator?
+		get() {
+			val route = routes.subList(0, index).lastOrNull { it.route.isOpaque } ?: return null
+			
+			return CurrentNavigator(
+				rootNavigator = rootNavigator,
+				currentRoute = route
+			)
+		}
+	
 	
 	fun popRoute(): Boolean {
 		return removeRoute(currentRoute)
@@ -92,5 +111,14 @@ class CurrentNavigator(navigator: Navigator, val currentRoute: RouteInstance) : 
 		
 		pushRoute(route)
 		return true
+	}
+	
+	fun replaceChildren(route: Route) {
+		removeChildren()
+		pushRoute(route)
+	}
+	
+	fun removeChildren() {
+		if(!isTop) removeRoutes(startIndex = index + 1)
 	}
 }

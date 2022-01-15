@@ -1,12 +1,11 @@
 package com.lhwdev.selfTestMacro.repository
 
-import com.lhwdev.selfTestMacro.database.DatabaseManager
-import com.lhwdev.selfTestMacro.database.DbTestGroup
-import com.lhwdev.selfTestMacro.database.DbUser
+import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.debug.log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeToSequence
 import java.io.File
@@ -75,7 +74,7 @@ class SelfTestLog(val logFile: File) {
 					json.decodeToSequence(stream = it, deserializer = Entry.serializer()).toList()
 				}
 			}
-			fileEntries = fetched
+			fileEntries = fetched.toMutableList()
 		} catch(th: Throwable) {
 			log("[SelfTestLog] error while reading: $th")
 		}

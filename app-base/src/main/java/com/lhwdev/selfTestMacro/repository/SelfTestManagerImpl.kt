@@ -2,19 +2,11 @@ package com.lhwdev.selfTestMacro.repository
 
 import android.app.AlarmManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.os.Build
-import android.os.PowerManager
-import androidx.compose.foundation.clickable
-import androidx.compose.material.ListItem
-import androidx.compose.material.Text
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
 import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.http.Session
@@ -24,7 +16,7 @@ import com.lhwdev.selfTestMacro.android.utils.activeNetworkCommon
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.debug.*
-import com.lhwdev.selfTestMacro.ui.Color
+import com.lhwdev.selfTestMacro.repository.ui.showSelfTestFailedDialog
 import com.lhwdev.selfTestMacro.ui.UiContext
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.CoroutineScope
@@ -36,6 +28,22 @@ import kotlinx.serialization.Serializable
 import java.util.Calendar
 import java.util.WeakHashMap
 import kotlin.random.Random
+
+
+@PublishedApi
+internal val sSelfTestManagerMap = WeakHashMap<Context, SelfTestManager>()
+
+inline fun Context.defaultSelfTestManager(create: (Context) -> SelfTestManager): SelfTestManager {
+	val context = applicationContext
+	return sSelfTestManagerMap.getOrPut(context) { create(context) }
+}
+
+fun Context.createDefaultSelfTestManager(debugContext: DebugContext): SelfTestManagerImpl = SelfTestManagerImpl(
+	context = applicationContext,
+	database = preferenceState.db,
+	debugContext = debugContext,
+	defaultCoroutineScope = CoroutineScope(Dispatchers.Default)
+)
 
 
 private fun Context.createScheduleIntent(
@@ -54,177 +62,6 @@ private fun Context.createScheduleIntent(
 
 private fun userInfoKeyHash(userCode: String, instituteCode: String) =
 	userCode.hashCode() * 31 + instituteCode.hashCode()
-
-
-class HcsAppError(
-	message: String,
-	val isSerious: Boolean,
-	val causes: Set<ErrorCause>,
-	val target: Any? = null,
-	val diagnosticItem: SelfTestDiagnosticInfo,
-	cause: Throwable? = null
-) : RuntimeException(null, cause), DiagnosticObject {
-	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticItem
-	private val mMessage = message
-	private var cachedMessage: String? = null
-	
-	private fun createMessage() = buildString {
-		append(mMessage)
-		
-		if(target != null) {
-			append(" -> ")
-			append(target)
-		}
-		
-		append('\n')
-		append("원인: ")
-		causes.joinTo(this) { it.description }
-		
-		append("\n")
-		append("진단 정보: ")
-		diagnosticItem.dumpLocalized(oneLine = true)
-	}
-	
-	override val message: String
-		get() = cachedMessage ?: run {
-			val m = createMessage()
-			cachedMessage = m
-			m
-		}
-	
-	enum class ErrorCause(
-		val description: String,
-		val detail: String?,
-		val parent: ErrorCause? = null,
-		val sure: ErrorCause? = null,
-		val action: Action? = null,
-		val category: SubmitResult.ErrorCategory
-	) {
-		repeated(description = "반복해서 일어난 오류", detail = null, category = SubmitResult.ErrorCategory.flag),
-		
-		noNetwork(
-			description = "네트워크 연결 없음",
-			detail = """
-				네트워크에 연결되어 있지 않습니다.
-				와이파이나 데이터 네트워크가 켜져있는지 확인하시고, 데이터만 켜져있을 경우 백그라운드 데이터 사용 제한을 해제하셨는지 확인해주세요.
-			""".trimIndent(),
-			action = Action.Notice("네트워크에 연결되어 있지 않아요."),
-			category = SubmitResult.ErrorCategory.network
-		),
-		
-		appBug(
-			description = "앱 자체 버그",
-			detail = """
-				자가진단 매크로 앱의 버그입니다.
-				오류정보를 복사해서 개발자에게 제보해주신다면 감사하겠습니다.
-			""".trimIndent(),
-			category = SubmitResult.ErrorCategory.bug
-		),
-		probableAppBug(
-			description = "앱 자체 버그(?)",
-			detail = """
-				자가진단 매크로 앱의 버그일 수도 있습니다.
-				만약 버그라고 생각되신다면 오류정보를 복사해서 개발자에게 제보해주신다면 감사하겠습니다.
-			""".trimIndent(),
-			sure = appBug,
-			category = SubmitResult.ErrorCategory.bug
-		),
-		
-		apiChange(
-			description = "교육청 건강상태 자가진단의 내부 구조 변화",
-			detail = """
-				교육청의 건강상태 자가진단 사이트 내부구조가 바뀌었습니다.
-				가능하다면 개발자에게 제보해주세요.
-			""".trimIndent(),
-			parent = appBug,
-			category = SubmitResult.ErrorCategory.bug
-		),
-		probableApiChange(
-			description = "교육청 건강상태 자가진단의 내부 구조 변화(?)",
-			detail = """
-				교육청의 건강상태 자가진단 사이트 내부구조가 바뀌었을 수 있습니다.
-				버그인 것 같다면 개발자에게 제보해주세요.
-			""".trimIndent(),
-			sure = apiChange,
-			category = SubmitResult.ErrorCategory.bug
-		),
-		
-		unresponsiveNetwork(
-			description = "네트워크 불안정",
-			detail = """
-				네트워크(와이파이, 데이터 네트워크 등)에 연결되어 있지만 인터넷에 연결할 수 없습니다.
-				네트워크 연결을 다시 확인해주세요.
-			""".trimIndent(),
-			category = SubmitResult.ErrorCategory.network
-		),
-		
-		hcsUnreachable(
-			description = "자가진단 사이트 접근 불가",
-			detail = """
-				네트워크에 연결되어 있고 인터넷에 연결할 수 있지만, 자가진단 사이트에 연결할 수 없습니다.
-				교육청 건강상태 자가진단 서버가 순간적으로 불안정해서 일어났을 수도 있습니다.
-				공식 자가진단 사이트나 앱에 들어가서 작동하는지 확인하고, 작동하는데도 이 에러가 뜬다면 버그를 제보해주세요.
-			""".trimIndent(),
-			category = SubmitResult.ErrorCategory.network
-		),
-		
-		vpn(
-			description = "VPN 사용 중..?",
-			detail = """
-				VPN을 사용하고 있다면 VPN을 끄고 다시 시도해보세요.
-				자가진단 서버는 해외에서 오는 연결을 싸그리 차단해버린답니다.
-			""".trimIndent(),
-			category = SubmitResult.ErrorCategory.network
-		);
-		
-		
-		sealed class Action {
-			class Notice(val message: String) : Action()
-		}
-	}
-}
-
-
-@PublishedApi
-internal val sSelfTestManagerMap = WeakHashMap<Context, SelfTestManager>()
-
-inline fun Context.defaultSelfTestManager(create: (Context) -> SelfTestManager): SelfTestManager {
-	val context = applicationContext
-	return sSelfTestManagerMap.getOrPut(context) { create(context) }
-}
-
-
-fun Context.createDefaultSelfTestManager(debugContext: DebugContext): SelfTestManagerImpl = SelfTestManagerImpl(
-	context = applicationContext,
-	database = preferenceState.db,
-	debugContext = debugContext,
-	defaultCoroutineScope = CoroutineScope(Dispatchers.Default)
-)
-
-
-class AlarmReceiver : BroadcastReceiver() {
-	override fun onReceive(context: Context, intent: Intent) {
-		val lock = context.getSystemService<PowerManager>()!!
-			.newWakeLock(
-				PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-				"SelfTestMacro:AlarmReceiver"
-			)
-		lock.acquire(20000)
-		
-		val selfTestManager = context.defaultSelfTestManager {
-			it.createDefaultSelfTestManager(
-				debugContext = BackgroundDebugContext(
-					flags = DebugContext.DebugFlags(
-						enabled = context.isDebugEnabled,
-						debuggingWithIde = App.debuggingWithIde
-					),
-					manager = context.debugManager,
-					contextName = "AlarmReceiver"
-				)
-			)
-		}
-	}
-}
 
 
 @TraceItems(requiredModifier = java.lang.reflect.Modifier.PUBLIC)
@@ -259,6 +96,12 @@ class SelfTestManagerImpl(
 			onScheduledSubmitSelfTest(group, user)
 		}
 	}
+	
+	private val notificationStatus = NotificationStatus(
+		holder = PreferenceHolder(
+			pref = context.getSharedPreferences("SelfTestManager-NotificationStatus", Context.MODE_PRIVATE)
+		)
+	)
 	
 	
 	init {
@@ -687,8 +530,11 @@ class SelfTestManagerImpl(
 			val (session, _) = ensureSessionLoaded(user.userGroup)
 			Status(session.getUserInfo(user.usersInstitute, user.apiUser()))
 		} catch(th: Throwable) {
-			log("getCurrentStatus: error")
-			th.printStackTrace()
+			debugContext.onError(
+				message = "${user.name}의 현재 상태를 불러오지 못했어요.",
+				throwable = th,
+				diagnostics = listOf(user)
+			)
 			null
 		}
 	}
@@ -740,66 +586,66 @@ class SelfTestManagerImpl(
 	}
 	
 	override suspend fun submitSelfTestNow(
-		context: UiContext,
+		uiContext: UiContext,
 		target: DbTestTarget,
 		users: List<DbUser>
 	): List<SubmitResult> {
 		return try {
-			val result = users.map { database.submitSelfTest(it, isFromUi = true) }
-			if(result.isEmpty()) return result
+			val results = mutableListOf<SubmitResult>()
 			
-			if(result.all { it is SubmitResult.Success }) context.scope.launch {
-				context.showMessage(
-					if(target is DbTestTarget.Group) "모두 자가진단을 완료했어요." else "자가진단을 완료했어요.",
-					"확인"
-				)
-			} else context.navigator.showDialogUnit {
-				Title { Text("자가진단 실패") }
-				
-				ListContent {
-					for(resultItem in result) when(resultItem) {
-						is SubmitResult.Success -> ListItem {
-							Text(
-								"${resultItem.target.name}: 성공",
-								color = Color(
-									onLight = Color(0xf4259644),
-									onDark = Color(0xff99ffa0)
-								)
-							)
+			var lastProbableApiChange = false
+			var terminated = false
+			
+			for(user in users) {
+				val result = database.submitSelfTest(user, isFromUi = true)
+				if(result is SubmitResult.Failed) {
+					var userSpecific = true
+					for(cause in result.causes) when(cause) {
+						// implementation or version problem
+						HcsAppError.ErrorCause.apiChange,
+							// probably network problem?
+						HcsAppError.ErrorCause.hcsUnreachable,
+							// network problems
+						HcsAppError.ErrorCause.vpn,
+						HcsAppError.ErrorCause.noNetwork,
+						HcsAppError.ErrorCause.unresponsiveNetwork ->
+							userSpecific = false
+						
+						HcsAppError.ErrorCause.probableApiChange -> if(lastProbableApiChange) {
+							userSpecific = false
+						} else {
+							lastProbableApiChange = true
 						}
 						
-						is SubmitResult.Failed -> ListItem(
-							modifier = Modifier.clickable {
-								context.navigator.showDialogAsync {
-									Title { Text("오류 발생") }
-									
-									Content {
-										resultItem.cause
-									}
-									
-									Buttons {
-										PositiveButton(onClick = requestClose) { Text("닫기") }
-										Button(onClick = {}) {
-											
-										}
-									}
-								}
-							}
-						) {
-							Text(
-								"${resultItem.target.name}: 실패",
-								color = Color(
-									onLight = Color(0xffff1122),
-									onDark = Color(0xffff9099)
-								)
-							)
-						}
+						// unknown
+						HcsAppError.ErrorCause.appBug,
+						HcsAppError.ErrorCause.probableAppBug -> Unit
+						
+						// ignore flags
+						HcsAppError.ErrorCause.repeated -> Unit
+					}
+					
+					if(!userSpecific) {
+						terminated = true
+						break
 					}
 				}
 				
-				Buttons { PositiveButton(onClick = requestClose) { Text("확인") } }
+				results += result
+				afterSelfTestSubmit(user, result, isFromUi = true)
 			}
-			result
+			if(terminated) terminated = results.size < users.size
+			
+			if(results.isEmpty()) return results
+			
+			if(results.all { it is SubmitResult.Success }) uiContext.scope.launch {
+				uiContext.showMessage(
+					if(target is DbTestTarget.Group) "모두 자가진단을 완료했어요." else "자가진단을 완료했어요.",
+					"확인"
+				)
+			} else uiContext.navigator.showSelfTestFailedDialog(results, terminated)
+			
+			results
 		} catch(th: Throwable) {
 			emptyList()
 		}
@@ -808,52 +654,25 @@ class SelfTestManagerImpl(
 	override suspend fun onScheduledSubmitSelfTest(
 		group: DbTestGroup,
 		user: DbUser
-	): List<SubmitResult> {
-		try {
-			val result = database.submitSelfTest(user, isFromUi = false)
-			
-			val notificationManager = NotificationManagerCompat.from(context)
-			
-			if(results.all { it is SubmitResult.Success }) {
-				notificationManager.notify(
-					NotificationIds.selfTestSuccess,
-					SelfTestSuccessNotification.notificationOf(
-						context, target = target, database = database,
-						time = (results.last() as SubmitResult.Success).at
-					)
-				)
-			} else {
-				var at = "???"
-				
-				val count = results.count {
-					if(it is SubmitResult.Success) {
-						at = it.at
-						true
-					} else {
-						false
-					}
-				}
-				
-				val size = results.size
-				
-				@Suppress("IntroduceWhenSubject")
-				notificationManager.notify(
-					NotificationIds.selfTestFailed,
-					SelfTestFailedNotification.notificationOf(
-						context, target = target, database = database,
-						message = when {
-							size == 1 -> "자세한 정보는 이 알림을 눌러주세요." // TODO: implement this message
-							size == count -> "그룹에 있는 사용자의 자가진단을 모두 실패했습니다."
-							else -> "그룹에 있는 ${size}명 중에 ${size - count}명의 자가진단을 하지 못했습니다."
-						}
-					)
-				)
-			}
-			return results
-		} catch(th: Throwable) {
-			return emptyList()
+	): SubmitResult = try {
+		database.submitSelfTest(user, isFromUi = false)
+	} catch(th: Throwable) {
+		SubmitResult.Failed(
+			target = user,
+			causes = setOf(HcsAppError.ErrorCause.appBug),
+			diagnostic = SelfTestDiagnosticInfo(extraInfo = th.toString())
+		)
+	}.also { afterSelfTestSubmit(user, it, isFromUi = false) }
+	
+	
+	private fun afterSelfTestSubmit(user: DbUser, result: SubmitResult, isFromUi: Boolean) {
+		if(!isFromUi) {
+			TODO("update NotificationStatus")
 		}
+		
+		TODO("update SelfTestLog")
 	}
+	
 	
 	/// Scheduling
 	

@@ -87,7 +87,7 @@ interface SelfTestManager {
 	
 	
 	suspend fun submitSelfTestNow(
-		context: UiContext,
+		uiContext: UiContext,
 		target: DbTestTarget,
 		users: List<DbUser> = with(database) { target.allUsers }
 	): List<SubmitResult>
@@ -95,7 +95,7 @@ interface SelfTestManager {
 	suspend fun onScheduledSubmitSelfTest(
 		group: DbTestGroup,
 		user: DbUser
-	): List<SubmitResult>
+	): SubmitResult
 	
 	fun updateSchedule(target: DbTestGroup, new: DbTestGroup)
 	fun onScheduleUpdated()

@@ -19,7 +19,7 @@ import com.lhwdev.selfTestMacro.debug.DiagnosticObject
 @Immutable
 sealed class SubmitResult(val target: DbUser) {
 	class Success(target: DbUser, val at: String) : SubmitResult(target)
-	class Failed(target: DbUser, val cause: Set<HcsAppError.ErrorCause>, val diagnostic: SelfTestDiagnosticInfo) :
+	class Failed(target: DbUser, val causes: Set<HcsAppError.ErrorCause>, val diagnostic: SelfTestDiagnosticInfo) :
 		SubmitResult(target), DiagnosticObject {
 		override fun getDiagnosticInformation(): DiagnosticItem = diagnostic
 	}

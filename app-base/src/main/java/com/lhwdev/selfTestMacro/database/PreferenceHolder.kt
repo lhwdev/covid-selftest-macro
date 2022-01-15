@@ -4,10 +4,15 @@ import android.content.SharedPreferences
 
 
 class PreferenceHolder(val pref: SharedPreferences) {
-	private val propertyClean = mutableMapOf<String, Boolean>()
+	interface Property {
+		fun onUpdated()
+	}
+	
+	
+	private val properties = mutableMapOf<String, Property>()
 	
 	private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-		if(key != null) propertyClean[key] = false
+		if(key != null) properties[key]?.onUpdated()
 	}
 	
 	init {
@@ -15,18 +20,8 @@ class PreferenceHolder(val pref: SharedPreferences) {
 	}
 	
 	
-	inner class PropertyHandle(private val key: String) {
-		/**
-		 * false by default
-		 */
-		var clean: Boolean
-			get() = propertyClean[key] == true
-			set(value) {
-				propertyClean[key] = value
-			}
-	}
-	
-	
 	// supposed to be property registered permanently
-	fun property(key: String): PropertyHandle = PropertyHandle(key)
+	fun property(key: String, value: Property) {
+		properties[key] = value
+	}
 }

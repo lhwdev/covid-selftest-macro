@@ -13,43 +13,50 @@ import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
 
 
-inline fun <T> PreferenceHolder.preferenceState(
-	key: String,
-	crossinline read: (SharedPreferences) -> T,
-	crossinline write: (SharedPreferences, T) -> Unit
-): MutableState<T> = object : SnapshotMutableState<T> {
-	private val handle = property(key)
-	private val cache = mutableStateOf<T?>(null)
+private val sEmpty = Any()
+
+
+abstract class PreferenceItemState<T>(protected val holder: PreferenceHolder, key: String) :
+	SnapshotMutableState<T>, PreferenceHolder.Property {
+	private val cache = mutableStateOf<Any?>(sEmpty)
+	
+	
+	protected abstract fun read(): T
+	protected abstract fun write(value: T)
 	
 	
 	override var value: T
 		get() {
-			return if(handle.clean) {
+			val previous = cache.value
+			
+			return if(previous !== sEmpty) {
 				@Suppress("UNCHECKED_CAST")
-				cache.value as T
+				previous as T
 			} else {
-				val newValue = read(pref)
+				val newValue = read()
 				cache.value = newValue
-				handle.clean = true
 				newValue
 			}
 		}
 		set(value) {
 			if(cache.value == value) return
 			
-			cache.value = value
 			val current = currentTransaction
 			if(current == null) {
-				write(pref, value)
-				handle.clean = true // forcibly; write() would make handle.clean false
+				write(value)
+				cache.value = value
 			} else {
 				current[this] = {
-					write(pref, value)
-					handle.clean = true // forcibly; write() would make handle.clean false
+					write(value)
+					cache.value = value
 				}
-				handle.clean = true
+				cache.value = value
 			}
 		}
+	
+	override fun onUpdated() {
+		cache.value = sEmpty
+	}
 	
 	override fun component1(): T = value
 	override fun component2(): (T) -> Unit = { value = it }
@@ -57,6 +64,24 @@ inline fun <T> PreferenceHolder.preferenceState(
 	override val policy: SnapshotMutationPolicy<T>
 		@Suppress("UNCHECKED_CAST")
 		get() = structuralEqualityPolicy()
+	
+	
+	init {
+		@Suppress("LeakingThis") // property() do nothing than putting this instance in map
+		holder.property(key, this)
+	}
+}
+
+inline fun <T> PreferenceHolder.preferenceState(
+	key: String,
+	crossinline read: (SharedPreferences) -> T,
+	crossinline write: (SharedPreferences, T) -> Unit
+): MutableState<T> = object : PreferenceItemState<T>(holder = this, key = key) {
+	override fun read(): T = read(holder.pref)
+	
+	override fun write(value: T) {
+		write(holder.pref, value)
+	}
 }
 
 

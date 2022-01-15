@@ -162,7 +162,6 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 			Text(detail.credit)
 			Spacer(Modifier.height(24.dp))
 			
-			println(detail.links)
 			for(link in detail.links) LinkedText(link.text, onClick = {
 				urlHandler.openUri(link.url)
 			})

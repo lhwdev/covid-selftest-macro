@@ -6,7 +6,7 @@ import com.lhwdev.selfTestMacro.debug.DiagnosticItemGroup
 import com.lhwdev.selfTestMacro.debug.diagnosticElements
 
 
-class SelfTestDiagnosticInfo : DiagnosticItemGroup {
+class SelfTestDiagnosticInfo(var extraInfo: String? = null) : DiagnosticItemGroup {
 	var networkInfo: NetworkCommonImpl? = null
 	var networkResponsive = true
 	var hcsAccessible = true

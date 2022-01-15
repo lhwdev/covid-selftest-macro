@@ -18,11 +18,11 @@ private inline fun <T> T?.merge(other: T?, merger: (T, T) -> T): T? = when {
 class ErrorInfo(
 	val message: String,
 	val throwable: Throwable?,
-	val diagnostics: List<DiagnosticItem> = emptyList(),
+	val diagnostics: List<DiagnosticObject> = emptyList(),
 	val location: String = invokeLocationDescription(depth = 1),
 	val severity: DebugContext.Severity
 ) {
-	val allDiagnostics: List<DiagnosticItem>
+	val allDiagnostics: List<DiagnosticObject>
 		get() = if(throwable is DiagnosticObject) {
 			diagnostics + throwable.getDiagnosticInformation()
 		} else {
@@ -58,10 +58,13 @@ abstract class DebugContext(
 	abstract val contextName: String
 	
 	
+	/**
+	 * @param message **User-friendly** message which is properly localized.
+	 */
 	inline fun onError(
 		message: String,
 		throwable: Throwable?,
-		diagnostics: List<DiagnosticItem> = emptyList(),
+		diagnostics: List<DiagnosticObject> = emptyList(),
 		forceShow: Boolean = false,
 		location: String = invokeLocationDescription(depth = 1),
 		severity: Severity = Severity.significant
@@ -77,7 +80,7 @@ abstract class DebugContext(
 	inline fun onThrowError(
 		message: String,
 		throwable: Throwable?,
-		diagnostics: List<DiagnosticItem> = emptyList(),
+		diagnostics: List<DiagnosticObject> = emptyList(),
 		forceShow: Boolean = false,
 		location: String = invokeLocationDescription(depth = 1),
 		severity: Severity = Severity.significant

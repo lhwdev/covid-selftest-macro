@@ -12,9 +12,11 @@ fun DiagnosticItem.asObject(): DiagnosticObject = object : DiagnosticObject {
 	override fun getDiagnosticInformation(): DiagnosticItem = this@asObject
 }
 
-sealed interface DiagnosticItem {
+sealed interface DiagnosticItem : DiagnosticObject {
 	val name: String
 	val localizedName: String?
+	
+	override fun getDiagnosticInformation(): DiagnosticItem = this
 }
 
 interface DiagnosticItemGroup : DiagnosticItem {
@@ -116,6 +118,8 @@ fun DiagnosticElement<*>.localizedData(): String {
 		else -> "$data"
 	}
 }
+
+fun DiagnosticObject.dumpDebug(oneLine: Boolean): String = getDiagnosticInformation().dumpDebug(oneLine = oneLine)
 
 fun DiagnosticItem.dumpDebug(oneLine: Boolean): String = buildString {
 	fun dump(item: DiagnosticItem, depth: Int): Any = when(item) {

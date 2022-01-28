@@ -1,95 +1,105 @@
-@file:Suppress("NOTHING_TO_INLINE")
+@file:Suppress("UNCHECKED_CAST", "NAME_SHADOWING")
 
 package com.vanpra.composematerialdialogs
 
 import androidx.compose.foundation.clickable
 import androidx.compose.material.ListItem
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lhwdev.selfTestMacro.navigation.*
 
 
-suspend inline fun <T> Navigator.showDialog(
+private val sDefaultDialogRouteFactory: ContentRouteFactory<Any?> =
+	{ content, removeRoute -> DialogRoute(content = content, onRouteRemoved = { removeRoute(null) }) }
+
+
+suspend fun <T> Navigator.showDialog(
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	maxHeight: Dp = FloatingDialogMaxHeight,
-	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
-	crossinline content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
+	routeFactory: ContentRouteFactory<T> = sDefaultDialogRouteFactory as ContentRouteFactory<T>,
+	content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
 ): T? = showRouteFactory { removeRoute ->
-	routeFactory {
+	routeFactory({
 		MaterialDialog(
 			onCloseRequest = { removeRoute(null) },
 			modifier = modifier,
 			properties = properties,
 			maxHeight = maxHeight
 		) { content(removeRoute) }
-	}
+	}, removeRoute)
 }
 
-suspend inline fun Navigator.showDialogUnit(
+suspend fun Navigator.showDialogUnit(
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	maxHeight: Dp = FloatingDialogMaxHeight,
-	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
-	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
+	routeFactory: ContentRouteFactory<Nothing?> = sDefaultDialogRouteFactory as ContentRouteFactory<Nothing?>,
+	content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
-	showDialog<Unit>(
+	@Suppress("RemoveExplicitTypeArguments")
+	showDialog<Nothing?>(
 		modifier = modifier,
 		properties = properties,
 		maxHeight = maxHeight,
 		routeFactory = routeFactory
-	) { content { it(Unit) } }
+	) { content { it(null) } }
 }
 
-inline fun Navigator.showDialogAsync(
+fun Navigator.showDialogAsync(
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	maxHeight: Dp = FloatingDialogMaxHeight,
-	routeFactory: (content: @Composable () -> Unit) -> Route = { DialogRoute(content = it) },
-	noinline content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
+	routeFactory: ContentRouteFactory<Nothing?> = sDefaultDialogRouteFactory as ContentRouteFactory<Nothing?>,
+	content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showRouteFactoryAsync { removeRoute ->
-		routeFactory {
+		val removeRouteUnit = { removeRoute(null) }
+		routeFactory({
 			MaterialDialog(
-				onCloseRequest = removeRoute,
+				onCloseRequest = removeRouteUnit,
 				modifier = modifier,
 				properties = properties,
 				maxHeight = maxHeight
-			) { content(removeRoute) }
-		}
+			) { content(removeRouteUnit) }
+		}, removeRoute)
 	}
 }
 
-suspend inline fun <T> Navigator.showFullDialog(
-	noinline routeFactory: (content: @Composable () -> Unit) -> Route = { FullDialogRoute(content = it) },
-	noinline content: @Composable (FullMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit)
+private val sFullscreenDialogRoute: ContentRouteFactory<Any?> =
+	{ content, removeRoute -> FullDialogRoute(content = content, onRouteRemoved = { removeRoute(null) }) }
+
+suspend fun <T> Navigator.showFullDialog(
+	properties: DialogProperties = DialogProperties(),
+	routeFactory: ContentRouteFactory<T?> = sFullscreenDialogRoute as ContentRouteFactory<T?>,
+	content: @Composable (FullMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit)
 ): T? = showRouteFactory { remoteRoute ->
-	routeFactory {
-		FullMaterialDialogStub(
-			onCloseRequest = { remoteRoute(null) }
+	routeFactory({
+		FullMaterialDialog(
+			onCloseRequest = { remoteRoute(null) },
+			properties = properties
 		) { content(remoteRoute) }
-	}
+	}, remoteRoute)
 }
 
-inline fun Navigator.showFullDialogAsync(
-	routeFactory: (content: @Composable () -> Unit) -> Route = { FullDialogRoute(content = it) },
-	noinline content: @Composable (FullMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
+fun Navigator.showFullDialogAsync(
+	properties: DialogProperties = DialogProperties(),
+	routeFactory: ContentRouteFactory<Nothing?> = sFullscreenDialogRoute as ContentRouteFactory<Nothing?>,
+	content: @Composable (FullMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showRouteFactoryAsync { remoteRoute ->
-		routeFactory {
-			FullMaterialDialogStub(
-				onCloseRequest = { remoteRoute() }
-			) { content(remoteRoute) }
-		}
+		val removeRouteUnit = { remoteRoute(null) }
+		routeFactory({
+			FullMaterialDialog(
+				onCloseRequest = removeRouteUnit,
+				properties = properties
+			) { content(removeRouteUnit) }
+		}, remoteRoute)
 	}
 }
-
 
 suspend fun Navigator.promptYesNoDialog(
 	title: @Composable () -> Unit,
@@ -126,22 +136,3 @@ suspend fun <T> Navigator.promptSelectDialog(
 		NegativeButton(onClick = requestClose) { Text("취소") }
 	}
 }
-
-
-@Composable
-internal fun ThemedDialog(
-	onCloseRequest: () -> Unit,
-	properties: DialogProperties,
-	children: @Composable () -> Unit
-) {
-	val colors = MaterialTheme.colors
-	val typography = MaterialTheme.typography
-	Dialog(onDismissRequest = onCloseRequest, properties = properties) {
-		MaterialTheme(colors = colors, typography = typography) {
-			children()
-		}
-	}
-}
-
-internal fun List<Pair<MaterialDialogButtonTypes, Placeable>>.buttons(type: MaterialDialogButtonTypes) =
-	this.filter { it.first == type }.map { it.second }

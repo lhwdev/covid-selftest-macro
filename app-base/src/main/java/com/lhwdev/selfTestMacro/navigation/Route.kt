@@ -23,8 +23,8 @@ fun Route.copy(
 ): Route = Route(name, isOpaque, transition, content)
 
 interface RouteObserver {
-	fun onRouteAdded(navigator: Navigator)
-	fun onRouteRemoved(navigator: Navigator)
+	fun onRouteAdded(navigator: Navigator) {}
+	fun onRouteRemoved(navigator: Navigator) {}
 }
 
 
@@ -40,28 +40,31 @@ fun Route(
 }
 
 
-fun DialogRoute(
-	name: String? = null,
-	isOpaque: Boolean = false,
-	content: @Composable () -> Unit
-): Route = object : Route, RouteTransition by NoneTransition() {
-	override val name: String? = name
-	override val content: @Composable () -> Unit get() = content
-	override val isOpaque: Boolean = isOpaque
-	
+@PublishedApi
+internal abstract class DialogRouteBase(
+	override val name: String?,
+	override val isOpaque: Boolean,
+	override val content: @Composable () -> Unit
+) : Route, RouteTransition by NoneTransition(), RouteObserver {
 	override fun toString(): String = "Route $name(isOpaque=$isOpaque, $content)"
 }
 
-fun FullDialogRoute(
+inline fun DialogRoute(
 	name: String? = null,
-	content: @Composable () -> Unit
-): Route = object : Route, RouteTransition by CustomDialogRouteTransition() {
-	override val name: String? = name
-	override val content: @Composable () -> Unit = content
-	override val isOpaque: Boolean get() = true
-	
-	override fun toString(): String = "Route $name(isOpaque=$isOpaque, $content)"
+	isOpaque: Boolean = false,
+	crossinline onRouteRemoved: () -> Unit,
+	noinline content: @Composable () -> Unit
+): Route = object : DialogRouteBase(name = name, isOpaque = isOpaque, content = content) {
+	override fun onRouteRemoved(navigator: Navigator) {
+		onRouteRemoved()
+	}
 }
+
+inline fun FullDialogRoute(
+	name: String? = null,
+	noinline content: @Composable () -> Unit,
+	crossinline onRouteRemoved: () -> Unit
+): Route = DialogRoute(name = name, content = content, onRouteRemoved = onRouteRemoved)
 
 inline fun Navigator.pushRoute(
 	name: String? = null,
@@ -94,14 +97,21 @@ suspend inline fun Navigator.showRouteUnit(
 }
 
 
-suspend fun <T> Navigator.showRouteFactory(routeFactory: (removeRoute: (T) -> Unit) -> Route): T {
+typealias RouteFactory<T> = (removeRoute: (T) -> Unit) -> Route
+typealias ContentRouteFactory<T> = (content: @Composable () -> Unit, removeRoute: (T) -> Unit) -> Route
+
+
+suspend fun <T> Navigator.showRouteFactory(routeFactory: RouteFactory<T>): T {
 	lateinit var route: Route
 	
 	return suspendCancellableCoroutine { cont ->
-		val removeRoute = { result: T ->
-			removeRoute(route)
-			cont.resume(result)
-		}
+		val removeRoute =
+			{ result: T -> // removeRoute should be able to be called several times, ignoring following calls.
+				val removed = removeRoute(route)
+				if(removed) {
+					cont.resume(result)
+				}
+			}
 		
 		route = routeFactory(removeRoute)
 		
@@ -117,10 +127,10 @@ suspend inline fun <T> Navigator.showRoute(
 	noinline content: @Composable (removeRoute: (T) -> Unit) -> Unit
 ): T = showRouteFactory { Route(name, isOpaque, transition) { content(it) } }
 
-inline fun Navigator.showRouteFactoryAsync(routeFactory: (removeRoute: () -> Unit) -> Route) {
+inline fun Navigator.showRouteFactoryAsync(routeFactory: RouteFactory<Nothing?>) {
 	lateinit var route: Route
 	
-	val removeRoute = {
+	val removeRoute = { _: Nothing? ->
 		removeRoute(route)
 	}
 	
@@ -139,5 +149,5 @@ inline fun Navigator.showRouteAsync(
 	transition: RouteTransition = DefaultTransition(isOpaque),
 	noinline content: @Composable (removeRoute: () -> Unit) -> Unit
 ) {
-	showRouteFactoryAsync { Route(name, isOpaque, transition) { content(it) } }
+	showRouteFactoryAsync { Route(name, isOpaque, transition) { content { it(null) } } }
 }

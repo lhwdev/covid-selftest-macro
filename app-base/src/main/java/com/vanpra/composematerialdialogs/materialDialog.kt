@@ -16,6 +16,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lhwdev.selfTestMacro.ui.AppliedUiPaddings
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
@@ -26,7 +27,6 @@ import com.lhwdev.selfTestMacro.ui.SystemUiMode
 @Composable
 fun MaterialDialogBase(
 	onCloseRequest: () -> Unit,
-	properties: DialogProperties = DialogProperties(),
 	content: @Composable (MaterialDialogInfo) -> Unit
 ) {
 	
@@ -46,12 +46,7 @@ fun MaterialDialogBase(
 		}
 	}
 	
-	ThemedDialog(
-		onCloseRequest = onCloseRequest,
-		properties = properties
-	) {
-		content(info)
-	}
+	content(info)
 }
 
 
@@ -104,44 +99,48 @@ fun MaterialDialog(
 	content: @Composable FloatingMaterialDialogScope.() -> Unit
 ) {
 	MaterialDialogBase(
-		onCloseRequest = onCloseRequest,
-		properties = properties
+		onCloseRequest = onCloseRequest
 	) { info ->
-		AutoSystemUi(
-			onScreenMode = null,
-			ime = SystemUiMode.Default
+		Dialog(
+			onDismissRequest = onCloseRequest,
+			properties = properties
 		) {
-			Box(
-				Modifier
-					.fillMaxSize(fraction = 1f - .03f) // some guard; shadow gets clipped as this dialog cannot be drawn behind app bar
-					.pointerInput(Unit) {
-						if(properties.dismissOnClickOutside) detectTapGestures(
-							onPress = { onCloseRequest() }
-						)
-					},
-				contentAlignment = Alignment.Center
+			AutoSystemUi(
+				onScreenMode = null,
+				ime = SystemUiMode.Default
 			) {
-				Surface(
-					modifier = modifier
-						.fillMaxWidth(fraction = .81f)
-						.sizeIn(maxHeight = maxHeight)
+				Box(
+					Modifier
+						.fillMaxSize(fraction = 1f - .03f) // some guard; shadow gets clipped as this dialog cannot be drawn behind app bar
 						.pointerInput(Unit) {
-							// override dismissOnClickOutside
-							if(properties.dismissOnClickOutside) detectTapGestures()
+							if(properties.dismissOnClickOutside) detectTapGestures(
+								onPress = { onCloseRequest() }
+							)
 						},
-					shape = shape,
-					color = backgroundColor,
-					border = border,
-					elevation = elevation
+					contentAlignment = Alignment.Center
 				) {
-					ProvideAppliedUiPaddings(
-						AppliedUiPaddings(
-							statusBar = true,
-							navigationBar = true
-						)
+					Surface(
+						modifier = modifier
+							.fillMaxWidth(fraction = .81f)
+							.sizeIn(maxHeight = maxHeight)
+							.pointerInput(Unit) {
+								// override dismissOnClickOutside
+								if(properties.dismissOnClickOutside) detectTapGestures()
+							},
+						shape = shape,
+						color = backgroundColor,
+						border = border,
+						elevation = elevation
 					) {
-						Column {
-							FloatingMaterialDialogScope(info, this).content()
+						ProvideAppliedUiPaddings(
+							AppliedUiPaddings(
+								statusBar = true,
+								navigationBar = true
+							)
+						) {
+							Column {
+								FloatingMaterialDialogScope(info, this).content()
+							}
 						}
 					}
 				}
@@ -151,29 +150,6 @@ fun MaterialDialog(
 }
 
 class FloatingMaterialDialogScope(
-	info: MaterialDialogInfo,
-	columnScope: ColumnScope
-) : MaterialDialogScope(info), ColumnScope by columnScope
-
-
-// this adds nothing; animation is done by navigator
-@Composable
-fun FullMaterialDialogStub(
-	onCloseRequest: () -> Unit,
-	content: @Composable FullMaterialDialogScope.() -> Unit
-) {
-	val info = remember {
-		MaterialDialogInfo(onCloseRequest)
-	}
-	info.requestClose = onCloseRequest
-	
-	
-	Column {
-		FullMaterialDialogScope(info, this).content()
-	}
-}
-
-class FullMaterialDialogScope(
 	info: MaterialDialogInfo,
 	columnScope: ColumnScope
 ) : MaterialDialogScope(info), ColumnScope by columnScope

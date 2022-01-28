@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -20,6 +21,11 @@ internal enum class MaterialDialogButtonTypes {
 	Negative,
 	Accessibility
 }
+
+
+private fun List<Pair<MaterialDialogButtonTypes, Placeable>>.buttons(type: MaterialDialogButtonTypes) =
+	this.filter { it.first == type }.map { it.second }
+
 
 /**
  *  Adds buttons to the bottom of the dialog

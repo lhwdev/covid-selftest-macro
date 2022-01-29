@@ -74,7 +74,7 @@ fun EditUsers() {
 							) {
 								DropdownMenuItem(onClick = {
 									showAddDialog = false
-									navigator.showRouteFactoryAsync { SetupRoute(SetupParameters(endRoute = it)) }
+									navigator.showRouteFactoryAsync { SetupRoute(SetupParameters(endRoute = { it(null) })) }
 								}) {
 									Text("사용자 추가")
 								}
@@ -255,7 +255,7 @@ private fun EditUsersContent(
 			ListItem(
 				icon = { Icon(painterResource(R.drawable.ic_add_24), contentDescription = null) },
 				modifier = Modifier.clickable {
-					navigator.showRouteFactoryAsync { SetupRoute(SetupParameters(endRoute = it)) }
+					navigator.showRouteFactoryAsync { SetupRoute(SetupParameters(endRoute = { it(null) })) }
 				}
 			) {
 				Text("사용자 추가")

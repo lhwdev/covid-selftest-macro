@@ -54,7 +54,7 @@ sealed interface SystemUiMode {
 
 sealed interface OnScreenSystemUiMode : SystemUiMode {
 	class Immersive(val scrimColor: Color = Color.Transparent) : OnScreenSystemUiMode
-	class Opaque(val scrimColor: Color = Color.Black) : OnScreenSystemUiMode
+	class Opaque(val scrimColor: Color) : OnScreenSystemUiMode
 }
 
 

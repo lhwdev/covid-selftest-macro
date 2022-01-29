@@ -16,10 +16,7 @@ import com.lhwdev.selfTestMacro.database.Answer
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.replacedValue
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.LocalPreference
-import com.lhwdev.selfTestMacro.ui.SelfTestQuestions
-import com.lhwdev.selfTestMacro.ui.TopAppBar
+import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.vanpra.composematerialdialogs.*
@@ -30,7 +27,9 @@ fun Navigator.showChangeAnswerDialog(user: DbUser) = showFullDialogAsync { dismi
 }
 
 @Composable
-fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = AutoSystemUi { scrims ->
+fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = AutoSystemUi(
+	statusBarMode = OnScreenSystemUiMode.Immersive()
+) { scrims ->
 	val pref = LocalPreference.current
 	
 	Scaffold(

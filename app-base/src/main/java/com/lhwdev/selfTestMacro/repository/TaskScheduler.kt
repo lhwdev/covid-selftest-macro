@@ -7,6 +7,9 @@ interface TaskItem {
 
 
 interface TaskScheduler<T : TaskItem> {
+	/**
+	 * This may contain old tasks.
+	 */
 	val allTasks: List<T>
 	
 	fun updateTasks(tasks: List<T>)

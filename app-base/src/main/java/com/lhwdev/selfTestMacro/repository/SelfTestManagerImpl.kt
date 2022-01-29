@@ -1,30 +1,30 @@
 package com.lhwdev.selfTestMacro.repository
 
 import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import android.os.Build
 import androidx.compose.runtime.snapshotFlow
 import androidx.core.content.getSystemService
 import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.isOk
-import com.lhwdev.selfTestMacro.*
 import com.lhwdev.selfTestMacro.android.utils.activeNetworkCommon
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.*
-import com.lhwdev.selfTestMacro.debug.*
+import com.lhwdev.selfTestMacro.debug.DebugContext
+import com.lhwdev.selfTestMacro.debug.DiagnosticObject
+import com.lhwdev.selfTestMacro.debug.TraceItems
+import com.lhwdev.selfTestMacro.debug.log
+import com.lhwdev.selfTestMacro.replaced
 import com.lhwdev.selfTestMacro.repository.ui.showSelfTestFailedDialog
+import com.lhwdev.selfTestMacro.tryAtMost
 import com.lhwdev.selfTestMacro.ui.UiContext
-import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import java.util.Calendar
 import java.util.WeakHashMap
 import kotlin.random.Random
@@ -46,24 +46,27 @@ fun Context.createDefaultSelfTestManager(debugContext: DebugContext): SelfTestMa
 )
 
 
-private fun Context.createScheduleIntent(
-	id: Int, newAlarmIntent: (Context) -> Intent
-): PendingIntent = PendingIntent.getBroadcast(
-	this,
-	id,
-	newAlarmIntent(this),
-	PendingIntent.FLAG_UPDATE_CURRENT or if(Build.VERSION.SDK_INT >= 23) {
-		PendingIntent.FLAG_IMMUTABLE
-	} else {
-		0
-	}
-)
-
-
 private fun userInfoKeyHash(userCode: String, instituteCode: String) =
 	userCode.hashCode() * 31 + instituteCode.hashCode()
 
 
+private const val sPrefPrefix = "SelfTestManager"
+
+/**
+ * A manager implementation for all SelfTest-related operations like submitting, scheduling, notification, etc,
+ * for more high level operation.
+ * I want to remove UI related things here, but I do not have such a time to do that.
+ *
+ * This and some classes, like [GroupTaskScheduler], [TodayStatus], [NotificationStatus], [SelfTestLog] seperate
+ * concerns that used to be focused here.
+ *
+ * Nowadays [SelfTestManager] focuses on:
+ *
+ * - database management
+ * - translating calls to api implementation like [Session.registerSurvey] (although it is merely wrapper so far)
+ * - fluent and user-friendly error handling
+ * - scheduling self test
+ */
 @TraceItems(requiredModifier = java.lang.reflect.Modifier.PUBLIC)
 class SelfTestManagerImpl(
 	override var context: Context,
@@ -71,15 +74,25 @@ class SelfTestManagerImpl(
 	override val database: DatabaseManager,
 	val defaultCoroutineScope: CoroutineScope
 ) : SelfTestManager {
-	@Serializable
-	private class SelfTestTask(val testGroupId: Int, val userId: Int, override val timeMillis: Long) : TaskItem
+	private val todayStatus = TodayStatus(
+		holder = context.preferenceHolderOf("$sPrefPrefix-todayStatus")
+	)
+	
+	private val notificationStatus = NotificationStatus(
+		holder = context.preferenceHolderOf("$sPrefPrefix-notificationStatus")
+	)
 	
 	private val scheduler = object : AlarmManagerTaskScheduler<SelfTestTask>(
 		context = context,
-		taskSerializer = SelfTestTask.serializer(),
 		holder = database.holder,
 		scheduleIntent = Intent(context, AlarmReceiver::class.java)
 	) {
+		override var tasks: List<SelfTestTask>
+			get() = todayStatus.tasks
+			set(value) {
+				todayStatus.tasks = value
+			}
+		
 		override suspend fun onTask(task: SelfTestTask) {
 			val group = database.testGroups.groups[task.testGroupId]
 			if(group == null) {
@@ -96,12 +109,6 @@ class SelfTestManagerImpl(
 			onScheduledSubmitSelfTest(group, user)
 		}
 	}
-	
-	private val notificationStatus = NotificationStatus(
-		holder = PreferenceHolder(
-			pref = context.getSharedPreferences("SelfTestManager-NotificationStatus", Context.MODE_PRIVATE)
-		)
-	)
 	
 	
 	init {
@@ -702,7 +709,7 @@ class SelfTestManagerImpl(
 				val to = calendarFor(schedule.to).timeInMillis
 				random.nextLong(from = from, until = to + 1)
 			}
-			DbTestSchedule.None -> error("Oh no")
+			DbTestSchedule.None -> error("Oh nyooo......")
 		}
 		
 		if(excludeWeekend) {
@@ -732,8 +739,6 @@ class SelfTestManagerImpl(
 	
 	override fun updateSchedule(target: DbTestGroup, new: DbTestGroup) {
 		val testGroups = database.testGroups
-		return
-		TODO()
 		
 		// change testGroups -> preferenceState.cache updated -> snapshotFlow(see above) -> call onScheduleUpdated
 		disableOnScheduleUpdated = true

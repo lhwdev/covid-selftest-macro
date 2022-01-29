@@ -8,11 +8,7 @@ import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.core.content.getSystemService
-import com.lhwdev.selfTestMacro.database.PreferenceHolder
-import com.lhwdev.selfTestMacro.database.preferenceInt
-import com.lhwdev.selfTestMacro.database.preferenceLong
-import com.lhwdev.selfTestMacro.database.preferenceSerialized
-import kotlinx.serialization.KSerializer
+import com.lhwdev.selfTestMacro.database.*
 import kotlinx.serialization.builtins.ListSerializer
 
 
@@ -20,16 +16,13 @@ import kotlinx.serialization.builtins.ListSerializer
 private const val sSetExactInterval = 18 * 60 * 1000 // 18m
 
 
-private fun Context.defaultPreferenceHolder() = PreferenceHolder(
-	getSharedPreferences("AlarmManagerTaskScheduler", Context.MODE_PRIVATE)
-)
+private fun Context.defaultPreferenceHolder() = preferenceHolderOf("AlarmManagerTaskScheduler")
 
 
 abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 	val context: Context,
 	val scheduleIntent: Intent,
-	val holder: PreferenceHolder = context.defaultPreferenceHolder(),
-	taskSerializer: KSerializer<T>
+	val holder: PreferenceHolder = context.defaultPreferenceHolder()
 ) : GroupTaskScheduler<T>() {
 	private val manager = context.getSystemService<AlarmManager>()!!
 	
@@ -40,11 +33,7 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 		defaultValue = Long.MIN_VALUE
 	)
 	
-	override var tasks: List<T> by holder.preferenceSerialized(
-		key = "tasks",
-		serializer = ListSerializer(taskSerializer),
-		defaultValue = emptyList()
-	)
+	abstract override var tasks: List<T>
 	
 	override fun canTaskScheduled(task: T, schedule: TaskSchedule): Boolean =
 		task.timeMillis - schedule.timeMillis in 0..sSetExactInterval
@@ -94,17 +83,10 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 	
 	/// Etc
 	
-	open fun cleanOldTasks() {
+	open fun cleanOldSchedules() {
 		val current = System.currentTimeMillis()
 		
-		run {
-			val index = tasks.indexOfFirst { it.timeMillis > current }
-			if(index > 0) tasks = tasks.drop(index)
-		}
-		
-		run {
-			val index = schedules.indexOfFirst { it.timeMillis > current }
-			if(index > 0) schedules = schedules.drop(index)
-		}
+		val index = schedules.indexOfFirst { it.timeMillis > current }
+		if(index > 0) schedules = schedules.drop(index)
 	}
 }

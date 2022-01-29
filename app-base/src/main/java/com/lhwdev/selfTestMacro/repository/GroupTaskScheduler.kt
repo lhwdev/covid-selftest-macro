@@ -16,10 +16,16 @@ import kotlinx.serialization.Serializable
 
 
 /**
- * If this is implemented properly, implementing SelfTestManagerImpl would be EASY, literally.
+ * Groups lightweight **tasks** and assigns to heavy **schedules**. Schedule may be a platform-dependant thing like
+ * an entry in AlarmManager just like implemented in [AlarmManagerTaskScheduler].
+ * Sometimes, schedules cannot be freely created, just like Threads, so we 'group' tasks, which is like coroutines.
  *
  * This class is seemingly less stateful. If you call [updateTasks], all tasks previous will be cancelled and new tasks
  * will be added externally. Internally, this should handle these updates efficiently.
+ *
+ * > note from old days of me: _If this is implemented properly, implementing SelfTestManagerImpl would be EASY, literally._
+ *
+ * Why I thought so?
  */
 @TraceItems
 abstract class GroupTaskScheduler<T : TaskItem> : TaskScheduler<T> {
@@ -51,8 +57,10 @@ abstract class GroupTaskScheduler<T : TaskItem> : TaskScheduler<T> {
 		val newTasks = tasks.sortedBy { it.timeMillis }
 		this.tasks = newTasks
 		
+		// Fast path #1
 		if(lastTasks == newTasks) return
 		
+		// Fast path #2
 		if(newTasks.isEmpty()) {
 			schedules.forEach { scheduleCancel(it) }
 			schedules = emptyList()

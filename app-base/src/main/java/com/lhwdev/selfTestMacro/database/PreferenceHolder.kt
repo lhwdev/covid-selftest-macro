@@ -1,9 +1,15 @@
 package com.lhwdev.selfTestMacro.database
 
+import android.content.Context
 import android.content.SharedPreferences
 
 
-class PreferenceHolder(val pref: SharedPreferences) {
+fun Context.preferenceHolderOf(key: String): PreferenceHolder = PreferenceHolder(
+	pref = getSharedPreferences("SelfTestManager-NotificationStatus", Context.MODE_PRIVATE)
+)
+
+
+class PreferenceHolder constructor(val pref: SharedPreferences) {
 	interface Property {
 		fun onUpdated()
 	}

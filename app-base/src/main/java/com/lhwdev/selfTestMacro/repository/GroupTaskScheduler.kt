@@ -28,7 +28,7 @@ import kotlinx.serialization.Serializable
  * Why I thought so?
  */
 @TraceItems
-abstract class GroupTaskScheduler<T : TaskItem> : TaskScheduler<T> {
+abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskScheduler<T> {
 	@Serializable
 	protected data class TaskSchedule(
 		val code: Int,
@@ -46,7 +46,7 @@ abstract class GroupTaskScheduler<T : TaskItem> : TaskScheduler<T> {
 	/**
 	 * This should be sorted by [TaskItem.timeMillis].
 	 */
-	protected abstract var tasks: List<T>
+	private var tasks: List<T> = initialTasks
 	
 	override val allTasks: List<T> get() = tasks
 	
@@ -104,13 +104,14 @@ abstract class GroupTaskScheduler<T : TaskItem> : TaskScheduler<T> {
 		}
 		
 		schedules = newSchedules
+		onScheduleUpdated()
 	}
 	
 	protected open fun onTaskScheduled(task: T, schedule: TaskSchedule) {}
 	
 	protected abstract suspend fun onTask(task: T)
 	
-	protected suspend fun onSchedule(schedule: TaskSchedule, coroutineScope: CoroutineScope) {
+	protected open suspend fun onSchedule(schedule: TaskSchedule, coroutineScope: CoroutineScope) {
 		val index = tasks.indexOfFirst { it.timeMillis >= schedule.timeMillis }
 		if(index != 0) {
 			error("[GroupTaskScheduler] onSchedule: schedule order miss: target task $index != 0")
@@ -142,7 +143,7 @@ abstract class GroupTaskScheduler<T : TaskItem> : TaskScheduler<T> {
 	
 	
 	/// Schedules: low level, heavy task; many tasks can be run in one schedule.
-	///            created to respond Android scheduling restriction.
+	///            created to cope with Android scheduling restriction.
 	
 	protected abstract var schedules: List<TaskSchedule>
 	
@@ -155,4 +156,6 @@ abstract class GroupTaskScheduler<T : TaskItem> : TaskScheduler<T> {
 	protected abstract fun scheduleSet(time: Long): TaskSchedule
 	
 	protected abstract fun scheduleCancel(schedule: TaskSchedule)
+	
+	protected abstract fun onScheduleUpdated()
 }

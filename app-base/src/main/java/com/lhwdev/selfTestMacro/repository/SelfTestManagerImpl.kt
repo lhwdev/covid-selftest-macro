@@ -54,7 +54,7 @@ private const val sPrefPrefix = "SelfTestManager"
  * for more high level operation.
  * I want to remove UI related things here, but I do not have such a time to do that.
  *
- * This and some classes, like [GroupTaskScheduler], [TodayStatus], [NotificationStatus], [SelfTestLog] seperate
+ * This and some classes, like [GroupTaskScheduler], [SelfTestSchedule], [NotificationStatus], [SelfTestLog] seperate
  * concerns that used to be focused here.
  *
  * Nowadays [SelfTestManager] focuses on:
@@ -71,41 +71,20 @@ class SelfTestManagerImpl(
 	override val database: DatabaseManager,
 	val defaultCoroutineScope: CoroutineScope
 ) : SelfTestManager {
-	private val todayStatus = TodayStatus(
-		holder = context.preferenceHolderOf("$sPrefPrefix-todayStatus")
-	)
+	private val holder = context.preferenceHolderOf(sPrefPrefix)
+	
+	private val schedule = object : SelfTestSchedule(
+		context = context,
+		holder = context.preferenceHolderOf("$sPrefPrefix-todayStatus"),
+		database = database,
+		debugContext = debugContext.childContext(hint = "schedule")
+	) {
+		
+	}
 	
 	private val notificationStatus = NotificationStatus(
 		holder = context.preferenceHolderOf("$sPrefPrefix-notificationStatus")
 	)
-	
-	private val scheduler = object : AlarmManagerTaskScheduler<SelfTestTask>(
-		context = context,
-		holder = database.holder,
-		scheduleIntent = Intent(context, AlarmReceiver::class.java)
-	) {
-		override var tasks: List<SelfTestTask>
-			get() = todayStatus.tasks
-			set(value) {
-				todayStatus.tasks = value
-			}
-		
-		override suspend fun onTask(task: SelfTestTask) {
-			val group = database.testGroups.groups[task.testGroupId]
-			if(group == null) {
-				log("[SelfTestManager] AlarmManagerTaskScheduler.onTask: no DbTestGroup with (id=${task.testGroupId})")
-				return
-			}
-			
-			val user = database.users.users[task.userId]
-			if(user == null) {
-				log("[SelfTestManager] AlarmManagerTaskScheduler.onTask: no User with (userId=${task.userId})")
-				return
-			}
-			
-			onScheduledSubmitSelfTest(group, user)
-		}
-	}
 	
 	
 	init {
@@ -589,65 +568,75 @@ class SelfTestManagerImpl(
 		}
 	}
 	
+	private suspend fun submitBulkSelfTest(
+		group: DbTestGroup,
+		users: List<DbUser>,
+		isFromUi: Boolean
+	): List<SubmitResult> = transactDb {
+		val results = mutableListOf<SubmitResult>()
+		
+		var lastProbableApiChange = false
+		
+		for(user in users) {
+			val result = database.submitSelfTest(user, isFromUi = true)
+			
+			if(result is SubmitResult.Failed) {
+				var userSpecific = true
+				for(cause in result.causes) when(cause) {
+					// implementation or version problem
+					HcsAppError.ErrorCause.apiChange,
+						// probably network problem?
+					HcsAppError.ErrorCause.hcsUnreachable,
+						// network problems
+					HcsAppError.ErrorCause.vpn,
+					HcsAppError.ErrorCause.noNetwork,
+					HcsAppError.ErrorCause.unresponsiveNetwork ->
+						userSpecific = false
+					
+					HcsAppError.ErrorCause.probableApiChange -> if(lastProbableApiChange) {
+						userSpecific = false
+					} else {
+						lastProbableApiChange = true
+					}
+					
+					// unknown
+					HcsAppError.ErrorCause.appBug,
+					HcsAppError.ErrorCause.probableAppBug -> Unit
+					
+					// ignore flags
+					HcsAppError.ErrorCause.repeated -> Unit
+				}
+				
+				if(!userSpecific) {
+					break
+				}
+			}
+			
+			results += result
+		}
+		
+		afterSelfTestSubmit(group, users, results, isFromUi)
+		results
+	}
+	
 	override suspend fun submitSelfTestNow(
 		uiContext: UiContext,
-		target: DbTestTarget,
+		group: DbTestGroup,
 		users: List<DbUser>
 	): List<SubmitResult> {
 		return try {
-			val results = mutableListOf<SubmitResult>()
-			
-			var lastProbableApiChange = false
-			var terminated = false
-			
-			for(user in users) {
-				val result = database.submitSelfTest(user, isFromUi = true)
-				if(result is SubmitResult.Failed) {
-					var userSpecific = true
-					for(cause in result.causes) when(cause) {
-						// implementation or version problem
-						HcsAppError.ErrorCause.apiChange,
-							// probably network problem?
-						HcsAppError.ErrorCause.hcsUnreachable,
-							// network problems
-						HcsAppError.ErrorCause.vpn,
-						HcsAppError.ErrorCause.noNetwork,
-						HcsAppError.ErrorCause.unresponsiveNetwork ->
-							userSpecific = false
-						
-						HcsAppError.ErrorCause.probableApiChange -> if(lastProbableApiChange) {
-							userSpecific = false
-						} else {
-							lastProbableApiChange = true
-						}
-						
-						// unknown
-						HcsAppError.ErrorCause.appBug,
-						HcsAppError.ErrorCause.probableAppBug -> Unit
-						
-						// ignore flags
-						HcsAppError.ErrorCause.repeated -> Unit
-					}
-					
-					if(!userSpecific) {
-						terminated = true
-						break
-					}
-				}
-				
-				results += result
-				afterSelfTestSubmit(user, result, isFromUi = true)
-			}
-			if(terminated) terminated = results.size < users.size
+			val results = submitBulkSelfTest(group, users, isFromUi = true)
 			
 			if(results.isEmpty()) return results
 			
 			if(results.all { it is SubmitResult.Success }) uiContext.scope.launch {
 				uiContext.showMessage(
-					if(target is DbTestTarget.Group) "모두 자가진단을 완료했어요." else "자가진단을 완료했어요.",
+					if(group.target is DbTestTarget.Group) "모두 자가진단을 완료했어요." else "자가진단을 완료했어요.",
 					"확인"
 				)
-			} else uiContext.navigator.showSelfTestFailedDialog(results, terminated)
+			} else {
+				uiContext.navigator.showSelfTestFailedDialog(results, terminated = results.size < users.size)
+			}
 			
 			results
 		} catch(th: Throwable) {
@@ -657,19 +646,23 @@ class SelfTestManagerImpl(
 	
 	override suspend fun onScheduledSubmitSelfTest(
 		group: DbTestGroup,
-		user: DbUser
-	): SubmitResult = try {
-		database.submitSelfTest(user, isFromUi = false)
-	} catch(th: Throwable) {
-		SubmitResult.Failed(
-			target = user,
-			causes = setOf(HcsAppError.ErrorCause.appBug),
-			diagnostic = SelfTestDiagnosticInfo(extraInfo = th.toString())
-		)
-	}.also { afterSelfTestSubmit(user, it, isFromUi = false) }
+		users: List<DbUser>
+	) {
+		try {
+			val results = submitBulkSelfTest(group, users, isFromUi = false)
+		} catch(th: Throwable) {
+		}
+	}
 	
 	
-	private fun afterSelfTestSubmit(user: DbUser, result: SubmitResult, isFromUi: Boolean) {
+	private fun afterSelfTestSubmit(
+		group: DbTestGroup,
+		users: List<DbUser>,
+		results: List<SubmitResult>,
+		isFromUi: Boolean
+	) {
+		// selfTestSchedule.updateStatus(group, users, complete = true)
+		
 		if(!isFromUi) {
 			TODO("update NotificationStatus")
 		}
@@ -684,50 +677,6 @@ class SelfTestManagerImpl(
 	private val lastGroups = database.testGroups.groups
 	
 	
-	private fun DbTestGroup.nextTime(): Long {
-		fun calendarFor(schedule: DbTestSchedule.Fixed): Calendar {
-			val calendar = Calendar.getInstance()
-			calendar[Calendar.SECOND] = 0
-			calendar[Calendar.MILLISECOND] = 0
-			
-			calendar[Calendar.HOUR_OF_DAY] = schedule.hour
-			calendar[Calendar.MINUTE] = schedule.minute
-			return calendar
-		}
-		
-		var calendar: Calendar? = null
-		val timeInMillis = when(val schedule = schedule) {
-			is DbTestSchedule.Fixed -> {
-				calendar = calendarFor(schedule)
-				calendar.timeInMillis
-			}
-			is DbTestSchedule.Random -> {
-				val from = calendarFor(schedule.from).timeInMillis
-				val to = calendarFor(schedule.to).timeInMillis
-				random.nextLong(from = from, until = to + 1)
-			}
-			DbTestSchedule.None -> error("Oh nyooo......")
-		}
-		
-		if(excludeWeekend) {
-			val c = if(calendar == null) {
-				calendar = Calendar.getInstance()
-				calendar.timeInMillis = timeInMillis
-				calendar
-			} else calendar
-			
-			while(true) {
-				when(c[Calendar.DAY_OF_WEEK]) {
-					Calendar.SATURDAY -> c.add(Calendar.DAY_OF_YEAR, 2)
-					Calendar.SUNDAY -> c.add(Calendar.DAY_OF_YEAR, 1)
-					else -> break
-				}
-			}
-		}
-		
-		
-		return timeInMillis
-	}
 	
 	private fun setSchedule(alarmManager: AlarmManager, target: DbTestGroup) {
 		return

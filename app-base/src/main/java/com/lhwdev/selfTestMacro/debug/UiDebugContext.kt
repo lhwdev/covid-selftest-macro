@@ -47,4 +47,13 @@ class UiDebugContext(
 	override suspend fun onShowErrorInfo(info: ErrorInfo, description: String) = withContext(uiContext) {
 		showErrorInfo(this@UiDebugContext, info, description)
 	}
+	
+	override fun childContext(hint: String): UiDebugContext = UiDebugContext(
+		manager = manager,
+		context = context,
+		contextName = "$contextName/$hint",
+		flags = flags,
+		uiContext = uiContext,
+		showErrorInfo = showErrorInfo
+	)
 }

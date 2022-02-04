@@ -2,7 +2,6 @@ package com.lhwdev.selfTestMacro.repository
 
 import android.app.AlarmManager
 import android.content.Context
-import android.content.Intent
 import android.net.ConnectivityManager
 import androidx.compose.runtime.snapshotFlow
 import androidx.core.content.getSystemService
@@ -15,7 +14,6 @@ import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.debug.DebugContext
 import com.lhwdev.selfTestMacro.debug.DiagnosticObject
 import com.lhwdev.selfTestMacro.debug.TraceItems
-import com.lhwdev.selfTestMacro.debug.log
 import com.lhwdev.selfTestMacro.replaced
 import com.lhwdev.selfTestMacro.repository.ui.showSelfTestFailedDialog
 import com.lhwdev.selfTestMacro.tryAtMost
@@ -25,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Calendar
 import java.util.WeakHashMap
 import kotlin.random.Random
 
@@ -41,7 +38,7 @@ inline fun Context.defaultSelfTestManager(create: (Context) -> SelfTestManager):
 fun Context.createDefaultSelfTestManager(debugContext: DebugContext): SelfTestManagerImpl = SelfTestManagerImpl(
 	context = applicationContext,
 	database = preferenceState.db,
-	debugContext = debugContext,
+	debugContext = debugContext.childContext(hint = "SelfTestManager"),
 	defaultCoroutineScope = CoroutineScope(Dispatchers.Default)
 )
 

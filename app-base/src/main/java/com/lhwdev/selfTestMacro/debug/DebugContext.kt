@@ -147,6 +147,8 @@ abstract class DebugContext(
 		}
 	}
 	
+	abstract fun childContext(hint: String): DebugContext
+	
 	
 	// Internals
 	
@@ -215,4 +217,17 @@ object GlobalDebugContext : DebugContext(
 	override suspend fun onShowErrorInfo(info: ErrorInfo, description: String) {
 		// no-op; not available
 	}
+	
+	override fun childContext(hint: String): DebugContext = SimpleDebugContext(flags, manager, "$contextName/$hint")
+}
+
+private class SimpleDebugContext(
+	flags: DebugFlags,
+	manager: DebugManager,
+	override val contextName: String
+) : DebugContext(flags, manager) {
+	
+	override fun childContext(hint: String) = SimpleDebugContext(flags, manager, "$contextName/$hint")
+	
+	override suspend fun onShowErrorInfo(info: ErrorInfo, description: String) {}
 }

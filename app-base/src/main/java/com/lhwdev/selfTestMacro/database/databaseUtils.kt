@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.database
 
 import android.content.SharedPreferences
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotMutableState
@@ -16,13 +15,24 @@ import kotlinx.serialization.json.Json
 private val sEmpty = Any()
 
 
-abstract class PreferenceItemState<T>(protected val holder: PreferenceHolder, key: String) :
-	SnapshotMutableState<T>, PreferenceHolder.Property {
+interface PreferenceItemState<T> : SnapshotMutableState<T> {
+	fun forceWrite()
+}
+
+
+abstract class PreferenceItemStateImpl<T>(protected val holder: PreferenceHolder, key: String) :
+	PreferenceItemState<T>, PreferenceHolder.Property {
 	private val cache = mutableStateOf<Any?>(sEmpty)
 	
 	
 	protected abstract fun read(): T
 	protected abstract fun write(value: T)
+	
+	
+	override fun forceWrite() {
+		@Suppress("UNCHECKED_CAST")
+		write(cache.value as T)
+	}
 	
 	
 	override var value: T
@@ -41,7 +51,7 @@ abstract class PreferenceItemState<T>(protected val holder: PreferenceHolder, ke
 		set(value) {
 			if(cache.value == value) return
 			
-			val current = currentTransaction
+			val current = currentDbTransaction
 			if(current == null) {
 				write(value)
 				cache.value = value
@@ -76,7 +86,7 @@ inline fun <T> PreferenceHolder.preferenceState(
 	key: String,
 	crossinline read: (SharedPreferences) -> T,
 	crossinline write: (SharedPreferences, T) -> Unit
-): MutableState<T> = object : PreferenceItemState<T>(holder = this, key = key) {
+): PreferenceItemState<T> = object : PreferenceItemStateImpl<T>(holder = this, key = key) {
 	override fun read(): T = read(holder.pref)
 	
 	override fun write(value: T) {
@@ -87,7 +97,7 @@ inline fun <T> PreferenceHolder.preferenceState(
 
 fun PreferenceHolder.preferenceInt(
 	key: String, defaultValue: Int
-): MutableState<Int> = preferenceState(
+): PreferenceItemState<Int> = preferenceState(
 	key = key,
 	read = { pref -> pref.getInt(key, defaultValue) },
 	write = { pref, value -> pref.edit { putInt(key, value) } }
@@ -95,7 +105,7 @@ fun PreferenceHolder.preferenceInt(
 
 fun PreferenceHolder.preferenceLong(
 	key: String, defaultValue: Long
-): MutableState<Long> = preferenceState(
+): PreferenceItemState<Long> = preferenceState(
 	key = key,
 	read = { pref -> pref.getLong(key, defaultValue) },
 	write = { pref, value -> pref.edit { putLong(key, value) } }
@@ -103,7 +113,7 @@ fun PreferenceHolder.preferenceLong(
 
 fun PreferenceHolder.preferenceBoolean(
 	key: String, defaultValue: Boolean
-): MutableState<Boolean> = preferenceState(
+): PreferenceItemState<Boolean> = preferenceState(
 	key = key,
 	read = { pref -> pref.getBoolean(key, defaultValue) },
 	write = { pref, value -> pref.edit { putBoolean(key, value) } }
@@ -111,7 +121,7 @@ fun PreferenceHolder.preferenceBoolean(
 
 fun PreferenceHolder.preferenceString(
 	key: String, defaultValue: String? = null
-): MutableState<String?> = preferenceState(
+): PreferenceItemState<String?> = preferenceState(
 	key = key,
 	read = { pref -> pref.getString(key, defaultValue) },
 	write = { pref, value -> pref.edit { putString(key, value) } }
@@ -119,7 +129,7 @@ fun PreferenceHolder.preferenceString(
 
 fun PreferenceHolder.preferenceStringSet(
 	key: String, defaultValue: Set<String>
-): MutableState<Set<String>> = preferenceState(
+): PreferenceItemState<Set<String>> = preferenceState(
 	key = key,
 	read = { pref -> pref.getStringSet(key, defaultValue)!! },
 	write = { pref, value -> pref.edit { putStringSet(key, value) } }
@@ -131,7 +141,7 @@ fun <T> PreferenceHolder.preferenceSerialized(
 	serializer: KSerializer<T>,
 	defaultValue: T,
 	formatter: StringFormat = Json
-): MutableState<T> = preferenceState(
+): PreferenceItemState<T> = preferenceState(
 	key = key,
 	read = { pref ->
 		val string = pref.getString(key, null)

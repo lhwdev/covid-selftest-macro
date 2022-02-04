@@ -7,7 +7,6 @@ import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.DatabaseManager
 import com.lhwdev.selfTestMacro.database.DbTestGroup
-import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.debug.DebugContext
 import com.lhwdev.selfTestMacro.ui.UiContext
@@ -88,14 +87,14 @@ interface SelfTestManager {
 	
 	suspend fun submitSelfTestNow(
 		uiContext: UiContext,
-		target: DbTestTarget,
-		users: List<DbUser> = with(database) { target.allUsers }
+		group: DbTestGroup,
+		users: List<DbUser> = with(database) { group.target.allUsers }
 	): List<SubmitResult>
 	
 	suspend fun onScheduledSubmitSelfTest(
 		group: DbTestGroup,
-		user: DbUser
-	): SubmitResult
+		users: List<DbUser>
+	)
 	
 	fun updateSchedule(target: DbTestGroup, new: DbTestGroup)
 	fun onScheduleUpdated()

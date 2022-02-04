@@ -235,31 +235,29 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: 
 					Row {
 						val text = buildAnnotatedString {
 							append(user.name)
-							append(" ")
+							
 							withStyle(SpanStyle(color = MediumContentColor)) {
-								append("(${user.institute.name})")
+								append(": ")
 							}
-							append(": ")
 							
 							when(status) {
-								is Status.Submitted -> if(status.suspicious == null) withStyle(
-									SpanStyle(
-										color = Color(
-											onLight = Color(0xff285db9),
-											onDark = Color(0xffadcbff)
+								is Status.Submitted -> {
+									if(status.suspicious == null) withStyle(
+										SpanStyle(
+											color = Color(onLight = Color(0xff285db9), onDark = Color(0xffadcbff))
 										)
-									)
-								) {
-									append("정상")
-								} else withStyle(
-									SpanStyle(
-										color = Color(
-											onLight = Color(0xfffd2f5f),
-											onDark = Color(0xffffa6aa)
+									) {
+										append("정상")
+									} else withStyle(
+										SpanStyle(
+											color = Color(onLight = Color(0xfffd2f5f), onDark = Color(0xffffa6aa))
 										)
-									)
-								) {
-									append(status.suspicious.displayText)
+									) {
+										append(status.suspicious.displayText)
+									}
+									
+									append(' ')
+									append("(${status.time})")
 								}
 								
 								Status.NotSubmitted -> withStyle(SpanStyle(MediumContentColor)) {

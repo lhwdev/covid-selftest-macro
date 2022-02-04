@@ -13,22 +13,22 @@ class Transaction {
 
 
 @PublishedApi
-internal val sTransaction = ThreadLocal<Transaction?>()
+internal val sDbTransaction = ThreadLocal<Transaction?>()
 
-inline val currentTransaction: MutableMap<Any?, () -> Unit>? get() = sTransaction.get()?.operations
+inline val currentDbTransaction: MutableMap<Any?, () -> Unit>? get() = sDbTransaction.get()?.operations
 
 
 inline fun <R> transactDb(block: () -> R): R {
-	val last = currentTransaction
-	val transaction = sTransaction.get() ?: Transaction()
-	if(last == null) sTransaction.set(transaction)
+	val last = currentDbTransaction
+	val transaction = sDbTransaction.get() ?: Transaction()
+	if(last == null) sDbTransaction.set(transaction)
 	
 	return try {
 		block()
 	} finally {
 		if(last == null) {
 			transaction.apply()
-			sTransaction.set(null)
+			sDbTransaction.set(null)
 		}
 	}
 }

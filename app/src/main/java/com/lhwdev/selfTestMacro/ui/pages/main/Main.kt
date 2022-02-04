@@ -308,7 +308,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 						},
 						scope = scope
 					),
-					target = selectedTestGroup.target
+					group = selectedTestGroup
 				)
 				
 				statusKey.value++

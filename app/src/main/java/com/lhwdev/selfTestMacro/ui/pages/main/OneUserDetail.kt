@@ -46,6 +46,6 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 		Button(onClick = {
 			navigator.showChangeAnswerDialog(user)
 		}) { Text("응답 바꾸기") }
-		PositiveButton(onClick = requestClose) { Text("확인") }
+		PositiveButton(onClick = requestClose)
 	}
 }

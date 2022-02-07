@@ -79,7 +79,7 @@ fun FloatingMaterialDialogScope.SetupGroup(
 		}
 		
 		Buttons {
-			PositiveButton(onClick = requestClose) { Text("확인") }
+			PositiveButton(onClick = requestClose)
 		}
 	}
 	
@@ -186,7 +186,7 @@ fun FloatingMaterialDialogScope.SetupGroup(
 			}
 			
 			navigator.popRoute()
-		}) { Text("확인") }
-		NegativeButton(onClick = requestClose) { Text("취소") }
+		})
+		NegativeButton(onClick = requestClose)
 	}
 }

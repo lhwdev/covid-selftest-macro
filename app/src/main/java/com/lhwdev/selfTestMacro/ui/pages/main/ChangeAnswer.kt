@@ -89,9 +89,9 @@ fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = 
 					pref.db.users = users.copy(
 						users = users.users.replacedValue(user, user.copy(answer = newAnswer))
 					)
-				}) { Text("확인") }
+				})
 				
-				NegativeButton(onClick = requestClose) { Text("취소") }
+				NegativeButton(onClick = requestClose)
 			}
 			
 			scrims.navigationBar()

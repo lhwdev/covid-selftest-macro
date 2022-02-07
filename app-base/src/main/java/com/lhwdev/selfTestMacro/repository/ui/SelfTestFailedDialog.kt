@@ -75,7 +75,7 @@ fun Navigator.showSelfTestFailedDialog(results: List<SubmitResult>, terminated: 
 	}
 	
 	Buttons {
-		PositiveButton(onClick = requestClose) { Text("확인") }
+		PositiveButton(onClick = requestClose)
 	}
 }
 

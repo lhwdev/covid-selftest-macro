@@ -98,7 +98,7 @@ internal fun FloatingMaterialDialogScope.MultipleInstituteDialog(
 	}
 	
 	Buttons {
-		NegativeButton(onClick = requestClose) { Text("취소") }
+		NegativeButton(onClick = requestClose)
 	}
 }
 

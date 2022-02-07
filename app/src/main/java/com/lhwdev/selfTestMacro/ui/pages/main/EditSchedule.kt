@@ -282,8 +282,8 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 			)
 			
 			dismiss()
-		}) { Text("확인") }
-		NegativeButton(onClick = requestClose) { Text("취소") }
+		})
+		NegativeButton(onClick = requestClose)
 	}
 	
 	scrims.navigationBar()

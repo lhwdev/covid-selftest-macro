@@ -121,7 +121,7 @@ fun FloatingMaterialDialogScope.TimePickerDialog(
 	}
 	
 	Buttons {
-		PositiveButton(onClick = { setTime(hour, minute) }) { Text("확인") }
-		NegativeButton(onClick = cancel) { Text("취소") }
+		PositiveButton(onClick = { setTime(hour, minute) })
+		NegativeButton(onClick = cancel)
 	}
 }

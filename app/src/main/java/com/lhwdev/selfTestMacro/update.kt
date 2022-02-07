@@ -92,7 +92,7 @@ suspend fun Activity.askUpdate(navigator: Navigator, update: Release, requestCod
 		}
 		Buttons {
 			PositiveButton(onClick = { removeRoute(true) }) { Text("업데이트") }
-			NegativeButton(onClick = requestClose) { Text("취소") }
+			NegativeButton(onClick = requestClose)
 		}
 	}
 	if(result != true) return null

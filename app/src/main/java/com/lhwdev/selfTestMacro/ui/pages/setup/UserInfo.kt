@@ -84,7 +84,7 @@ private suspend fun submitLogin(
 			Title { Text("알림") }
 			Content { Text("공식 자가진단 사이트나 앱에서 로그인한 후 약관에 동의해 주세요.") }
 			Buttons {
-				PositiveButton(onClick = requestClose) { Text("확인") }
+				PositiveButton(onClick = requestClose)
 			}
 		}
 		return false
@@ -111,8 +111,8 @@ private suspend fun submitLogin(
 		}
 		
 		Buttons {
-			PositiveButton(onClick = { close(password) }) { Text("확인") }
-			NegativeButton(onClick = requestClose) { Text("취소") }
+			PositiveButton(onClick = { close(password) })
+			NegativeButton(onClick = requestClose)
 		}
 	}
 	password ?: return false
@@ -137,7 +137,7 @@ private suspend fun submitLogin(
 				)
 			}
 			Buttons {
-				PositiveButton(onClick = requestClose) { Text("확인") }
+				PositiveButton(onClick = requestClose)
 			}
 		}
 		is UsersToken -> try {

@@ -11,6 +11,8 @@ import java.util.WeakHashMap
 
 val Context.isDebugEnabled get() = preferenceState.isDebugEnabled
 
+var debugCheck: Boolean = false
+
 
 private val debugManagerMap = WeakHashMap<Context, DebugManager>()
 

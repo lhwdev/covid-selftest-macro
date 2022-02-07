@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -163,7 +164,7 @@ fun MaterialDialogButtonsScope.Button(
 @Composable
 fun MaterialDialogButtonsScope.PositiveButton(
 	onClick: () -> Unit,
-	content: @Composable () -> Unit
+	content: @Composable () -> Unit = { Text("확인") }
 ) {
 	ButtonBase(
 		onClick = onClick,
@@ -184,7 +185,7 @@ fun MaterialDialogButtonsScope.PositiveButton(
 @Composable
 fun MaterialDialogButtonsScope.NegativeButton(
 	onClick: () -> Unit,
-	content: @Composable () -> Unit
+	content: @Composable () -> Unit = { Text("취소") }
 ) {
 	ButtonBase(
 		onClick = onClick,

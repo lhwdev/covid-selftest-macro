@@ -28,7 +28,8 @@ class PreferenceState(val pref: PreferenceHolder) {
 	var updateChannel by pref.preferenceString("updateChannel", defaultUpdateChannel)
 	
 	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
-	var isVirtualServer by pref.preferenceBoolean("isVirtualServer", false)
+	var isDebugCheckEnabled by pref.preferenceBoolean("isDebugCheckEnabled", false)
+	var virtualServer by pref.preferenceString("isVirtualServer", null)
 	var isDebugFetchEnabled by pref.preferenceBoolean("isDebugFetchEnabled", false)
 	var isNavigationDebugEnabled by pref.preferenceBoolean("isDebugAnimateListAsComposableEnabled", false)
 	

@@ -8,6 +8,7 @@ import com.lhwdev.fetch.http.Session
 import com.lhwdev.github.repo.Repository
 import com.lhwdev.github.sGithubInstanceDefault
 import com.lhwdev.selfTestMacro.database.preferenceState
+import com.lhwdev.selfTestMacro.debug.debugCheck
 import com.lhwdev.selfTestMacro.debug.logOutput
 import com.lhwdev.selfTestMacro.navigation.sDebugNavigation
 import com.lhwdev.selfTestMacro.ui.utils.sDebugAnimateListAsComposable
@@ -47,6 +48,7 @@ object FirstInitialization {
 		val pref = preferenceState
 		
 		if(pref.isDebugEnabled) {
+			debugCheck = pref.isDebugCheckEnabled
 			sDebugFetch = pref.isDebugFetchEnabled
 			sDebugNavigation = pref.isNavigationDebugEnabled
 			sDebugAnimateListAsComposable = pref.isNavigationDebugEnabled

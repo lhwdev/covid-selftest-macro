@@ -108,7 +108,7 @@ suspend fun Navigator.promptYesNoDialog(
 	noButton: @Composable () -> Unit = { Text("취소") },
 	properties: DialogProperties = FloatingDialogProperties
 ): Boolean? = showDialog(properties = properties) { removeRoute ->
-	Title { title() }
+	Title(text = title)
 	
 	if(content != null) content()
 	
@@ -124,7 +124,7 @@ suspend fun <T> Navigator.promptSelectDialog(
 	itemToContent: @Composable (T) -> Unit,
 	properties: DialogProperties = FloatingDialogProperties
 ): T? = showDialog(properties = properties) { removeRoute ->
-	Title { title() }
+	Title(text = title)
 	
 	ListContent {
 		for(item in items) ListItem(

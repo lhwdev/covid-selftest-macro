@@ -51,3 +51,7 @@ fun log(message: String) {
 		output.flush()
 	}
 }
+
+fun debugFlow(message: String) {
+	if(debugCheck) log(message)
+}

@@ -56,7 +56,7 @@ abstract class PreferenceItemStateImpl<T>(protected val holder: PreferenceHolder
 				write(value)
 				cache.value = value
 			} else {
-				current[this] = {
+				current.operations[this] = {
 					write(value)
 					cache.value = value
 				}

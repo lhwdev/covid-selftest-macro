@@ -28,11 +28,9 @@ import com.lhwdev.selfTestMacro.ui.*
 import com.vanpra.composematerialdialogs.showFullDialogAsync
 
 
-private const val sPrivacyPolicyName = "PRIVACY_POLICY.md"
-private const val sPrivacyPolicyLink = "https://github.com/lhwdev/covid-selftest-macro/blob/master/PRIVACY_POLICY.md"
-
-
 fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
+	val link = App.github.privacyPolicy.webUrl.toString()
+	
 	AutoSystemUi(
 		navigationBarMode = OnScreenSystemUiMode.Immersive(ScrimNavSurfaceColor)
 	) { scrims ->
@@ -43,7 +41,7 @@ fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
 				TopAppBar(
 					title = { Text("개인정보 처리 방침") },
 					actions = {
-						IconButton(onClick = { uriHandler.openUri(sPrivacyPolicyLink) }) {
+						IconButton(onClick = { uriHandler.openUri(link) }) {
 							Icon(painterResource(R.drawable.ic_open_in_browser_24), contentDescription = "브라우저에서 열기")
 						}
 					},
@@ -52,10 +50,7 @@ fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
 			}
 		) {
 			val data = produceState<String?>(null) {
-				value = App.masterBranch.getContent(
-					sPrivacyPolicyName,
-					accept = GithubContentType.html
-				).getText()
+				value = App.github.privacyPolicy.get(accept = GithubContentType.html).getText()
 			}.value
 			
 			Box(Modifier.fillMaxSize()) {
@@ -69,7 +64,7 @@ fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
 								
 								// eew, dirty
 								loadDataWithBaseURL(
-									sPrivacyPolicyLink,
+									link,
 									"""
 										<html>
 										<head>
@@ -86,7 +81,7 @@ fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
 									""",
 									"text/html",
 									"utf-8",
-									sPrivacyPolicyLink
+									link
 								)
 							}
 						},

@@ -5,8 +5,6 @@ import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpInterceptor
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
-import com.lhwdev.github.repo.Repository
-import com.lhwdev.github.sGithubInstanceDefault
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.debug.debugCheck
 import com.lhwdev.selfTestMacro.debug.logOutput
@@ -33,7 +31,6 @@ object FirstInitialization {
 	) {
 		AppInitializationInfo.versionCode = versionCode
 		AppInitializationInfo.versionName = versionName
-		AppInitializationInfo.githubRepo = Repository(sGithubInstanceDefault, "lhwdev", "covid-selftest-macro")
 		AppInitializationInfo.flavor = flavor
 		AppInitializationInfo.debug = debug
 		
@@ -47,12 +44,20 @@ object FirstInitialization {
 		
 		val pref = preferenceState
 		
+		val repository = pref.virtualServer ?: sDefaultRepository
+		AppInitializationInfo.github = defaultGithubDataModel(repository)
+		
+		
 		if(pref.isDebugEnabled) {
 			debugCheck = pref.isDebugCheckEnabled
 			sDebugFetch = pref.isDebugFetchEnabled
 			sDebugNavigation = pref.isNavigationDebugEnabled
 			sDebugAnimateListAsComposable = pref.isNavigationDebugEnabled
-			
+		}
+		
+		
+		// after initialization
+		if(App.debug && !App.debuggingWithIde) {
 			logOutput = getExternalFilesDir(null)!!.bufferedWriter()
 		}
 	}

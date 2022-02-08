@@ -8,6 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import com.lhwdev.github.repo.Repository
+import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
@@ -15,6 +17,7 @@ import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.pages.intro.IntroRoute
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 
 fun Navigator.showDebugWindow() = showDialogAsync {
@@ -33,17 +36,32 @@ fun Navigator.showDebugWindow() = showDialogAsync {
 				val info = navigator.showDialog<String?> {
 					Title { Text("가상 서버 설정") }
 					
-					val (url, setUrl) = remember { mutableStateOf(pref.virtualServer ?: "") }
+					val (value, setValue) = remember {
+						mutableStateOf(
+							pref.virtualServer?.owner ?: Json.encodeToString(
+								Repository.serializer(),
+								App.github.repository
+							)
+						)
+					}
 					Input {
-						TextField(url, setUrl, label = { Text("URL") })
+						TextField(value, setValue)
 					}
 					
 					Buttons {
 						PositiveButton(onClick = {
-							pref.virtualServer = url.ifEmpty { null }
+							try {
+								pref.virtualServer = Json.decodeFromString(Repository.serializer(), value)
+							} catch(th: Throwable) { // 오타는 고의적임
+								navigator.showDialogAsync { Text("틀렸스비다\n" + th.stackTraceToString()) }
+							}
 						})
 						
 						NegativeButton(onClick = requestClose)
+						Button(onClick = {
+							pref.virtualServer = null
+							requestClose()
+						}) { Text("초기화") }
 					}
 				}
 			}

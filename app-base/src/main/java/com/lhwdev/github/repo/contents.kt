@@ -1,13 +1,18 @@
 package com.lhwdev.github.repo
 
 import com.lhwdev.fetch.FetchResult
+import java.net.URL
 
 
 interface ContentSource {
-	suspend fun getContent(
-		path: String,
-		accept: GithubContentType = GithubContentType.raw
-	): FetchResult
+	fun contentOf(path: String): Content
+}
+
+interface Content {
+	val url: URL
+	val webUrl: URL
+	
+	suspend fun get(accept: GithubContentType = GithubContentType.raw): FetchResult
 }
 
 

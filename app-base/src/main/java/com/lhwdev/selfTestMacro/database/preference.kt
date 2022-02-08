@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
+import com.lhwdev.github.repo.Repository
 import com.lhwdev.selfTestMacro.App
 import java.util.WeakHashMap
 
@@ -29,7 +30,7 @@ class PreferenceState(val pref: PreferenceHolder) {
 	
 	var isDebugEnabled by pref.preferenceBoolean("isDebugEnabled", false)
 	var isDebugCheckEnabled by pref.preferenceBoolean("isDebugCheckEnabled", false)
-	var virtualServer by pref.preferenceString("isVirtualServer", null)
+	var virtualServer by pref.preferenceSerialized<Repository?>("isVirtualServer", Repository.serializer(), null)
 	var isDebugFetchEnabled by pref.preferenceBoolean("isDebugFetchEnabled", false)
 	var isNavigationDebugEnabled by pref.preferenceBoolean("isDebugAnimateListAsComposableEnabled", false)
 	

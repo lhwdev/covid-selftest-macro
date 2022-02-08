@@ -3,9 +3,6 @@ package com.lhwdev.selfTestMacro
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.DrawableRes
-import com.lhwdev.github.repo.Repository
-import com.lhwdev.github.repo.branch
-import com.lhwdev.github.repo.defaultBranch
 import com.lhwdev.selfTestMacro.models.Version
 import java.io.File
 
@@ -13,7 +10,7 @@ import java.io.File
 object AppInitializationInfo {
 	var versionCode: Int = 0
 	lateinit var versionName: String
-	lateinit var githubRepo: Repository
+	lateinit var github: GithubDataModel
 	lateinit var flavor: String
 	lateinit var debugLogDirectory: File
 	lateinit var mainActivity: Class<*>
@@ -40,9 +37,7 @@ object App {
 	@DrawableRes
 	val appIcon: Int = AppInitializationInfo.appIcon
 	
-	val githubRepo: Repository = AppInitializationInfo.githubRepo
-	val masterBranch = githubRepo.defaultBranch()
-	val metaBranch = githubRepo.branch("app-meta")
+	val github: GithubDataModel = AppInitializationInfo.github
 }
 
 

@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.WeakHashMap
-import kotlin.random.Random
 
 
 @PublishedApi
@@ -71,15 +70,21 @@ class SelfTestManagerImpl(
 	override val database: DatabaseManager,
 	val defaultCoroutineScope: CoroutineScope
 ) : SelfTestManager {
-	private val holder = context.preferenceHolderOf(sPrefPrefix)
-	
 	private val schedule = object : SelfTestSchedule(
 		context = context,
 		holder = context.preferenceHolderOf("$sPrefPrefix-todayStatus"),
 		database = database,
 		debugContext = debugContext.childContext(hint = "schedule")
 	) {
-		
+		override suspend fun onScheduledSubmitSelfTest(group: DbTestGroup, users: List<DbUser>?) {
+			try {
+				withContext(Dispatchers.IO) {
+					submitBulkSelfTest(group, users, isFromUi = false)
+				}
+			} catch(th: Throwable) {
+				debugContext.onError("자가진단을 실패했습니다?!", throwable = th)
+			}
+		}
 	}
 	
 	private val notificationStatus = NotificationStatus(
@@ -570,14 +575,15 @@ class SelfTestManagerImpl(
 	
 	private suspend fun submitBulkSelfTest(
 		group: DbTestGroup,
-		users: List<DbUser>,
+		users: List<DbUser>?,
 		isFromUi: Boolean
 	): List<SubmitResult> = transactDb {
+		val allUsers = users ?: with(database) { group.target.allUsers }
 		val results = mutableListOf<SubmitResult>()
 		
 		var lastProbableApiChange = false
 		
-		for(user in users) {
+		for(user in allUsers) {
 			val result = database.submitSelfTest(user, isFromUi = true)
 			
 			if(result is SubmitResult.Failed) {
@@ -622,7 +628,7 @@ class SelfTestManagerImpl(
 	override suspend fun submitSelfTestNow(
 		uiContext: UiContext,
 		group: DbTestGroup,
-		users: List<DbUser>
+		users: List<DbUser>?
 	): List<SubmitResult> {
 		return try {
 			val results = submitBulkSelfTest(group, users, isFromUi = true)
@@ -635,7 +641,8 @@ class SelfTestManagerImpl(
 					"확인"
 				)
 			} else {
-				uiContext.navigator.showSelfTestFailedDialog(results, terminated = results.size < users.size)
+				val size = users?.size ?: group.target.allUserIds.size
+				uiContext.navigator.showSelfTestFailedDialog(results, terminated = results.size < size)
 			}
 			
 			results
@@ -644,24 +651,14 @@ class SelfTestManagerImpl(
 		}
 	}
 	
-	override suspend fun onScheduledSubmitSelfTest(
-		group: DbTestGroup,
-		users: List<DbUser>
-	) {
-		try {
-			val results = submitBulkSelfTest(group, users, isFromUi = false)
-		} catch(th: Throwable) {
-		}
-	}
-	
 	
 	private fun afterSelfTestSubmit(
 		group: DbTestGroup,
-		users: List<DbUser>,
+		users: List<DbUser>?,
 		results: List<SubmitResult>,
 		isFromUi: Boolean
 	) {
-		// selfTestSchedule.updateStatus(group, users, complete = true)
+		schedule.updateStatus(group, users, complete = true)
 		
 		if(!isFromUi) {
 			TODO("update NotificationStatus")
@@ -673,7 +670,6 @@ class SelfTestManagerImpl(
 	
 	/// Scheduling
 	
-	private val random = Random(System.currentTimeMillis())
 	private val lastGroups = database.testGroups.groups
 	
 	

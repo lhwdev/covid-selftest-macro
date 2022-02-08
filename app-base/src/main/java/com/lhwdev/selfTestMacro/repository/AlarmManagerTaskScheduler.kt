@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.core.content.getSystemService
 import com.lhwdev.selfTestMacro.database.*
+import com.lhwdev.selfTestMacro.debug.debugFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
@@ -27,7 +28,7 @@ private fun Context.defaultPreferenceHolder() = preferenceHolderOf("AlarmManager
  * As the limitation of it, this class extends from [GroupTaskScheduler] to remove the limit of tasks.
  *
  * All the schedules basically work in day-to-day basis, meaning if there is no left task to be run today, then before
- * moving to tomorrow, [updateTomorrow] is called. You need to implement proper logic that might call [updateTasks],
+ * moving to tomorrow, [updateNextDays] is called. You need to implement proper logic that might call [updateTasks],
  * so that tasks for the next day are properly handled.
  */
 abstract class AlarmManagerTaskScheduler<T : TaskItem>(
@@ -94,22 +95,23 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 		val index = schedules.indexOf(schedule)
 		val next = schedules.getOrNull(index + 1)
 		
+		val today = dayOf(currentTimeMillis())
 		val updateTomorrow = if(next == null) {
 			true
 		} else {
-			dayOf(next.timeMillis) > dayOf(currentTimeMillis())
+			dayOf(next.timeMillis) > today
 		}
-		if(updateTomorrow) updateTomorrow()
+		if(updateTomorrow) updateNextDays(previousDay = today)
 		
 		val newNext = schedules.getOrNull(index + 1) // maybe updated from next, from updateTomorrow
 		if(newNext != null) {
-			scheduleAlarm(newNext.code, timeMillis = newNext.timeMillis)
+			scheduleAlarm(newNext)
 		}
 		
 		super.onSchedule(schedule, coroutineScope)
 	}
 	
-	protected abstract fun updateTomorrow()
+	protected abstract fun updateNextDays(previousDay: Long)
 	
 	override fun onScheduleUpdated() {
 		val new = schedules.firstOrNull()
@@ -117,17 +119,21 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 		
 		if(new != last) {
 			if(last != null) {
-				cancelAlarm(last.code)
+				cancelAlarm(last)
 			}
 			
 			if(new != null) {
-				scheduleAlarm(new.code, timeMillis = new.timeMillis)
+				scheduleAlarm(new)
 			}
+			
+			alarmSchedule = new
 		}
 	}
 	
-	private fun scheduleAlarm(code: Int, timeMillis: Long) {
-		val intent = schedulerIntent(code = code)
+	private fun scheduleAlarm(schedule: TaskSchedule) {
+		debugFlow("scheduleAlarm $schedule")
+		val intent = schedulerIntent(code = schedule.code)
+		val timeMillis = schedule.timeMillis
 		
 		if(Build.VERSION.SDK_INT >= 23) {
 			manager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeMillis, intent)
@@ -136,8 +142,9 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 		}
 	}
 	
-	private fun cancelAlarm(code: Int) {
-		val intent = schedulerIntent(code = code)
+	private fun cancelAlarm(schedule: TaskSchedule) {
+		debugFlow("cancelAlarm $schedule")
+		val intent = schedulerIntent(code = schedule.code)
 		manager.cancel(intent)
 	}
 	

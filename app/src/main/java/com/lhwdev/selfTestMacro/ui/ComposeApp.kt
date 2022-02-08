@@ -76,7 +76,7 @@ fun ComposeApp(activity: Activity) {
 			) {
 				ProvideAutoWindowInsets {
 					Box {
-						if(pref.isVirtualServer) Text(
+						if(pref.virtualServer != null) Text(
 							"가상 서버",
 							modifier = Modifier
 								.background(Color.Black.copy(alpha = .3f))

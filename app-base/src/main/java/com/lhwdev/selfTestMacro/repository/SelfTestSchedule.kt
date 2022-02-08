@@ -19,7 +19,7 @@ class SelfTestTask(
 	val testGroupId: Int,
 	val userId: Int? = null, // null if schedule.stable
 	override var timeMillis: Long,
-	var complete: Boolean = false
+	var complete: Boolean = false // generally should be 'val'. see updateStatus.
 ) : TaskItem {
 	override fun equals(other: Any?): Boolean = when {
 		this === other -> true
@@ -69,7 +69,10 @@ abstract class SelfTestSchedule(
 		defaultValue = emptyList()
 	)
 	
+	// epoch day
 	private var targetDay by holder.preferenceLong("targetDay", 0)
+	
+	private val calendarCache = Calendar.getInstance() // not thread safe (but everything here is also)
 	
 	
 	/**
@@ -79,17 +82,8 @@ abstract class SelfTestSchedule(
 		get() = updateAndGetTasks()
 	
 	
-	private fun initTasks(): List<SelfTestTask> {
-		val today = today()
-		return if(targetDay != today) {
-			if(targetDay < today) {
-				targetDay = today
-			}
-			
-			createTasks(updateUnstable = true)
-		} else {
-			createTasks(updateUnstable = false)
-		}
+	init {
+		updateAndGetTasks()
 	}
 	
 	private fun updateAndGetTasks(): List<SelfTestTask> {
@@ -100,15 +94,16 @@ abstract class SelfTestSchedule(
 				targetDay = today
 			}
 			
-			createTasks(updateUnstable = true).also { tasksCache.value = it }
+			createTasks().also { tasksCache.value = it }
 		} else {
 			tasksCache.value
 		}
 	}
 	
 	private fun DbTestGroup.nextTime(): LongRange {
+		// NOTE: calendarCache is cached, so check if it is used synchronously across places. 
 		fun calendarFor(schedule: DbTestSchedule.Fixed): Calendar {
-			val calendar = Calendar.getInstance()
+			val calendar = calendarCache
 			calendar.timeInMillis = targetDay * sDayMillis // reset to the target day
 			
 			// calendar[Calendar.SECOND] = 0 // as set in `calendar.timeInMillis = ...`
@@ -135,7 +130,7 @@ abstract class SelfTestSchedule(
 		
 		return if(excludeWeekend) {
 			val c = if(calendar == null) {
-				calendar = Calendar.getInstance()
+				calendar = calendarCache
 				calendar.timeInMillis = timeInMillis.first // from and to should be on the same day
 				calendar
 			} else calendar
@@ -156,7 +151,7 @@ abstract class SelfTestSchedule(
 		}
 	}
 	
-	private fun createTasks(updateUnstable: Boolean): List<SelfTestTask> {
+	private fun createTasks(): List<SelfTestTask> {
 		val list = ArrayList<SelfTestTask>(database.users.users.size)
 		
 		val old = ArrayDeque(tasksCache.value)
@@ -259,36 +254,38 @@ abstract class SelfTestSchedule(
 	}
 	
 	
-	fun updateStatus(group: DbTestGroup, user: DbUser, complete: Boolean) {
-		val task = tasks.find { it.testGroupId == group.id && it.userId == user.id }
-			?: run {
-				log("[TodayStatus] updateStatus failed: could not find task with (groupId=$group, userId=$user)")
-				return
+	fun updateStatus(group: DbTestGroup, users: List<DbUser>?, complete: Boolean) {
+		val targetTasks = when {
+			group.schedule.altogether ->
+				listOfNotNull(tasks.find { it.testGroupId == group.id && it.userId == null })
+			
+			users == null -> tasks.filter { it.testGroupId == group.id }
+			else -> { // note: this is not called generally
+				val ids = IntArray(size = users.size) { index -> users[index].id }
+				tasks.filter { it.testGroupId == group.id && it.userId != null && it.userId in ids }
 			}
+		}
+		if(targetTasks.isEmpty()) {
+			log("[TodayStatus] updateStatus failed: could not find task with (groupId=$group, users=$users)")
+			return
+		}
 		
-		updateStatus(task, complete)
-	}
-	
-	private fun updateStatus(task: SelfTestTask, complete: Boolean) {
-		require(task in tasks) { "task !in tasks" }
-		updateAndGetTasks()
 		
-		task.complete = true
+		for(task in targetTasks) {
+			task.complete = complete
+		}
 		
-		val transaction = currentDbTransaction
-		if(transaction == null) {
-			unstableTimeTasks.forceWrite()
-		} else {
-			transaction[this] = { unstableTimeTasks.forceWrite() }
+		
+		// SelfTestSchedule.complete is 'var', so it is not synchronized basically.
+		pushDbOperation(this) {
+			tasksCache.forceWrite()
 		}
 	}
 	
 	
 	/// scheduler implementation
 	
-	private fun onScheduledSubmitSelfTest(group: DbTestGroup, users: List<DbUser>) {
-		
-	}
+	protected abstract suspend fun onScheduledSubmitSelfTest(group: DbTestGroup, users: List<DbUser>?)
 	
 	
 	private val scheduler = object : AlarmManagerTaskScheduler<SelfTestTask>(
@@ -309,7 +306,7 @@ abstract class SelfTestSchedule(
 			
 			val users = if(task.userId == null) {
 				// fixed time
-				with(database) { group.target.allUsers }
+				null
 			} else {
 				// random time + all different
 				val user = database.users.users[task.userId]
@@ -326,8 +323,8 @@ abstract class SelfTestSchedule(
 			onScheduledSubmitSelfTest(group, users)
 		}
 		
-		override fun updateTomorrow() {
-			
+		override fun updateNextDays(previousDay: Long) {
+			targetDay = previousDay + 1
 		}
 	}
 }

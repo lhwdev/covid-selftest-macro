@@ -5,12 +5,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.ListItem
 import androidx.compose.material.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.lhwdev.selfTestMacro.debug.DiagnosticObject
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.SubmitResult
 import com.lhwdev.selfTestMacro.ui.Color
+import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
 import com.vanpra.composematerialdialogs.*
 
 
@@ -49,7 +55,7 @@ fun Navigator.showSelfTestFailedDialog(results: List<SubmitResult>, terminated: 
 							Spacer(Modifier.height(8.dp))
 							
 							ListItem(
-								modifier = Modifier.clickable { showDiagnosticDialog(result.diagnostic) }
+								modifier = Modifier.clickable { showHcsErrorDialog(result.diagnostic, result.cause) }
 							) { Text("자세한 진단정보 보기") }
 						}
 						
@@ -79,3 +85,25 @@ fun Navigator.showSelfTestFailedDialog(results: List<SubmitResult>, terminated: 
 	}
 }
 
+
+
+fun Navigator.showHcsErrorDialog(obj: DiagnosticObject, error: Throwable?) = showDialogAsync {
+	val item = remember { obj.getDiagnosticInformation() }
+	Title { Text(item.localizedName ?: item.name) }
+	
+	if(error != null) {
+		var isVisible by remember { mutableStateOf(false) }
+		
+		ListItem(modifier = Modifier.clickable { isVisible = !isVisible }) {
+			Text("Exception 정보 ${if(isVisible) "숨기기" else "표시"}")
+		}
+		
+		AnimateHeight(visible = isVisible) {
+			ListItem {
+				val result = remember(error) { error.stackTraceToString() }
+				Text(result)
+			}
+		}
+	}
+	DiagnosticItemView(item, root = true)
+}

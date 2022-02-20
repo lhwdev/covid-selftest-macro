@@ -46,9 +46,11 @@ fun log(message: String) {
 	Log.d("SelfTestMacro", message)
 	
 	val output = logOutput
-	if(output != null) {
+	if(output != null) try {
 		output.appendLine(message)
 		output.flush()
+	} catch(th: Throwable) {
+		Log.d("SelfTestMacro", "[Log] error while printing error: $th")
 	}
 }
 

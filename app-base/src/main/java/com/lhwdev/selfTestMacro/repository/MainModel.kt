@@ -14,14 +14,22 @@ import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.debug.DiagnosticItem
 import com.lhwdev.selfTestMacro.debug.DiagnosticObject
+import com.lhwdev.selfTestMacro.debug.dumpLocalized
 
 
 @Immutable
 sealed class SubmitResult(val target: DbUser) {
 	class Success(target: DbUser, val at: String) : SubmitResult(target)
-	class Failed(target: DbUser, val causes: Set<HcsAppError.ErrorCause>, val diagnostic: SelfTestDiagnosticInfo) :
-		SubmitResult(target), DiagnosticObject {
+	class Failed(
+		target: DbUser,
+		val causes: Set<HcsAppError.ErrorCause>,
+		val diagnostic: SelfTestDiagnosticInfo,
+		val cause: Throwable?
+	) : SubmitResult(target), DiagnosticObject {
 		override fun getDiagnosticInformation(): DiagnosticItem = diagnostic
+		
+		val description =
+			"자가진단 실패(추정 이유: ${causes.joinToString { it.description }}, 진단정보: ${diagnostic.dumpLocalized(oneLine = true)})"
 	}
 	
 	enum class ErrorCategory {

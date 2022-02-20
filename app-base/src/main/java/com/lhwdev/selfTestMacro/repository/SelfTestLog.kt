@@ -1,52 +1,78 @@
 package com.lhwdev.selfTestMacro.repository
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.debug.log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeToSequence
+import kotlinx.serialization.json.encodeToStream
 import java.io.File
+import java.io.OutputStream
 
 
 private val json = Json
 
 
-class SelfTestLog(val logFile: File) {
-	@Serializable
-	sealed class Entry
-	
-	@Serializable
-	class SelfTestGroup(
-		val id: Int,
-		val hash: Long,
-		val name: String,
-		val abbr: String,
-		val success: Boolean,
-		val message: String
-	) : Entry() {
-		companion object {
-			fun hash(users: List<DbUser>): Long =
-				users.fold(0L) { acc, user -> (acc shl 8) or user.userCode.hashCode().toLong() }
+class SelfTestLog(val logFile: File, holder: PreferenceHolder, private val coroutineScope: CoroutineScope) {
+	private inner class DbAction(val entries: MutableList<Entry>) : () -> Unit {
+		var task: Job? = null
+		
+		override fun invoke() {
+			task = coroutineScope.launch(Dispatchers.IO) {
+				run()
+			}
+		}
+		
+		suspend fun run() {
+			val task = task
+			if(task != null) {
+				task.join()
+				return
+			}
+			logFile.outputStream().buffered().use {
+				for(entry in entries) logLineTo(entry, it)
+			}
 		}
 	}
 	
+	
 	@Serializable
-	class SelfTestUser(val userCode: String, val name: String, val success: Boolean, val message: String) : Entry()
+	sealed class Entry {
+		abstract val id: Int
+	}
+	
+	@SerialName("submitUser")
+	@Serializable
+	class SelfTestUser(
+		override val id: Int,
+		val userCode: String,
+		val name: String,
+		val success: Boolean,
+		val message: String,
+		val timeMillis: Long
+	) : Entry()
 	
 	
 	private var fileEntries: MutableList<Entry>? = try {
 		logFile.parentFile?.mkdirs()
 		if(logFile.createNewFile()) {
-			mutableListOf()
+			mutableListOf() // new file which did not exist before
 		} else {
 			null
 		}
 	} catch(_: Throwable) {
 		null
 	}
+	
+	var nextId by holder.preferenceInt("nextId", defaultValue = 0)
+	
+	fun nextId(): Int = nextId++
 	
 	private var extraEntries: MutableList<Entry> = mutableListOf()
 	
@@ -68,9 +94,14 @@ class SelfTestLog(val logFile: File) {
 		}
 	
 	suspend fun fetchEntries(): List<Entry> {
+		currentDbTransaction?.flush(this) {
+			(it as DbAction).run()
+		}
+		
 		if(fileEntries == null) try {
 			val fetched = withContext(Dispatchers.IO) {
 				logFile.inputStream().use {
+					@OptIn(ExperimentalSerializationApi::class)
 					json.decodeToSequence(stream = it, deserializer = Entry.serializer()).toList()
 				}
 			}
@@ -83,8 +114,6 @@ class SelfTestLog(val logFile: File) {
 	}
 	
 	private suspend fun logLine(entry: Entry) {
-		val line = json.encodeToString(Entry.serializer(), entry)
-		
 		val cache = fileEntries
 		if(cache == null || extraEntries.isNotEmpty()) {
 			extraEntries += entry
@@ -92,37 +121,57 @@ class SelfTestLog(val logFile: File) {
 			cache += entry
 		}
 		
+		val transaction = currentDbTransaction
+		if(transaction == null) {
+			try {
+				logFile.outputStream().buffered().use {
+					logLineTo(entry, it)
+				}
+			} catch(th: Throwable) {
+				log("[SelfTestLog] error while writing: $th")
+			}
+		} else {
+			val previous = transaction.operations[this]
+			if(previous == null) {
+				transaction.operations[this] = DbAction(mutableListOf(entry))
+			} else {
+				previous as DbAction
+				previous.entries += entry
+			}
+		}
+	}
+	
+	private suspend fun logLineTo(entry: Entry, to: OutputStream) {
 		try {
-			withContext(Dispatchers.IO) { logFile.appendText("\n$line") }
+			withContext(Dispatchers.IO) {
+				to.write('\n'.code)
+				@OptIn(ExperimentalSerializationApi::class)
+				json.encodeToStream(Entry.serializer(), entry, to)
+			}
 		} catch(th: Throwable) {
 			log("[SelfTestLog] error while writing: $th")
 		}
 	}
 	
-	suspend fun logSelfTest(database: DatabaseManager, user: DbUser, success: Boolean, message: String) {
-		logLine(SelfTestUser(userCode = user.userCode, name = user.name, success = success, message = message))
-	}
-	
-	suspend fun logSelfTest(database: DatabaseManager, group: DbTestGroup, success: Boolean, message: String) {
-		val users = with(database) { group.target.allUsers }
-		val hash = SelfTestGroup.hash(users)
-		val abbr = StringBuilder()
-		for((index, user) in users.withIndex()) {
-			if(abbr.length > 10) break
-			
-			if(index != 0) abbr.append(", ")
-			abbr.append(user)
-		}
+	suspend fun logSelfTest(
+		database: DatabaseManager,
+		user: DbUser,
+		success: Boolean,
+		message: String,
+		timeMillis: Long = System.currentTimeMillis()
+	): Int {
+		val id = nextId()
 		
 		logLine(
-			SelfTestGroup(
-				id = group.id,
-				hash = hash,
-				name = with(database) { group.target.name },
-				abbr = abbr.toString(),
+			SelfTestUser(
+				id = id,
+				userCode = user.userCode,
+				name = user.name,
 				success = success,
-				message = message
+				message = message,
+				timeMillis = timeMillis
 			)
 		)
+		return id
 	}
 }

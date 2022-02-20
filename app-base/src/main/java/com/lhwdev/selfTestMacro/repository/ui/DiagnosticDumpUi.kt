@@ -12,24 +12,15 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.lhwdev.selfTestMacro.debug.*
-import com.lhwdev.selfTestMacro.navigation.Navigator
+import com.lhwdev.selfTestMacro.debug.DiagnosticElement
+import com.lhwdev.selfTestMacro.debug.DiagnosticItem
+import com.lhwdev.selfTestMacro.debug.DiagnosticItemGroup
+import com.lhwdev.selfTestMacro.debug.localizedData
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
-import com.vanpra.composematerialdialogs.Title
-import com.vanpra.composematerialdialogs.showDialogAsync
-
-
-fun Navigator.showDiagnosticDialog(obj: DiagnosticObject) = showDialogAsync {
-	val item = remember { obj.getDiagnosticInformation() }
-	Title { Text(item.localizedName ?: item.name) }
-	
-	DiagnosticItemView(item, root = true)
-}
 
 
 @Composable
-private fun DiagnosticItemView(item: DiagnosticItem, root: Boolean = false) {
-	
+fun DiagnosticItemView(item: DiagnosticItem, root: Boolean = false) {
 	when(item) {
 		is DiagnosticElement<*> -> DiagnosticElementView(item)
 		is DiagnosticItemGroup -> DiagnosticItemGroupView(item, root = root)

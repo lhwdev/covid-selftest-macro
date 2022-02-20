@@ -19,8 +19,13 @@ class SelfTestTask(
 	val testGroupId: Int,
 	val userId: Int? = null, // null if schedule.stable
 	override var timeMillis: Long,
-	var complete: Boolean = false // generally should be 'val'. see updateStatus.
+	var result: TaskResult? = null // generally should be 'val'. see updateStatus.
 ) : TaskItem {
+	@Serializable
+	class TaskResult(
+		val errorLogId: Int? = null // -1 to no log
+	)
+	
 	override fun equals(other: Any?): Boolean = when {
 		this === other -> true
 		other !is SelfTestTask -> false
@@ -43,7 +48,7 @@ internal fun today() = dayOf(System.currentTimeMillis())
 
 
 /**
- * This class manages what **self test schedules** are going to happen today.
+ * This class manages what **self test schedules** are going to happen in [targetDay].
  * We need to save today schedules separately, because:
  *
  * - to prevent unstable schedules like random schedule keep changing, so that it is more deterministic,
@@ -83,10 +88,10 @@ abstract class SelfTestSchedule(
 	
 	
 	init {
-		updateAndGetTasks()
+		updateAndGetTasks(init = true)
 	}
 	
-	private fun updateAndGetTasks(): List<SelfTestTask> {
+	private fun updateAndGetTasks(init: Boolean = false): List<SelfTestTask> {
 		val today = today()
 		return if(targetDay != today) {
 			// lastDay may be intentionally set to the next day from [updateTomorrow].
@@ -96,6 +101,7 @@ abstract class SelfTestSchedule(
 			
 			createTasks().also { tasksCache.value = it }
 		} else {
+			
 			tasksCache.value
 		}
 	}
@@ -254,7 +260,7 @@ abstract class SelfTestSchedule(
 	}
 	
 	
-	fun updateStatus(group: DbTestGroup, users: List<DbUser>?, complete: Boolean) {
+	fun updateStatus(group: DbTestGroup, users: List<DbUser>?, results: List<SubmitResult>, logRange: IntRange) {
 		val targetTasks = when {
 			group.schedule.altogether ->
 				listOfNotNull(tasks.find { it.testGroupId == group.id && it.userId == null })
@@ -270,13 +276,25 @@ abstract class SelfTestSchedule(
 			return
 		}
 		
+		var logIndex = 0
 		
-		for(task in targetTasks) {
-			task.complete = complete
+		for(index in targetTasks.indices) {
+			val task = targetTasks[index]
+			val result = results.getOrNull(index)
+			
+			val logId = when(result) {
+				null -> -1
+				is SubmitResult.Success -> null
+				else -> if(logIndex < logRange.last - logRange.first) {
+					logRange.first + logIndex++
+				} else {
+					-1
+				}
+			}
+			task.result = SelfTestTask.TaskResult(errorLogId = logId)
 		}
 		
-		
-		// SelfTestSchedule.complete is 'var', so it is not synchronized basically.
+		// SelfTestSchedule.complete is 'var', so it is not synchronized by itself.
 		pushDbOperation(this) {
 			tasksCache.forceWrite()
 		}

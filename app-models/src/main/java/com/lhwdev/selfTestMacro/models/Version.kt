@@ -17,9 +17,15 @@ data class Version(
 	val major: Int,
 	val minor: Int,
 	val patch: Int?,
-	val preRelease: PreRelease?,
-	private var stringCache: String? = null
+	val preRelease: PreRelease?
 ) : Comparable<Version> {
+	constructor(major: Int, minor: Int, patch: Int?, preRelease: PreRelease?, stringCache: String?)
+		: this(major, minor, patch, preRelease) {
+		this.stringCache = stringCache
+	}
+	
+	private var stringCache: String? = null
+	
 	object VersionSerializer : KSerializer<Version> {
 		override val descriptor: SerialDescriptor =
 			PrimitiveSerialDescriptor(Version::class.qualifiedName!!, PrimitiveKind.STRING)

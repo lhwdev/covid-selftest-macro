@@ -40,21 +40,28 @@ val DbTestTarget.allUserIds: List<Int>
 		is DbTestTarget.Single -> listOf(userId)
 	}
 
+val DbTestTarget.allUsersCount: Int
+	get() = when(this) {
+		is DbTestTarget.Group -> userIds.size
+		is DbTestTarget.Single -> 1
+	}
+
 
 @Serializable
-sealed class DbTestSchedule(val stable: Boolean, val altogether: Boolean) {
-	@Serializable
-	object None : DbTestSchedule(stable = true, altogether = true)
+sealed class DbTestSchedule(val stable: Boolean) {
+	open val altogether: Boolean get() = true
 	
 	@Serializable
-	class Fixed(val hour: Int, val minute: Int) : DbTestSchedule(stable = true, altogether = true)
+	object None : DbTestSchedule(stable = true)
+	
+	@Serializable
+	class Fixed(val hour: Int, val minute: Int) : DbTestSchedule(stable = true)
 	
 	/**
 	 * @param altogether if time for users in a group should be rolled separately, or altogether.
 	 */
 	@Serializable
-	class Random(val from: Fixed, val to: Fixed, altogether: Boolean) :
-		DbTestSchedule(stable = false, altogether = altogether)
+	class Random(val from: Fixed, val to: Fixed, override val altogether: Boolean) : DbTestSchedule(stable = false)
 }
 
 

@@ -4,6 +4,7 @@ package com.lhwdev.selfTestMacro.api
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import java.net.URL
@@ -325,7 +326,7 @@ public data class UserInfo(
 		false to "0", true to "1"
 	)
 	
-	
+	@Transient
 	private var mInstituteStub: InstituteInfo? = null
 	public val instituteStub: InstituteInfo
 		get() = mInstituteStub ?: run {
@@ -342,6 +343,7 @@ public data class UserInfo(
 	}
 	
 	// see getInstituteData.kt
+	@Transient
 	public val instituteType: InstituteType = when { // TODO: needs verification
 		instituteClassifierCode == "5" -> InstituteType.school
 		instituteClassifierCode == "7" -> InstituteType.university

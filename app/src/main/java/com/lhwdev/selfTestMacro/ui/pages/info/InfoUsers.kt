@@ -37,9 +37,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
 
-private const val sInfoSpecialThanks = "src/info/special-thanks.json"
-
-
 // Such as things in https://github.com/lhwdev/covid-selftest-macro/blob/meta/src/info
 object InfoUserStructure {
 	@Serializable
@@ -66,7 +63,7 @@ fun InfoUsers() {
 	val data = produceState<Any?>(null) {
 		withContext(Dispatchers.Default) {
 			value = try {
-				App.metaBranch.getContent(sInfoSpecialThanks)
+				App.github.meta.specialThanks.get()
 					.toJson(InfoUserStructure.Root.serializer(), anyContentType = true)
 			} catch(th: Throwable) {
 				false

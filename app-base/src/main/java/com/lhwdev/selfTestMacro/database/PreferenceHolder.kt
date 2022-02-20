@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 
 
 fun Context.preferenceHolderOf(key: String): PreferenceHolder = PreferenceHolder(
-	pref = getSharedPreferences("SelfTestManager-NotificationStatus", Context.MODE_PRIVATE)
+	pref = getSharedPreferences(key, Context.MODE_PRIVATE)
 )
 
 

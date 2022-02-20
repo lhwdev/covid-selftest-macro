@@ -15,7 +15,7 @@ interface Route {
 }
 
 
-fun Route.copy(
+fun Route.copy( // TODO: no support for RouteObserver
 	name: String? = this.name,
 	isOpaque: Boolean = this.isOpaque,
 	transition: RouteTransition = this as? RouteTransition ?: DefaultTransition(isOpaque),

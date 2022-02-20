@@ -30,9 +30,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-private const val sInfoDeveloper = "src/info/developer.json"
-
-
 @Composable
 fun Info(): Unit = MaterialTheme(
 	colors = MaterialTheme.colors.copy(primary = Color(0xff304ffe), onPrimary = Color.White)
@@ -95,7 +92,7 @@ fun Info(): Unit = MaterialTheme(
 							scope.launch {
 								val data = withContext(Dispatchers.Default) {
 									try {
-										App.metaBranch.getContent(sInfoDeveloper)
+										App.github.meta.developerInfo.get()
 											.toJson(InfoUserStructure.Detail.serializer(), anyContentType = true)
 									} catch(th: Throwable) {
 										navigator.showDialogAsync {

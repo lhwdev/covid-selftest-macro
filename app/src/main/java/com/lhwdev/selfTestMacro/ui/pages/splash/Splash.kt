@@ -90,12 +90,11 @@ fun Splash() {
 		
 		val initialFirst = pref.isFirstTime
 		
-		val route =
-			if(initialFirst || pref.db.testGroups.groups.isEmpty()) {
-				IntroRoute
-			} else {
-				MainRoute
-			}
+		val route = if(initialFirst || pref.db.testGroups.groups.isEmpty()) {
+			IntroRoute
+		} else {
+			MainRoute
+		}
 		
 		navigator.replaceRoute(route.copy(transition = FadeRouteTransition()))
 	}

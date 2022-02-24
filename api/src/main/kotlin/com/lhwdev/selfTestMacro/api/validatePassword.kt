@@ -22,23 +22,6 @@ public sealed class PasswordResult {
 	public abstract val isSuccess: Boolean
 }
 
-// {isError: true, statusCode: 252, errorCode: 1001, data: {failCnt: 1, canInitPassword: false}}
-/* switch(e.data.errorCode):
- * case 1000:
- *     var t = "비밀번호를 5회 틀리셔서 5분후 재시도 하실 수 있습니다.";
- *     void 0 != e.data.data && void 0 != e.data.data.remainMinutes && (t += "\n약 ".concat(e.data.data.remainMinutes, "분 남았습니다")),
- *     5 === e.data.data.failCnt && (t += "\n비밀번호를 잊으셨나요? 학교(기관)로 문의 바랍니다."),
- *     alert(t);
- *     break;
- * case 1001:
- *     if (!1 === e.data.data.canInitPassword) {
- *         var n = "사용자 비밀번호가 맞지 않습니다. \n본인이나 가족이 이미 설정한 비밀번호를 입력하여 주시기 바랍니다.\n5회 틀리실 경우 5분후에 재시도 가능합니다 \n" + "현재 ".concat(e.data.data.failCnt, "회 틀리셨습니다");
- *         alert(n)
- *     }
- *     break;
- * case 1003:
- *     alert("비밀번호가 초기화 되었습니다.\n다시 로그인하세요")
- */
 @Serializable
 public data class PasswordWrong(
 	val isError: Boolean,
@@ -46,27 +29,35 @@ public data class PasswordWrong(
 	val errorCode: Int,
 	val data: Data
 ) : PasswordResult() {
+	@Serializable
+	public data class Data(
+		@SerialName("failCnt") val failedCount: Int
+	)
+	
+	
 	val errorMessage: String?
-		get() = when(errorCode) {
-			1000 -> "비밀번호를 5회 틀려서 5분후 재시도 하실 수 있어요."
-			1001 -> """
+		get() = when(statusCode) {
+			252 -> when(errorCode) {
+				1000 -> "비밀번호를 5회 틀려서 5분후 재시도 하실 수 있어요."
+				1001 -> """
 					사용자 비밀번호가 맞지 않아요.
 					본인이나 가족이 이미 설정한 비밀번호를 입력해 주세요.
 					5회 틀리실 경우 5분후에 재시도할 수 있어요.
 					현재 ${data.failedCount}회 틀리셨습니다.
 					""".trimIndent()
-			1003 -> "비밀번호가 초기화되었으니 다시 로그인해주세요."
+				1003 -> "비밀번호가 초기화되었으니 다시 로그인해주세요."
+				else -> null
+			}
+			255 -> when(errorCode) {
+				1004 -> "입력시간이 초과되어 다시 비밀번호를 입력해주세요."
+				else -> null
+			}
 			else -> null
 		}
 	
 	override val isSuccess: Boolean get() = false
 	
 	override fun toString(): String = errorMessage ?: "알 수 없는 오류: 에러코드 $errorCode (틀린 횟수: ${data.failedCount})"
-	
-	@Serializable
-	public data class Data(
-		@SerialName("failCnt") val failedCount: Int
-	)
 }
 
 private val json = Json { ignoreUnknownKeys = true }

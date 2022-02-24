@@ -22,6 +22,11 @@ interface PreferenceItemState<T> : SnapshotMutableState<T>, PreferenceHolder.Pro
 
 abstract class PreferenceItemStateImpl<T>(protected val holder: PreferenceHolder, key: String) :
 	PreferenceItemState<T>, PreferenceHolder.Property {
+	/*
+	 * NOTE: This does not fully support snapshot things like dropping snapshot. Ideally, all writes should be applied
+	 * only if it is done in global snapshot, and pend synchronization if done in nested snapshots.
+	 * Should we create new thing by implementing StateObject?
+	 */
 	private val cache = mutableStateOf<Any?>(sEmpty)
 	
 	

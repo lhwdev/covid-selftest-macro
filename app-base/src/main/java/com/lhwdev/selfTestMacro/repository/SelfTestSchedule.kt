@@ -19,12 +19,18 @@ class SelfTestTask(
 	val testGroupId: Int,
 	val userId: Int? = null, // null if schedule.stable
 	override var timeMillis: Long,
+	/**
+	 * If null, means task is not completed yet. Otherwise stands for result of task execution.
+	 */
 	var result: TaskResult? = null // generally should be 'val'. see updateStatus.
 ) : TaskItem {
 	@Serializable
 	class TaskResult(
 		val errorLogId: Int? = null // -1 to no log
 	)
+	
+	override val ignoredByScheduler: Boolean
+		get() = result != null
 	
 	override fun equals(other: Any?): Boolean = when {
 		this === other -> true
@@ -43,7 +49,7 @@ class SelfTestTask(
 
 private const val sDayMillis = 1000 * 60 * 60 * 24
 
-internal fun dayOf(millis: Long) = millis / sDayMillis
+internal fun dayOf(millis: Long) = millis / sDayMillis // NOTE: how about leap second? It may be affected
 internal fun today() = dayOf(System.currentTimeMillis())
 
 
@@ -68,7 +74,7 @@ abstract class SelfTestSchedule(
 ) {
 	private val random = Random(seed = System.currentTimeMillis())
 	
-	private val tasksCache: PreferenceItemState<List<SelfTestTask>> = holder.preferenceSerialized(
+	private val tasksState: PreferenceItemState<List<SelfTestTask>> = holder.preferenceSerialized(
 		key = "tasksCache",
 		serializer = ListSerializer(SelfTestTask.serializer()),
 		defaultValue = emptyList()
@@ -80,18 +86,14 @@ abstract class SelfTestSchedule(
 	private val calendarCache = Calendar.getInstance() // not thread safe (but everything here is also)
 	
 	
+	var tasksCache: List<SelfTestTask> by tasksState
+		private set
+	
+	
 	/**
 	 * Note that this task is not sorted by [SelfTestTask.timeMillis].
 	 */
-	val tasks: List<SelfTestTask>
-		get() = updateAndGetTasks()
-	
-	
-	init {
-		updateAndGetTasks(init = true)
-	}
-	
-	private fun updateAndGetTasks(init: Boolean = false): List<SelfTestTask> {
+	fun updateAndGetTasks(): List<SelfTestTask> {
 		val today = today()
 		return if(targetDay != today) {
 			// lastDay may be intentionally set to the next day from [updateTomorrow].
@@ -99,10 +101,9 @@ abstract class SelfTestSchedule(
 				targetDay = today
 			}
 			
-			createTasks().also { tasksCache.value = it }
+			createTasks().also { tasksCache = it }
 		} else {
-			
-			tasksCache.value
+			tasksCache
 		}
 	}
 	
@@ -160,7 +161,7 @@ abstract class SelfTestSchedule(
 	private fun createTasks(): List<SelfTestTask> {
 		val list = ArrayList<SelfTestTask>(database.users.users.size)
 		
-		val old = ArrayDeque(tasksCache.value)
+		val old = ArrayDeque(tasksCache)
 		val new = ArrayList<SelfTestTask>(/* initialCapacity = */ old.size)
 		var modified = false
 		
@@ -174,6 +175,11 @@ abstract class SelfTestSchedule(
 				schedule !is DbTestSchedule.Random -> { // stable!
 					check(timeRange.first == timeRange.last) // 'stable'
 					
+					val last = old.removeFirstOrNull()
+					if(last != null && last.testGroupId == group.id && last.userId == null && last.timeMillis in timeRange) {
+						new += last
+						continue
+					}
 					list += SelfTestTask(
 						testGroupId = group.id,
 						userId = null, // because the time is stable, we can do all the users at once.
@@ -253,7 +259,8 @@ abstract class SelfTestSchedule(
 		}
 		
 		if(modified) {
-			tasksCache.value = new
+			tasksCache = new
+			scheduler.updateTasks(new)
 		}
 		
 		return list
@@ -261,6 +268,7 @@ abstract class SelfTestSchedule(
 	
 	
 	fun updateStatus(group: DbTestGroup, users: List<DbUser>?, results: List<SubmitResult>, logRange: IntRange) {
+		val tasks = updateAndGetTasks()
 		val targetTasks = when {
 			group.schedule.altogether ->
 				listOfNotNull(tasks.find { it.testGroupId == group.id && it.userId == null })
@@ -296,7 +304,7 @@ abstract class SelfTestSchedule(
 		
 		// SelfTestSchedule.complete is 'var', so it is not synchronized by itself.
 		pushDbOperation(this) {
-			tasksCache.forceWrite()
+			tasksState.forceWrite()
 		}
 	}
 	
@@ -307,7 +315,7 @@ abstract class SelfTestSchedule(
 	
 	
 	private val scheduler = object : AlarmManagerTaskScheduler<SelfTestTask>(
-		initialTasks = tasks,
+		initialTasks = updateAndGetTasks(),
 		context = context,
 		holder = database.holder,
 		scheduleIntent = Intent(context, AlarmReceiver::class.java)
@@ -343,6 +351,7 @@ abstract class SelfTestSchedule(
 		
 		override fun updateNextDays(previousDay: Long) {
 			targetDay = previousDay + 1
+			updateAndGetTasks()
 		}
 	}
 }

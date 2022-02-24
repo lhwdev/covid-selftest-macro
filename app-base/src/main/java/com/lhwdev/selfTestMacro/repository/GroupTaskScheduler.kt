@@ -74,7 +74,7 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 		
 		// Tasks are cheap, need not diff or anything, maybe?
 		for(task in newTasks) {
-			// println("step $task current=$currentSchedule new=$newSchedules last=$lastSchedules")
+			if(task.ignoredByScheduler) continue
 			
 			// reuse current existing schedule
 			if(canTaskScheduled(task, currentSchedule)) {
@@ -95,7 +95,6 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 				next
 			} else {
 				// create new schedule
-				
 				scheduleSet(task.timeMillis)
 			}
 			newSchedules += resolved

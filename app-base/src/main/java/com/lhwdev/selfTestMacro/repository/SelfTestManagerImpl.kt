@@ -1,6 +1,5 @@
 package com.lhwdev.selfTestMacro.repository
 
-import android.app.AlarmManager
 import android.content.Context
 import android.net.ConnectivityManager
 import androidx.compose.runtime.snapshotFlow
@@ -114,7 +113,7 @@ class SelfTestManagerImpl(
 	private suspend fun <R> handleError(
 		operationName: String,
 		target: DiagnosticObject,
-		isFromUi: Boolean,
+		fromUi: Boolean,
 		onError: (HcsAppError) -> R,
 		operation: suspend () -> R
 	): R {
@@ -206,7 +205,6 @@ class SelfTestManagerImpl(
 					}
 					
 				} else {
-					isSerious = isSerious && !isFromUi
 					// network?.isAvailable != true
 					causes += HcsAppError.ErrorCause.noNetwork
 				}
@@ -549,7 +547,7 @@ class SelfTestManagerImpl(
 		
 		return handleError(
 			operationName = "자가진단 제출",
-			isFromUi = fromUi,
+			fromUi = fromUi,
 			target = user,
 			onError = { SubmitResult.Failed(user, it.causes, it.diagnosticItem, it.cause) }
 		) {
@@ -691,48 +689,14 @@ class SelfTestManagerImpl(
 	
 	/// Scheduling
 	
-	private val lastGroups = database.testGroups.groups
-	
-	
-	
-	private fun setSchedule(alarmManager: AlarmManager, target: DbTestGroup) {
-		return
-		TODO()
-	}
 	
 	override fun updateSchedule(target: DbTestGroup, new: DbTestGroup) {
 		val testGroups = database.testGroups
-		
-		// change testGroups -> preferenceState.cache updated -> snapshotFlow(see above) -> call onScheduleUpdated
-		disableOnScheduleUpdated = true
-		try {
-			database.testGroups = testGroups.copy(groups = testGroups.groups.replaced(from = target.id, to = new))
-		} finally {
-			disableOnScheduleUpdated = false
-		}
-		
-		// setSchedule(alarmManager, new)
+		database.testGroups = testGroups.copy(groups = testGroups.groups.replaced(from = target.id, to = new))
+		// onScheduleUpdated is called by itself
 	}
 	
-	private var disableOnScheduleUpdated: Boolean = false
-	
 	override fun onScheduleUpdated(): Unit = with(database) {
-		if(disableOnScheduleUpdated) return
-		
-		val newGroups = database.testGroups.groups
-		if(lastGroups == newGroups) return
-		
-		val added = newGroups - lastGroups.keys
-		val removed = lastGroups - newGroups.keys
-		
-		val alarmManager = context.getSystemService<AlarmManager>()!!
-		for(group in removed) {
-			println("TODO")
-			// TODO
-		}
-		
-		for(group in added.values) {
-			setSchedule(alarmManager, group)
-		}
+		schedule.updateAndGetTasks()
 	}
 }

@@ -46,7 +46,7 @@ internal suspend fun showDetailsFor(
 					},
 					title = {
 						if(target is DbTestTarget.Group) {
-							Text("$groupName (${group.target.allUserIds.size}명)")
+							Text("$groupName (${group.target.allUsersCount}명)")
 						} else {
 							Text(groupName)
 						}

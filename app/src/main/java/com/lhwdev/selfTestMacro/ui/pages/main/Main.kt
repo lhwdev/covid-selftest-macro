@@ -229,7 +229,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 				if(selectedGroup.isGroup) append(", ")
 			}
 			
-			if(selectedGroup.isGroup) append("${selectedGroup.group.target.allUserIds.size}명")
+			if(selectedGroup.isGroup) append("${selectedGroup.group.target.allUsersCount}명")
 		}
 		Text("($subText)", color = LocalContentColor.current.copy(ContentAlpha.medium))
 	}

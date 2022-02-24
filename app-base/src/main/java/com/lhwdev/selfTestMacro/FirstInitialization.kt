@@ -20,6 +20,7 @@ object FirstInitialization {
 		sFetchInterceptors.addFirst(SelfTestHttpErrorRetryInterceptor)
 	}
 	
+	// ~~for me: please use DI~~
 	fun Context.initializeApplication(
 		versionName: String,
 		versionCode: Int,
@@ -42,21 +43,25 @@ object FirstInitialization {
 		
 		AppInitializationInfo.mainActivity = mainActivity
 		
+		AppInitializationInfo.github = defaultGithubDataModel(sDefaultRepository)
+		
+		AppInitializationInfo.initialized = true
+		
+		
+		// after initialization
 		val pref = preferenceState
-		
-		val repository = pref.virtualServer ?: sDefaultRepository
-		AppInitializationInfo.github = defaultGithubDataModel(repository)
-		
 		
 		if(pref.isDebugEnabled) {
 			debugCheck = pref.isDebugCheckEnabled
 			sDebugFetch = pref.isDebugFetchEnabled
 			sDebugNavigation = pref.isNavigationDebugEnabled
 			sDebugAnimateListAsComposable = pref.isNavigationDebugEnabled
+			
+			val repository = preferenceState.virtualServer
+			if(repository != null) {
+				AppInitializationInfo.github = defaultGithubDataModel(repository)
+			}
 		}
-		
-		
-		// after initialization
 		if(App.debug && !App.debuggingWithIde) {
 			logOutput = getExternalFilesDir(null)!!.bufferedWriter()
 		}

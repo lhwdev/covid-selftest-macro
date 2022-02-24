@@ -1,13 +1,8 @@
 package com.lhwdev.selfTestMacro
 
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.os.Build
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.app.TaskStackBuilder
 
 
 fun Context.initializeNotificationChannel() {
@@ -16,12 +11,13 @@ fun Context.initializeNotificationChannel() {
 			getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 		
 		val notifications = arrayOf(
-			SelfTestSuccessNotification,
-			SelfTestFailedNotification,
-			UpdateAvailableNotification,
+			AppNotifications.SelfTestSuccess,
+			AppNotifications.SelfTestFailed,
+			AppNotifications.SelfTestProgress,
+			// UpdateAvailableNotification,
 		)
 		for(notification in notifications) {
-			notificationManager.createNotificationChannel(notification.createNotificationChannel())
+			notificationManager.createNotificationChannel(notification.notificationChannel)
 		}
 	}
 }

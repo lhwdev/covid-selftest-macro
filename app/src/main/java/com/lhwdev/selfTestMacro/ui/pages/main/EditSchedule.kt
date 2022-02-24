@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestSchedule
+import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupInfo
@@ -27,6 +28,7 @@ import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.common.TestTargetListItem
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
+import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
 import com.lhwdev.selfTestMacro.ui.utils.TimePickerDialog
 import com.vanpra.composematerialdialogs.*
 
@@ -77,6 +79,7 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 	var toMinute by remember { mutableStateOf(random?.to?.minute ?: 0) }
 	
 	var excludeWeekend by remember { mutableStateOf(group.excludeWeekend) }
+	var altogether by remember { mutableStateOf(group.schedule.altogether) }
 	
 	
 	TopAppBar(
@@ -114,7 +117,12 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 		fun ScheduleTypeHead(targetType: ScheduleType, text: String) {
 			ListItem(
 				icon = { RadioButton(selected = type == targetType, onClick = null) },
-				modifier = Modifier.clickable { type = targetType }
+				modifier = Modifier.clickable {
+					if(targetType == ScheduleType.random && targetType != type) {
+						altogether = false // good default?
+					}
+					type = targetType
+				}
 			) {
 				Text(text)
 			}
@@ -197,11 +205,10 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 			visible = type == ScheduleType.random,
 			modifier = Modifier.padding(horizontal = 16.dp)
 		) {
-			Column {
+			Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 				Text(
 					"시작 시간과 끝 시간 사이 임의의 시간에 자가진단을 합니다.",
-					style = MaterialTheme.typography.body2,
-					modifier = Modifier.padding(8.dp)
+					style = MaterialTheme.typography.body2
 				)
 				
 				Row(verticalAlignment = Alignment.CenterVertically) {
@@ -228,7 +235,16 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 					)
 				}
 				
-				Spacer(Modifier.height(8.dp))
+				if(target is DbTestTarget.Group) {
+					TextCheckbox(
+						text = { Text("그룹원들을 동시에 자가진단") },
+						checked = altogether,
+						setChecked = { altogether = it }
+					)
+					
+					if(altogether)
+						Text("임의의 시간이 정해지면 그 때 그룹원들을 모두 자가진단합니다. 이 옵션이 체크되어 있지 않다면 정해진 범위 내에서 각각 따로 실행됩니다.")
+				}
 			}
 		}
 	}
@@ -267,7 +283,8 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 					}
 					DbTestSchedule.Random(
 						from = DbTestSchedule.Fixed(hour = fromHour, minute = fromMinute),
-						to = DbTestSchedule.Fixed(hour = toHour, minute = toMinute)
+						to = DbTestSchedule.Fixed(hour = toHour, minute = toMinute),
+						altogether = true
 					)
 				}
 			}

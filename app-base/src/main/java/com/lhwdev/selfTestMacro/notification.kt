@@ -2,16 +2,22 @@ package com.lhwdev.selfTestMacro
 
 import android.app.Notification
 import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.lhwdev.selfTestMacro.database.DatabaseManager
-import com.lhwdev.selfTestMacro.database.DbTestTarget
+import androidx.core.content.getSystemService
 
 
-// TODO: setContentIntent
+operator fun NotificationManagerCompat.set(id: Int, tag: String? = null, value: Notification?) {
+	if(value == null) {
+		cancel(tag, id)
+	} else {
+		notify(tag, id, value)
+	}
+}
 
 
 open class AndroidNotificationChannel(
@@ -21,6 +27,21 @@ open class AndroidNotificationChannel(
 	val importance: Int,
 	val priority: Int
 ) {
+	@RequiresApi(Build.VERSION_CODES.O)
+	private var notificationChannelCache: NotificationChannel? = null
+	
+	val notificationChannel: NotificationChannel
+		@RequiresApi(Build.VERSION_CODES.O)
+		get() = notificationChannelCache ?: run {
+			val new = createNotificationChannel()
+			notificationChannelCache = new
+			new
+		}
+	
+	@RequiresApi(Build.VERSION_CODES.O)
+	fun acquireNotificationChannel(context: Context): NotificationChannel =
+		context.getSystemService<NotificationManager>()!!.getNotificationChannel(channelId)
+	
 	@RequiresApi(Build.VERSION_CODES.O)
 	open fun createNotificationChannel(): NotificationChannel = NotificationChannel(channelId, name, importance).also {
 		if(description != null) it.description = description
@@ -38,59 +59,77 @@ open class AndroidNotificationChannel(
 
 const val sNotificationPrefix = "com.lhwdev.selfTestMacro"
 
-object NotificationIds {
+object AppNotificationIds {
 	const val selfTestSuccess = 1
 	const val selfTestFailed = 2
-	const val updateAvailable = 3
+	const val selfTestProgress = 3
+	const val updateAvailable = 10
 }
 
 
-object SelfTestSuccessNotification : AndroidNotificationChannel(
-	channelId = "$sNotificationPrefix/selfTestSuccess",
-	name = "자가진단 완료",
-	importance = NotificationManagerCompat.IMPORTANCE_LOW,
-	priority = NotificationCompat.PRIORITY_LOW
-) {
-	fun notificationOf(
-		context: Context,
-		target: DbTestTarget,
-		database: DatabaseManager,
-		time: String
-	) = context.buildNotification {
-		val targetName = with(database) { target.name }
-		setContentTitle("${targetName}의 건강상태 자가진단을 완료했어요.")
-		setContentText("제출 시간: $time") // TODO: suspicious/quarantined status view
+object AppNotifications {
+	object SelfTestSuccess : AndroidNotificationChannel(
+		channelId = "$sNotificationPrefix/selfTestSuccess",
+		name = "자가진단 완료",
+		importance = NotificationManagerCompat.IMPORTANCE_LOW,
+		priority = NotificationCompat.PRIORITY_LOW
+	) {
+		fun notificationOf(
+			context: Context,
+			target: String,
+			time: String?
+		) = context.buildNotification {
+			setContentTitle("${target}의 건강상태 자가진단을 완료했어요.")
+			if(time != null) {
+				setContentText("${time}에 자가진단을 제출했어요.") // TODO: suspicious/quarantined status view
+			}
+		}
 	}
-}
-
-object SelfTestFailedNotification : AndroidNotificationChannel(
-	channelId = "$sNotificationPrefix/selfTestFailed",
-	name = "자가진단 실패",
-	importance = NotificationManagerCompat.IMPORTANCE_MAX,
-	priority = NotificationCompat.PRIORITY_MAX
-) {
-	fun notificationOf(
-		context: Context,
-		target: DbTestTarget,
-		database: DatabaseManager,
-		message: String
-	) = context.buildNotification {
-		val targetName = with(database) { target.name }
-		setContentTitle("${targetName}의 건강상태 자가진단이 실패했습니다.")
-		setContentText(message)
+	
+	object SelfTestFailed : AndroidNotificationChannel(
+		channelId = "$sNotificationPrefix/selfTestFailed",
+		name = "자가진단 실패",
+		importance = NotificationManagerCompat.IMPORTANCE_MAX,
+		priority = NotificationCompat.PRIORITY_MAX
+	) {
+		fun notificationOf(
+			context: Context,
+			target: String,
+			message: String
+		) = context.buildNotification {
+			setContentTitle("${target}의 건강상태 자가진단이 실패했습니다.")
+			setContentText(message)
+		}
 	}
-}
-
-object SelfTestScheduleNotification : AndroidNotificationChannel(
-	channelId = "$sNotificationPrefix/selfTestSchedule",
-	name = "자가진단 실행 현황",
-	description = "자가진단 예약을 실행하는 중에 현황을 알려줘요.",
-	importance = NotificationManagerCompat.IMPORTANCE_LOW,
-	priority = NotificationCompat.PRIORITY_LOW
-) {
-	fun notificationOf(context: Context, title: String, content: String) = context.buildNotification {
-		setContentTitle(title)
-		setContentText(content)
+	
+	object SelfTestProgress : AndroidNotificationChannel(
+		channelId = "$sNotificationPrefix/selfTestProgress",
+		name = "자가진단 실행 현황",
+		description = "자가진단 예약을 실행하는 중에 현황을 알려줘요.",
+		importance = NotificationManagerCompat.IMPORTANCE_LOW,
+		priority = NotificationCompat.PRIORITY_LOW
+	) {
+		@RequiresApi(Build.VERSION_CODES.O)
+		override fun createNotificationChannel(): NotificationChannel = super.createNotificationChannel().also {
+			
+		}
+		
+		fun notificationOf(
+			context: Context,
+			allUsersCount: Int,
+			doneCount: Int,
+			failedCount: Int
+		) = context.buildNotification {
+			setContentTitle("자가진단 실행 현황")
+			setContentText(
+				if(failedCount == 0) {
+					"${allUsersCount}명 중 ${doneCount}명의 자가진단을 완료했어요."
+				} else {
+					"${allUsersCount}명 중 ${failedCount}명의 자가진단을 실패했고, ${doneCount}명의 자가진단을 성공적으로 완료했어요."
+				}
+			)
+			setLights(0xffff2200.toInt(), 1000, 0)
+		}
 	}
 }
 

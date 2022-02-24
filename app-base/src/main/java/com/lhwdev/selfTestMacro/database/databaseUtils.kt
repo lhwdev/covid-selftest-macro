@@ -15,7 +15,7 @@ import kotlinx.serialization.json.Json
 private val sEmpty = Any()
 
 
-interface PreferenceItemState<T> : SnapshotMutableState<T> {
+interface PreferenceItemState<T> : SnapshotMutableState<T>, PreferenceHolder.Property {
 	fun forceWrite()
 }
 
@@ -74,23 +74,19 @@ abstract class PreferenceItemStateImpl<T>(protected val holder: PreferenceHolder
 	override val policy: SnapshotMutationPolicy<T>
 		@Suppress("UNCHECKED_CAST")
 		get() = structuralEqualityPolicy()
-	
-	
-	init {
-		@Suppress("LeakingThis") // property() do nothing than putting this instance in map
-		holder.property(key, this)
-	}
 }
 
 inline fun <T> PreferenceHolder.preferenceState(
 	key: String,
 	crossinline read: (SharedPreferences) -> T,
 	crossinline write: (SharedPreferences, T) -> Unit
-): PreferenceItemState<T> = object : PreferenceItemStateImpl<T>(holder = this, key = key) {
-	override fun read(): T = read(holder.pref)
-	
-	override fun write(value: T) {
-		write(holder.pref, value)
+): PreferenceItemState<T> = property<PreferenceItemState<T>>(key) {
+	object : PreferenceItemStateImpl<T>(holder = this, key = key) {
+		override fun read(): T = read(holder.pref)
+		
+		override fun write(value: T) {
+			write(holder.pref, value)
+		}
 	}
 }
 

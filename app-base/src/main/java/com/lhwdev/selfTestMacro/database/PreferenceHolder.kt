@@ -4,18 +4,35 @@ import android.content.Context
 import android.content.SharedPreferences
 
 
-fun Context.preferenceHolderOf(key: String): PreferenceHolder = PreferenceHolder(
-	pref = getSharedPreferences(key, Context.MODE_PRIVATE)
-)
+// Reference to SharedPreference is safe for static
+// https://stackoverflow.com/questions/22544466/is-it-safe-to-keep-a-static-reference-to-a-sharedpreferences-and-its-editor
+@PublishedApi
+internal val preferenceHolders = mutableMapOf<String, PreferenceHolder>()
 
 
-class PreferenceHolder constructor(val pref: SharedPreferences) {
+fun Context.preferenceHolderOf(key: String): PreferenceHolder = preferenceHolderOf<PreferenceHolder>(key) { pref ->
+	DefaultPreferenceHolder(pref = pref)
+}
+
+inline fun <reified T : PreferenceHolder> Context.preferenceHolderOf(
+	key: String, create: (SharedPreferences) -> T
+): T {
+	val last = preferenceHolders[key]
+	if(last is T) return last
+	return create(getSharedPreferences(key, Context.MODE_PRIVATE)).also { preferenceHolders[key] = it }
+}
+
+
+class DefaultPreferenceHolder(pref: SharedPreferences) : PreferenceHolder(pref)
+
+abstract class PreferenceHolder constructor(val pref: SharedPreferences) {
 	interface Property {
 		fun onUpdated()
 	}
 	
 	
-	private val properties = mutableMapOf<String, Property>()
+	@PublishedApi
+	internal val properties = mutableMapOf<String, Property>()
 	
 	private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
 		if(key != null) properties[key]?.onUpdated()
@@ -25,9 +42,14 @@ class PreferenceHolder constructor(val pref: SharedPreferences) {
 		pref.registerOnSharedPreferenceChangeListener(listener)
 	}
 	
-	
-	// supposed to be property registered permanently
-	fun property(key: String, value: Property) {
-		properties[key] = value
+	inline fun <reified T : Property> property(key: String, create: () -> T): T {
+		val last = properties[key]
+		if(last is T) {
+			return last
+		}
+		
+		return create().also {
+			properties[key] = it
+		}
 	}
 }

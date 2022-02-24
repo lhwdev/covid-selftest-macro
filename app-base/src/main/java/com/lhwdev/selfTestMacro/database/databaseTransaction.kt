@@ -10,9 +10,18 @@ import kotlin.contracts.contract
 class DbTransaction {
 	val operations = mutableMapOf<Any?, () -> Unit>()
 	
-	fun apply() {
+	@PublishedApi
+	internal fun apply() {
 		for(operation in operations.values) {
 			operation()
+		}
+	}
+	
+	inline fun flush(key: Any?, block: (value: () -> Unit) -> Unit = { it() }) {
+		val last = operations[key]
+		if(last != null) {
+			block(last)
+			operations -= key
 		}
 	}
 }

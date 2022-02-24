@@ -24,6 +24,7 @@ data class Version(
 		this.stringCache = stringCache
 	}
 	
+	@Transient
 	private var stringCache: String? = null
 	
 	object VersionSerializer : KSerializer<Version> {

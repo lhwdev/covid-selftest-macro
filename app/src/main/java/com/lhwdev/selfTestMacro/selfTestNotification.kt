@@ -27,23 +27,23 @@ fun Context.initializeNotificationChannel() {
 }
 
 
-object UpdateAvailableNotification : AndroidNotificationChannel(
-	channelId = "$sNotificationPrefix/updateAvailable",
-	name = "업데이트 가능",
-	description = "자가진단 매크로 앱의 업데이트가 있다면 알려줘요.",
-	importance = NotificationManagerCompat.IMPORTANCE_DEFAULT,
-	priority = NotificationCompat.PRIORITY_DEFAULT
-) {
-	const val pendingIntentRequestCode = 1001
-	
-	fun notificationOf(context: Context, isRequired: Boolean, toVersion: String) = context.buildNotification {
-		setContentTitle("자가진단 매크로 앱의 업데이트 버전 ${toVersion}이 사용 가능해요.")
-		if(isRequired) setContentText("업데이트를 하지 않으면 앱이 정상 작동하지 않을 수 있어요.")
-		setContentIntent(
-			TaskStackBuilder.create(context).run {
-				addNextIntentWithParentStack(Intent(context, UpdateActivity::class.java))
-				getPendingIntent(pendingIntentRequestCode, PendingIntent.FLAG_ONE_SHOT)
-			}
-		)
-	}
-}
+// object UpdateAvailableNotification : AndroidNotificationChannel(
+// 	channelId = "$sNotificationPrefix/updateAvailable",
+// 	name = "업데이트 가능",
+// 	description = "자가진단 매크로 앱의 업데이트가 있다면 알려줘요.",
+// 	importance = NotificationManagerCompat.IMPORTANCE_DEFAULT,
+// 	priority = NotificationCompat.PRIORITY_DEFAULT
+// ) {
+// 	const val pendingIntentRequestCode = 1001
+//	
+// 	fun notificationOf(context: Context, isRequired: Boolean, toVersion: String) = context.buildNotification {
+// 		setContentTitle("자가진단 매크로 앱의 업데이트 버전 ${toVersion}이 사용 가능해요.")
+// 		if(isRequired) setContentText("업데이트를 하지 않으면 앱이 정상 작동하지 않을 수 있어요.")
+// 		setContentIntent(
+// 			TaskStackBuilder.create(context).run {
+// 				addNextIntentWithParentStack(Intent(context, UpdateActivity::class.java))
+// 				getPendingIntent(pendingIntentRequestCode, PendingIntent.FLAG_ONE_SHOT)
+// 			}
+// 		)
+// 	}
+// }

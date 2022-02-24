@@ -35,7 +35,7 @@ data class NotificationEntry(
 
 suspend fun Activity.checkNotice(navigator: Navigator) = withContext(Dispatchers.IO) {
 	// also check updates
-	checkAndAskUpdate(navigator, 1001)
+	// checkAndAskUpdate(navigator, 1001)
 	
 	val content: String?
 	try {

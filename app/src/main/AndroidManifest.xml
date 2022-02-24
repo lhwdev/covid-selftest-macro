@@ -41,9 +41,9 @@
 			</intent-filter>
 		</activity>
 		
-		<activity
-			android:name=".UpdateActivity"
-			android:theme="@style/AppTheme.Transparent" />
+		<!--		<activity-->
+		<!--			android:name=".UpdateActivity"-->
+		<!--			android:theme="@style/AppTheme.Transparent" />-->
 		
 		<activity android:name=".DebugActivity" />
 		

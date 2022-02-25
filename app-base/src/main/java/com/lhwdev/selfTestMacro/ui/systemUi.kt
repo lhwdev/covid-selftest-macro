@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.ui
 
 import android.annotation.SuppressLint
-import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -76,12 +75,6 @@ fun rememberPreviewUiController(): SystemUiController = LocalPreviewUiController
 // val isSystemUiDarkContentAvailable: Boolean = Build.VERSION.SDK_INT >= 23
 
 
-@Composable
-fun PreviewSideEffect(effect: () -> Unit) {
-	if(LocalPreview.current) effect()
-	else SideEffect(effect)
-}
-
 
 private val LocalIsImeVisible: ProvidableCompositionLocal<Boolean> =
 	compositionLocalOf { error("not provided") }
@@ -110,30 +103,6 @@ fun ProvideIsImeVisible(content: @Composable () -> Unit) {
 }
 
 
-private val WindowInsets.Type.insets: Insets
-	get() = if(animationInProgress) animatedInsets else layoutInsets
-
-/**
- * Immutable implementation of [Insets].
- */
-@Immutable
-internal class ImmutableInsets(
-	override val left: Int = 0,
-	override val top: Int = 0,
-	override val right: Int = 0,
-	override val bottom: Int = 0,
-) : Insets
-
-fun lerp(start: Int, stop: Int, fraction: Float): Int = (start + (stop - start) * fraction).toInt()
-
-fun lerp(start: Insets, stop: Insets, fraction: Float): Insets = ImmutableInsets(
-	left = lerp(start.left, stop.left, fraction),
-	top = lerp(start.top, stop.top, fraction),
-	right = lerp(start.right, stop.right, fraction),
-	bottom = lerp(start.bottom, stop.bottom, fraction)
-)
-
-
 @Composable
 fun ProvideAutoWindowInsets(
 	consumeWindowInsets: Boolean = true,
@@ -147,78 +116,7 @@ fun ProvideAutoWindowInsets(
 			consumeWindowInsets = consumeWindowInsets,
 			windowInsetsAnimationsEnabled = windowInsetsAnimationsEnabled
 		) {
-			// windows inset animation
-			if(Build.VERSION.SDK_INT >= 29) {
-				var imeMaxHeight by remember { mutableStateOf(0) }
-				val insets = LocalWindowInsets.current
-				val nav = insets.navigationBars
-				val ime = insets.ime
-				
-				var lerpFraction: Float
-				var animationFraction: Float
-				
-				
-				// while ime is showing, navigation bar becomes `opaque state`, but some part of app
-				// uses immersive style so expects navigation bar padding to not exist, adding its
-				// custom padding.
-				
-				// this is not quite accurate, just an effort not to be seen a lot weird.
-				// maybe a little better?
-				
-				// I don't know why, but this is needed to correctly subscribe to snapshot state
-				ime.layoutInsets.bottom
-				ime.animatedInsets.bottom
-				
-				when {
-					// 1. not animating
-					!ime.animationInProgress -> {
-						lerpFraction = if(isImeVisible) 0f else 1f
-						animationFraction = 0f
-					}
-					
-					// 2. ime is dismissing
-					ime.layoutInsets.bottom == 0 -> { // already dismissed; layoutInsets foretells us
-						animationFraction =
-							1f - ime.animatedInsets.bottom.toFloat() / imeMaxHeight.toFloat()
-						lerpFraction = animationFraction
-					}
-					
-					// 3. ime is showing
-					else -> {
-						imeMaxHeight = ime.layoutInsets.bottom
-						animationFraction =
-							ime.animatedInsets.bottom.toFloat() / imeMaxHeight.toFloat()
-						lerpFraction = 1f - animationFraction
-					}
-				}
-				
-				// some 'guards': these may not work well
-				// I occasionally come up with java.lang.IllegalArgumentException: minWidth(0) and minHeight(-25) must be >= 0
-				animationFraction = animationFraction.coerceIn(0f, 1f)
-				lerpFraction = lerpFraction.coerceIn(0f, 1f)
-				
-				val navInsets = lerp(Insets.Empty, nav.insets, lerpFraction)
-				
-				val animationFractionState by rememberUpdatedState(animationFraction)
-				val navInsetsState by rememberUpdatedState(navInsets)
-				
-				val newInsets = remember(insets) {
-					object : WindowInsets by insets {
-						override val navigationBars: WindowInsets.Type = object : WindowInsets.Type {
-							// not `nav`: to subscribe correctly?
-							override val isVisible: Boolean get() = insets.navigationBars.isVisible
-							override val layoutInsets: Insets get() = navInsetsState
-							override val animatedInsets: Insets get() = navInsetsState
-							override val animationFraction: Float get() = animationFractionState
-							override val animationInProgress: Boolean get() = insets.ime.animationInProgress
-						}
-					}
-				}
-				
-				CompositionLocalProvider(
-					LocalWindowInsets provides newInsets
-				) { content() }
-			} else ProvideAppliedUiPaddings(
+			ProvideAppliedUiPaddings(
 				AppliedUiPaddings(navigationBar = isImeVisible)
 			) {
 				content()
@@ -276,11 +174,9 @@ fun AutoSystemUi(
 	content: @Composable ColumnScope.(Scrims) -> Unit,
 ) {
 	val realEnabled = enabled and LocalAutoSystemUiEnabled.current
-	
 	val enabledState by rememberUpdatedState(realEnabled)
 	
 	val controller = rememberUiController()
-	
 	
 	@Composable
 	fun StatusBarScrim(color: Color) {
@@ -292,8 +188,11 @@ fun AutoSystemUi(
 		)
 		
 		val isDark = LocalContentColor.current.isDarkColor()
-		if(enabledState) PreviewSideEffect {
+		if(enabledState) DisposableEffect(Unit) {
+			println("status $isDark last=${controller.statusBarDarkContentEnabled}")
 			controller.statusBarDarkContentEnabled = isDark
+			println("status updated? last=${controller.statusBarDarkContentEnabled}")
+			onDispose {}
 		}
 	}
 	
@@ -307,8 +206,9 @@ fun AutoSystemUi(
 		)
 		
 		val isDark = LocalContentColor.current.isDarkColor()
-		if(enabledState) PreviewSideEffect {
+		if(enabledState) DisposableEffect(Unit) {
 			controller.navigationBarDarkContentEnabled = isDark
+			onDispose {}
 		}
 	}
 	

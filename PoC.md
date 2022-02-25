@@ -230,7 +230,7 @@
     "extSurveyRemainCount": 0,
     "insttClsfCode": "5",
     "isHealthy": true, // 일부 시도에서는 이 항목이 없다는 말을 들었습니다
-    "isIsolated": "false",
+    "isIsolated": false,
     "lctnScCode": "03",
     "lockYn": "N",
     "mngrClassYn": "N",

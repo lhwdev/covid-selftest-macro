@@ -143,7 +143,13 @@
   지금 만들고는 있는데 한참 걸릴겁니다. 차라리 transkey 소스코드(비공개)를 보세요.
 
 * 출력:
-  - 로그인 성공 시: `"<UsersToken>"` (쌍따옴표 " " 포함)
+  - 로그인 성공 시: json
+    ```json5
+    {
+      "token": "<UsersToken>", // Bearer (hex) 형태
+      "pInfAgrmYn": "Y/N" // 약관 동의 여부
+    }
+    ```
   - 실패 시: json
     ```json5
     {
@@ -208,37 +214,48 @@
   - `Content-Type: application/json;charset=utf-8`
   - Authorization: **UserToken**
 * 입력: json
-	```json5
-	{
-		"orgCode": "<기관 코드>",
-		"userPNo": "<사용자 id>"
-	}
-	```
+  ```json5
+  {
+    "orgCode": "<기관 코드>",
+    "userPNo": "<사용자 id>"
+  }
+  ```
 * 출력: json
   ```json5
   {
-	  "admnYn": "N",
-	  "atptOfcdcConctUrl": "dgehcs.eduro.go.kr",
-	  "deviceUuid": "3b...",
-	  "insttClsfCode": "5",
-	  "isHealthy": true,
-	  "lctnScCode": "03",
-	  "lockYn": "N",
-	  "mngrClassYn": "N",
-	  "mngrDeptYn": "N",
-	  "orgCode": "D????????",
-	  "orgName": "??고등학교",
-	  "pInfAgrmYn": "Y",
-	  "registerDtm": "2020-10-21 07:05:43.187088",
-	  "registerYmd": "20201021",
-	  "schulCrseScCode": "4",
-	  "stdntYn": "Y",
-	  "token": "Bearer ey.....",
-	  "upperUserName": "홍길동",
-	  "userName": "홍길동",
-	  "userNameEncpt": "홍길동",
-	  "userPNo": "...",
-	  "wrongPassCnt": 0
+    "admnYn": "N",
+    "atptOfcdcConctUrl": "dgehcs.eduro.go.kr",
+    "deviceUuid": "3b...",
+    "extSurveyCount": 0,
+    "extSurveyRemainCount": 0,
+    "insttClsfCode": "5",
+    "isHealthy": true, // 일부 시도에서는 이 항목이 없다는 말을 들었습니다
+    "isIsolated": "false",
+    "lctnScCode": "03",
+    "lockYn": "N",
+    "mngrClassYn": "N",
+    "mngrDeptYn": "N",
+    "orgCode": "D????????",
+    "orgName": "??고등학교",
+    "newNoticeCount": 0,
+    "pInfAgrmYn": "Y",
+    "stdntYn": "Y",
+    "token": "Bearer 0156DA.....",
+    "upperUserName": "홍길동",
+    "userName": "홍길동",
+    "userNameEncpt": "홍길동",
+    "userPNo": "...",
+    "wrongPassCnt": 0,
+    
+    // 자가진단 안하면 없음
+    "registerDtm": "2020-10-21 07:05:43.187088",
+    "registerYmd": "20201021",
+    "rspns01": "1",
+    "rspns02": "1",
+    "rspns03": "1",
+    "rspns05": "0",
+    "rspns08": "0",
+    "rspns09": "0"
   }
   ```
 
@@ -252,15 +269,15 @@
   {
     "deviceUuid": "",
     "rspns00": "Y",
-    "rspns01": "1",
-    "rspns02": "1",
-    "rspns03": null,
+    "rspns01": "1", // 1. 학생 본인이 코로나19 감염에 의심되는 아래의 임상증상이 있나요?: "1"=아니오, "2"=예
+    "rspns02": "1", // 3. 학생 본인 또는 동거인이 PCR 검사를 받고 그 결과를 기다리고 있나요?: "1"=아니오, "2"=예
+    "rspns03": "1", // 2. 학생은 오늘 신속항원검사(자가진단)를 실시했나요?: "1"=실시하지 않음, "2"=음성, "3"=양성
     "rspns04": null,
     "rspns05": null,
     "rspns06": null,
     "rspns07": null,
-    "rspns08": "0",
-    "rspns09": "0",
+    "rspns08": "0", // 5. 학생의 동거인 중 재택치료자가 있어 공동격리인으로 지정되어 현재 자가격리 중인가요?: "0"=아니오, "1"=예
+    "rspns09": "0", // 4. 학생 본인이 보건소로부터 밀접접촉자로 통보받아 현재 자가격리 중인가요?: "0"=아니오, "1"=예
     "rspns10": null,
     "rspns11": null,
     "rspns12": null,

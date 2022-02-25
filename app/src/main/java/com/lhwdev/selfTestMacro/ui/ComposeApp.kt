@@ -11,7 +11,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,7 +34,6 @@ import kotlinx.coroutines.Dispatchers
 @Composable
 fun ComposeApp(activity: Activity) {
 	val context = LocalContext.current
-	val scope = rememberCoroutineScope()
 	
 	val pref = remember(context) { context.preferenceState }
 	

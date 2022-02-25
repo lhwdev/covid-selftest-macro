@@ -24,8 +24,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.LocalWindowInsets
 import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.api.DangerousHcsApi
 import com.lhwdev.selfTestMacro.api.PasswordWrong
 import com.lhwdev.selfTestMacro.api.UsersToken
+import com.lhwdev.selfTestMacro.api.updateAgreement
 import com.lhwdev.selfTestMacro.debug.log
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
@@ -33,6 +35,7 @@ import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.MasterUser
 import com.lhwdev.selfTestMacro.repository.SelfTestManager
 import com.lhwdev.selfTestMacro.repository.WizardUser
+import com.lhwdev.selfTestMacro.showToastSuspendAsync
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
@@ -80,14 +83,15 @@ private suspend fun submitLogin(
 	// user agreement
 	if(!userId.agreement) {
 		log("약관 동의 필요!")
-		navigator.showDialogUnit {
-			Title { Text("알림") }
-			Content { Text("공식 자가진단 사이트나 앱에서 로그인한 후 약관에 동의해 주세요.") }
-			Buttons {
-				PositiveButton(onClick = requestClose)
-			}
+		
+		val agree = navigator.showSelfTestAgreementDialog()
+		if(agree == true) {
+			@OptIn(DangerousHcsApi::class) // confirmed to user
+			session.updateAgreement(institute, userId.token)
+			context.showToastSuspendAsync("약관에 동의했습니다.")
+		} else {
+			return false
 		}
-		return false
 	}
 	
 	// ask for password

@@ -7,7 +7,6 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,16 +46,15 @@ fun FullMaterialDialog(
 				onScreenMode = null,
 				ime = SystemUiMode.Default
 			) {
-				FullMaterialDialogScope(info, this).content()
+				FullMaterialDialogScope(info).content()
 			}
 		}
 	}
 }
 
 class FullMaterialDialogScope(
-	info: MaterialDialogInfo,
-	columnScope: ColumnScope
-) : MaterialDialogScope(info), ColumnScope by columnScope
+	info: MaterialDialogInfo
+) : MaterialDialogScope(info)
 
 
 /**

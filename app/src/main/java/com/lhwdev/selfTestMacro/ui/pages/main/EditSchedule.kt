@@ -45,8 +45,7 @@ internal fun Navigator.showScheduleSelfTest(
 }
 
 @Composable
-private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: () -> Unit, scrims: Scrims) {
-	val pref = LocalPreference.current
+private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: () -> Unit, scrims: Scrims) = Column {
 	val context = LocalContext.current
 	val selfTestManager = LocalSelfTestManager.current
 	val navigator = LocalNavigator
@@ -265,7 +264,7 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 	
 	Spacer(Modifier.height(4.dp))
 	
-	this.Buttons {
+	Buttons {
 		PositiveButton(onClick = submit@{
 			val schedule = when(type) {
 				ScheduleType.none -> DbTestSchedule.None

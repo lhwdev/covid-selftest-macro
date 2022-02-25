@@ -19,10 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.core.view.setPadding
 import androidx.lifecycle.lifecycleScope
-import com.lhwdev.selfTestMacro.api.UsersToken
-import com.lhwdev.selfTestMacro.api.getUserGroup
-import com.lhwdev.selfTestMacro.api.getUserInfo
-import com.lhwdev.selfTestMacro.api.validatePassword
+import com.lhwdev.selfTestMacro.api.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.coroutines.Dispatchers
@@ -72,7 +69,11 @@ class MainActivity : AppCompatActivity() {
 			
 			val detailedUserInfo = try {
 				val usersIdentifier = user.findUser(session)
-				val usersToken = session.validatePassword(institute, usersIdentifier, user.password) as UsersToken
+				val usersToken = (session.validatePassword(
+					institute,
+					usersIdentifier,
+					user.password
+				) as PasswordResult.Success).token
 				val users = session.getUserGroup(institute, usersToken)
 				session.getUserInfo(institute, singleOfUserGroup(users)!!)
 			} catch(e: Throwable) {

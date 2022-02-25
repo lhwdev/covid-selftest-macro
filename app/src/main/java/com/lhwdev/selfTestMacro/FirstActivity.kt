@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
-import android.widget.EditText
 import android.widget.Filter
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -192,17 +191,18 @@ class FirstActivity : AppCompatActivity() {
 						})
 					} ?: return@main
 					
-					val token = catchErrorThanToast {
+					val result = catchErrorThanToast {
 						tryAtMost(maxTrial = 3) {
 							session.validatePassword(instituteInfo, userIdentifier, password)
 						}
 					} ?: return@main
 					
-					if(token is PasswordWrong) {
-						showToastSuspendAsync(token.toString())
+					if(result is PasswordResult.Failed) {
+						showToastSuspendAsync(result.toString())
 						return@main
 					}
-					require(token is UsersToken)
+					require(result is PasswordResult.Success)
+					val token = result.token
 					
 					val groups = tryAtMost(maxTrial = 3) {
 						session.getUserGroup(instituteInfo, token)
@@ -210,7 +210,8 @@ class FirstActivity : AppCompatActivity() {
 					singleOfUserGroup(groups) ?: return@main // TODO: many users
 					
 					pref.institute = instituteInfo
-					pref.user = UserLoginInfo(userIdentifier, instituteInfo, birth, LoginType.school, password/*, token*/)
+					pref.user =
+						UserLoginInfo(userIdentifier, instituteInfo, birth, LoginType.school, password/*, token*/)
 					pref.setting = UserSetting(
 						loginType = LoginType.school, // TODO
 						region = sRegions.getValue(input_region.text.toString()),

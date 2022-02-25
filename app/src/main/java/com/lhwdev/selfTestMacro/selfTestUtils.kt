@@ -59,8 +59,10 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 			// }
 			val usersIdentifier = loginInfo.findUser(session)
 			
-			val usersToken = session.validatePassword(institute, usersIdentifier, loginInfo.password) as? UsersToken
-				?: error("잘못된 비밀번호입니다.")
+			val usersToken =
+				(session.validatePassword(institute, usersIdentifier, loginInfo.password) as? PasswordResult.Success
+					?: error("잘못된 비밀번호입니다.")
+					).token
 			
 			val users = session.getUserGroup(institute, usersToken)
 			

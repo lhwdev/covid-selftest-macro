@@ -62,7 +62,7 @@ data class SurveyData(
 	@Serializable(with = YesNoSerializer::class) val rspns00: Boolean = true,
 	val rspns01: String = "1",
 	val rspns02: String = "1",
-	val rspns03: String? = null,
+	val rspns03: String = "1",
 	val rspns04: String? = null,
 	val rspns05: String? = null,
 	val rspns06: String? = null,

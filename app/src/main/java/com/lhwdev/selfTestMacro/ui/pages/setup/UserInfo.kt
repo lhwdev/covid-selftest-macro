@@ -25,8 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.LocalWindowInsets
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.DangerousHcsApi
-import com.lhwdev.selfTestMacro.api.PasswordWrong
-import com.lhwdev.selfTestMacro.api.UsersToken
+import com.lhwdev.selfTestMacro.api.PasswordResult
 import com.lhwdev.selfTestMacro.api.updateAgreement
 import com.lhwdev.selfTestMacro.debug.log
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
@@ -133,7 +132,7 @@ private suspend fun submitLogin(
 	log("#4. 비밀번호 결과")
 	
 	when(result) {
-		is PasswordWrong -> navigator.showDialogUnit {
+		is PasswordResult.Failed -> navigator.showDialogUnit {
 			Title { Text("로그인 실패") }
 			Content {
 				Text(
@@ -144,8 +143,8 @@ private suspend fun submitLogin(
 				PositiveButton(onClick = requestClose)
 			}
 		}
-		is UsersToken -> try {
-			val userList = selfTestManager.getUserGroup(session, institute, result)
+		is PasswordResult.Success -> try {
+			val userList = selfTestManager.getUserGroup(session, institute, result.token)
 			
 			val master = MasterUser(
 				identifier = userId,
@@ -278,7 +277,7 @@ private fun WizardStudentInfo(
 					) { // For legibility: ime may hide TextField
 						if(it) Column {
 							TopAppBar(
-								title = { Text("학생 정보 입력") },
+								title = { Text("사용자 정보 입력") },
 								navigationIcon = if(parameters.endRoute == null) null else ({
 									IconButton(onClick = parameters.endRoute) {
 										Icon(painterResource(R.drawable.ic_clear_24), contentDescription = "닫기")

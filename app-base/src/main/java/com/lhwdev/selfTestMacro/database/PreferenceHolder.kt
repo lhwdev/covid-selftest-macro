@@ -27,7 +27,7 @@ class DefaultPreferenceHolder(pref: SharedPreferences) : PreferenceHolder(pref)
 
 abstract class PreferenceHolder constructor(val pref: SharedPreferences) {
 	interface Property {
-		fun onUpdated()
+		fun onPropertyUpdated()
 	}
 	
 	
@@ -35,7 +35,7 @@ abstract class PreferenceHolder constructor(val pref: SharedPreferences) {
 	internal val properties = mutableMapOf<String, Property>()
 	
 	private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-		if(key != null) properties[key]?.onUpdated()
+		if(key != null) properties[key]?.onPropertyUpdated()
 	}
 	
 	init {

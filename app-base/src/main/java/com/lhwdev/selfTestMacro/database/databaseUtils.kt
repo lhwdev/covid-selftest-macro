@@ -1,18 +1,17 @@
 package com.lhwdev.selfTestMacro.database
 
 import android.content.SharedPreferences
-import androidx.compose.runtime.SnapshotMutationPolicy
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotMutableState
+import androidx.compose.runtime.snapshots.StateRecord
+import androidx.compose.runtime.snapshots.withCurrent
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.core.content.edit
+import com.lhwdev.selfTestMacro.utils.SynchronizedMutableStateImpl
+import com.lhwdev.selfTestMacro.utils.sEmpty
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
-
-
-private val sEmpty = Any()
 
 
 interface PreferenceItemState<T> : SnapshotMutableState<T>, PreferenceHolder.Property {
@@ -21,64 +20,36 @@ interface PreferenceItemState<T> : SnapshotMutableState<T>, PreferenceHolder.Pro
 
 
 abstract class PreferenceItemStateImpl<T>(protected val holder: PreferenceHolder, key: String) :
-	PreferenceItemState<T>, PreferenceHolder.Property {
-	/*
-	 * NOTE: This does not fully support snapshot things like dropping snapshot. Ideally, all writes should be applied
-	 * only if it is done in global snapshot, and pend synchronization if done in nested snapshots.
-	 * Should we create new thing by implementing StateObject?
-	 */
-	private val cache = mutableStateOf<Any?>(sEmpty)
+	SynchronizedMutableStateImpl<T>(structuralEqualityPolicy()), PreferenceItemState<T> {
+	@Suppress("LeakingThis")
+	override var next: StateStateRecord<T> = StateStateRecordImpl(this)
 	
-	
-	protected abstract fun read(): T
-	protected abstract fun write(value: T)
-	
+	override fun onPropertyUpdated() {
+		next.withCurrent { it.emptyCache() }
+	}
 	
 	override fun forceWrite() {
-		@Suppress("UNCHECKED_CAST")
-		write(cache.value as T)
+		next.withCurrent { it.apply() }
 	}
 	
-	
-	override var value: T
-		get() {
-			val previous = cache.value
-			
-			return if(previous !== sEmpty) {
-				@Suppress("UNCHECKED_CAST")
-				previous as T
-			} else {
-				val newValue = read()
-				cache.value = newValue
-				newValue
-			}
-		}
-		set(value) {
-			if(cache.value == value) return
-			
-			val current = currentDbTransaction
-			if(current == null) {
-				write(value)
-				cache.value = value
-			} else {
-				current.operations[this] = {
-					write(value)
-					cache.value = value
-				}
-				cache.value = value
-			}
-		}
-	
-	override fun onUpdated() {
-		cache.value = sEmpty
+	override fun prependStateRecord(value: StateRecord) {
+		@Suppress("UNCHECKED_CAST")
+		next = value as StateStateRecord<T>
 	}
 	
-	override fun component1(): T = value
-	override fun component2(): (T) -> Unit = { value = it }
+	abstract fun read(): T
+	abstract fun write(value: T)
 	
-	override val policy: SnapshotMutationPolicy<T>
-		@Suppress("UNCHECKED_CAST")
-		get() = structuralEqualityPolicy()
+	private class StateStateRecordImpl<T>(val state: PreferenceItemStateImpl<T>, cache: Any? = sEmpty) :
+		StateStateRecord<T>(cache) {
+		override fun create(): StateRecord = StateStateRecordImpl(state, cache)
+		
+		override fun read(): T = state.read()
+		
+		override fun write(value: T) {
+			state.write(value)
+		}
+	}
 }
 
 inline fun <T> PreferenceHolder.preferenceState(

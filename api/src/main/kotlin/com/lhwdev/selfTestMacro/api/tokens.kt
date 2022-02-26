@@ -24,9 +24,7 @@ public data class UsersIdToken(val token: String) {
 
 
 @Serializable(UsersToken.Serializer::class)
-public data class UsersToken(val token: String) : PasswordResult() {
-	override val isSuccess: Boolean get() = true
-	
+public data class UsersToken(val token: String) {
 	public object Serializer : KSerializer<UsersToken> {
 		override val descriptor: SerialDescriptor =
 			PrimitiveSerialDescriptor(UsersToken::class.java.name, PrimitiveKind.STRING)

@@ -1,7 +1,9 @@
 @file:Suppress("SpellCheckingInspection")
+@file:OptIn(ExperimentalSerializationApi::class)
 
 package com.lhwdev.selfTestMacro.api
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -187,7 +189,7 @@ public data class UsersIdentifier(
 @Serializable
 public data class User(
 	/**
-	 * The code of user. Consists of a normal number.
+	 * The unique identifier of user.
 	 */
 	@SerialName("userPNo") val userCode: String,
 	
@@ -277,8 +279,6 @@ public data class UserInfo(
 	
 	@SerialName("lctnScCode") val instituteRegionCode: String? = null,
 	
-	@SerialName("schulCrseScCode") val schoolLevelCode: String? = null,
-	
 	@SerialName("sigCode") val instituteSigCode: String? = null,
 	
 	// latest survey
@@ -288,16 +288,21 @@ public data class UserInfo(
 	
 	@SerialName("isHealthy") val isHealthy: Boolean? = null,
 	
+	@SerialName("isIsoslated") val isIsolated: Boolean? = null,
+	
 	@Serializable(with = Rspns1Serializer::class)
 	@SerialName("rspns01") val questionSuspicious: Boolean? = null,
+	
+	@Serializable(with = Rspns3Serializer::class)
+	@SerialName("rspns03") val questionTestResult: TestResult? = null,
 	
 	@Serializable(with = Rspns2Serializer::class)
 	@SerialName("rspns02") val questionWaitingResult: Boolean? = null,
 	
-	@Serializable(with = Rspns34Serializer::class)
+	@Serializable(with = Rspns45Serializer::class)
 	@SerialName("rspns09") val questionQuarantined: Boolean? = null,
 	
-	@Serializable(with = Rspns34Serializer::class)
+	@Serializable(with = Rspns45Serializer::class)
 	@SerialName("rspns08") val questionHouseholdInfected: Boolean? = null,
 	
 	// etc
@@ -308,6 +313,9 @@ public data class UserInfo(
 	
 	@SerialName("deviceUuid") val deviceUuid: String? = null
 ) {
+	public enum class TestResult { didNotConduct, positive, negative }
+	
+	
 	public object Rspns1Serializer : PrimitiveMappingSerializer<Boolean, String>(
 		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns1",
 		primitiveKind = PrimitiveKind.STRING,
@@ -320,7 +328,13 @@ public data class UserInfo(
 		false to "1", true to "0"
 	)
 	
-	public object Rspns34Serializer : PrimitiveMappingSerializer<Boolean, String>(
+	public object Rspns3Serializer : PrimitiveMappingSerializer<TestResult, String>(
+		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns3",
+		primitiveKind = PrimitiveKind.STRING,
+		TestResult.didNotConduct to "1", TestResult.negative to "2", TestResult.positive to "3"
+	)
+	
+	public object Rspns45Serializer : PrimitiveMappingSerializer<Boolean, String>(
 		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns34",
 		primitiveKind = PrimitiveKind.STRING,
 		false to "0", true to "1"
@@ -347,8 +361,8 @@ public data class UserInfo(
 	public val instituteType: InstituteType = when { // TODO: needs verification
 		instituteClassifierCode == "5" -> InstituteType.school
 		instituteClassifierCode == "7" -> InstituteType.university
-		instituteRegionCode != null && schoolLevelCode != null -> InstituteType.school
 		instituteRegionCode != null && instituteSigCode != null -> InstituteType.academy
+		instituteRegionCode != null -> InstituteType.school
 		else -> InstituteType.office
 	}
 	

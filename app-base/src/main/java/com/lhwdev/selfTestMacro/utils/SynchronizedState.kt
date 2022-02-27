@@ -8,8 +8,6 @@ val sEmpty = object : Any() {
 	override fun toString(): String = "sEmpty"
 }
 
-private val sGlobalSnapshot = Snapshot.global { Snapshot.current }
-
 private val sApplyObserverHandle = Snapshot.registerApplyObserver { modified, _ ->
 	modified.forEach {
 		if(it is SynchronizedMutableStateImpl<*>) {
@@ -103,7 +101,9 @@ abstract class SynchronizedMutableStateImpl<T>(override val policy: SnapshotMuta
 		}
 		
 		fun apply() {
-			if(Snapshot.current == sGlobalSnapshot) {
+			check(cache != sEmpty) { "Tried to apply but cache == sEmpty" }
+			// Is there better way to do this?
+			if(Snapshot.current == Snapshot.global { Snapshot.current }) {
 				@Suppress("UNCHECKED_CAST")
 				write(cache as T)
 			}

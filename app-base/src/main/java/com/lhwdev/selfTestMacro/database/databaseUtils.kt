@@ -48,6 +48,7 @@ abstract class PreferenceItemStateImpl<T>(protected val holder: PreferenceHolder
 		
 		override fun write(value: T) {
 			state.write(value)
+			cache = value // previously cleared by onPropertyUpdated -> it.emptyCache
 		}
 	}
 }

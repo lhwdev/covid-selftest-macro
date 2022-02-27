@@ -14,6 +14,8 @@ interface Route {
 	val name: String? get() = null
 }
 
+interface DialogRoute : Route
+
 
 fun Route.copy( // TODO: no support for RouteObserver
 	name: String? = this.name,
@@ -37,6 +39,7 @@ fun Route(
 	override val name: String? = name
 	override val content: @Composable () -> Unit = content
 	override val isOpaque: Boolean = isOpaque
+	override fun toString(): String = "Route $name(isOpaque=$isOpaque, transition=$transition, $content)"
 }
 
 
@@ -45,7 +48,7 @@ internal abstract class DialogRouteBase(
 	override val name: String?,
 	override val isOpaque: Boolean,
 	override val content: @Composable () -> Unit
-) : Route, RouteTransition by NoneTransition(), RouteObserver {
+) : DialogRoute, RouteTransition by NoneTransition(), RouteObserver {
 	override fun toString(): String = "Route $name(isOpaque=$isOpaque, $content)"
 }
 
@@ -54,7 +57,7 @@ inline fun DialogRoute(
 	isOpaque: Boolean = false,
 	crossinline onRouteRemoved: () -> Unit,
 	noinline content: @Composable () -> Unit
-): Route = object : DialogRouteBase(name = name, isOpaque = isOpaque, content = content) {
+): DialogRoute = object : DialogRouteBase(name = name, isOpaque = isOpaque, content = content) {
 	override fun onRouteRemoved(navigator: Navigator) {
 		onRouteRemoved()
 	}
@@ -64,7 +67,7 @@ inline fun FullDialogRoute(
 	name: String? = null,
 	noinline content: @Composable () -> Unit,
 	crossinline onRouteRemoved: () -> Unit
-): Route = DialogRoute(name = name, content = content, onRouteRemoved = onRouteRemoved)
+): DialogRoute = DialogRoute(name = name, content = content, onRouteRemoved = onRouteRemoved)
 
 inline fun Navigator.pushRoute(
 	name: String? = null,

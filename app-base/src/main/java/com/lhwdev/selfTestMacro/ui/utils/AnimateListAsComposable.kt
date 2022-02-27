@@ -46,7 +46,7 @@ fun <T> AnimateListAsComposable(
 		onAnimationEnd: () -> Unit,
 		content: @Composable () -> Unit
 	) -> Unit,
-	content: @Composable (index: Int, T) -> Unit
+	content: @Composable (index: Int, item: T, visible: Boolean, container: @Composable (@Composable () -> Unit) -> Unit) -> Unit
 ) {
 	val scope = rememberCoroutineScope()
 	
@@ -157,29 +157,32 @@ fun <T> AnimateListAsComposable(
 	
 	Box {
 		for((index, entry) in result.withIndex()) key(key(entry.item)) {
-			Box(Modifier.graphicsLayer {
-				alpha = if(index >= lastOpaqueIndex) 1f else 0f
-			}) {
-				animation(
-					entry.item,
-					entry.state,
-					{
-						val newIndex = list.indexOf(entry)
-						if(newIndex == -1) return@animation
-						when(entry.state) {
-							VisibilityAnimationState.enter -> {
-								entry.state = VisibilityAnimationState.visible
-								recomposeScope.invalidate()
-							}
-							VisibilityAnimationState.visible -> Unit // no-op
-							VisibilityAnimationState.waitingExit -> Unit // never called with this
-							VisibilityAnimationState.exit -> {
-								list = list.removeAt(newIndex)
-								recomposeScope.invalidate()
+			val visible = index >= lastOpaqueIndex
+			content(index, entry.item, visible) { contentInner ->
+				Box(Modifier.graphicsLayer {
+					alpha = if(visible) 1f else 0f
+				}) {
+					animation(
+						entry.item,
+						entry.state,
+						{
+							val newIndex = list.indexOf(entry)
+							if(newIndex == -1) return@animation
+							when(entry.state) {
+								VisibilityAnimationState.enter -> {
+									entry.state = VisibilityAnimationState.visible
+									recomposeScope.invalidate()
+								}
+								VisibilityAnimationState.visible -> Unit // no-op
+								VisibilityAnimationState.waitingExit -> Unit // never called with this
+								VisibilityAnimationState.exit -> {
+									list = list.removeAt(newIndex)
+									recomposeScope.invalidate()
+								}
 							}
 						}
-					}
-				) { content(index, entry.item) }
+					) { contentInner() }
+				}
 			}
 		}
 	}

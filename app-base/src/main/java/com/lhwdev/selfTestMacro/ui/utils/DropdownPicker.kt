@@ -24,6 +24,8 @@ import com.lhwdev.selfTestMacro.ui.icons.ExpandMore
 import com.lhwdev.selfTestMacro.ui.icons.Icons
 import com.lhwdev.selfTestMacro.ui.primaryActive
 
+
+// note: added in latest Compose; if released, will discard this and replace with it
 @Composable
 fun DropdownPicker(
 	modifier: Modifier = Modifier,

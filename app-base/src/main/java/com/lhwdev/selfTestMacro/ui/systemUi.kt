@@ -189,9 +189,7 @@ fun AutoSystemUi(
 		
 		val isDark = LocalContentColor.current.isDarkColor()
 		if(enabledState) DisposableEffect(Unit) {
-			println("status $isDark last=${controller.statusBarDarkContentEnabled}")
 			controller.statusBarDarkContentEnabled = isDark
-			println("status updated? last=${controller.statusBarDarkContentEnabled}")
 			onDispose {}
 		}
 	}

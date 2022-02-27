@@ -72,6 +72,7 @@ class FullMaterialDialogScope(
 fun FullScreenDialog(
 	onDismissRequest: () -> Unit,
 	properties: DialogProperties = DialogProperties(),
+	solid: Boolean = false,
 	content: @Composable () -> Unit
 ) {
 	val view = LocalView.current
@@ -87,7 +88,8 @@ fun FullScreenDialog(
 			composeView = view,
 			layoutDirection = layoutDirection,
 			// density = density,
-			dialogId = dialogId
+			dialogId = dialogId,
+			solid = solid
 		).apply {
 			setContent(composition) {
 				Box(
@@ -150,10 +152,11 @@ private class DialogWrapper(
 	private val composeView: View,
 	layoutDirection: LayoutDirection,
 	// density: Density,
-	dialogId: UUID
+	dialogId: UUID,
+	solid: Boolean
 ) : Dialog(
 	composeView.context,
-	R.style.FullScreenDialog
+	if(solid) R.style.FullScreenDialog_NoAnimation else R.style.FullScreenDialog
 ),
 	ViewRootForInspector {
 	
@@ -174,6 +177,7 @@ private class DialogWrapper(
 			// Set unique id for AbstractComposeView. This allows state restoration for the state
 			// defined inside the Dialog via rememberSaveable()
 			setTag(androidx.compose.ui.R.id.compose_view_saveable_id_tag, "Dialog:$dialogId")
+			setTag(R.id.FullScreenDialog_Dialog, this@DialogWrapper)
 			// // Enable children to draw their shadow by not clipping them
 			// clipChildren = false
 			// // Allocate space for elevation

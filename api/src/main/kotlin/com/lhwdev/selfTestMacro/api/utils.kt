@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.lhwdev.selfTestMacro.api
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -49,11 +52,12 @@ public open class PrimitiveMappingSerializer<Data, Raw>(
 	
 	override fun deserialize(decoder: Decoder): Data {
 		val raw = rawSerializer.deserialize(decoder)
-		return map.find { it.second == raw }!!.first
+		return (map.find { it.second == raw } ?: error("Could not find $raw (from ${descriptor.serialName})")).first
 	}
 	
 	override fun serialize(encoder: Encoder, value: Data) {
-		val raw = map.find { it.first == value }!!.second
+		val raw =
+			(map.find { it.first == value } ?: error("Could not find $value (from ${descriptor.serialName})")).second
 		rawSerializer.serialize(encoder, raw)
 	}
 }

@@ -19,20 +19,12 @@ import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.GroupStatus
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.Status
-import com.lhwdev.selfTestMacro.repository.SuspiciousKind
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.lhwdev.selfTestMacro.ui.utils.SmallIconButton
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
 
-
-private val SuspiciousKind?.displayText
-	get() = when(this) {
-		null -> "정상"
-		SuspiciousKind.quarantined -> "자가격리 중"
-		SuspiciousKind.symptom -> "의심증상 있음"
-	}
 
 @Composable
 internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
@@ -69,7 +61,7 @@ internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
 	when(status) {
 		null -> Text("불러오는 중...", style = MaterialTheme.typography.h3)
 		is Status.Submitted -> {
-			Text(status.suspicious.displayText, style = MaterialTheme.typography.h3)
+			Text(status.suspicious.displayName, style = MaterialTheme.typography.h3)
 			
 			Spacer(Modifier.height(20.dp))
 			

@@ -54,8 +54,10 @@ android {
 		applicationId = "com.lhwdev.selfTestMacro"
 		minSdk = 21
 		targetSdk = 30
-		versionCode = 3000
-		versionName = "3.0.0-build03"
+		// 3.0.0-build01 ~ 3.0.0-build03 = 3000
+		// 3.0.0-build04 = 3001
+		versionCode = 3001
+		versionName = "3.0.0-build04"
 		
 		// multiDexEnabled = true
 		

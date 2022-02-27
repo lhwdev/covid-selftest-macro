@@ -31,6 +31,9 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 				Text("'${SelfTestQuestions.suspicious}': ${if(status.questionSuspicious == true) "있음" else "없음"}")
 			}
 			ListItem {
+				Text("'${SelfTestQuestions.quickTestResult}': ${status.questionQuickTestResult?.displayLabel}")
+			}
+			ListItem {
 				Text("'${SelfTestQuestions.waitingResult}': ${if(status.questionWaitingResult == true) "있음" else "없음"}")
 			}
 			ListItem {

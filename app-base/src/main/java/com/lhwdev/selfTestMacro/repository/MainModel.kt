@@ -8,6 +8,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.core.content.getSystemService
+import com.lhwdev.selfTestMacro.api.QuickTestResult
 import com.lhwdev.selfTestMacro.api.UserInfo
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
@@ -55,7 +56,8 @@ data class GroupInfo(
 		}
 }
 
-enum class SuspiciousKind(val displayName: String) { symptom("유증상 있음"), quarantined("자가격리함") }
+
+enum class SuspiciousKind(val displayName: String) { symptom("의심증상 있음"), quarantined("자가격리함") }
 
 @Immutable
 sealed class Status {
@@ -64,6 +66,7 @@ sealed class Status {
 		val time: String,
 		
 		val questionSuspicious: Boolean?,
+		val questionQuickTestResult: QuickTestResult?,
 		val questionWaitingResult: Boolean?,
 		val questionQuarantined: Boolean?,
 		val questionHousemateInfected: Boolean?
@@ -105,6 +108,7 @@ fun Status(info: UserInfo): Status = when {
 			time = formatRegisterTime(info.lastRegisterAt!!),
 			
 			questionSuspicious = info.questionSuspicious,
+			questionQuickTestResult = info.questionQuickTestResult,
 			questionWaitingResult = info.questionWaitingResult,
 			questionQuarantined = info.questionQuarantined,
 			questionHousemateInfected = info.questionHouseholdInfected

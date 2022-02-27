@@ -93,7 +93,10 @@ private fun EditUserDetail(
 			
 			ListItem(modifier = Modifier.clickAction {
 				val doDelete = navigator.promptYesNoDialog(
-					title = { Text("${with(pref.db) { target.name }}을(를) 삭제할까요?") }
+					title = { Text("${with(pref.db) { target.name }}을(를) 삭제할까요?") },
+					content = {
+						Content { Text("ㄹㅇ로?") }
+					}
 				)
 				
 				if(doDelete == true) pref.db.removeTestGroup(group)
@@ -167,7 +170,7 @@ private fun EditUserDetail(
 									onCheckedChange = null
 								)
 							},
-							text = { Text("그룹의 자가진단 예약 상태 유지") },
+							text = { Text("그룹의 자가진단 예약 일정 복사") },
 							modifier = Modifier.clickable {
 								inheritSchedule = !inheritSchedule
 							}

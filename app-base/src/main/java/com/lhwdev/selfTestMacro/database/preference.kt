@@ -18,7 +18,8 @@ class PreferenceState(pref: SharedPreferences) : PreferenceHolder(pref) {
 		when(LastVersion(preferenceInt("lastVersion", -1)).last()) {
 			App.versionCode -> Unit // latest
 			in -1..999 -> pref.edit { clear() }
-			in 1000..2999 -> pref.edit { clear() }
+			in 1000..3000 -> pref.edit { clear() }
+			else -> Unit
 		}
 	}
 	

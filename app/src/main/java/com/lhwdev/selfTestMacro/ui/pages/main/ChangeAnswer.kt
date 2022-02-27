@@ -1,17 +1,16 @@
 package com.lhwdev.selfTestMacro.ui.pages.main
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.api.QuickTestResult
 import com.lhwdev.selfTestMacro.database.Answer
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.Navigator
@@ -47,9 +46,10 @@ fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = 
 		
 		
 		val (a1, setA1) = remember { mutableStateOf(user.answer.suspicious) }
-		val (a2, setA2) = remember { mutableStateOf(user.answer.waitingResult) }
-		val (a3, setA3) = remember { mutableStateOf(user.answer.quarantined) }
-		val (a4, setA4) = remember { mutableStateOf(user.answer.housemateInfected) }
+		val (a2, setA2) = remember { mutableStateOf(user.answer.quickTestResult) }
+		val (a3, setA3) = remember { mutableStateOf(user.answer.waitingResult) }
+		val (a4, setA4) = remember { mutableStateOf(user.answer.quarantined) }
+		val (a5, setA5) = remember { mutableStateOf(user.answer.housemateInfected) }
 		
 		Column {
 			Divider()
@@ -63,14 +63,28 @@ fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = 
 			CheckBoxListItem(checked = a1, onCheckChanged = setA1, modifier = modifier) {
 				Text(SelfTestQuestions.suspicious)
 			}
-			CheckBoxListItem(checked = a2, onCheckChanged = setA2, modifier = modifier) {
-				Text(SelfTestQuestions.waitingResult)
-				Spacer(Modifier.height(8.dp))
+			ListItem(icon = {}) {
+				Text(SelfTestQuestions.quickTestResult)
+			}
+			Row(horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)) {
+				@Composable
+				fun Item(enum: QuickTestResult) {
+					CheckBoxListItem(a2 == enum, { setA2(enum) }) {
+						Text(enum.displayLabel)
+					}
+				}
+				
+				Item(QuickTestResult.didNotConduct)
+				Item(QuickTestResult.negative)
+				Item(QuickTestResult.positive)
 			}
 			CheckBoxListItem(checked = a3, onCheckChanged = setA3, modifier = modifier) {
-				Text(SelfTestQuestions.quarantined)
+				Text(SelfTestQuestions.waitingResult)
 			}
 			CheckBoxListItem(checked = a4, onCheckChanged = setA4, modifier = modifier) {
+				Text(SelfTestQuestions.quarantined)
+			}
+			CheckBoxListItem(checked = a5, onCheckChanged = setA5, modifier = modifier) {
 				Text(SelfTestQuestions.housemateInfected)
 			}
 			
@@ -81,9 +95,10 @@ fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = 
 					val users = pref.db.users
 					val newAnswer = Answer(
 						suspicious = a1,
-						waitingResult = a2,
-						quarantined = a3,
-						housemateInfected = a4
+						quickTestResult = a2,
+						waitingResult = a3,
+						quarantined = a4,
+						housemateInfected = a5
 					)
 					
 					pref.db.users = users.copy(

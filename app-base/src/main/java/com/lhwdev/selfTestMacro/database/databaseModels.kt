@@ -2,12 +2,12 @@ package com.lhwdev.selfTestMacro.database
 
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
+import com.lhwdev.selfTestMacro.api.QuickTestResult
 import com.lhwdev.selfTestMacro.api.UsersIdentifier
 import com.lhwdev.selfTestMacro.debug.DiagnosticItem
 import com.lhwdev.selfTestMacro.debug.DiagnosticObject
 import com.lhwdev.selfTestMacro.debug.diagnosticGroup
 import com.lhwdev.selfTestMacro.sRegions
-import com.lhwdev.selfTestMacro.sSchoolLevels
 import kotlinx.serialization.Serializable
 
 
@@ -79,21 +79,12 @@ data class DbInstitute(
 	val classifierCode: String,
 	val hcsUrl: String,
 	val regionCode: String? = null,
-	val levelCode: String? = null,
 	val sigCode: String? = null
 ) : DiagnosticObject {
 	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticGroup("DbInstitute", "기관 정보") {
 		"type" set type localized "기관 유형" localizeData { it.displayName }
 		"name" set name localized "이름"
 		"regionCode" set regionCode localized "지역" localizeData { sRegions[it] ?: "?" }
-		"levelCode" set levelCode localized "학교 수준" localizeData {
-			val code = it.toIntOrNull()
-			if(code == null) {
-				"?"
-			} else {
-				sSchoolLevels[code] ?: "?"
-			}
-		}
 	}
 }
 
@@ -121,6 +112,7 @@ data class DbUser(
 @Serializable
 data class Answer(
 	val suspicious: Boolean,
+	val quickTestResult: QuickTestResult,
 	val waitingResult: Boolean,
 	val quarantined: Boolean,
 	val housemateInfected: Boolean,
@@ -128,6 +120,7 @@ data class Answer(
 ) : DiagnosticObject {
 	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticGroup("Answer", "자가진단 제출 질문") {
 		"suspicious" set suspicious localized "의심증상 여부"
+		"quickTestResult" set quickTestResult localized "신속항원검사 결과" localizeData { it.displayLabel }
 		"waitingResult" set waitingResult localized "검사결과 대기 중"
 		"quarantined" set quarantined localized "자가격리 중"
 		"housemateInfected" set housemateInfected localized "동거인 확진"

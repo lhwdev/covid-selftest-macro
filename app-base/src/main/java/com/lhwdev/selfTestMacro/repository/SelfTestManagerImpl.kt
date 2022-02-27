@@ -286,10 +286,10 @@ class SelfTestManagerImpl(
 			val result = tryAtMost(maxTrial = 3) {
 				info.session.validatePassword(institute, usersIdentifier.token, password)
 			}
-			if(result is UsersToken) {
-				apiLoginCache[usersIdentifier.token] = result
+			if(result is PasswordResult.Success) {
+				apiLoginCache[usersIdentifier.token] = result.token
 				info.sessionFullyLoaded = true
-				return result
+				return result.token
 			} else debugContext.onLightError(message = "password wrong?")
 		}
 		
@@ -431,12 +431,12 @@ class SelfTestManagerImpl(
 						classifierCode = user.info.instituteClassifierCode,
 						hcsUrl = user.info.instituteRequestUrlBody,
 						regionCode = user.info.instituteRegionCode,
-						levelCode = user.info.schoolLevelCode,
 						sigCode = user.info.instituteSigCode
 					),
 					userGroupId = thisGroupId,
 					answer = Answer(
 						suspicious = false,
+						quickTestResult = QuickTestResult.didNotConduct,
 						waitingResult = false,
 						quarantined = false,
 						housemateInfected = false

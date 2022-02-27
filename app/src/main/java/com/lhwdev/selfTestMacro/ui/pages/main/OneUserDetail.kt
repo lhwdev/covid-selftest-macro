@@ -21,7 +21,7 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 	Content(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 		val text = when(status) {
 			is Status.NotSubmitted -> "자가진단 제출 안함"
-			is Status.Submitted -> status.suspicious?.displayName ?: "정상"
+			is Status.Submitted -> status.suspicious?.displayText ?: "정상"
 		}
 		ListItem { Text(text) }
 		

@@ -1,11 +1,15 @@
 package com.lhwdev.selfTestMacro.ui.pages.main
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Icon
+import androidx.compose.material.ListItem
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -16,8 +20,8 @@ import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.replacedValue
 import com.lhwdev.selfTestMacro.ui.*
-import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
+import com.lhwdev.selfTestMacro.ui.utils.SelectionChip
 import com.vanpra.composematerialdialogs.*
 
 
@@ -43,67 +47,25 @@ fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = 
 			)
 		}
 	) {
-		
-		
-		val (a1, setA1) = remember { mutableStateOf(user.answer.suspicious) }
-		val (a2, setA2) = remember { mutableStateOf(user.answer.quickTestResult) }
-		val (a3, setA3) = remember { mutableStateOf(user.answer.waitingResult) }
-		val (a4, setA4) = remember { mutableStateOf(user.answer.quarantined) }
-		val (a5, setA5) = remember { mutableStateOf(user.answer.housemateInfected) }
+		val (answer, setAnswer) = remember { mutableStateOf(user.answer) }
 		
 		Column {
-			Divider()
-			
-			ListItem(icon = { Icon(painterResource(iconFor(user)), contentDescription = null) }) {
-				Text("${user.name} (${user.institute.name})")
-			}
-			
-			val modifier = Modifier.padding(vertical = 4.dp)
-			
-			CheckBoxListItem(checked = a1, onCheckChanged = setA1, modifier = modifier) {
-				Text(SelfTestQuestions.suspicious)
-			}
-			ListItem(icon = {}) {
-				Text(SelfTestQuestions.quickTestResult)
-			}
-			Row(horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)) {
-				@Composable
-				fun Item(enum: QuickTestResult) {
-					CheckBoxListItem(a2 == enum, { setA2(enum) }) {
-						Text(enum.displayLabel)
-					}
+			Column(Modifier.verticalScroll(rememberScrollState()).weight(1f)) {
+				ListItem(icon = { Icon(painterResource(iconFor(user)), contentDescription = null) }) {
+					Text("${user.name} (${user.institute.name})")
 				}
 				
-				Item(QuickTestResult.didNotConduct)
-				Item(QuickTestResult.negative)
-				Item(QuickTestResult.positive)
+				SelectAnswerContent(answer, setAnswer)
 			}
-			CheckBoxListItem(checked = a3, onCheckChanged = setA3, modifier = modifier) {
-				Text(SelfTestQuestions.waitingResult)
-			}
-			CheckBoxListItem(checked = a4, onCheckChanged = setA4, modifier = modifier) {
-				Text(SelfTestQuestions.quarantined)
-			}
-			CheckBoxListItem(checked = a5, onCheckChanged = setA5, modifier = modifier) {
-				Text(SelfTestQuestions.housemateInfected)
-			}
-			
-			Spacer(Modifier.weight(1f))
 			
 			Buttons {
 				PositiveButton(onClick = {
 					val users = pref.db.users
-					val newAnswer = Answer(
-						suspicious = a1,
-						quickTestResult = a2,
-						waitingResult = a3,
-						quarantined = a4,
-						housemateInfected = a5
+					pref.db.users = users.copy(
+						users = users.users.replacedValue(user, user.copy(answer = answer))
 					)
 					
-					pref.db.users = users.copy(
-						users = users.users.replacedValue(user, user.copy(answer = newAnswer))
-					)
+					requestClose()
 				})
 				
 				NegativeButton(onClick = requestClose)
@@ -112,4 +74,71 @@ fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = 
 			scrims.navigationBar()
 		}
 	}
+}
+
+
+@Composable
+fun (@Suppress("unused") ColumnScope).SelectAnswerContent(answer: Answer, setAnswer: (Answer) -> Unit) {
+	@Composable
+	fun <T> Item(value: T, setValue: (T) -> Unit, title: String, items: Map<T, String>) {
+		ListItem(Modifier.padding(top = 8.dp, bottom = 12.dp)) {
+			Column {
+				Text(title)
+				Spacer(Modifier.height(8.dp))
+				Row(
+					horizontalArrangement = Arrangement.spacedBy(10.dp),
+					modifier = Modifier.padding(start = 8.dp)
+				) {
+					for((item, text) in items) {
+						SelectionChip(
+							selected = value == item,
+							setSelected = { if(it) setValue(item) },
+							trailingIconSelected = {
+								Icon(painterResource(R.drawable.ic_check_24), contentDescription = null)
+							}
+						) { Text(text) }
+					}
+				}
+			}
+		}
+	}
+	
+	val yesNoItems = mapOf(false to "아니오", true to "예")
+	
+	Item(
+		value = answer.suspicious,
+		setValue = { setAnswer(answer.copy(suspicious = it)) },
+		title = SelfTestQuestions.suspicious,
+		items = yesNoItems
+	)
+	
+	Item(
+		value = answer.quickTestResult,
+		setValue = { setAnswer(answer.copy(quickTestResult = it)) },
+		title = SelfTestQuestions.quickTestResult,
+		items = mapOf(
+			QuickTestResult.didNotConduct to "실시하지 않음",
+			QuickTestResult.negative to "음성",
+			QuickTestResult.positive to "양성"
+		)
+	)
+	
+	Item(
+		value = answer.waitingResult,
+		setValue = { setAnswer(answer.copy(waitingResult = it)) },
+		title = SelfTestQuestions.waitingResult,
+		items = yesNoItems
+	)
+	Item(
+		value = answer.quarantined,
+		setValue = { setAnswer(answer.copy(quarantined = it)) },
+		title = SelfTestQuestions.quarantined,
+		items = yesNoItems
+	)
+	Item(
+		value = answer.housemateInfected,
+		setValue = { setAnswer(answer.copy(housemateInfected = it)) },
+		title = SelfTestQuestions.housemateInfected,
+		items = yesNoItems
+	)
 }

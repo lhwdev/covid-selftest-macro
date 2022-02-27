@@ -7,7 +7,10 @@ import androidx.compose.ui.graphics.lerp
 
 
 val Colors.primarySurfaceColored: Color
-	@Composable get() = if(isLight) primary else lerp(primary, surface, .7f)
+	@Composable get() = if(isLight) primary else lerp(surface, primary, .3f)
+
+val Colors.primaryContainer: Color
+	@Composable get() = lerp(surface, primary, .2f)
 
 /**
  * A color that is used for texts, icons, and small elements on the background or surface.

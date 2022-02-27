@@ -5,10 +5,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +54,12 @@ private fun SetupWizardView(model: SetupModel, parameters: SetupParameters) {
 	var pageIndex by remember { mutableStateOf(0) }
 	
 	AutoScaffold(
-		scaffoldState = model.scaffoldState
+		scaffoldState = model.scaffoldState,
+		snackbarHost = {
+			Box(Modifier.padding(bottom = 40.dp)) {
+				SnackbarHost(it)
+			}
+		}
 	) {
 		WizardPager(pageIndex = pageIndex) { index ->
 			val wizard = SetupWizard(index, pageIndex, sSetupPagesCount) {

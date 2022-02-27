@@ -92,7 +92,7 @@ fun FloatingMaterialDialogScope.SetupGroup(
 			val focusManager = LocalFocusManager.current
 			
 			this@SetupGroup.Input(focusOnShow = true, contentPadding = PaddingValues()) {
-				TextField(
+				OutlinedTextField(
 					value = groupName,
 					onValueChange = { groupName = it },
 					label = { Text("그룹 이름") },

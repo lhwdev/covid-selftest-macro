@@ -57,7 +57,7 @@ data class GroupInfo(
 }
 
 
-enum class SuspiciousKind(val displayName: String) { symptom("의심증상 있음"), quarantined("자가격리함") }
+enum class SuspiciousKind(val displayText: String) { symptom("의심증상 있음"), quarantined("자가격리함") }
 
 @Immutable
 sealed class Status {
@@ -117,4 +117,5 @@ fun Status(info: UserInfo): Status = when {
 }
 
 
-private fun formatRegisterTime(time: String): String = time.substring(0, time.lastIndexOf('.'))
+private fun formatRegisterTime(time: String): String =
+	"오늘 " + time.substring(time.indexOf(' ') + 1, time.lastIndexOf('.'))

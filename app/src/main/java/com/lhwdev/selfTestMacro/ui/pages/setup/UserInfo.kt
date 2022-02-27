@@ -75,7 +75,8 @@ private suspend fun submitLogin(
 			loginType = instituteInfo.type.loginType
 		)
 	} catch(e: Throwable) {
-		selfTestManager.debugContext.onError("사용자를 찾을 수 없어요.", e)
+		model.showSnackbar("사용자를 찾을 수 없어요.", actionLabel = "확인")
+		selfTestManager.debugContext.onLightError("사용자를 찾을 수 없어요.", e)
 		return false
 	}
 	
@@ -100,7 +101,7 @@ private suspend fun submitLogin(
 		Title { Text("비밀번호를 입력해주세요") }
 		
 		Input(focusOnShow = true) {
-			TextField(
+			OutlinedTextField(
 				password, setPassword,
 				label = { Text("비밀번호") },
 				isError = password.length > 4,
@@ -125,7 +126,8 @@ private suspend fun submitLogin(
 		log("#3. 비밀번호 확인")
 		selfTestManager.validatePassword(session, institute, userId.token, password)
 	} catch(e: Throwable) {
-		selfTestManager.debugContext.onError("로그인에 실패했어요.", e)
+		model.showSnackbar("비밀번호가 바르지 않아요.", actionLabel = "확인")
+		selfTestManager.debugContext.onLightError("로그인에 실패했어요.", e)
 		return false
 	}
 	

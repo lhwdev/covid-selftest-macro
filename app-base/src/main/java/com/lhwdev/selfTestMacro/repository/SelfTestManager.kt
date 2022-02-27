@@ -85,6 +85,9 @@ interface SelfTestManager {
 	suspend fun getCurrentStatus(user: DbUser): Status?
 	
 	
+	/**
+	 * Note: [users] may not be derived from database, rather arbitrary modified data to change answer etc.
+	 */
 	suspend fun submitSelfTestNow(
 		uiContext: UiContext,
 		group: DbTestGroup,

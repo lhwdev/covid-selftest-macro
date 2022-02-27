@@ -18,8 +18,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.LocalWindowInsets
@@ -34,7 +36,14 @@ private fun DefaultNumberPicker(value: Int, setValue: (Int) -> Unit, range: IntR
 		value = value,
 		setValue = setValue,
 		onEditInput = { endEdit ->
-			var text by remember { mutableStateOf("$value") }
+			var text by remember {
+				val t = "$value"
+				mutableStateOf(TextFieldValue(t, selection = TextRange(0, t.length)))
+			}
+			val finish = {
+				text.text.toIntOrNull()?.let { setValue(it) }
+				endEdit()
+			}
 			var everGainFocus by remember { mutableStateOf(false) }
 			val maxLength = remember(range) { range.last.toString().length }
 			val focusRequester = remember { FocusRequester() }
@@ -42,15 +51,12 @@ private fun DefaultNumberPicker(value: Int, setValue: (Int) -> Unit, range: IntR
 			BasicTextField(
 				value = text,
 				onValueChange = change@{
-					if(it.length > maxLength) return@change
+					if(it.text.length > maxLength) return@change
 					text = it
 				},
 				textStyle = MaterialTheme.typography.h4.copy(textAlign = TextAlign.Center),
 				keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-				keyboardActions = KeyboardActions {
-					text.toIntOrNull()?.let { setValue(it) }
-					endEdit()
-				},
+				keyboardActions = KeyboardActions { finish() },
 				decorationBox = { innerTextField ->
 					Box(Modifier.drawBehind {
 						drawLine(
@@ -66,7 +72,7 @@ private fun DefaultNumberPicker(value: Int, setValue: (Int) -> Unit, range: IntR
 						if(it.isFocused) {
 							everGainFocus = true
 						} else {
-							if(everGainFocus) endEdit()
+							if(everGainFocus) finish()
 						}
 					},
 				singleLine = true
@@ -78,7 +84,7 @@ private fun DefaultNumberPicker(value: Int, setValue: (Int) -> Unit, range: IntR
 				snapshotFlow { insets.ime.isVisible }
 					.drop(1)
 					.collect {
-						if(!it) endEdit()
+						if(!it) finish()
 					}
 			}
 		},

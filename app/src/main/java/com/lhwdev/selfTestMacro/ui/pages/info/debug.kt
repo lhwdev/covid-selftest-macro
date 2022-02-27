@@ -16,7 +16,6 @@ import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.pages.intro.IntroRoute
 import com.vanpra.composematerialdialogs.*
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 
@@ -32,44 +31,42 @@ fun Navigator.showDebugWindow() = showDialogAsync {
 		}) { Text("개발자 모드 끄기") }
 		
 		ListItem(modifier = Modifier.clickable {
-			scope.launch {
-				val info = navigator.showDialog<String?> {
-					Title { Text("가상 서버 설정") }
-					
-					val (value, setValue) = remember {
-						mutableStateOf(
-							pref.virtualServer?.owner ?: Json.encodeToString(
-								Repository.serializer(),
-								App.github.repository
-							)
+			navigator.showDialogAsync {
+				Title { Text("가상 서버 설정") }
+				
+				val (value, setValue) = remember {
+					mutableStateOf(
+						pref.virtualServer?.owner ?: Json.encodeToString(
+							Repository.serializer(),
+							App.github.repository
 						)
-					}
-					Input {
-						TextField(value, setValue)
-					}
+					)
+				}
+				Input {
+					TextField(value, setValue)
+				}
+				
+				Buttons {
+					PositiveButton(onClick = {
+						try {
+							pref.virtualServer = Json.decodeFromString(Repository.serializer(), value)
+						} catch(th: Throwable) { // 오타는 고의적임
+							navigator.showDialogAsync { Text("틀렸스비다\n" + th.stackTraceToString()) }
+						}
+					})
 					
-					Buttons {
-						PositiveButton(onClick = {
-							try {
-								pref.virtualServer = Json.decodeFromString(Repository.serializer(), value)
-							} catch(th: Throwable) { // 오타는 고의적임
-								navigator.showDialogAsync { Text("틀렸스비다\n" + th.stackTraceToString()) }
-							}
-						})
-						
-						NegativeButton(onClick = requestClose)
-						Button(onClick = {
-							pref.virtualServer = null
-							requestClose()
-						}) { Text("초기화") }
-					}
+					NegativeButton(onClick = requestClose)
+					Button(onClick = {
+						pref.virtualServer = null
+						requestClose()
+					}) { Text("초기화") }
 				}
 			}
 		}) { Text("가상 서버 ${if(pref.virtualServer != null) "설정" else "켜기"}") }
 		
 		ListItem(modifier = Modifier.clickable {
 			pref.isDebugCheckEnabled = !pref.isDebugCheckEnabled
-		}) { Text("체크 ${if(pref.isDebugFetchEnabled) "끄기" else "켜기"}") }
+		}) { Text("체크 ${if(pref.isDebugCheckEnabled) "끄기" else "켜기"}") }
 		
 		ListItem(modifier = Modifier.clickable {
 			navigator.pushRoute(IntroRoute)

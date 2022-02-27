@@ -299,17 +299,16 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 	RoundButton(
 		onClick = {
 			scope.launch {
-				selfTestManager.submitSelfTestNow(
-					uiContext = UiContext(
-						context = context,
-						navigator = navigator,
-						showMessage = { message, action ->
-							scaffoldState.snackbarHostState.showSnackbar(message, action)
-						},
-						scope = scope
-					),
-					group = selectedTestGroup
+				val uiContext = UiContext(
+					context = context,
+					navigator = navigator,
+					showMessage = { message, action ->
+						scaffoldState.snackbarHostState.showSnackbar(message, action)
+					},
+					scope = scope
 				)
+				
+				navigator.showSubmitSelfTestNowDialog(selfTestManager, uiContext, selectedTestGroup)
 				
 				statusKey.value++
 			}

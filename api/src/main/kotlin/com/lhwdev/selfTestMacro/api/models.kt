@@ -248,6 +248,13 @@ public data class User(
 )
 
 
+public enum class QuickTestResult(public val displayLabel: String) {
+	didNotConduct("실시하지 않음"),
+	negative("음성"),
+	positive("양성")
+}
+
+
 /**
  * The class that contains detailed information about user.
  * Can be obtained from [getUserInfo].
@@ -294,7 +301,7 @@ public data class UserInfo(
 	@SerialName("rspns01") val questionSuspicious: Boolean? = null,
 	
 	@Serializable(with = Rspns3Serializer::class)
-	@SerialName("rspns03") val questionTestResult: TestResult? = null,
+	@SerialName("rspns03") val questionQuickTestResult: QuickTestResult? = null,
 	
 	@Serializable(with = Rspns2Serializer::class)
 	@SerialName("rspns02") val questionWaitingResult: Boolean? = null,
@@ -313,7 +320,6 @@ public data class UserInfo(
 	
 	@SerialName("deviceUuid") val deviceUuid: String? = null
 ) {
-	public enum class TestResult { didNotConduct, positive, negative }
 	
 	
 	public object Rspns1Serializer : PrimitiveMappingSerializer<Boolean, String>(
@@ -328,10 +334,10 @@ public data class UserInfo(
 		false to "1", true to "0"
 	)
 	
-	public object Rspns3Serializer : PrimitiveMappingSerializer<TestResult, String>(
+	public object Rspns3Serializer : PrimitiveMappingSerializer<QuickTestResult, String>(
 		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns3",
 		primitiveKind = PrimitiveKind.STRING,
-		TestResult.didNotConduct to "1", TestResult.negative to "2", TestResult.positive to "3"
+		QuickTestResult.didNotConduct to "1", QuickTestResult.negative to "2", QuickTestResult.positive to "3"
 	)
 	
 	public object Rspns45Serializer : PrimitiveMappingSerializer<Boolean, String>(
@@ -350,11 +356,11 @@ public data class UserInfo(
 				englishName = instituteName,
 				code = instituteCode,
 				address = "???",
-			requestUrlBody = instituteRequestUrlBody
-		)
-		mInstituteStub = stub
-		stub
-	}
+				requestUrlBody = instituteRequestUrlBody
+			)
+			mInstituteStub = stub
+			stub
+		}
 	
 	// see getInstituteData.kt
 	@Transient

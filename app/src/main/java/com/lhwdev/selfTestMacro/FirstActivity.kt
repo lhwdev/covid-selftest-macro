@@ -205,8 +205,15 @@ class FirstActivity : AppCompatActivity() {
 					val token = result.token
 					
 					val groups = tryAtMost(maxTrial = 3) {
-						session.getUserGroup(instituteInfo, token)
-					}
+						try {
+							session.getUserGroup(instituteInfo, token)
+						} catch(th: Throwable) {
+							if(th.message?.contains("userNameEncpt") == true) {
+								showToastSuspendAsync("아직 여러명의 자가진단은 지원하지 않습니다.")
+								null
+							} else throw th
+						}
+					} ?: return@main
 					singleOfUserGroup(groups) ?: return@main // TODO: many users
 					
 					pref.institute = instituteInfo

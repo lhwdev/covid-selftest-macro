@@ -17,6 +17,7 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
+import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.lifecycle.lifecycleScope
 import com.lhwdev.selfTestMacro.api.*
@@ -28,9 +29,14 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.URL
+import java.util.Calendar
 
 
 const val IGNORE_BATTERY_OPTIMIZATION_REQUEST = 1001
+private val defaultQuickTestInfo = QuickTestInfo(
+	days = emptySet(),
+	behavior = QuickTestInfo.Behavior.negative
+)
 
 
 @Suppress("SpellCheckingInspection")
@@ -63,7 +69,7 @@ class MainActivity : AppCompatActivity() {
 		
 		
 		@SuppressLint("SetTextI18n")
-		suspend fun updateCurrentState() = withContext(Dispatchers.IO) main@ {
+		suspend fun updateCurrentState() = withContext(Dispatchers.IO) main@{
 			val institute = pref.institute!!
 			val user = pref.user!! // note: may change
 			
@@ -136,19 +142,38 @@ class MainActivity : AppCompatActivity() {
 		}
 		
 		
+		switch_weekend.isChecked = pref.includeWeekend
+		
+		switch_weekend.setOnCheckedChangeListener { _, isChecked ->
+			pref.includeWeekend = isChecked
+			updateTime(intent)
+		}
+		
+		
 		switch_isolation.isChecked = pref.isIsolated
 		
 		switch_isolation.setOnCheckedChangeListener { _, isChecked ->
-			pref.isIsolated = isChecked
-			if(isChecked) AlertDialog.Builder(this).apply {
-				setTitle("자가격리자 옵션")
-				setMessage("""
-					|가정에서 자가격리를 하고 있으신 분은 이 옵션을 선택해주세요. 즉, 자가진단 설문에서 3번 문항에 '예'를 답해야 하는 경우입니다.
-					|(참고) 해당 문항:
-					|3. 학생 본인 또는 동거인이 방역당국에 의해 현재 자가격리가 이루어지고 있나요?
-					|※ 동거인이 자가격리중인 경우, ① 매 등교 희망일로부터 2일 이내 진단검사 결과가 음성인 경우 또는 ② 격리 통지를 받은 ‘즉시’ 자가격리된 동거인과 접촉이 없었던 경우는 ‘아니오’ 선택
-				""".trimMargin())
-			}.show()
+			if(isChecked) {
+				AlertDialog.Builder(this).apply {
+					setTitle("자가격리자 옵션")
+					setMessage(
+						"""
+						|가정에서 자가격리를 하고 있으신 분은 이 옵션을 선택해주세요. 즉, 자가진단 설문에서 3번 문항에 '예'를 답해야 하는 경우입니다.
+						|(참고) 해당 문항:
+						|3. 학생 본인 또는 동거인이 방역당국에 의해 현재 자가격리가 이루어지고 있나요?
+						|※ 동거인이 자가격리중인 경우, ① 매 등교 희망일로부터 2일 이내 진단검사 결과가 음성인 경우 또는 ② 격리 통지를 받은 ‘즉시’ 자가격리된 동거인과 접촉이 없었던 경우는 ‘아니오’ 선택
+					""".trimMargin()
+					)
+					setPositiveButton("설정") { _, _ ->
+						pref.isIsolated = true
+					}
+					setNegativeButton("취소") { _, _ ->
+						switch_isolation.isChecked = false
+					}
+				}.show()
+			} else {
+				pref.isIsolated = false
+			}
 		}
 		
 		
@@ -161,6 +186,73 @@ class MainActivity : AppCompatActivity() {
 			update()
 			Toast.makeText(this, "자동예약 취소", Toast.LENGTH_SHORT).show()
 			true
+		}
+		
+		var quickTest = pref.quickTest ?: defaultQuickTestInfo
+		var quickTestEnabled = pref.quickTest != null
+		
+		quick_test_enable.isChecked = quickTestEnabled
+		quick_test_result.isVisible = quickTestEnabled
+		quick_test_enable.setOnCheckedChangeListener { _, isChecked ->
+			quick_test_result.isVisible = isChecked
+			quickTestEnabled = isChecked
+			
+			pref.quickTest = if(isChecked) {
+				quickTest
+			} else {
+				null
+			}
+		}
+		
+		fun quickTestDay(button: Button, day: Int) {
+			fun up(enabled: Boolean) {
+				val color = if(enabled) {
+					0x55229cff
+				} else {
+					0x00000000
+				}
+				button.setBackgroundColor(color)
+			}
+			up(day in quickTest.days)
+			button.setOnClickListener {
+				val lastEnabled = day in quickTest.days
+				
+				val days = if(lastEnabled) {
+					quickTest.days - day
+				} else {
+					quickTest.days + day
+				}
+				quickTest = quickTest.copy(days = days)
+				pref.quickTest = quickTest
+				up(!lastEnabled)
+				updateTime(intent)
+			}
+		}
+		
+		quickTestDay(monday, Calendar.MONDAY)
+		quickTestDay(tuesday, Calendar.TUESDAY)
+		quickTestDay(wednesday, Calendar.WEDNESDAY)
+		quickTestDay(thursday, Calendar.THURSDAY)
+		quickTestDay(friday, Calendar.FRIDAY)
+		quickTestDay(saturday, Calendar.SATURDAY)
+		quickTestDay(sunday, Calendar.SUNDAY)
+		
+		quick_test_result_behavior.check(
+			when(quickTest.behavior) {
+				QuickTestInfo.Behavior.negative -> R.id.result_negative
+				QuickTestInfo.Behavior.doNotSubmit -> R.id.disable_macro
+			}
+		)
+		
+		quick_test_result_behavior.setOnCheckedChangeListener { _, checkedId ->
+			val behavior = when(checkedId) {
+				R.id.result_negative -> QuickTestInfo.Behavior.negative
+				R.id.disable_macro -> QuickTestInfo.Behavior.doNotSubmit
+				else -> error("oh no")
+			}
+			quickTest = quickTest.copy(behavior = behavior)
+			pref.quickTest = quickTest
+			updateTime(intent)
 		}
 		
 		submit.setOnClickListener {
@@ -194,7 +286,7 @@ class MainActivity : AppCompatActivity() {
 			content =
 				URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/notice_v4.json").readText()
 			
-			val notificationObject = Json {
+			val notificationObject: NotificationObject = Json {
 				ignoreUnknownKeys = true /* loose */
 			}.decodeFromString(NotificationObject.serializer(), content)
 			

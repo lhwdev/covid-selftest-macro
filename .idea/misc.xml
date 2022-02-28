@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/LHW/develop/android/SelfTest-Macro-bugfix/app/src/main/res/layout/activity_first.xml" value="0.36302083333333335" />
+        <entry key="..\:/LHW/develop/android/SelfTest-Macro-bugfix/app/src/main/res/layout/content_main.xml" value="0.33" />
+      </map>
+    </option>
+  </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="13" project-jdk-type="JavaSDK" />
 </project>

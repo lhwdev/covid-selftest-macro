@@ -40,16 +40,40 @@ suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) lis
 	null
 }
 
+fun Context.surveyData(user: User, usersIdentifier: UserIdentifier): SurveyData {
+	val pref = preferenceState
+	
+	val quickTestNegative = pref.quickTest?.let {
+		if(it.behavior != QuickTestInfo.Behavior.negative) {
+			false
+		} else {
+			val day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+			day in it.days
+		}
+	} ?: false
+	val isIsolated = pref.isIsolated
+	
+	
+	return SurveyData(
+		userToken = user.token,
+		upperUserName = usersIdentifier.mainUserName,
+		rspns03 = if(quickTestNegative) null else "1",
+		rspns07 = if(quickTestNegative) "0" else null,
+		rspns09 = if(isIsolated) "1" else "0",
+		rspns00 = !(isIsolated) // true = okay, false = problem
+	)
+}
+
 suspend fun Context.submitSuspend(session: Session, notification: Boolean = true) {
 	val pref = preferenceState
 	selfLog("submitSuspend ${pref.user?.identifier?.mainUserName}")
+	
 	try {
 		tryAtMost(maxTrial = 3) trial@{
 			val institute = pref.institute!!
 			val loginInfo: UserLoginInfo =
-				pref.user!! // (not valid ->) // note: `preferenceStte.user` may change after val user = ...
+				pref.user!! // (not valid ->) // note: `preferenceState.user` may change after val user = ...
 			
-			val isIsolated = pref.isIsolated
 			
 			// val user = loginInfo.ensureTokenValid(
 			// 	session, institute,
@@ -65,17 +89,13 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 					).token
 			
 			val users = session.getUserGroup(institute, usersToken)
-			
 			val user = singleOfUserGroup(users) ?: return@trial
+			val surveyData = surveyData(user, usersIdentifier)
 			
 			val result = session.registerSurvey(
 				pref.institute!!,
 				user,
-				SurveyData(
-					userToken = user.token,
-					upperUserName = usersIdentifier.mainUserName,
-					rspns09 = if(isIsolated) "1" else "0"
-				)
+				surveyData
 			)
 			
 			pref.lastSubmit = Date().time
@@ -98,6 +118,7 @@ fun Context.updateTime(intent: PendingIntent) {
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT >= 21)
 		selfLog("updateTime: lastAlarm=${alarmManager.nextAlarmClock}")
+	
 	alarmManager.cancel(intent)
 	if(preferenceState.isSchedulingEnabled)
 		scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min, isRandom = preferenceState.isRandomEnabled)
@@ -106,7 +127,7 @@ fun Context.updateTime(intent: PendingIntent) {
 private val random = Random
 
 private fun millisToDaysCumulative(millis: Long) =
-	// ms         s  min hour day
+	// ms     sec   min hour day
 	millis / 1000 / 60 / 60 / 24
 
 @SuppressLint("NewApi")
@@ -132,12 +153,30 @@ fun Context.scheduleNextAlarm(
 		val targetMin = hour * 60 + min
 		val currentMin = this[Calendar.HOUR_OF_DAY] * 60 + this[Calendar.MINUTE]
 		
-		if(
-			nextDay ||
-			lastDay == millisToDaysCumulative(currentTime) ||
-			targetMin < currentMin - 5
-		) {
+		// update date
+		val quick = pref.quickTest
+		
+		if(quick?.behavior == QuickTestInfo.Behavior.doNotSubmit && quick.days.size >= 7) {
+			// refuse to schedule
+			return
+		}
+		
+		var iteration = 0
+		while(iteration < 10) {
+			val days = millisToDaysCumulative(new.timeInMillis)
+			val day = new[Calendar.DAY_OF_WEEK]
+			
+			when {
+				!pref.includeWeekend && (day == Calendar.SATURDAY || day == Calendar.SUNDAY) -> Unit
+				nextDay || lastDay == days || targetMin < currentMin - 5 -> Unit
+				quick != null && quick.behavior == QuickTestInfo.Behavior.doNotSubmit && day in quick.days -> Unit
+				else -> break
+			}
 			new.add(Calendar.DAY_OF_YEAR, 1)
+			iteration++
+		}
+		if(iteration == 10) {
+			return
 		}
 		
 		new[Calendar.HOUR_OF_DAY] = hour

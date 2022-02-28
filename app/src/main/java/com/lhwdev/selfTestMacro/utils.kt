@@ -131,6 +131,7 @@ class PreferenceState(val pref: SharedPreferences) {
 	var firstState by pref.preferenceInt("first", 0)
 	var isSchedulingEnabled by pref.preferenceBoolean("isSchedulingEnabled", false)
 	var isRandomEnabled by pref.preferenceBoolean("isRandomEnabled", false)
+	var includeWeekend by pref.preferenceBoolean("includeWeekend", false)
 	var isIsolated by pref.preferenceBoolean("isIsolated", false)
 	
 	var hour by pref.preferenceInt("hour", -1)
@@ -142,6 +143,9 @@ class PreferenceState(val pref: SharedPreferences) {
 		by pref.preferenceSerialized("institute", InstituteInfo.serializer())
 	var setting: UserSetting?
 		by pref.preferenceSerialized("userSetting", UserSetting.serializer())
+	
+	var quickTest: QuickTestInfo?
+		by pref.preferenceSerialized("quickTest", QuickTestInfo.serializer())
 	
 	var lastSubmit: Long
 		get() = pref.getLong("lastSubmit", Long.MIN_VALUE)
@@ -161,6 +165,14 @@ class PreferenceState(val pref: SharedPreferences) {
 		set(value) = pref.edit {
 			putStringSet("shownNotices", value)
 		}
+}
+
+@Serializable
+data class QuickTestInfo(
+	val days: Set<Int>,
+	val behavior: Behavior
+) {
+	enum class Behavior { negative, doNotSubmit }
 }
 
 
@@ -238,6 +250,7 @@ fun <T> SharedPreferences.preferenceSerialized(
 		if(!updated) {
 			val string = getString(key, null)
 			cache = if(string == null) null else formatter.decodeFromString(serializer, string)
+			updated = true
 		}
 		return cache
 	}

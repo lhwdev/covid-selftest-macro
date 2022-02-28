@@ -18,30 +18,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 
-/*
- * deviceUuid: ""
- * rspns00: "Y"
- * rspns01: "1"
- * rspns02: "1"
- * rspns03: null
- * rspns04: null
- * rspns05: null
- * rspns06: null
- * rspns07: null
- * rspns08: null
- * rspns09: "0"
- * rspns10: null
- * rspns11: null
- * rspns12: null
- * rspns13: null
- * rspns14: null
- * rspns15: null
- * upperToken: "Bearer ey..."
- * upperUserNameEncpt: "홍길동"
- */
-
-
-
 /**
  * Can be used only once.
  */
@@ -62,7 +38,7 @@ data class SurveyData(
 	@Serializable(with = YesNoSerializer::class) val rspns00: Boolean = true,
 	val rspns01: String = "1",
 	val rspns02: String = "1",
-	val rspns03: String = "1",
+	val rspns03: String? = "1",
 	val rspns04: String? = null,
 	val rspns05: String? = null,
 	val rspns06: String? = null,

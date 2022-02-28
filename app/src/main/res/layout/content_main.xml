@@ -1,58 +1,180 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical"
 	android:padding="8dp"
+	android:fillViewport="true"
+	tools:ignore="HardcodedText"
 	app:layout_behavior="@string/appbar_scrolling_view_behavior">
 	
-	<TextView
-		android:id="@+id/text_currentUserState"
-		android:text="사용자 정보 불러오는 중..."
-		android:paddingTop="4dp"
-		android:paddingBottom="16dp"
-		android:textAlignment="center"
-		android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+	<LinearLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		tools:ignore="HardcodedText" />
-	
-	<Switch
+		android:orientation="vertical">
+		
+		<TextView
+			android:id="@+id/text_currentUserState"
+			android:text="사용자 정보 불러오는 중..."
+			android:paddingTop="4dp"
+			android:paddingBottom="16dp"
+			android:textAlignment="center"
+			android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" />
+		
+		<Switch
 		android:id="@+id/switch_enable"
 		android:padding="12dp"
 		android:text="자가진단 예약"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content" />
-	
-	<Switch
-		android:id="@+id/switch_random"
-		android:padding="12dp"
-		android:text="렌덤 시간(설정한 시간 ±5분)"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content" />
-	
-	<Switch
-		android:id="@+id/switch_isolation"
-		android:padding="12dp"
-		android:text="자가격리자 여부"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content" />
-	
-	<Button
-		style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-		android:id="@+id/time"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content" />
-	
-	<Button
-		style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-		android:id="@+id/submit"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:text="지금 자가진단 제출하기"
-		tools:ignore="HardcodedText" />
-	
-
-</LinearLayout>
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" />
+		
+		<Switch
+			android:id="@+id/switch_random"
+			android:padding="12dp"
+			android:text="렌덤 시간(설정한 시간 ±5분)"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" />
+		
+		<Switch
+			android:id="@+id/switch_weekend"
+			android:padding="12dp"
+			android:text="주말에 자가진단하기"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" />
+		
+		<Switch
+			android:id="@+id/switch_isolation"
+			android:padding="12dp"
+			android:text="자가격리자 여부"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" />
+		
+		<Button
+			style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+			android:id="@+id/time"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" />
+		
+		<Switch
+			android:id="@+id/quick_test_enable"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:padding="12dp"
+			android:text="신속항원검사 설정" />
+		
+		<LinearLayout
+			android:id="@+id/quick_test_result"
+			android:padding="10dp"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="vertical">
+			
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				style="@style/TextAppearance.MaterialComponents.Subtitle2"
+				android:text="신속항원검사를 실시하는 요일 지정" />
+			
+			<LinearLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="horizontal">
+				
+				<Button
+					style="@style/Widget.MaterialComponents.Button.TextButton"
+					android:id="@+id/monday"
+					android:layout_width="0dp"
+					android:layout_weight="1"
+					android:layout_height="wrap_content"
+					android:text="월" />
+				
+				<Button
+					style="@style/Widget.MaterialComponents.Button.TextButton"
+					android:id="@+id/tuesday"
+					android:layout_width="0dp"
+					android:layout_weight="1"
+					android:layout_height="wrap_content"
+					android:text="화" />
+				
+				<Button
+					style="@style/Widget.MaterialComponents.Button.TextButton"
+					android:id="@+id/wednesday"
+					android:layout_width="0dp"
+					android:layout_weight="1"
+					android:layout_height="wrap_content"
+					android:text="수" />
+				
+				<Button
+					style="@style/Widget.MaterialComponents.Button.TextButton"
+					android:id="@+id/thursday"
+					android:layout_width="0dp"
+					android:layout_weight="1"
+					android:layout_height="wrap_content"
+					android:text="목" />
+				
+				<Button
+					style="@style/Widget.MaterialComponents.Button.TextButton"
+					android:id="@+id/friday"
+					android:layout_width="0dp"
+					android:layout_weight="1"
+					android:layout_height="wrap_content"
+					android:text="금" />
+				
+				<Button
+					style="@style/Widget.MaterialComponents.Button.TextButton"
+					android:id="@+id/saturday"
+					android:layout_width="0dp"
+					android:layout_weight="1"
+					android:layout_height="wrap_content"
+					android:text="토" />
+				
+				<Button
+					style="@style/Widget.MaterialComponents.Button.TextButton"
+					android:id="@+id/sunday"
+					android:layout_width="0dp"
+					android:layout_weight="1"
+					android:layout_height="wrap_content"
+					android:text="일" />
+			</LinearLayout>
+			
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				style="@style/TextAppearance.MaterialComponents.Subtitle2"
+				android:layout_marginTop="16dp"
+				android:text="지정 요일의 동작 정하기" />
+			
+			<RadioGroup
+				android:id="@+id/quick_test_result_behavior"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical">
+				
+				<RadioButton
+					android:id="@+id/result_negative"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:text="검사 결과를 음성으로 제출" />
+				
+				<RadioButton
+					android:id="@+id/disable_macro"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:text="매크로 끄기, 수동으로 공식 앱/웹에서 제출" />
+			
+			</RadioGroup>
+		
+		</LinearLayout>
+		
+		<Button
+			style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+			android:id="@+id/submit"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="지금 자가진단 제출하기"
+			tools:ignore="HardcodedText" />
+	</LinearLayout>
+</ScrollView>

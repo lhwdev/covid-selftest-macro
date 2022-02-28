@@ -14,6 +14,10 @@
     [
       "커뮤니티 관리: ",
       "@하이젠베르크의먐먐미"
+    ],
+    [
+      "Community Manager & Tester",
+      "@cog25"
     ]
   ],
   "details": {
@@ -51,6 +55,21 @@
           "url": "https://youtu.be/dQw4w9WgXcQ?t=45"
         }
       ]
-    }
+    },
+    "cog25": {
+      "name": "cog25",
+      "credit": "커뮤니티 관리 및 테스팅을 했습니다.",
+      "quote": "개발자가 되고싶어요",
+      "links": [
+        {
+          "text": "Github",
+          "url": "https://github.com/cog25"
+        },
+        {
+          "text": "Website",
+          "url": "https://cog.la/"
+        }
+      ]
+    },
   }
 }

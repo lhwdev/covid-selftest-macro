@@ -13,10 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          path: repo
 
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
 
       - name: main
-        run: deno run --allow-net --location https://example.com --no-check --quiet jobs/auto-merge/mod.ts ${{ github.repository }} ${{ github.token }} ${{ github.event.number }}
+        run: deno run --allow-net --location https://example.com --no-check --quiet repo/jobs/auto-merge/mod.ts ${{ github.repository }} ${{ github.token }} ${{ github.event.number }}

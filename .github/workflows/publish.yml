@@ -19,4 +19,3 @@ jobs:
 
       - name: Minify and Publish files
         run: deno run --allow-read --allow-write --unstable --quiet repo/jobs/publish/mod.ts repo output
-        working-directory: .

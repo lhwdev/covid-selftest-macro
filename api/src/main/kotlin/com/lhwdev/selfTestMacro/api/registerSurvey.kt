@@ -37,10 +37,11 @@ public data class SurveyData(
 		rspns00 = !questionSuspicious && questionQuickTestResult != QuickTestResult.positive &&
 			!questionWaitingResult && !questionQuarantined && !questionHousemateInfected,
 		rspns01 = if(questionSuspicious) "2" else "1",
-		rspns03 = when(questionQuickTestResult) {
-			QuickTestResult.didNotConduct -> "1"
-			QuickTestResult.negative -> "2"
-			QuickTestResult.positive -> "3"
+		rspns03 = if(questionQuickTestResult == QuickTestResult.didNotConduct) "1" else null,
+		rspns07 = when(questionQuickTestResult) {
+			QuickTestResult.didNotConduct -> null
+			QuickTestResult.negative -> "0"
+			QuickTestResult.positive -> "1"
 		},
 		rspns02 = if(questionWaitingResult) "0" else "1",
 		rspns09 = if(questionQuarantined) "1" else "0",
@@ -48,13 +49,13 @@ public data class SurveyData(
 	)
 }
 
-@Serializable
+@Serializable // JsonEncodeDefaults should be used
 public data class ApiSurveyData(
 	val deviceUuid: String = "",
 	@Serializable(with = YesNoSerializer::class) val rspns00: Boolean = true,
 	val rspns01: String = "1",
 	val rspns02: String = "1",
-	val rspns03: String = "1",
+	val rspns03: String? = "1",
 	val rspns04: String? = null,
 	val rspns05: String? = null,
 	val rspns06: String? = null,

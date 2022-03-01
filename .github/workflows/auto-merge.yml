@@ -6,7 +6,6 @@ on:
     types:
       - opened
       - reopened
-    
 
 jobs:
 
@@ -14,13 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with: # specify branch: when using pull_request_target trigger, checkout default to base branch (where no modification lives)
-          ref: ${{github.event.pull_request.head.ref}}
-          repository: ${{github.event.pull_request.head.repo.full_name}}
 
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
 
       - name: main
-        run: deno run --allow-net --location https://example.com --no-check --quiet auto-merge/mod.ts ${{ github.repository }} ${{ github.token }} ${{ github.event.number }}
+        run: deno run --allow-net --location https://example.com --no-check --quiet jobs/auto-merge/mod.ts ${{ github.repository }} ${{ github.token }} ${{ github.event.number }}

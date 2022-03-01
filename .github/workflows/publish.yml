@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - meta
+  workflow_dispatch: {}
 
 jobs:
   publish:

@@ -8,3 +8,11 @@ object SelfTestQuestions {
 	const val quarantined = "본인이 보건소로부터 밀접접촉자로 통보받아 현재 자가격리 중인가요?"
 	const val housemateInfected = "동거인 중 재택치료자가 있어 공동격리인으로 지정되어 현재 자가격리 중인가요?"
 }
+
+object ShortSelfTestQuestions {
+	const val suspicious = "감염 의심증상"
+	const val quickTestResult = "신속항원검사 결과"
+	const val waitingResult = "본인 또는 동거인의 PCR 검사 여부"
+	const val quarantined = "밀접접촉자 여부"
+	const val housemateInfected = "동거인 자가격리 여부"
+}

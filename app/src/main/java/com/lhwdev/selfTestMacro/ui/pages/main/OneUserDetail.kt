@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.Status
-import com.lhwdev.selfTestMacro.ui.SelfTestQuestions
+import com.lhwdev.selfTestMacro.ui.ShortSelfTestQuestions
 import com.vanpra.composematerialdialogs.*
 
 
@@ -28,19 +28,19 @@ fun FloatingMaterialDialogScope.OneUserDetail(user: DbUser, status: Status) {
 		
 		if(status is Status.Submitted) {
 			ListItem {
-				Text("'${SelfTestQuestions.suspicious}': ${if(status.questionSuspicious == true) "있음" else "없음"}")
+				Text("'${ShortSelfTestQuestions.suspicious}': ${if(status.questionSuspicious == true) "있음" else "없음"}")
 			}
 			ListItem {
-				Text("'${SelfTestQuestions.quickTestResult}': ${status.questionQuickTestResult?.displayLabel}")
+				Text("'${ShortSelfTestQuestions.quickTestResult}': ${status.questionQuickTestResult?.displayLabel}")
 			}
 			ListItem {
-				Text("'${SelfTestQuestions.waitingResult}': ${if(status.questionWaitingResult == true) "있음" else "없음"}")
+				Text("'${ShortSelfTestQuestions.waitingResult}': ${if(status.questionWaitingResult == true) "있음" else "없음"}")
 			}
 			ListItem {
-				Text("'${SelfTestQuestions.quarantined}': ${if(status.questionQuarantined == true) "있음" else "없음"}")
+				Text("'${ShortSelfTestQuestions.quarantined}': ${if(status.questionQuarantined == true) "있음" else "없음"}")
 			}
 			ListItem {
-				Text("'${SelfTestQuestions.housemateInfected}': ${if(status.questionQuarantined == true) "있음" else "없음"}")
+				Text("'${ShortSelfTestQuestions.housemateInfected}': ${if(status.questionQuarantined == true) "있음" else "없음"}")
 			}
 		}
 	}

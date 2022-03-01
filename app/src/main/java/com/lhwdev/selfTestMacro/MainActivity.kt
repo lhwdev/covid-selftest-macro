@@ -150,31 +150,31 @@ class MainActivity : AppCompatActivity() {
 		}
 		
 		
-		switch_isolation.isChecked = pref.isIsolated
-		
-		switch_isolation.setOnCheckedChangeListener { _, isChecked ->
-			if(isChecked) {
-				AlertDialog.Builder(this).apply {
-					setTitle("자가격리자 옵션")
-					setMessage(
-						"""
-						|가정에서 자가격리를 하고 있으신 분은 이 옵션을 선택해주세요. 즉, 자가진단 설문에서 3번 문항에 '예'를 답해야 하는 경우입니다.
-						|(참고) 해당 문항:
-						|3. 학생 본인 또는 동거인이 방역당국에 의해 현재 자가격리가 이루어지고 있나요?
-						|※ 동거인이 자가격리중인 경우, ① 매 등교 희망일로부터 2일 이내 진단검사 결과가 음성인 경우 또는 ② 격리 통지를 받은 ‘즉시’ 자가격리된 동거인과 접촉이 없었던 경우는 ‘아니오’ 선택
-					""".trimMargin()
-					)
-					setPositiveButton("설정") { _, _ ->
-						pref.isIsolated = true
-					}
-					setNegativeButton("취소") { _, _ ->
-						switch_isolation.isChecked = false
-					}
-				}.show()
-			} else {
-				pref.isIsolated = false
-			}
-		}
+		// switch_isolation.isChecked = pref.isIsolated
+		//
+		// switch_isolation.setOnCheckedChangeListener { _, isChecked ->
+		// 	if(isChecked) {
+		// 		AlertDialog.Builder(this).apply {
+		// 			setTitle("자가격리자 옵션")
+		// 			setMessage(
+		// 				"""
+		// 				|가정에서 자가격리를 하고 있으신 분은 이 옵션을 선택해주세요. 즉, 자가진단 설문에서 3번 문항에 '예'를 답해야 하는 경우입니다.
+		// 				|(참고) 해당 문항:
+		// 				|3. 학생 본인 또는 동거인이 방역당국에 의해 현재 자가격리가 이루어지고 있나요?
+		// 				|※ 동거인이 자가격리중인 경우, ① 매 등교 희망일로부터 2일 이내 진단검사 결과가 음성인 경우 또는 ② 격리 통지를 받은 ‘즉시’ 자가격리된 동거인과 접촉이 없었던 경우는 ‘아니오’ 선택
+		// 			""".trimMargin()
+		// 			)
+		// 			setPositiveButton("설정") { _, _ ->
+		// 				pref.isIsolated = true
+		// 			}
+		// 			setNegativeButton("취소") { _, _ ->
+		// 				switch_isolation.isChecked = false
+		// 			}
+		// 		}.show()
+		// 	} else {
+		// 		pref.isIsolated = false
+		// 	}
+		// }
 		
 		
 		time.setOnClickListener {

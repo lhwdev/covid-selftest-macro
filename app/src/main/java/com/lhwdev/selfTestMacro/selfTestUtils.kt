@@ -59,7 +59,7 @@ fun Context.surveyData(user: User, usersIdentifier: UserIdentifier): SurveyData 
 		upperUserName = usersIdentifier.mainUserName,
 		rspns03 = if(quickTestNegative) null else "1",
 		rspns07 = if(quickTestNegative) "0" else null,
-		rspns09 = if(isIsolated) "1" else "0",
+		// rspns09 = if(isIsolated) "1" else "0",
 		rspns00 = !(isIsolated) // true = okay, false = problem
 	)
 }

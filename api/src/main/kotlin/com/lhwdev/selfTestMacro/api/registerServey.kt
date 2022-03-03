@@ -52,7 +52,8 @@ data class SurveyData(
 	val rspns14: String? = null,
 	val rspns15: String? = null,
 	@SerialName("upperToken") val userToken: UserToken,
-	@SerialName("upperUserNameEncpt") val upperUserName: String
+	@SerialName("upperUserNameEncpt") val upperUserName: String,
+	val clientVersion: String
 )
 
 @Serializable

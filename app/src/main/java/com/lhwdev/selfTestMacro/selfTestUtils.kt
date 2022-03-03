@@ -40,7 +40,7 @@ suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) lis
 	null
 }
 
-fun Context.surveyData(user: User, usersIdentifier: UserIdentifier): SurveyData {
+suspend fun Context.surveyData(user: User, usersIdentifier: UserIdentifier): SurveyData {
 	val pref = preferenceState
 	
 	val quickTestNegative = pref.quickTest?.let {
@@ -53,6 +53,7 @@ fun Context.surveyData(user: User, usersIdentifier: UserIdentifier): SurveyData 
 	} ?: false
 	val isIsolated = pref.isIsolated
 	
+	val clientVersion = pref.appMeta().hcsVersion
 	
 	return SurveyData(
 		userToken = user.token,
@@ -60,7 +61,9 @@ fun Context.surveyData(user: User, usersIdentifier: UserIdentifier): SurveyData 
 		rspns03 = if(quickTestNegative) null else "1",
 		rspns07 = if(quickTestNegative) "0" else null,
 		// rspns09 = if(isIsolated) "1" else "0",
-		rspns00 = !(isIsolated) // true = okay, false = problem
+		// rspns00 = !(isIsolated) // true = okay, false = problem
+		rspns00 = true,
+		clientVersion = clientVersion
 	)
 }
 
@@ -126,7 +129,7 @@ fun Context.updateTime(intent: PendingIntent) {
 
 private val random = Random
 
-private fun millisToDaysCumulative(millis: Long) =
+fun millisToDaysCumulative(millis: Long) =
 	// ms     sec   min hour day
 	millis / 1000 / 60 / 60 / 24
 
@@ -161,6 +164,10 @@ fun Context.scheduleNextAlarm(
 			return
 		}
 		
+		if(nextDay && lastDay == millisToDaysCumulative(new.timeInMillis)) {
+			new.add(Calendar.DAY_OF_YEAR, 1)
+		}
+		
 		var iteration = 0
 		while(iteration < 10) {
 			val days = millisToDaysCumulative(new.timeInMillis)
@@ -168,7 +175,6 @@ fun Context.scheduleNextAlarm(
 			
 			when {
 				!pref.includeWeekend && (day == Calendar.SATURDAY || day == Calendar.SUNDAY) -> Unit
-				nextDay || lastDay == days || targetMin < currentMin - 5 -> Unit
 				quick != null && quick.behavior == QuickTestInfo.Behavior.doNotSubmit && day in quick.days -> Unit
 				else -> break
 			}

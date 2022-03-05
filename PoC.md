@@ -286,7 +286,8 @@
     "rspns14": null,
     "rspns15": null,
     "upperToken": "<UserToken>",
-    "upperUserNameEncpt": "홍길동" // 제출한 사람 이름. 공식 사이트에서는 다른 사람이 대신 제출한 경우 그 이름이 들어가나, 실제로는 아무 이름이나 넣어도 됨
+    "upperUserNameEncpt": "홍길동", // 제출한 사람 이름. 공식 사이트에서는 다른 사람이 대신 제출한 경우 그 이름이 들어가나, 실제로는 아무 이름이나 넣어도 됨
+    "clientVersion": "1.8.8" // 메뉴 바에서 뜨는 UI ver. 버전을 적으면 됨. 어떤 방식으로 작동하는지는 확인 필요
   }
   ```
 * 출력: json

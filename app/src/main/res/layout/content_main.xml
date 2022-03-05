@@ -4,7 +4,6 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:padding="8dp"
 	android:fillViewport="true"
 	tools:ignore="HardcodedText"
 	app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -12,6 +11,7 @@
 	<LinearLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
+		android:padding="8dp"
 		android:orientation="vertical">
 		
 		<TextView
@@ -176,5 +176,10 @@
 			android:layout_height="wrap_content"
 			android:text="지금 자가진단 제출하기"
 			tools:ignore="HardcodedText" />
+		
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="이 앱을 통해 자가진단을 이미 제출한 경우, 그 날 예약이 별개로 실행되지 않습니다." />
 	</LinearLayout>
 </ScrollView>

@@ -164,7 +164,7 @@ fun Context.scheduleNextAlarm(
 			return
 		}
 		
-		if(nextDay && lastDay == millisToDaysCumulative(new.timeInMillis)) {
+		if(nextDay || lastDay == millisToDaysCumulative(new.timeInMillis)) {
 			new.add(Calendar.DAY_OF_YEAR, 1)
 		}
 		

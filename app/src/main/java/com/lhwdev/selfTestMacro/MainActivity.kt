@@ -110,7 +110,7 @@ class MainActivity : AppCompatActivity() {
 			} else {
 				time.text = "시간 예약 안 됨"
 			}
-			updateTime(intent)
+			updateTime(intent, reset = true)
 		}
 		
 		fun pickTime() {
@@ -257,7 +257,7 @@ class MainActivity : AppCompatActivity() {
 		
 		submit.setOnClickListener {
 			lifecycleScope.launch {
-				submitSuspend(session, false)
+				submitSuspend(session, false, manual = true)
 				updateCurrentState()
 			}
 		}

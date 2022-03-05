@@ -67,7 +67,7 @@ suspend fun Context.surveyData(user: User, usersIdentifier: UserIdentifier): Sur
 	)
 }
 
-suspend fun Context.submitSuspend(session: Session, notification: Boolean = true) {
+suspend fun Context.submitSuspend(session: Session, notification: Boolean = true, manual: Boolean) {
 	val pref = preferenceState
 	selfLog("submitSuspend ${pref.user?.identifier?.mainUserName}")
 	
@@ -101,7 +101,9 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 				surveyData
 			)
 			
-			pref.lastSubmit = Date().time
+			if(!manual) {
+				pref.lastSubmit = System.currentTimeMillis()
+			}
 			
 			selfLog("submitSuspend success ${pref.user?.identifier?.mainUserName} ${result.registerAt}", force = true)
 			
@@ -116,15 +118,23 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 	}
 }
 
-fun Context.updateTime(intent: PendingIntent) {
+fun Context.updateTime(intent: PendingIntent, reset: Boolean = false) {
 	val preferenceState = preferenceState
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT >= 21)
 		selfLog("updateTime: lastAlarm=${alarmManager.nextAlarmClock}")
 	
 	alarmManager.cancel(intent)
-	if(preferenceState.isSchedulingEnabled)
-		scheduleNextAlarm(intent, preferenceState.hour, preferenceState.min, isRandom = preferenceState.isRandomEnabled)
+	if(preferenceState.isSchedulingEnabled) {
+		scheduleNextAlarm(
+			intent = intent,
+			hour = preferenceState.hour, min = preferenceState.min,
+			isRandom = preferenceState.isRandomEnabled,
+			nextDay = false
+		)
+		
+		if(reset) preferenceState.lastSubmit = -1
+	}
 }
 
 private val random = Random
@@ -139,7 +149,7 @@ fun Context.scheduleNextAlarm(
 	hour: Int,
 	min: Int,
 	isRandom: Boolean,
-	nextDay: Boolean = false,
+	nextDay: Boolean
 ) {
 	val pref = preferenceState
 	val currentTime: Long
@@ -164,7 +174,8 @@ fun Context.scheduleNextAlarm(
 			return
 		}
 		
-		if(nextDay || lastDay == millisToDaysCumulative(new.timeInMillis)) {
+		val newDay = millisToDaysCumulative(new.timeInMillis)
+		if(nextDay || lastDay == newDay) {
 			new.add(Calendar.DAY_OF_YEAR, 1)
 		}
 		
@@ -189,11 +200,12 @@ fun Context.scheduleNextAlarm(
 		new[Calendar.MINUTE] = min
 		new[Calendar.SECOND] = 0
 		new[Calendar.MILLISECOND] = 0
+		selfLog("schedule time selection (nextDay=$nextDay lastDay=$lastDay, current=$newDay)")
 		new
 	}.timeInMillis
 	
 	if(isRandom) {
-		newTime += 1000 * 60 * (Random.nextFloat() * 5).toInt()
+		newTime += 1000 * 60 * (Random.nextFloat() * 10 - 5).toInt()
 		if(newTime - currentTime < 10000) {
 			selfLog("scheduling: coerced time from $newTime")
 			newTime = currentTime + 10000

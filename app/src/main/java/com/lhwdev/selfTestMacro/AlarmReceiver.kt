@@ -23,7 +23,7 @@ class AlarmReceiver : BroadcastReceiver() {
 		val session = selfTestSession(context)
 		
 		runBlocking { // TODO: is this okay?
-			context.submitSuspend(session)
+			context.submitSuspend(session, manual = false)
 		}
 		
 		val pref = PreferenceState(context.prefMain())

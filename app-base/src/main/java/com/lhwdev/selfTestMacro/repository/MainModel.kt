@@ -8,11 +8,8 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.core.content.getSystemService
-import com.lhwdev.selfTestMacro.api.QuickTestResult
 import com.lhwdev.selfTestMacro.api.UserInfo
-import com.lhwdev.selfTestMacro.database.DbTestGroup
-import com.lhwdev.selfTestMacro.database.DbTestTarget
-import com.lhwdev.selfTestMacro.database.DbUser
+import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.debug.DiagnosticItem
 import com.lhwdev.selfTestMacro.debug.DiagnosticObject
 import com.lhwdev.selfTestMacro.debug.dumpLocalized
@@ -65,11 +62,7 @@ sealed class Status {
 		val suspicious: SuspiciousKind?,
 		val time: String,
 		
-		val questionSuspicious: Boolean?,
-		val questionQuickTestResult: QuickTestResult?,
-		val questionWaitingResult: Boolean?,
-		val questionQuarantined: Boolean?,
-		val questionHousemateInfected: Boolean?
+		val answer: Answer
 	) : Status()
 	
 	object NotSubmitted : Status()
@@ -95,9 +88,7 @@ val UserInfo.suspiciousKind: SuspiciousKind?
 	get() = when {
 		isHealthy == true -> null
 		questionSuspicious == true -> SuspiciousKind.symptom
-		questionWaitingResult == true ||
-			questionQuarantined == true ||
-			questionHouseholdInfected == true -> SuspiciousKind.quarantined
+		questionWaitingResult == true -> SuspiciousKind.quarantined
 		else -> null
 	}
 
@@ -106,12 +97,7 @@ fun Status(info: UserInfo): Status = when {
 		Status.Submitted(
 			suspicious = info.suspiciousKind,
 			time = formatRegisterTime(info.lastRegisterAt!!),
-			
-			questionSuspicious = info.questionSuspicious,
-			questionQuickTestResult = info.questionQuickTestResult,
-			questionWaitingResult = info.questionWaitingResult,
-			questionQuarantined = info.questionQuarantined,
-			questionHousemateInfected = info.questionHouseholdInfected
+			answer = info.answer!!
 		)
 	else -> Status.NotSubmitted
 }

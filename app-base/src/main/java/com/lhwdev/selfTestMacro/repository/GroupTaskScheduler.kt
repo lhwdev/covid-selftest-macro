@@ -30,7 +30,7 @@ import kotlinx.serialization.Serializable
 @TraceItems
 abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskScheduler<T> {
 	@Serializable
-	protected data class TaskSchedule(
+	data class TaskSchedule(
 		val code: Int,
 		val timeMillis: Long
 	)
@@ -110,7 +110,12 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 	
 	protected abstract suspend fun onTask(task: T)
 	
-	protected open suspend fun onSchedule(schedule: TaskSchedule, coroutineScope: CoroutineScope) {
+	fun tasksForSchedule(schedule: TaskSchedule): List<T> {
+		val index = tasks.indexOfFirst { it.timeMillis >= schedule.timeMillis }
+		return tasks.drop(index).takeWhile { canTaskScheduled(it, schedule) }
+	}
+	
+	open suspend fun onSchedule(schedule: TaskSchedule, coroutineScope: CoroutineScope) {
 		val index = tasks.indexOfFirst { it.timeMillis >= schedule.timeMillis }
 		if(index != 0) {
 			error("[GroupTaskScheduler] onSchedule: schedule order miss: target task $index != 0")
@@ -138,13 +143,15 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 	/**
 	 * Note: this should be fast, stateless.
 	 */
-	protected abstract fun canTaskScheduled(task: T, schedule: TaskSchedule): Boolean
+	abstract fun canTaskScheduled(task: T, schedule: TaskSchedule): Boolean
 	
 	
 	/// Schedules: low level, heavy task; many tasks can be run in one schedule.
 	///            created to cope with Android scheduling restriction.
 	
-	protected abstract var schedules: List<TaskSchedule>
+	abstract var schedules: List<TaskSchedule>
+	
+	fun getSchedule(code: Int): TaskSchedule? = schedules.find { it.code == code }
 	
 	protected abstract var scheduleId: Int
 	

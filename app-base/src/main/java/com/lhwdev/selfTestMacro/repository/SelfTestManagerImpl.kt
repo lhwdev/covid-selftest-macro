@@ -17,11 +17,8 @@ import com.lhwdev.selfTestMacro.replaced
 import com.lhwdev.selfTestMacro.repository.ui.showSelfTestFailedDialog
 import com.lhwdev.selfTestMacro.tryAtMost
 import com.lhwdev.selfTestMacro.ui.UiContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.WeakHashMap
 
@@ -38,7 +35,7 @@ fun Context.createDefaultSelfTestManager(debugContext: DebugContext): SelfTestMa
 	context = applicationContext,
 	database = preferenceState.db,
 	debugContext = debugContext.childContext(hint = "SelfTestManager"),
-	defaultCoroutineScope = CoroutineScope(Dispatchers.Default)
+	defaultCoroutineScope = CoroutineScope(Dispatchers.Default + Job())
 )
 
 
@@ -53,7 +50,7 @@ private const val sPrefPrefix = "SelfTestManager"
  * for more high level operation.
  * I want to remove UI related things here, but I do not have such a time to do that.
  *
- * This and some classes, like [GroupTaskScheduler], [SelfTestSchedule], [NotificationStatus], [SelfTestLog] separate
+ * This and some classes, like [GroupTaskScheduler], [SelfTestSchedules], [NotificationStatus], [SelfTestLog] separate
  * concerns that used to be focused here.
  *
  * Nowadays [SelfTestManager] focuses on:
@@ -66,11 +63,11 @@ private const val sPrefPrefix = "SelfTestManager"
 @TraceItems(requiredModifier = java.lang.reflect.Modifier.PUBLIC)
 class SelfTestManagerImpl(
 	override var context: Context,
-	override val debugContext: DebugContext,
+	override var debugContext: DebugContext,
 	override val database: DatabaseManager,
 	val defaultCoroutineScope: CoroutineScope
 ) : SelfTestManager {
-	private val schedule = object : SelfTestSchedule(
+	override val schedules: SelfTestSchedulesImpl = object : SelfTestSchedulesImpl(
 		context = context,
 		holder = context.preferenceHolderOf("$sPrefPrefix-schedule"),
 		database = database,
@@ -82,12 +79,13 @@ class SelfTestManagerImpl(
 					submitBulkSelfTest(group, users, fromUi = false)
 				}
 			} catch(th: Throwable) {
+				if(th is CancellationException) throw th
 				debugContext.onError("자가진단을 실패했습니다?!", throwable = th)
 			}
 		}
 	}
 	
-	private val notificationStatus = NotificationStatus(schedule = schedule, database = database, context = context)
+	private val notificationStatus = NotificationStatus(schedule = schedules, database = database, context = context)
 	
 	private val selfTestLog = SelfTestLog(
 		logFile = File(context.getExternalFilesDir(null)!!, ""),
@@ -127,6 +125,7 @@ class SelfTestManagerImpl(
 				
 				return operation()
 			} catch(th: Throwable) {
+				if(th is CancellationException) throw th
 				val causes = mutableSetOf<HcsAppError.ErrorCause>()
 				val diagnostic = SelfTestDiagnosticInfo()
 				var isSerious = false
@@ -152,7 +151,8 @@ class SelfTestManagerImpl(
 						isSerious = isSerious,
 						causes = causes,
 						target = target,
-						diagnosticItem = diagnostic
+						diagnosticItem = diagnostic,
+						cause = th
 					)
 					
 					debugContext.onError(
@@ -221,7 +221,7 @@ class SelfTestManagerImpl(
 				lastCauses = causes
 			}
 		} finally {
-			if(trials != 0) try {
+			if(trials > 1) try {
 				// had any error
 				val messages = throwables.map { it.toString() }.toSet()
 				debugContext.onLightError(
@@ -437,9 +437,7 @@ class SelfTestManagerImpl(
 					answer = Answer(
 						suspicious = false,
 						quickTestResult = QuickTestResult.didNotConduct,
-						waitingResult = false,
-						quarantined = false,
-						housemateInfected = false
+						waitingResult = false
 					)
 				)
 			}
@@ -521,6 +519,7 @@ class SelfTestManagerImpl(
 			val (session, _) = ensureSessionLoaded(user.userGroup)
 			Status(session.getUserInfo(user.usersInstitute, user.apiUser()))
 		} catch(th: Throwable) {
+			if(th is CancellationException) throw th
 			debugContext.onError(
 				message = "${user.name}의 현재 상태를 불러오지 못했어요.",
 				throwable = th,
@@ -559,8 +558,8 @@ class SelfTestManagerImpl(
 			val answer = user.answer
 			val surveyData = SurveyData(
 				questionSuspicious = answer.suspicious,
+				questionQuickTestResult = answer.quickTestResult,
 				questionWaitingResult = answer.waitingResult,
-				questionQuarantined = answer.quarantined,
 				upperUserName = answer.message
 			)
 			
@@ -650,8 +649,14 @@ class SelfTestManagerImpl(
 			
 			results
 		} catch(th: Throwable) {
+			if(th is CancellationException) throw th
 			emptyList()
 		}
+	}
+	
+	override suspend fun onSubmitSchedule(schedule: SelfTestSchedule) {
+		schedule as SelfTestSchedulesImpl.Schedule
+		schedules.scheduler.onSchedule(schedule.schedule, defaultCoroutineScope)
 	}
 	
 	
@@ -680,7 +685,7 @@ class SelfTestManagerImpl(
 				}
 			)
 		}
-		schedule.updateStatus(group, users, results, logRange = logEntryId until selfTestLog.nextId)
+		schedules.updateStatus(group, users, results, logRange = logEntryId until selfTestLog.nextId)
 		
 		notificationStatus.onStatusUpdated(fromUi = fromUi)
 		notificationStatus.onSubmitSelfTest(allUsers, results)
@@ -696,7 +701,7 @@ class SelfTestManagerImpl(
 		// onScheduleUpdated is called by itself
 	}
 	
-	override fun onScheduleUpdated(): Unit = with(database) {
-		schedule.updateAndGetTasks()
+	override fun onScheduleUpdated() {
+		schedules.updateAndGetTasks()
 	}
 }

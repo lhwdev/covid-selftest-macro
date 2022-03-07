@@ -3,7 +3,6 @@ package com.lhwdev.selfTestMacro.repository
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -34,7 +33,6 @@ private fun Context.defaultPreferenceHolder() = preferenceHolderOf("AlarmManager
 abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 	initialTasks: List<T>,
 	val context: Context,
-	val scheduleIntent: Intent,
 	val holder: PreferenceHolder = context.defaultPreferenceHolder()
 ) : GroupTaskScheduler<T>(initialTasks = initialTasks) {
 	private val manager = context.getSystemService<AlarmManager>()!!
@@ -71,15 +69,10 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 		defaultValue = null
 	)
 	
-	private val schedulerFlags = PendingIntent.FLAG_UPDATE_CURRENT or if(Build.VERSION.SDK_INT >= 23) {
-		PendingIntent.FLAG_IMMUTABLE
-	} else {
-		0
-	}
-	
-	// This function should be idempotent, so that it can be used to AlarmManager.cancel
-	private fun schedulerIntent(code: Int): PendingIntent =
-		PendingIntent.getBroadcast(context, code, scheduleIntent, schedulerFlags)
+	/**
+	 * This function should be idempotent, so that it can be used to [AlarmManager.cancel].
+	 */
+	abstract fun schedulerIntent(schedule: TaskSchedule): PendingIntent
 	
 	override fun scheduleSet(time: Long): TaskSchedule {
 		val code = nextScheduleId()
@@ -130,9 +123,14 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 		}
 	}
 	
+	private val intentCache = mutableMapOf<TaskSchedule, PendingIntent>()
+	
+	private fun schedulerIntentCached(schedule: TaskSchedule) =
+		intentCache.getOrPut(schedule) { schedulerIntent(schedule) }
+	
 	private fun scheduleAlarm(schedule: TaskSchedule) {
 		debugFlow("scheduleAlarm $schedule")
-		val intent = schedulerIntent(code = schedule.code)
+		val intent = schedulerIntentCached(schedule)
 		val timeMillis = schedule.timeMillis
 		
 		if(Build.VERSION.SDK_INT >= 23) {
@@ -144,8 +142,10 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 	
 	private fun cancelAlarm(schedule: TaskSchedule) {
 		debugFlow("cancelAlarm $schedule")
-		val intent = schedulerIntent(code = schedule.code)
+		val intent = schedulerIntentCached(schedule)
 		manager.cancel(intent)
+		
+		intentCache -= schedule // cancelled so cache won't be used
 	}
 	
 	/// Etc

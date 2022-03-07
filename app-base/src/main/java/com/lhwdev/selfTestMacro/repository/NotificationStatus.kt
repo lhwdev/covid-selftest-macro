@@ -17,7 +17,7 @@ import java.util.Date
 /**
  * Manages the notification displayed, such as '5명 중 3명 자가진단 완료', '~~~ 자가진단 실패'.
  */
-class NotificationStatus(val schedule: SelfTestSchedule, val database: DatabaseManager, val context: Context) {
+class NotificationStatus(val schedule: SelfTestSchedules, val database: DatabaseManager, val context: Context) {
 	private val notifications = NotificationManagerCompat.from(context)
 	
 	private val enabled = notifications.areNotificationsEnabled()

@@ -42,7 +42,9 @@ enum class SelfTestInitiator(val isFromUi: Boolean) {
 interface SelfTestManager {
 	var context: Context
 	val database: DatabaseManager
-	val debugContext: DebugContext
+	var debugContext: DebugContext
+	
+	val schedules: SelfTestSchedules
 	
 	suspend fun createSession(): TempSession
 	
@@ -93,6 +95,8 @@ interface SelfTestManager {
 		group: DbTestGroup,
 		users: List<DbUser>? = null
 	): List<SubmitResult>
+	
+	suspend fun onSubmitSchedule(schedule: SelfTestSchedule)
 	
 	fun updateSchedule(target: DbTestGroup, new: DbTestGroup)
 	fun onScheduleUpdated()

@@ -3,23 +3,17 @@ package com.lhwdev.selfTestMacro.repository
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.PowerManager
-import androidx.core.content.getSystemService
 import com.lhwdev.selfTestMacro.App
-import com.lhwdev.selfTestMacro.debug.BackgroundDebugContext
-import com.lhwdev.selfTestMacro.debug.DebugContext
-import com.lhwdev.selfTestMacro.debug.debugManager
-import com.lhwdev.selfTestMacro.debug.isDebugEnabled
+import com.lhwdev.selfTestMacro.debug.*
 import com.lhwdev.selfTestMacro.debuggingWithIde
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+
 
 class AlarmReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
-		val lock = context.getSystemService<PowerManager>()!!
-			.newWakeLock(
-				PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-				"SelfTestMacro:AlarmReceiver"
-			)
-		lock.acquire(20000)
+		val scheduleCode = intent.getIntExtra("code", -1)
 		
 		val selfTestManager = context.defaultSelfTestManager {
 			it.createDefaultSelfTestManager(
@@ -29,11 +23,32 @@ class AlarmReceiver : BroadcastReceiver() {
 						debuggingWithIde = App.debuggingWithIde
 					),
 					manager = context.debugManager,
-					contextName = "AlarmReceiver"
+					contextName = "SelfTestSchedule"
 				)
 			)
 		}
-		
-		TODO()
+		val schedule = selfTestManager.schedules.getSchedule(scheduleCode) ?: run {
+			selfTestManager.debugContext.onLightError(
+				"자가진단 예약이 실행되려 했지만, 해당하는 일정을 찾을 수 없어요.",
+				diagnostics = diagnosticElements {
+					"scheduleCode" to scheduleCode
+					"schedules" to selfTestManager.schedules
+				}
+			)
+			return
+		}
+		if(schedule.tasks.size > 1) {
+			val serviceIntent = Intent(context, ScheduleService::class.java)
+			serviceIntent.putExtra("code", scheduleCode)
+			context.startService(serviceIntent)
+		} else {
+			val pendingResult = goAsync()
+			
+			@OptIn(DelicateCoroutinesApi::class) // valid case: we can use default
+			GlobalScope.launch {
+				selfTestManager.onSubmitSchedule(schedule)
+				pendingResult.finish()
+			}
+		}
 	}
 }

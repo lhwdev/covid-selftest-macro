@@ -1,50 +1,17 @@
 package com.lhwdev.selfTestMacro.repository
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.lhwdev.selfTestMacro.database.*
-import com.lhwdev.selfTestMacro.debug.DebugContext
-import com.lhwdev.selfTestMacro.debug.log
-import kotlinx.serialization.Serializable
+import com.lhwdev.selfTestMacro.debug.*
 import kotlinx.serialization.builtins.ListSerializer
 import java.util.Calendar
 import java.util.Date
 import kotlin.random.Random
-
-
-@Serializable
-class SelfTestTask(
-	val testGroupId: Int,
-	val userId: Int? = null, // null if schedule.stable
-	override var timeMillis: Long,
-	/**
-	 * If null, means task is not completed yet. Otherwise stands for result of task execution.
-	 */
-	var result: TaskResult? = null // generally should be 'val'. see updateStatus.
-) : TaskItem {
-	@Serializable
-	class TaskResult(
-		val errorLogId: Int? = null // -1 to no log
-	)
-	
-	override val ignoredByScheduler: Boolean
-		get() = result != null
-	
-	override fun equals(other: Any?): Boolean = when {
-		this === other -> true
-		other !is SelfTestTask -> false
-		else -> testGroupId == other.testGroupId && userId == other.userId && timeMillis == other.timeMillis
-	}
-	
-	override fun hashCode(): Int {
-		var result = testGroupId
-		result = 31 * result + (userId ?: 0)
-		result = 31 * result + timeMillis.hashCode()
-		return result
-	}
-}
 
 
 private const val sDayMillis = 1000 * 60 * 60 * 24
@@ -52,6 +19,12 @@ private const val sDayMillis = 1000 * 60 * 60 * 24
 internal fun dayOf(millis: Long) = millis / sDayMillis // NOTE: how about leap second? It may be affected
 internal fun today() = dayOf(System.currentTimeMillis())
 
+
+private val schedulerFlags = PendingIntent.FLAG_UPDATE_CURRENT or if(Build.VERSION.SDK_INT >= 23) {
+	PendingIntent.FLAG_IMMUTABLE
+} else {
+	0
+}
 
 /**
  * This class manages what **self test schedules** are going to happen in [targetDay].
@@ -61,17 +34,30 @@ internal fun today() = dayOf(System.currentTimeMillis())
  *   less error-prone, and performant.
  * - to show useful information in [NotificationStatus], like 'self test 3/5 ongoing'
  *
- * [SelfTestSchedule] also saves task list in [tasks] which is used by schedulers. All schedule creation and update is
+ * [SelfTestSchedules] also saves task list in [tasks] which is used by schedulers. All schedule creation and update is
  * handled by this class.
  *
  * [tasks] are reset every day.
  */
-abstract class SelfTestSchedule(
+abstract class SelfTestSchedulesImpl(
 	context: Context,
 	holder: PreferenceHolder,
 	private val database: DatabaseManager,
 	private val debugContext: DebugContext
-) {
+) : SelfTestSchedules(), DiagnosticObject {
+	inner class Schedule(val schedule: GroupTaskScheduler.TaskSchedule) : SelfTestSchedule {
+		override val code: Int get() = schedule.code
+		override val tasks: List<SelfTestTask> = scheduler.tasksForSchedule(schedule)
+		
+		override fun equals(other: Any?): Boolean = when {
+			this === other -> true
+			else -> other is Schedule && schedule == other.schedule
+		}
+		
+		override fun hashCode(): Int = schedule.hashCode()
+	}
+	
+	
 	private val random = Random(seed = System.currentTimeMillis())
 	
 	private val tasksState: PreferenceItemState<List<SelfTestTask>> = holder.preferenceSerialized(
@@ -86,14 +72,14 @@ abstract class SelfTestSchedule(
 	private val calendarCache = Calendar.getInstance() // not thread safe (but everything here is also)
 	
 	
-	var tasksCache: List<SelfTestTask> by tasksState
+	final override var tasksCache: List<SelfTestTask> by tasksState
 		private set
 	
 	
 	/**
 	 * Note that this task is not sorted by [SelfTestTask.timeMillis].
 	 */
-	fun updateAndGetTasks(): List<SelfTestTask> {
+	final override fun updateAndGetTasks(): List<SelfTestTask> {
 		val today = today()
 		return if(targetDay != today) {
 			// lastDay may be intentionally set to the next day from [updateTomorrow].
@@ -280,7 +266,8 @@ abstract class SelfTestSchedule(
 			}
 		}
 		if(targetTasks.isEmpty()) {
-			log("[TodayStatus] updateStatus failed: could not find task with (groupId=$group, users=$users)")
+			// in case where no scheduling is enabled but manually submitted
+			// log("[TodayStatus] updateStatus failed: could not find task with (groupId=$group, users=$users)")
 			return
 		}
 		
@@ -314,12 +301,17 @@ abstract class SelfTestSchedule(
 	protected abstract suspend fun onScheduledSubmitSelfTest(group: DbTestGroup, users: List<DbUser>?)
 	
 	
-	private val scheduler = object : AlarmManagerTaskScheduler<SelfTestTask>(
+	val scheduler = object : AlarmManagerTaskScheduler<SelfTestTask>(
 		initialTasks = updateAndGetTasks(),
 		context = context,
-		holder = database.holder,
-		scheduleIntent = Intent(context, AlarmReceiver::class.java)
+		holder = database.holder
 	) {
+		override fun schedulerIntent(schedule: TaskSchedule): PendingIntent {
+			val intent = Intent(context, AlarmReceiver::class.java)
+			intent.putExtra("code", schedule.code)
+			return PendingIntent.getBroadcast(context, schedule.code, intent, schedulerFlags)
+		}
+		
 		override suspend fun onTask(task: SelfTestTask) {
 			val group = database.testGroups.groups[task.testGroupId]
 			if(group == null) {
@@ -352,6 +344,25 @@ abstract class SelfTestSchedule(
 		override fun updateNextDays(previousDay: Long) {
 			targetDay = previousDay + 1
 			updateAndGetTasks()
+		}
+	}
+	
+	override fun getSchedule(code: Int): Schedule? = scheduler.getSchedule(code)?.let { Schedule(it) }
+	
+	
+	// Diagnostic
+	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticGroup("SelfTestSchedulesImpl") {
+		"tasks" set diagnosticGroup("tasks") {
+			val schedules = ArrayDeque(scheduler.schedules)
+			for((index, task) in scheduler.allTasks.withIndex()) {
+				if(!scheduler.canTaskScheduled(task, schedules.first())) schedules.removeFirst()
+				if(schedules.isEmpty()) break
+				
+				"$index" set diagnosticGroup("$index") {
+					"schedule" set schedules.first().code
+					"task" set task
+				}
+			}
 		}
 	}
 }

@@ -297,20 +297,10 @@ public data class UserInfo(
 	
 	@SerialName("isIsoslated") val isIsolated: Boolean? = null,
 	
-	@Serializable(with = Rspns1Serializer::class)
-	@SerialName("rspns01") val questionSuspicious: Boolean? = null,
-	
-	@Serializable(with = Rspns3Serializer::class)
-	@SerialName("rspns03") val questionQuickTestResult: QuickTestResult? = null,
-	
-	@Serializable(with = Rspns2Serializer::class)
-	@SerialName("rspns02") val questionWaitingResult: Boolean? = null,
-	
-	@Serializable(with = Rspns45Serializer::class)
-	@SerialName("rspns09") val questionQuarantined: Boolean? = null,
-	
-	@Serializable(with = Rspns45Serializer::class)
-	@SerialName("rspns08") val questionHouseholdInfected: Boolean? = null,
+	val rspns01: String? = null,
+	val rspns02: String? = null,
+	val rspns03: String? = null,
+	val rspns07: String? = null,
 	
 	// etc
 	@SerialName("newNoticeCount") val newNoticeCount: Int,
@@ -320,31 +310,30 @@ public data class UserInfo(
 	
 	@SerialName("deviceUuid") val deviceUuid: String? = null
 ) {
+	val questionSuspicious: Boolean?
+		get() = when(rspns01) {
+			"1" -> false
+			"2" -> true
+			else -> null
+		}
 	
+	val questionQuickTestResult: QuickTestResult?
+		get() = if(rspns03 == "1") {
+			QuickTestResult.didNotConduct
+		} else {
+			when(rspns07) {
+				"0" -> QuickTestResult.negative
+				"1" -> QuickTestResult.positive
+				else -> null
+			}
+		}
 	
-	public object Rspns1Serializer : PrimitiveMappingSerializer<Boolean, String>(
-		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns1",
-		primitiveKind = PrimitiveKind.STRING,
-		false to "1", true to "2"
-	)
-	
-	public object Rspns2Serializer : PrimitiveMappingSerializer<Boolean, String>(
-		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns2",
-		primitiveKind = PrimitiveKind.STRING,
-		false to "1", true to "0"
-	)
-	
-	public object Rspns3Serializer : PrimitiveMappingSerializer<QuickTestResult, String>(
-		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns3",
-		primitiveKind = PrimitiveKind.STRING,
-		QuickTestResult.didNotConduct to "1", QuickTestResult.negative to "2", QuickTestResult.positive to "3"
-	)
-	
-	public object Rspns45Serializer : PrimitiveMappingSerializer<Boolean, String>(
-		rawSerializer = String.serializer(), serialName = "com.lhwdev.selfTestMacro.api.UserInfo.rspns34",
-		primitiveKind = PrimitiveKind.STRING,
-		false to "0", true to "1"
-	)
+	val questionWaitingResult: Boolean?
+		get() = when(rspns02) {
+			"1" -> false
+			"0" -> true
+			else -> null
+		}
 	
 	@Transient
 	private var mInstituteStub: InstituteInfo? = null

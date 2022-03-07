@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
-import com.lhwdev.selfTestMacro.api.QuickTestResult
 import com.lhwdev.selfTestMacro.database.Answer
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.Navigator
@@ -42,8 +41,7 @@ fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = 
 				navigationIcon = {
 					SimpleIconButton(icon = R.drawable.ic_clear_24, contentDescription = "닫기", onClick = dismiss)
 				},
-				statusBarScrim = scrims.statusBar,
-				elevation = 0.dp
+				statusBarScrim = scrims.statusBar
 			)
 		}
 	) {
@@ -80,19 +78,16 @@ fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = 
 @Composable
 fun (@Suppress("unused") ColumnScope).SelectAnswerContent(answer: Answer, setAnswer: (Answer) -> Unit) {
 	@Composable
-	fun <T> Item(value: T, setValue: (T) -> Unit, title: String, items: Map<T, String>) {
+	fun <T> Item(question: SelfTestQuestions<T>) {
 		ListItem(Modifier.padding(top = 8.dp, bottom = 12.dp)) {
 			Column {
-				Text(title)
+				Text(question.content)
 				Spacer(Modifier.height(8.dp))
-				Row(
-					horizontalArrangement = Arrangement.spacedBy(10.dp),
-					modifier = Modifier.padding(start = 8.dp)
-				) {
-					for((item, text) in items) {
+				Row(Modifier.padding(start = 2.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+					for((item, text) in question.displayTexts) {
 						SelectionChip(
-							selected = value == item,
-							setSelected = { if(it) setValue(item) },
+							selected = answer[question] == item,
+							setSelected = { if(it) setAnswer(answer.with(question, item)) },
 							trailingIconSelected = {
 								Icon(painterResource(R.drawable.ic_check_24), contentDescription = null)
 							}
@@ -103,42 +98,9 @@ fun (@Suppress("unused") ColumnScope).SelectAnswerContent(answer: Answer, setAns
 		}
 	}
 	
-	val yesNoItems = mapOf(false to "아니오", true to "예")
+	Spacer(Modifier.height(8.dp))
 	
-	Item(
-		value = answer.suspicious,
-		setValue = { setAnswer(answer.copy(suspicious = it)) },
-		title = SelfTestQuestions.suspicious,
-		items = yesNoItems
-	)
-	
-	Item(
-		value = answer.quickTestResult,
-		setValue = { setAnswer(answer.copy(quickTestResult = it)) },
-		title = SelfTestQuestions.quickTestResult,
-		items = mapOf(
-			QuickTestResult.didNotConduct to "실시하지 않음",
-			QuickTestResult.negative to "음성",
-			QuickTestResult.positive to "양성"
-		)
-	)
-	
-	Item(
-		value = answer.waitingResult,
-		setValue = { setAnswer(answer.copy(waitingResult = it)) },
-		title = SelfTestQuestions.waitingResult,
-		items = yesNoItems
-	)
-	Item(
-		value = answer.quarantined,
-		setValue = { setAnswer(answer.copy(quarantined = it)) },
-		title = SelfTestQuestions.quarantined,
-		items = yesNoItems
-	)
-	Item(
-		value = answer.housemateInfected,
-		setValue = { setAnswer(answer.copy(housemateInfected = it)) },
-		title = SelfTestQuestions.housemateInfected,
-		items = yesNoItems
-	)
+	for(question in SelfTestQuestions.all) {
+		Item(question)
+	}
 }

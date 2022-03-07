@@ -1,13 +1,11 @@
 package com.lhwdev.selfTestMacro.database
 
-import com.lhwdev.selfTestMacro.api.InstituteInfo
-import com.lhwdev.selfTestMacro.api.InstituteType
-import com.lhwdev.selfTestMacro.api.QuickTestResult
-import com.lhwdev.selfTestMacro.api.UsersIdentifier
+import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.debug.DiagnosticItem
 import com.lhwdev.selfTestMacro.debug.DiagnosticObject
 import com.lhwdev.selfTestMacro.debug.diagnosticGroup
 import com.lhwdev.selfTestMacro.sRegions
+import com.lhwdev.selfTestMacro.ui.SelfTestQuestions
 import kotlinx.serialization.Serializable
 
 
@@ -109,23 +107,42 @@ data class DbUser(
 	}
 }
 
+
 @Serializable
 data class Answer(
 	val suspicious: Boolean,
 	val quickTestResult: QuickTestResult,
 	val waitingResult: Boolean,
-	val quarantined: Boolean,
-	val housemateInfected: Boolean,
 	val message: String? = null
 ) : DiagnosticObject {
+	@Suppress("UNCHECKED_CAST")
+	operator fun <T> get(question: SelfTestQuestions<T>): T = when(question) {
+		SelfTestQuestions.Suspicious -> suspicious
+		SelfTestQuestions.QuickTestResult -> quickTestResult
+		SelfTestQuestions.WaitingResult -> waitingResult
+	} as T
+	
+	fun <T> with(question: SelfTestQuestions<T>, value: T): Answer = when(question) {
+		SelfTestQuestions.Suspicious -> copy(suspicious = value as Boolean)
+		SelfTestQuestions.QuickTestResult -> copy(quickTestResult = value as QuickTestResult)
+		SelfTestQuestions.WaitingResult -> copy(waitingResult = value as Boolean)
+	}
+	
 	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticGroup("Answer", "자가진단 제출 질문") {
 		"suspicious" set suspicious localized "의심증상 여부"
 		"quickTestResult" set quickTestResult localized "신속항원검사 결과" localizeData { it.displayLabel }
 		"waitingResult" set waitingResult localized "검사결과 대기 중"
-		"quarantined" set quarantined localized "자가격리 중"
-		"housemateInfected" set housemateInfected localized "동거인 확진"
 	}
 }
+
+val UserInfo.answer: Answer?
+	get() = if(questionSuspicious != null) {
+		Answer(
+			suspicious = questionSuspicious ?: false,
+			quickTestResult = questionQuickTestResult ?: QuickTestResult.didNotConduct,
+			waitingResult = questionWaitingResult ?: false
+		)
+	} else null
 
 
 @Serializable

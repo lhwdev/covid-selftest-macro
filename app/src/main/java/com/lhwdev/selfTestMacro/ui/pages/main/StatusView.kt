@@ -13,9 +13,11 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
+import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupStatus
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.Status
@@ -78,7 +80,8 @@ internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
 
 @Suppress("unused")
 @Composable
-internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: MutableState<Int>) {
+internal fun ColumnScope.GroupStatusView(group: DbTestGroup, statusKey: MutableState<Int>) {
+	val target = group.target as DbTestTarget.Group
 	val pref = LocalPreference.current
 	val selfTestManager = LocalSelfTestManager.current
 	val navigator = LocalNavigator
@@ -174,10 +177,12 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: 
 		
 		Spacer(Modifier.height(12.dp))
 		
-		var showDetails by remember { mutableStateOf(false) }
 		Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+			val allStatusState = rememberUpdatedState(allStatus)
 			RoundButton(
-				onClick = { showDetails = true },
+				onClick = {
+					navigator.showUserDetailsDialog(group, statusKey, allStatusBlock = { allStatusState.value })
+				},
 				colors = ButtonDefaults.textButtonColors()
 			) {
 				Text("자세히 보기")
@@ -203,71 +208,79 @@ internal fun ColumnScope.GroupStatusView(target: DbTestTarget.Group, statusKey: 
 				Text("응답 수정")
 			}
 		}
-		
-		if(showDetails) MaterialDialog(onCloseRequest = { showDetails = false }) {
-			Title { Text("${target.name}의 자가진단 현황") }
-			ListContent {
-				for((user, status) in allStatus) ListItem(
-					icon = {
-						val icon = when(status) {
-							is Status.Submitted -> if(status.suspicious == null) {
-								R.drawable.ic_check_24
-							} else {
-								R.drawable.ic_warning_24
-							}
-							Status.NotSubmitted -> R.drawable.ic_clear_24
-						}
-						
-						Icon(painterResource(icon), contentDescription = null)
-					},
-					// trailing = { Icon(painterResource(R.drawable.ic_arrow_right_24), contentDescription = null) },
-					modifier = Modifier.clickable {
-						navigator.showDialogAsync { OneUserDetail(user, status) }
+	}
+}
+
+
+private fun Navigator.showUserDetailsDialog(
+	group: DbTestGroup, statusKey: MutableState<Int>, allStatusBlock: () -> Map<DbUser, Status>
+) = showDialogAsync {
+	val target = group.target as DbTestTarget.Group
+	Title { Text("${target.name}의 자가진단 현황") }
+	ListContent {
+		val allStatus = allStatusBlock()
+		for((user, status) in allStatus) ListItem(
+			icon = {
+				val icon = when(status) {
+					is Status.Submitted -> if(status.suspicious == null) {
+						R.drawable.ic_check_24
+					} else {
+						R.drawable.ic_warning_24
 					}
-				) {
-					Row {
-						val text = buildAnnotatedString {
-							append(user.name)
-							
-							withStyle(SpanStyle(color = MediumContentColor)) {
-								append(": ")
-							}
-							
-							when(status) {
-								is Status.Submitted -> {
-									if(status.suspicious == null) withStyle(
-										SpanStyle(
-											color = Color(onLight = Color(0xff285db9), onDark = Color(0xffadcbff))
-										)
-									) {
-										append("정상")
-									} else withStyle(
-										SpanStyle(
-											color = Color(onLight = Color(0xfffd2f5f), onDark = Color(0xffffa6aa))
-										)
-									) {
-										append(status.suspicious.displayText)
-									}
-									
-									append(' ')
-									append("(${status.time})")
-								}
-								
-								Status.NotSubmitted -> withStyle(SpanStyle(MediumContentColor)) {
-									append("미제출")
-								}
-							}
-							
-						}
-						
-						Text(text)
-					}
+					Status.NotSubmitted -> R.drawable.ic_clear_24
+				}
+				
+				Icon(painterResource(icon), contentDescription = null)
+			},
+			// trailing = { Icon(painterResource(R.drawable.ic_arrow_right_24), contentDescription = null) },
+			modifier = Modifier.clickable {
+				showDialogAsync {
+					OneUserDetail(group, user, allStatusBlock().getValue(user), statusKey)
 				}
 			}
-			
-			Buttons {
-				PositiveButton(onClick = requestClose)
+		) {
+			Row {
+				val text = buildAnnotatedString {
+					append(user.name)
+					
+					withStyle(SpanStyle(color = MediumContentColor)) {
+						append(": ")
+					}
+					
+					when(status) {
+						is Status.Submitted -> {
+							if(status.suspicious == null) withStyle(
+								SpanStyle(
+									color = Color(onLight = Color(0xff285db9), onDark = Color(0xffadcbff))
+								)
+							) {
+								append("정상")
+							} else withStyle(
+								SpanStyle(
+									color = Color(onLight = Color(0xfffd2f5f), onDark = Color(0xffffa6aa))
+								)
+							) {
+								append(status.suspicious.displayText)
+							}
+							
+							append(' ')
+							append("(${status.time})")
+						}
+						
+						Status.NotSubmitted -> withStyle(SpanStyle(MediumContentColor)) {
+							append("미제출")
+						}
+					}
+					
+				}
+				
+				Text(text)
 			}
 		}
+	}
+	
+	Buttons {
+		Button(onClick = { statusKey.value++ }) { Text("새로고침") }
+		PositiveButton(onClick = requestClose)
 	}
 }

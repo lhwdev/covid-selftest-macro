@@ -20,26 +20,38 @@ import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.replacedValue
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
+import com.lhwdev.selfTestMacro.ui.pages.common.iconFor
 import com.lhwdev.selfTestMacro.ui.utils.SelectionChip
 import com.vanpra.composematerialdialogs.*
 
 
-fun Navigator.showChangeAnswerDialog(user: DbUser) = showFullDialogAsync { dismiss ->
-	ChangeAnswer(user, dismiss)
+fun Navigator.showChangeAnswerDialog(user: DbUser) = showFullDialogAsync {
+	val pref = LocalPreference.current
+	
+	SelectAnswer("응답 바꾸기", user, onResult = { answer ->
+		val users = pref.db.users
+		pref.db.users = users.copy(
+			users = users.users.replacedValue(user, user.copy(answer = answer))
+		)
+	})
+}
+
+suspend fun Navigator.promptSelectAnswerDialog(title: String, user: DbUser) = showFullDialog<Answer> { dismiss ->
+	SelectAnswer(title, user, onResult = dismiss)
 }
 
 @Composable
-fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = AutoSystemUi(
+private fun MaterialDialogScope.SelectAnswer(
+	title: String, user: DbUser, onResult: (Answer) -> Unit
+): Unit = AutoSystemUi(
 	statusBarMode = OnScreenSystemUiMode.Immersive()
 ) { scrims ->
-	val pref = LocalPreference.current
-	
 	Scaffold(
 		topBar = {
 			TopAppBar(
-				title = { Text("응답 바꾸기") },
+				title = { Text(title) },
 				navigationIcon = {
-					SimpleIconButton(icon = R.drawable.ic_clear_24, contentDescription = "닫기", onClick = dismiss)
+					SimpleIconButton(icon = R.drawable.ic_clear_24, contentDescription = "닫기", onClick = requestClose)
 				},
 				statusBarScrim = scrims.statusBar
 			)
@@ -58,11 +70,7 @@ fun MaterialDialogScope.ChangeAnswer(user: DbUser, dismiss: () -> Unit): Unit = 
 			
 			Buttons {
 				PositiveButton(onClick = {
-					val users = pref.db.users
-					pref.db.users = users.copy(
-						users = users.users.replacedValue(user, user.copy(answer = answer))
-					)
-					
+					onResult(answer)
 					requestClose()
 				})
 				

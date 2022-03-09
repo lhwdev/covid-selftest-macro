@@ -373,7 +373,7 @@ private fun StudentInfoHeader(model: SetupModel) {
 		)
 		
 		Text(
-			"학생 정보 입력",
+			"사용자 정보 입력",
 			style = MaterialTheme.typography.h4,
 			modifier = Modifier.padding(8.dp)
 		)

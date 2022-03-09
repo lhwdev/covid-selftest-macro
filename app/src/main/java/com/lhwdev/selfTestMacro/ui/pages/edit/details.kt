@@ -16,7 +16,9 @@ import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.ui.LocalPreference
-import com.lhwdev.selfTestMacro.ui.scheduleInfo
+import com.lhwdev.selfTestMacro.ui.pages.common.promptSelectUserInGroupDialog
+import com.lhwdev.selfTestMacro.ui.pages.common.scheduleInfo
+import com.lhwdev.selfTestMacro.ui.pages.main.showChangeAnswerDialog
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -148,12 +150,21 @@ private fun EditUserDetail(
 				Text(text)
 			}
 			
+			// edit answer
+			ListItem(modifier = Modifier.clickAction {
+				val editTarget = navigator.promptSelectUserInGroupDialog(
+					title = "응답을 바꿀 사용자 선택",
+					target = target,
+					database = pref.db
+				) ?: return@clickAction
+				
+				navigator.showChangeAnswerDialog(editTarget)
+			}) { Text("설문 응답 바꾸기") }
+			
 			// rename
 			ListItem(modifier = Modifier.clickAction {
 				navigator.showDialogAsync { SetupGroup(previousGroup = group) }
-			}) {
-				Text("그룹 수정")
-			}
+			}) { Text("그룹 수정") }
 			
 			
 			// disband group
@@ -181,14 +192,13 @@ private fun EditUserDetail(
 				if(doDisband == true) {
 					pref.db.disbandGroup(group, inheritSchedule = inheritSchedule)
 				}
-			}) {
-				Text("그룹 해제")
-			}
+			}) { Text("그룹 해제") }
 			
 			// remove group and group members entirely
 			ListItem(modifier = Modifier.clickAction {
 				val doDelete = navigator.promptYesNoDialog(
-					title = { Text("${groupName}을(를) 삭제할까요?") }
+					title = { Text("${groupName}을(를) 삭제할까요?") },
+					content = { Content { Text("ㄹㄹㄹㄹㅇ로요?") } }
 				)
 				
 				if(doDelete == true) pref.db.removeTestGroup(group)

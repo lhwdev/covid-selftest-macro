@@ -11,13 +11,6 @@
 	<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	
-	<queries>
-		<intent>
-			<action android:name="android.intent.action.VIEW" />
-			<data android:scheme="https" />
-		</intent>
-	</queries>
-	
 	<application
 		android:name=".MainApplication"
 		android:allowBackup="true"

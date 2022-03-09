@@ -7,5 +7,7 @@
 	
 	<application>
 		<receiver android:name="com.lhwdev.selfTestMacro.repository.AlarmReceiver" />
+		
+		<service android:name="com.lhwdev.selfTestMacro.repository.ScheduleService" />
 	</application>
 </manifest>

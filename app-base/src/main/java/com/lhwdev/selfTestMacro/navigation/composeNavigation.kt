@@ -8,7 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.google.accompanist.insets.navigationBarsWithImePadding
 import com.lhwdev.selfTestMacro.debug.LocalDebugContext
 import com.lhwdev.selfTestMacro.debug.rememberDebugContext
 import com.lhwdev.selfTestMacro.ui.LocalSnackbarHost
@@ -25,22 +27,20 @@ inline val LocalNavigator: CurrentNavigator
 
 
 @Composable
-fun RouteContent(route: RouteInstance) {
-	val navigator = LocalGlobalNavigator.current
-	val currentNav = remember(navigator, route) { CurrentNavigator(navigator, route) }
-	
-	Surface(color = if(route.route.isOpaque) Color.Transparent else Color.White) {
+fun RouteContent(navigator: CurrentNavigator) {
+	val route = navigator.currentRoute
+	Surface(color = if(route.isOpaque) Color.Transparent else Color.White) {
 		val snackbarHostState = remember { SnackbarHostState() }
-		val debugContext = rememberDebugContext(contextName = route.route.name ?: "(ComposeRoute)")
+		val debugContext = rememberDebugContext(contextName = route.name ?: "(ComposeRoute)")
 		
 		CompositionLocalProvider(
-			sLocalCurrentNavigator provides currentNav,
+			sLocalCurrentNavigator provides navigator,
 			LocalSnackbarHost provides snackbarHostState,
 			LocalDebugContext provides debugContext
 		) {
 			Box {
-				route.route.content()
-				SnackbarHost(snackbarHostState)
+				route.content()
+				SnackbarHost(snackbarHostState, modifier = Modifier.navigationBarsWithImePadding())
 			}
 		}
 	}

@@ -113,9 +113,12 @@ fun Info(): Unit = MaterialTheme(
 					)
 				}
 				
-				Spacer(Modifier.height(8.dp))
+				// Spacer(Modifier.height(8.dp))
 				
-				InfoUsers()
+				LinkedText(
+					"개발에 도움을 주신 분들",
+					onClick = { navigator.showSpecialThanks() }
+				)
 				
 				Spacer(Modifier.height(8.dp))
 				

@@ -5,7 +5,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -20,19 +19,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.fetch
-import com.lhwdev.fetch.toJson
-import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.debug.LocalDebugContext
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
-import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.common.LinkedText
+import com.lhwdev.selfTestMacro.ui.utils.AutoSizeText
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
@@ -58,43 +55,6 @@ object InfoUserStructure {
 
 
 @Composable
-fun InfoUsers() {
-	val navigator = LocalNavigator
-	val data = produceState<Any?>(null) {
-		withContext(Dispatchers.Default) {
-			value = try {
-				App.github.meta.specialThanks.get()
-					.toJson(InfoUserStructure.Root.serializer(), anyContentType = true)
-			} catch(th: Throwable) {
-				false
-			}
-		}
-	}.value
-	
-	if(data is InfoUserStructure.Root) for(line in data.titles) Row {
-		for(element in line) {
-			if(element.first() == '@') { // special meta
-				val detailName = element.drop(1)
-				val detail = data.details[detailName]
-				if(detail == null) {
-					Text(detailName)
-				} else {
-					LinkedText(detail.name, onClick = {
-						navigator.showDialogAsync(maxHeight = Dp.Infinity) { InfoUsersDetail(detail) }
-					})
-				}
-			} else {
-				Text(element)
-			}
-		}
-	} else {
-		if(data == null) Text("Special Thanks 불러오는 중")
-		else Text("Special Thanks를 불러오지 못했습니다", color = DefaultContentColor.copy(alpha = ContentAlpha.medium))
-	}
-}
-
-
-@Composable
 fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 	val navigator = LocalNavigator
 	val urlHandler = LocalUriHandler.current
@@ -111,9 +71,12 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 					withContext(Dispatchers.Default) {
 						value =
 							try { // I know, this would be insane, but putting Glide or Coil is overkill for only this
-								fetch(detail.profile).rawResponse.use {
-									BitmapFactory.decodeStream(it)
-								}.asImageBitmap()
+								val response = fetch(detail.profile).rawResponse
+								runInterruptible {
+									response.use {
+										BitmapFactory.decodeStream(it)
+									}.asImageBitmap()
+								}
 							} catch(th: Throwable) {
 								if(th is CancellationException) throw th
 								debug.onError("${detail.name}의 프로필 사진이 로딩되지 못했어요.", th)
@@ -140,7 +103,7 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 		
 		
 		Spacer(Modifier.height((detail.profileBottomPadding ?: 32f).dp))
-		Text(detail.name, style = MaterialTheme.typography.h3)
+		AutoSizeText(detail.name, style = MaterialTheme.typography.h4)
 		Spacer(Modifier.height(16.dp))
 		
 		Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {

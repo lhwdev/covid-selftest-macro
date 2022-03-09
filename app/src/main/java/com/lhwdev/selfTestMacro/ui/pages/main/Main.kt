@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.ui.pages.main
 
 import android.annotation.SuppressLint
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,8 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
-import com.lhwdev.selfTestMacro.api.InstituteType
-import com.lhwdev.selfTestMacro.database.*
+import com.lhwdev.selfTestMacro.database.DbTestGroup
+import com.lhwdev.selfTestMacro.database.DbTestTarget
+import com.lhwdev.selfTestMacro.database.allUsersCount
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.navigation.pushRoute
@@ -31,6 +31,8 @@ import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.icons.ExpandMore
 import com.lhwdev.selfTestMacro.ui.icons.Icons
+import com.lhwdev.selfTestMacro.ui.pages.common.iconFor
+import com.lhwdev.selfTestMacro.ui.pages.common.scheduleInfo
 import com.lhwdev.selfTestMacro.ui.pages.edit.EditUsers
 import com.lhwdev.selfTestMacro.ui.pages.info.Info
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
@@ -99,21 +101,6 @@ private fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 		scrims.navigationBar()
 	}
 	
-}
-
-
-@DrawableRes
-fun DatabaseManager.iconFor(group: DbTestTarget): Int = when(group) {
-	is DbTestTarget.Group -> R.drawable.ic_group_24
-	is DbTestTarget.Single -> iconFor(group.user)
-}
-
-@DrawableRes
-fun iconFor(user: DbUser): Int = when(user.institute.type) {
-	InstituteType.school -> R.drawable.ic_school_24
-	InstituteType.university -> TODO()
-	InstituteType.academy -> TODO()
-	InstituteType.office -> TODO()
 }
 
 
@@ -257,7 +244,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 	
 	when(val target = selectedGroup.group.target) {
 		is DbTestTarget.Group -> {
-			GroupStatusView(target, statusKey)
+			GroupStatusView(selectedTestGroup, statusKey)
 		}
 		is DbTestTarget.Single -> {
 			SingleStatusView(target, statusKey)

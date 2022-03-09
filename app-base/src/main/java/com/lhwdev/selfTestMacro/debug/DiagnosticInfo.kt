@@ -8,10 +8,6 @@ interface DiagnosticObject {
 }
 
 
-fun DiagnosticItem.asObject(): DiagnosticObject = object : DiagnosticObject {
-	override fun getDiagnosticInformation(): DiagnosticItem = this@asObject
-}
-
 sealed interface DiagnosticItem : DiagnosticObject {
 	val name: String
 	val localizedName: String?
@@ -46,7 +42,7 @@ class SimpleDiagnosticItemGroup(
 
 inline fun <reified T : Any> diagnosticElement(
 	name: String,
-	localizedName: String?,
+	localizedName: String? = null,
 	data: T
 ): SimpleDiagnosticElement<T> =
 	SimpleDiagnosticElement(name, localizedName, data, T::class)
@@ -56,7 +52,7 @@ inline fun diagnosticElements(block: DiagnosticItemGroupBuilder.() -> Unit): Lis
 
 inline fun diagnosticGroup(
 	name: String,
-	localizedName: String?,
+	localizedName: String? = null,
 	block: DiagnosticItemGroupBuilder.() -> Unit
 ): DiagnosticItemGroup = SimpleDiagnosticItemGroup(
 	name = name,
@@ -75,20 +71,24 @@ class BuildingDiagnosticElement<T : Any>(
 class DiagnosticItemGroupBuilder {
 	private val list = mutableListOf<DiagnosticItem>()
 	
-	inline infix fun <reified T : Any> String.set(data: T?): DiagnosticElement<T> =
+	inline infix fun <reified T : Any> String.set(data: T?): BuildingDiagnosticElement<T> =
 		set(name = this, data = data, type = T::class)
 	
-	infix fun <T : Any> DiagnosticElement<T>.localized(name: String): DiagnosticElement<T> =
-		also { (it as BuildingDiagnosticElement<T>).localizedName = name }
+	infix fun <T : Any> BuildingDiagnosticElement<T>.localized(name: String): BuildingDiagnosticElement<T> =
+		also { it.localizedName = name }
 	
 	
-	infix fun <T : Any> DiagnosticElement<T>.localizeData(block: (T) -> String): DiagnosticElement<T> =
-		also { (it as BuildingDiagnosticElement<T>).localizeData = block }
+	infix fun <T : Any> BuildingDiagnosticElement<T>.localizeData(block: (T) -> String): BuildingDiagnosticElement<T> =
+		also { it.localizeData = block }
 	
-	fun <T : Any> set(name: String, data: T?, type: KClass<T>): DiagnosticElement<T> {
+	fun <T : Any> set(name: String, data: T?, type: KClass<T>): BuildingDiagnosticElement<T> {
 		val element = BuildingDiagnosticElement(name = name, localizedName = null, data = data, type = type)
 		list += element
 		return element
+	}
+	
+	fun add(item: DiagnosticItem) {
+		list.add(item)
 	}
 	
 	infix fun String.set(element: DiagnosticObject) {

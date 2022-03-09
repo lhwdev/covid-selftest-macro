@@ -1,7 +1,4 @@
-@file:Suppress("SpellCheckingInspection")
-@file:JvmName("AndroidSelfTestUtils")
-
-package com.lhwdev.selfTestMacro.ui
+package com.lhwdev.selfTestMacro.ui.pages.common
 
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestSchedule

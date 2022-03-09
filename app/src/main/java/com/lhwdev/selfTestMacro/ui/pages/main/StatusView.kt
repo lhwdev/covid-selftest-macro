@@ -23,6 +23,7 @@ import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.Status
 import com.lhwdev.selfTestMacro.repository.SuspiciousKind
 import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.pages.common.promptSelectUserInGroupDialog
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.lhwdev.selfTestMacro.ui.utils.SmallIconButton
 import com.vanpra.composematerialdialogs.*
@@ -193,10 +194,10 @@ internal fun ColumnScope.GroupStatusView(group: DbTestGroup, statusKey: MutableS
 					if(users.size == 1) {
 						navigator.showChangeAnswerDialog(users[0])
 					} else scope.launch {
-						val changeTarget = navigator.promptSelectDialog(
-							title = { Text("응답을 수정할 대상 선택") },
-							items = users,
-							itemToContent = { Text(it.name) }
+						val changeTarget = navigator.promptSelectUserInGroupDialog(
+							title = "응답을 수정할 대상 선택",
+							target = target,
+							database = pref.db
 						)
 						if(changeTarget != null) {
 							navigator.showChangeAnswerDialog(changeTarget)

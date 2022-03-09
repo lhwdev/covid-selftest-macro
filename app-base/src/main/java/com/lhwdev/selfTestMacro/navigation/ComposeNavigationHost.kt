@@ -2,9 +2,7 @@ package com.lhwdev.selfTestMacro.navigation
 
 import android.app.Dialog
 import android.view.View
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalView
 import com.lhwdev.selfTestMacro.modules.app_base.R
 import com.lhwdev.selfTestMacro.ui.EnableAutoSystemUi
@@ -19,6 +17,8 @@ fun ComposeNavigationHost(navigator: Navigator) {
 		LocalGlobalNavigator provides navigator
 	) {
 		var hasDialog = false
+		var parentNavigator: CurrentNavigator? = null
+		
 		AnimateListAsComposable(
 			navigator.routes,
 			isOpaque = { it.route.isOpaque },
@@ -34,10 +34,22 @@ fun ComposeNavigationHost(navigator: Navigator) {
 		) { index, route, visible, container ->
 			if(route.route is DialogRoute) hasDialog = true
 			
+			val scope = rememberCoroutineScope()
+			val currentNavigator = remember(navigator) { // route itself is key of AnimateListAsComposable
+				CurrentNavigator(
+					rootNavigator = navigator,
+					currentRouteInstance = route,
+					coroutineScope = scope,
+					parent = parentNavigator
+				)
+			}
+			currentNavigator.parent = parentNavigator
+			parentNavigator = currentNavigator
+			
 			val content = @Composable {
 				container {
 					EnabledRoute(enabled = index == navigator.routes.lastIndex) {
-						RouteContent(route)
+						RouteContent(currentNavigator)
 					}
 				}
 			}

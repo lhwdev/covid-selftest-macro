@@ -2,6 +2,7 @@ package com.lhwdev.selfTestMacro.navigation
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf
+import kotlinx.coroutines.CoroutineScope
 
 
 
@@ -76,34 +77,38 @@ class NavigatorImpl : Navigator {
 	}
 }
 
-class CurrentNavigator(val rootNavigator: Navigator, val currentRoute: RouteInstance) : Navigator by rootNavigator {
-	val isRoot: Boolean get() = routes.firstOrNull() == currentRoute
-	val isTop: Boolean get() = routes.last() == currentRoute
+class CurrentNavigator(
+	val rootNavigator: Navigator,
+	val currentRouteInstance: RouteInstance,
+	val coroutineScope: CoroutineScope,
+	parent: CurrentNavigator?
+) : Navigator by rootNavigator {
+	val currentRoute: Route get() = currentRouteInstance.route
 	
-	val index: Int get() = routes.indexOf(currentRoute)
+	var parent: CurrentNavigator? = parent
+		internal set
 	
-	val parent: CurrentNavigator?
-		get() = routes.getOrNull(index - 1)?.let {
-			CurrentNavigator(rootNavigator = rootNavigator, currentRoute = it)
-		}
+	val isRoot: Boolean get() = routes.firstOrNull() == currentRouteInstance
+	val isTop: Boolean get() = routes.last() == currentRouteInstance
 	
-	val opaqueParent: CurrentNavigator?
-		get() {
-			val route = routes.subList(0, index).lastOrNull { it.route.isOpaque } ?: return null
-			
-			return CurrentNavigator(
-				rootNavigator = rootNavigator,
-				currentRoute = route
-			)
+	val index: Int get() = routes.indexOf(currentRouteInstance)
+	
+	val parents: Iterable<CurrentNavigator>
+		get() = object : Iterable<CurrentNavigator> {
+			override fun iterator(): Iterator<CurrentNavigator> = object : Iterator<CurrentNavigator> {
+				private var current: CurrentNavigator = this@CurrentNavigator
+				override fun hasNext(): Boolean = current.parent != null
+				override fun next(): CurrentNavigator = current.parent!!.also { current = it }
+			}
 		}
 	
 	
 	fun popRoute(): Boolean {
-		return removeRoute(currentRoute)
+		return removeRoute(currentRouteInstance)
 	}
 	
 	fun replaceRoute(route: Route): Boolean {
-		val result = removeRoute(currentRoute)
+		val result = removeRoute(currentRouteInstance)
 		if(!result) {
 			println("[Navigator] couldn't replace route $route: not exist in routes")
 			return false

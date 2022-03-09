@@ -31,7 +31,7 @@ import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.common.LinkedText
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
-import com.vanpra.composematerialdialogs.showDialogAsync
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -115,6 +115,7 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 									BitmapFactory.decodeStream(it)
 								}.asImageBitmap()
 							} catch(th: Throwable) {
+								if(th is CancellationException) throw th
 								debug.onError("${detail.name}의 프로필 사진이 로딩되지 못했어요.", th)
 								null
 							}

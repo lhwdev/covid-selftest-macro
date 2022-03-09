@@ -41,11 +41,12 @@ fun interface HttpInterceptor : FetchInterceptor {
 
 
 val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, headers, session, body, _ ->
+	val cookieManager = session?.cookieManager
 	if(sDebugFetch) runInterruptible(Dispatchers.IO) {
 		println("")
 		
 		val lastCookieManager = threadLocalCookieHandler
-		if(session != null) setThreadLocalCookieHandler(session.cookieManager)
+		if(cookieManager != null) setThreadLocalCookieHandler(cookieManager)
 		
 		// open
 		try {
@@ -76,9 +77,9 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 			}
 			
 			if(session != null) {
-				val cookies = session.cookieManager.get(
+				val cookies = cookieManager?.get(
 					url.toURI(), headers.mapValues { listOf(it.value) }
-				).values.singleOrNull() // returns "Cookie": [...]
+				)?.values?.singleOrNull() // returns "Cookie": [...]
 				
 				if(cookies?.isNotEmpty() == true) {
 					val cookieStr = cookies.fold(cookies.first()) { acc, entry -> "$acc; $entry" }
@@ -151,7 +152,7 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 		}
 	} else runInterruptible(Dispatchers.IO) { // without debug logging
 		val lastCookieManager = threadLocalCookieHandler
-		if(session != null) setThreadLocalCookieHandler(session.cookieManager)
+		if(cookieManager != null) setThreadLocalCookieHandler(cookieManager)
 		
 		// open
 		try {

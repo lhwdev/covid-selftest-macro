@@ -162,12 +162,12 @@ internal fun readableUrl(url: String): String {
 	} + ")"
 }
 
-typealias FetchHeadersBuilder = MutableFetchHeadersBuilder.() -> Unit
+typealias FetchHeadersBuilderBlock = MutableFetchHeadersBuilder.() -> Unit
 
 suspend inline fun fetch(
 	url: URL,
 	method: FetchMethod? = null,
-	headers: FetchHeadersBuilder,
+	headers: FetchHeadersBuilderBlock,
 	session: Session? = null,
 	body: FetchBody? = null
 ): FetchResult = fetch(url, method, MutableFetchHeadersBuilder().apply(headers).build(), session, body)
@@ -185,7 +185,7 @@ suspend fun fetch(
 
 suspend inline fun fetch(
 	url: String,
-	method: FetchMethod? = null, headers: FetchHeadersBuilder,
+	method: FetchMethod? = null, headers: FetchHeadersBuilderBlock,
 	session: Session? = null, body: FetchBody? = null
 ): FetchResult = fetch(URL(url), method, headers, session, body)
 

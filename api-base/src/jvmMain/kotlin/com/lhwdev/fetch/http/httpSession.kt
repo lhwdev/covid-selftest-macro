@@ -31,34 +31,39 @@ private val sDummyInitialization = run {
 }
 
 
-class Session(
-	val cookieManager: CookieManager = CookieManager(null, CookiePolicy.ACCEPT_ALL),
-	var keepAlive: Boolean? = null
-)
+interface Session {
+	val cookieManager: CookieManager? get() = null
+	val keepAlive: Boolean? get() = null
+	
+	suspend fun fetch(
+		url: URL,
+		method: FetchMethod? = null,
+		headers: Map<String, String> = emptyMap(),
+		body: FetchBody? = null
+	): FetchResult = fetch(url = url, method = method, headers = headers, session = this, body = body)
+}
+
+class BasicSession(
+	override val cookieManager: CookieManager = CookieManager(null, CookiePolicy.ACCEPT_ALL),
+	override var keepAlive: Boolean? = null
+) : Session
 
 
 suspend inline fun Session.fetch(
 	url: URL,
 	method: FetchMethod? = null,
-	headers: FetchHeadersBuilder,
+	headers: FetchHeadersBuilderBlock,
 	body: FetchBody? = null
-): FetchResult = fetch(url, method, headers, this, body)
-
-suspend fun Session.fetch(
-	url: URL,
-	method: FetchMethod? = null,
-	headers: Map<String, String> = emptyMap(),
-	body: FetchBody? = null
-): FetchResult = fetch(url, method, headers, this, body)
+): FetchResult = fetch(url, method, MutableFetchHeadersBuilder().apply(headers).build(), body)
 
 suspend inline fun Session.fetch(
 	url: String,
-	method: FetchMethod? = null, headers: FetchHeadersBuilder,
+	method: FetchMethod? = null, headers: FetchHeadersBuilderBlock,
 	body: FetchBody? = null
-): FetchResult = fetch(url, method, headers, this, body)
+): FetchResult = fetch(url, method, MutableFetchHeadersBuilder().apply(headers).build(), body)
 
 suspend inline fun Session.fetch(
 	url: String,
 	method: FetchMethod? = null, headers: Map<String, String> = emptyMap(),
 	body: FetchBody? = null
-): FetchResult = fetch(url, method, headers, this, body)
+): FetchResult = fetch(URL(url), method, headers, body)

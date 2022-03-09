@@ -124,11 +124,7 @@ fun OpenSources() {
 					scrims.navigationBar()
 				}
 			} else Column {
-				Text(
-					"로딩 중...",
-					style = MaterialTheme.typography.h4,
-					modifier = Modifier.wrapContentSize(align = Alignment.Center)
-				)
+				ListItem { Text("로딩 중...", color = DisabledContentColor) }
 				
 				Box(Modifier.wrapContentSize(align = Alignment.BottomCenter)) {
 					scrims.navigationBar()

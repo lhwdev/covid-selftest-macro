@@ -12,60 +12,55 @@ import androidx.compose.ui.window.DialogProperties
 import com.lhwdev.selfTestMacro.navigation.*
 
 
-private val sDefaultDialogRouteFactory: ContentRouteFactory<Any?> =
-	{ content, removeRoute -> DialogRoute(content = content, onRouteRemoved = { removeRoute(null) }) }
-
-
 suspend fun <T> Navigator.showDialog(
+	route: Route = Route.Empty,
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	maxHeight: Dp = FloatingDialogMaxHeight,
-	routeFactory: ContentRouteFactory<T> = sDefaultDialogRouteFactory as ContentRouteFactory<T>,
 	content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
 ): T? = showRouteFactory { removeRoute ->
-	routeFactory({
+	DialogRoute(onRouteRemoved = { removeRoute(null) }) {
 		MaterialDialog(
 			onCloseRequest = { removeRoute(null) },
 			modifier = modifier,
 			properties = properties,
 			maxHeight = maxHeight
 		) { content(removeRoute) }
-	}, removeRoute)
+	}.merge(route)
 }
 
 suspend fun Navigator.showDialogUnit(
+	route: Route = Route.Empty,
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	maxHeight: Dp = FloatingDialogMaxHeight,
-	routeFactory: ContentRouteFactory<Nothing?> = sDefaultDialogRouteFactory as ContentRouteFactory<Nothing?>,
 	content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
-	@Suppress("RemoveExplicitTypeArguments")
 	showDialog<Nothing?>(
 		modifier = modifier,
 		properties = properties,
 		maxHeight = maxHeight,
-		routeFactory = routeFactory
+		route = route
 	) { content { it(null) } }
 }
 
 fun Navigator.showDialogAsync(
+	route: Route = Route.Empty,
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = FloatingDialogProperties,
 	maxHeight: Dp = FloatingDialogMaxHeight,
-	routeFactory: ContentRouteFactory<Nothing?> = sDefaultDialogRouteFactory as ContentRouteFactory<Nothing?>,
 	content: @Composable (FloatingMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showRouteFactoryAsync { removeRoute ->
 		val removeRouteUnit = { removeRoute(null) }
-		routeFactory({
+		DialogRoute(onRouteRemoved = removeRouteUnit) {
 			MaterialDialog(
 				onCloseRequest = removeRouteUnit,
 				modifier = modifier,
 				properties = properties,
 				maxHeight = maxHeight
 			) { content(removeRouteUnit) }
-		}, removeRoute)
+		}.merge(route)
 	}
 }
 
@@ -73,31 +68,31 @@ private val sFullscreenDialogRoute: ContentRouteFactory<Any?> =
 	{ content, removeRoute -> FullDialogRoute(content = content, onRouteRemoved = { removeRoute(null) }) }
 
 suspend fun <T> Navigator.showFullDialog(
+	route: Route = Route.Empty,
 	properties: DialogProperties = DialogProperties(),
-	routeFactory: ContentRouteFactory<T?> = sFullscreenDialogRoute as ContentRouteFactory<T?>,
 	content: @Composable (FullMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit)
 ): T? = showRouteFactory { remoteRoute ->
-	routeFactory({
+	FullDialogRoute(onRouteRemoved = { remoteRoute(null) }) {
 		FullMaterialDialog(
 			onCloseRequest = { remoteRoute(null) },
 			properties = properties
 		) { content(remoteRoute) }
-	}, remoteRoute)
+	}
 }
 
 fun Navigator.showFullDialogAsync(
+	route: Route = Route.Empty,
 	properties: DialogProperties = DialogProperties(),
-	routeFactory: ContentRouteFactory<Nothing?> = sFullscreenDialogRoute as ContentRouteFactory<Nothing?>,
 	content: @Composable (FullMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
 	showRouteFactoryAsync { remoteRoute ->
 		val removeRouteUnit = { remoteRoute(null) }
-		routeFactory({
+		FullDialogRoute(onRouteRemoved = removeRouteUnit) {
 			FullMaterialDialog(
 				onCloseRequest = removeRouteUnit,
 				properties = properties
 			) { content(removeRouteUnit) }
-		}, remoteRoute)
+		}
 	}
 }
 

@@ -8,6 +8,7 @@ import com.lhwdev.selfTestMacro.database.AppDatabase
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.Navigator
+import com.lhwdev.selfTestMacro.navigation.Route
 import com.vanpra.composematerialdialogs.*
 
 
@@ -15,7 +16,7 @@ suspend fun Navigator.promptSelectUserInGroupDialog(
 	title: String,
 	target: DbTestTarget.Group,
 	database: AppDatabase
-): DbUser? = showDialog { removeRoute ->
+): DbUser? = showDialog(Route(name = "selectUserInGroupDialog")) { removeRoute ->
 	Title { Text(title) }
 	
 	ListContent {

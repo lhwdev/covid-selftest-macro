@@ -17,6 +17,7 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.Answer
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.Navigator
+import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.replacedValue
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
@@ -25,7 +26,7 @@ import com.lhwdev.selfTestMacro.ui.utils.SelectionChip
 import com.vanpra.composematerialdialogs.*
 
 
-fun Navigator.showChangeAnswerDialog(user: DbUser) = showFullDialogAsync {
+fun Navigator.showChangeAnswerDialog(user: DbUser) = showFullDialogAsync(Route(name = "changeAnswerDialog")) {
 	val pref = LocalPreference.current
 	
 	SelectAnswer("응답 바꾸기", user, onResult = { answer ->

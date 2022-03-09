@@ -7,67 +7,98 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 
-interface Route {
-	val content: @Composable () -> Unit
-	val isOpaque: Boolean
+data class Route(
+	val name: String? = null,
+	val isOpaque: Boolean? = null,
+	val transition: RouteTransition? = null,
+	val onRouteAdded: (() -> Unit)? = null,
+	val onRouteRemoved: (() -> Unit)? = null,
+	val extras: Map<Key<*>, *>? = null,
+	val content: @Composable (() -> Unit)? = null
+) {
+	companion object {
+		val Empty = Route()
+		
+		fun <T> extra(key: Key<T>, value: T): Route = Route(extras = mapOf(key to value))
+	}
 	
-	val name: String? get() = null
+	open class Key<T>(private val defaultValue: () -> T = { error("defaultValue not provided for $this") }) {
+		companion object {
+			private val sEmptyCache = Any()
+		}
+		
+		private var defaultCache: Any? = sEmptyCache
+		
+		fun getDefault(): T = if(defaultCache != sEmptyCache) {
+			@Suppress("UNCHECKED_CAST")
+			defaultCache as T
+		} else {
+			val value = defaultValue() // if defaultValue throws exception, fail fast here
+			defaultCache = value
+			value
+		}
+	}
+	
+	
+	operator fun <T> get(key: Key<T>): T {
+		if(extras != null && key in extras) {
+			@Suppress("UNCHECKED_CAST")
+			return extras[key] as T
+		}
+		
+		return key.getDefault()
+	}
+	
+	fun <T> withExtra(key: Key<T>, value: T): Route = copy(extras = extras.join(key, value))
+	
+	
+	fun merge(other: Route): Route = Route(
+		name = other.name ?: name,
+		isOpaque = other.isOpaque ?: isOpaque,
+		transition = other.transition ?: transition,
+		onRouteAdded = joinFunction(other.onRouteAdded, onRouteAdded),
+		onRouteRemoved = joinFunction(other.onRouteRemoved, onRouteRemoved),
+		extras = merge(other.extras, extras) { a, b -> a + b },
+		content = other.content ?: content,
+	)
 }
 
-interface DialogRoute : Route
+
+val DialogRouteKey: Route.Key<Boolean> = Route.Key { false }
 
 
-fun Route.copy( // TODO: no support for RouteObserver
-	name: String? = this.name,
-	isOpaque: Boolean = this.isOpaque,
-	transition: RouteTransition = this as? RouteTransition ?: DefaultTransition(isOpaque),
-	content: @Composable () -> Unit = this.content
-): Route = Route(name, isOpaque, transition, content)
-
-interface RouteObserver {
-	fun onRouteAdded(navigator: Navigator) {}
-	fun onRouteRemoved(navigator: Navigator) {}
-}
-
-
-fun Route(
-	name: String? = null,
-	isOpaque: Boolean = true,
-	transition: RouteTransition = DefaultTransition(isOpaque),
-	content: @Composable () -> Unit
-): Route = object : Route, RouteTransition by transition {
-	override val name: String? = name
-	override val content: @Composable () -> Unit = content
-	override val isOpaque: Boolean = isOpaque
-	override fun toString(): String = "Route $name(isOpaque=$isOpaque, transition=$transition, $content)"
-}
-
-
-@PublishedApi
-internal abstract class DialogRouteBase(
-	override val name: String?,
-	override val isOpaque: Boolean,
-	override val content: @Composable () -> Unit
-) : DialogRoute, RouteTransition by NoneTransition(), RouteObserver {
-	override fun toString(): String = "Route $name(isOpaque=$isOpaque, $content)"
-}
-
-inline fun DialogRoute(
+fun DialogRoute(
 	name: String? = null,
 	isOpaque: Boolean = false,
-	crossinline onRouteRemoved: () -> Unit,
-	noinline content: @Composable () -> Unit
-): DialogRoute = object : DialogRouteBase(name = name, isOpaque = isOpaque, content = content) {
-	override fun onRouteRemoved(navigator: Navigator) {
-		onRouteRemoved()
-	}
-}
+	onRouteAdded: (() -> Unit)? = null,
+	onRouteRemoved: (() -> Unit)? = null,
+	extras: Map<Route.Key<*>, *>? = null,
+	content: @Composable () -> Unit
+): Route = Route(
+	name = name,
+	isOpaque = isOpaque,
+	transition = NoneTransition(),
+	onRouteAdded = onRouteAdded,
+	onRouteRemoved = onRouteRemoved,
+	extras = extras.join(DialogRouteKey, true),
+	content = content
+)
 
-inline fun FullDialogRoute(
+fun FullDialogRoute(
 	name: String? = null,
-	noinline content: @Composable () -> Unit,
-	crossinline onRouteRemoved: () -> Unit
-): DialogRoute = DialogRoute(name = name, content = content, onRouteRemoved = onRouteRemoved)
+	isOpaque: Boolean = true,
+	onRouteAdded: (() -> Unit)? = null,
+	onRouteRemoved: (() -> Unit)? = null,
+	extras: Map<Route.Key<*>, *>? = null,
+	content: @Composable () -> Unit
+): Route = DialogRoute(
+	name = name,
+	isOpaque = isOpaque,
+	onRouteAdded = onRouteAdded,
+	onRouteRemoved = onRouteRemoved,
+	extras = extras,
+	content = content
+)
 
 inline fun Navigator.pushRoute(
 	name: String? = null,
@@ -153,4 +184,19 @@ inline fun Navigator.showRouteAsync(
 	noinline content: @Composable (removeRoute: () -> Unit) -> Unit
 ) {
 	showRouteFactoryAsync { Route(name, isOpaque, transition) { content { it(null) } } }
+}
+
+
+private inline fun <T : Any> merge(a: T?, b: T?, operation: (T, T) -> T): T? = when {
+	a == null -> b
+	b == null -> a
+	else -> operation(a, b)
+}
+
+private fun joinFunction(a: (() -> Unit)?, b: (() -> Unit)?) = merge(a, b) { a2, b2 -> { a2(); b2() } }
+
+private fun <K, V> Map<K, V>?.join(key: K, value: V) = if(this == null) {
+	mapOf(key to value)
+} else {
+	this + (key to value)
 }

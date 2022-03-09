@@ -35,7 +35,7 @@ class PreferenceState(pref: SharedPreferences) : PreferenceHolder(pref) {
 	
 	var isFirstTime by preferenceBoolean("first", true)
 	
-	val db: DatabaseManager = DatabaseManager(this)
+	val db: AppDatabase = AppDatabase(this)
 	
 	var headUser by preferenceInt(key = "headUser", defaultValue = 0)
 	

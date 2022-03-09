@@ -6,7 +6,7 @@ import com.lhwdev.selfTestMacro.LazyListBase
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 
 
-class DatabaseManager(val holder: PreferenceHolder) {
+class AppDatabase(val holder: PreferenceHolder) {
 	var testGroups: DbTestGroups by holder.preferenceSerialized(
 		key = "testGroups",
 		serializer = DbTestGroups.serializer(),

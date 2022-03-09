@@ -7,7 +7,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.lhwdev.selfTestMacro.AndroidNotificationChannel
 import com.lhwdev.selfTestMacro.AppNotificationIds
 import com.lhwdev.selfTestMacro.AppNotifications
-import com.lhwdev.selfTestMacro.database.DatabaseManager
+import com.lhwdev.selfTestMacro.database.AppDatabase
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.database.allUsersCount
 import com.lhwdev.selfTestMacro.set
@@ -17,7 +17,7 @@ import java.util.Date
 /**
  * Manages the notification displayed, such as '5명 중 3명 자가진단 완료', '~~~ 자가진단 실패'.
  */
-class NotificationStatus(val schedule: SelfTestSchedules, val database: DatabaseManager, val context: Context) {
+class NotificationStatus(val schedule: SelfTestSchedules, val database: AppDatabase, val context: Context) {
 	private val notifications = NotificationManagerCompat.from(context)
 	
 	private val enabled = notifications.areNotificationsEnabled()

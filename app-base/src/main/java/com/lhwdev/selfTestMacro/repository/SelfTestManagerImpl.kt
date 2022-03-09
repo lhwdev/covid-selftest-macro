@@ -64,7 +64,7 @@ private const val sPrefPrefix = "SelfTestManager"
 class SelfTestManagerImpl(
 	override var context: Context,
 	override var debugContext: DebugContext,
-	override val database: DatabaseManager,
+	override val database: AppDatabase,
 	val defaultCoroutineScope: CoroutineScope
 ) : SelfTestManager {
 	override val schedules: SelfTestSchedulesImpl = object : SelfTestSchedulesImpl(
@@ -540,7 +540,7 @@ class SelfTestManagerImpl(
 	 * - 앱을 켜면 알림이 실행되지 않았는 적이 있는지 여부 확인 및 버그 제보 제안
 	 * - 백그라운드 업데이트(3.1.0에 구현 예정)
 	 */
-	private suspend fun DatabaseManager.submitSelfTest(user: DbUser, fromUi: Boolean): SubmitResult {
+	private suspend fun AppDatabase.submitSelfTest(user: DbUser, fromUi: Boolean): SubmitResult {
 		val group = user.userGroup
 		val info = getSessionInfo(group)
 		

@@ -154,7 +154,7 @@ class SelfTestLog(val logFile: File, holder: PreferenceHolder, private val corou
 	}
 	
 	suspend fun logSelfTest(
-		database: DatabaseManager,
+		database: AppDatabase,
 		user: DbUser,
 		success: Boolean,
 		message: String,

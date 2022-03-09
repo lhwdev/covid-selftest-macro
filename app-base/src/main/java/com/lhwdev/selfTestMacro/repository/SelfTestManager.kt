@@ -5,7 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.*
-import com.lhwdev.selfTestMacro.database.DatabaseManager
+import com.lhwdev.selfTestMacro.database.AppDatabase
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.debug.DebugContext
@@ -41,7 +41,7 @@ enum class SelfTestInitiator(val isFromUi: Boolean) {
 
 interface SelfTestManager {
 	var context: Context
-	val database: DatabaseManager
+	val database: AppDatabase
 	var debugContext: DebugContext
 	
 	val schedules: SelfTestSchedules

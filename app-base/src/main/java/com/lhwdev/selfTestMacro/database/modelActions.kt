@@ -8,20 +8,20 @@ fun List<Int>.nextTestGroupId(): Int {
 	return -1
 }
 
-fun DatabaseManager.removeTestGroup(group: DbTestGroup): Unit = transactDb {
+fun AppDatabase.removeTestGroup(group: DbTestGroup): Unit = transactDb {
 	removeUsers(group.target.allUserIds)
 	
 	testGroups = testGroups.copy(groups = testGroups.groups - group.id)
 }
 
-fun DatabaseManager.removeTestGroups(groups: List<DbTestGroup>): Unit = transactDb {
+fun AppDatabase.removeTestGroups(groups: List<DbTestGroup>): Unit = transactDb {
 	removeUsers(groups.flatMap { it.target.allUserIds })
 	
 	testGroups = testGroups.copy(groups = testGroups.groups - groups.map { it.id })
 }
 
 
-fun DatabaseManager.removeUsers(userIdsToRemove: List<Int>): Unit = transactDb {
+fun AppDatabase.removeUsers(userIdsToRemove: List<Int>): Unit = transactDb {
 	// clear user groups
 	val userGroupsToModify = userIdsToRemove.map { users.users.getValue(it).userGroup.id }.toSet()
 	
@@ -40,7 +40,7 @@ fun DatabaseManager.removeUsers(userIdsToRemove: List<Int>): Unit = transactDb {
 }
 
 
-fun DatabaseManager.disbandGroup(group: DbTestGroup, inheritSchedule: Boolean) {
+fun AppDatabase.disbandGroup(group: DbTestGroup, inheritSchedule: Boolean) {
 	if(group.target !is DbTestTarget.Group) return
 	
 	val users = group.target.allUsers
@@ -61,7 +61,7 @@ fun DatabaseManager.disbandGroup(group: DbTestGroup, inheritSchedule: Boolean) {
 	testGroups = testGroups.copy(groups = testGroups.groups - group.id + newTestGroups)
 }
 
-fun DatabaseManager.moveToTestGroup(
+fun AppDatabase.moveToTestGroup(
 	target: List<DbTestGroup>,
 	toGroup: DbTestGroup
 ): DbTestGroup {
@@ -80,7 +80,7 @@ fun DatabaseManager.moveToTestGroup(
 	return newGroup
 }
 
-fun DatabaseManager.moveOutFromTestGroup(
+fun AppDatabase.moveOutFromTestGroup(
 	fromGroup: DbTestGroup,
 	target: List<DbTestGroup> // not added to db yet
 ): DbTestGroup {
@@ -101,19 +101,19 @@ fun DatabaseManager.moveOutFromTestGroup(
 	return newGroup
 }
 
-fun DatabaseManager.replaceTestGroupDangerous(from: DbTestGroup, to: DbTestGroup) {
+fun AppDatabase.replaceTestGroupDangerous(from: DbTestGroup, to: DbTestGroup) {
 	testGroups = testGroups.copy(groups = testGroups.groups.mapValues { (_, value) ->
 		if(value == from) to else value
 	})
 }
 
-fun DatabaseManager.updateSchedule(group: DbTestGroup, schedule: DbTestSchedule): DbTestGroup {
+fun AppDatabase.updateSchedule(group: DbTestGroup, schedule: DbTestSchedule): DbTestGroup {
 	val newGroup = group.copy(schedule = schedule)
 	replaceTestGroupDangerous(group, newGroup)
 	return newGroup
 }
 
-fun DatabaseManager.renameTestGroup(group: DbTestGroup, newName: String): DbTestGroup {
+fun AppDatabase.renameTestGroup(group: DbTestGroup, newName: String): DbTestGroup {
 	check(group.target is DbTestTarget.Group)
 	val newGroup = group.copy(target = group.target.copy(name = newName))
 	replaceTestGroupDangerous(group, newGroup)

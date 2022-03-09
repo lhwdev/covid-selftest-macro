@@ -50,7 +50,7 @@ fun Navigator.showDebugWindow() = showDialogAsync {
 					PositiveButton(onClick = {
 						try {
 							pref.virtualServer = Json.decodeFromString(Repository.serializer(), value)
-						} catch(th: Throwable) { // 오타는 고의적임
+						} catch(th: Throwable) {
 							navigator.showDialogAsync { Text("틀렸스비다\n" + th.stackTraceToString()) }
 						}
 					})

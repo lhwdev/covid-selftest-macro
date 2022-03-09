@@ -42,7 +42,7 @@ private val schedulerFlags = PendingIntent.FLAG_UPDATE_CURRENT or if(Build.VERSI
 abstract class SelfTestSchedulesImpl(
 	context: Context,
 	holder: PreferenceHolder,
-	private val database: DatabaseManager,
+	private val database: AppDatabase,
 	private val debugContext: DebugContext
 ) : SelfTestSchedules(), DiagnosticObject {
 	inner class Schedule(val schedule: GroupTaskScheduler.TaskSchedule) : SelfTestSchedule {

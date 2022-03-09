@@ -1,6 +1,6 @@
 package com.lhwdev.selfTestMacro
 
-import com.lhwdev.selfTestMacro.database.DatabaseManager
+import com.lhwdev.selfTestMacro.database.AppDatabase
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 
 
@@ -19,7 +19,7 @@ private inline fun <T, K> List<T>.fixDuplicate(key: (T) -> K): Pair<Map<T, K>, L
 }
 
 
-fun DatabaseManager.validateAndFixDb() {
+fun AppDatabase.validateAndFixDb() {
 	// #1. validate groupUsers id (cannot fix)
 	for((id, group) in userGroups.groups) {
 		if(group.id != id) error("database misalignment: user $group should have id=$id")

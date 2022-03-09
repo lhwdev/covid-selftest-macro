@@ -46,6 +46,8 @@ interface FetchResult {
 	val responseCodeMessage: String
 	val rawResponse: InputStream
 	
+	fun getHeader(key: String): String
+	
 	fun close()
 }
 

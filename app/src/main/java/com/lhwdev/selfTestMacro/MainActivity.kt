@@ -110,7 +110,7 @@ class MainActivity : AppCompatActivity() {
 			} else {
 				time.text = "시간 예약 안 됨"
 			}
-			updateTime(intent, reset = true)
+			updateTime(intent)
 		}
 		
 		fun pickTime() {

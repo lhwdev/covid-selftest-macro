@@ -15,7 +15,6 @@ import net.gotev.cookiestore.InMemoryCookieStore
 import java.net.CookieManager
 import java.net.CookiePolicy
 import java.util.Calendar
-import java.util.Date
 import kotlin.random.Random
 
 
@@ -40,7 +39,7 @@ suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) lis
 	null
 }
 
-suspend fun Context.surveyData(user: User, usersIdentifier: UserIdentifier): SurveyData {
+suspend fun Context.surveyData(user: User, usersIdentifier: UserIdentifier, clientVersion: String): SurveyData {
 	val pref = preferenceState
 	
 	val quickTestNegative = pref.quickTest?.let {
@@ -52,8 +51,6 @@ suspend fun Context.surveyData(user: User, usersIdentifier: UserIdentifier): Sur
 		}
 	} ?: false
 	val isIsolated = pref.isIsolated
-	
-	val clientVersion = pref.appMeta().hcsVersion
 	
 	return SurveyData(
 		userToken = user.token,
@@ -93,7 +90,7 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 			
 			val users = session.getUserGroup(institute, usersToken)
 			val user = singleOfUserGroup(users) ?: return@trial
-			val surveyData = surveyData(user, usersIdentifier)
+			val surveyData = surveyData(user, usersIdentifier, users.clientVersion)
 			
 			val result = session.registerSurvey(
 				pref.institute!!,
@@ -118,7 +115,7 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 	}
 }
 
-fun Context.updateTime(intent: PendingIntent, reset: Boolean = false) {
+fun Context.updateTime(intent: PendingIntent) {
 	val preferenceState = preferenceState
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT >= 21)
@@ -132,12 +129,8 @@ fun Context.updateTime(intent: PendingIntent, reset: Boolean = false) {
 			isRandom = preferenceState.isRandomEnabled,
 			nextDay = false
 		)
-		
-		if(reset) preferenceState.lastSubmit = -1
 	}
 }
-
-private val random = Random
 
 fun millisToDaysCumulative(millis: Long) =
 	// ms     sec   min hour day
@@ -152,67 +145,61 @@ fun Context.scheduleNextAlarm(
 	nextDay: Boolean
 ) {
 	val pref = preferenceState
-	val currentTime: Long
+	val now = Calendar.getInstance()
 	
-	var newTime = Calendar.getInstance().run {
-		currentTime = timeInMillis
+	val new = now.clone() as Calendar
+	
+	// Submitted today
+	val last = pref.lastSubmit
+	val lastDay = millisToDaysCumulative(last)
+	
+	// update date
+	val quick = pref.quickTest
+	
+	if(quick?.behavior == QuickTestInfo.Behavior.doNotSubmit && quick.days.size >= 7) {
+		// refuse to schedule
+		return
+	}
+	
+	if(nextDay || lastDay == millisToDaysCumulative(new.timeInMillis)) {
+		new.add(Calendar.DATE, 1)
+	}
+	
+	var iteration = 0
+	while(iteration < 10) {
+		val days = millisToDaysCumulative(new.timeInMillis)
+		val day = new[Calendar.DAY_OF_WEEK]
 		
-		val new = clone() as Calendar
-		
-		// Submitted today
-		val last = pref.lastSubmit
-		val lastDay = millisToDaysCumulative(last)
-		
-		val targetMin = hour * 60 + min
-		val currentMin = this[Calendar.HOUR_OF_DAY] * 60 + this[Calendar.MINUTE]
-		
-		// update date
-		val quick = pref.quickTest
-		
-		if(quick?.behavior == QuickTestInfo.Behavior.doNotSubmit && quick.days.size >= 7) {
-			// refuse to schedule
-			return
+		when {
+			!pref.includeWeekend && (day == Calendar.SATURDAY || day == Calendar.SUNDAY) -> Unit
+			quick != null && quick.behavior == QuickTestInfo.Behavior.doNotSubmit && day in quick.days -> Unit
+			else -> break
 		}
-		
-		val newDay = millisToDaysCumulative(new.timeInMillis)
-		if(nextDay || lastDay == newDay) {
-			new.add(Calendar.DAY_OF_YEAR, 1)
-		}
-		
-		var iteration = 0
-		while(iteration < 10) {
-			val days = millisToDaysCumulative(new.timeInMillis)
-			val day = new[Calendar.DAY_OF_WEEK]
-			
-			when {
-				!pref.includeWeekend && (day == Calendar.SATURDAY || day == Calendar.SUNDAY) -> Unit
-				quick != null && quick.behavior == QuickTestInfo.Behavior.doNotSubmit && day in quick.days -> Unit
-				else -> break
-			}
-			new.add(Calendar.DAY_OF_YEAR, 1)
-			iteration++
-		}
-		if(iteration == 10) {
-			return
-		}
-		
-		new[Calendar.HOUR_OF_DAY] = hour
-		new[Calendar.MINUTE] = min
-		new[Calendar.SECOND] = 0
-		new[Calendar.MILLISECOND] = 0
-		selfLog("schedule time selection (nextDay=$nextDay lastDay=$lastDay, current=$newDay)")
-		new
-	}.timeInMillis
+		new.add(Calendar.DAY_OF_WEEK, 1)
+		iteration++
+	}
+	if(iteration == 10) { // guard against looping forever
+		return
+	}
+	
+	new[Calendar.HOUR_OF_DAY] = hour
+	new[Calendar.MINUTE] = min
+	new[Calendar.SECOND] = 0
+	new[Calendar.MILLISECOND] = 0
+	var newTime = new.timeInMillis
+	
+	selfLog("schedule time selection (nextDay=$nextDay lastDay=$lastDay, newDay=${millisToDaysCumulative(newTime)})")
 	
 	if(isRandom) {
 		newTime += 1000 * 60 * (Random.nextFloat() * 10 - 5).toInt()
-		if(newTime - currentTime < 10000) {
-			selfLog("scheduling: coerced time from $newTime")
-			newTime = currentTime + 10000
-		}
 	}
 	
-	selfLog("scheduling next alarm at ${Date(newTime)}", force = true)
+	if(newTime - now.timeInMillis < 10000) {
+		selfLog("scheduling: coerced time from $newTime (diff = ${newTime - now.timeInMillis})")
+		newTime = now.timeInMillis + 10000
+	}
+	
+	selfLog("scheduling next alarm at ${new.time}", force = true)
 	
 	val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 	if(Build.VERSION.SDK_INT < 21) {

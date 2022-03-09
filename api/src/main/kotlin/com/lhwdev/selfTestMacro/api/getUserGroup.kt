@@ -21,10 +21,18 @@ data class User(
 	@SerialName("token") val token: UserToken
 )
 
+// a temporary hack to pass clientVersion where proper api design is not done
+class UserGroup(val users: List<User>, val clientVersion: String) : List<User> by users
 
-suspend fun Session.getUserGroup(institute: InstituteInfo, token: UsersToken): List<User> = fetch(
+
+suspend fun Session.getUserGroup(institute: InstituteInfo, token: UsersToken): UserGroup = fetch(
 	institute.requestUrl["selectUserGroup"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to token.token),
 	body = "{}"
-).toJsonLoose(ListSerializer(User.serializer()))
+).let {
+	UserGroup(
+		users = it.toJsonLoose(ListSerializer(User.serializer())),
+		clientVersion = it.getHeader("X-Client-Version")
+	)
+}

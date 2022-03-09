@@ -20,7 +20,6 @@ import androidx.core.view.doOnPreDraw
 import androidx.core.view.setPadding
 import com.google.android.material.snackbar.Snackbar
 import com.lhwdev.fetch.http.Session
-import com.lhwdev.fetch.http.fetch
 import com.lhwdev.selfTestMacro.api.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -29,7 +28,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.net.URL
 import java.util.WeakHashMap
 import kotlin.coroutines.resume
 import kotlin.properties.ReadWriteProperty
@@ -155,7 +153,7 @@ class PreferenceState(val pref: SharedPreferences) {
 			putLong("lastSubmit", value)
 		}
 	
-	var appMeta: AppMeta? by pref.preferenceSerialized("appMeta", AppMeta.serializer())
+	// var appMeta: AppMeta? by pref.preferenceSerialized("appMeta", AppMeta.serializer())
 	
 	var lastQuestion: String? by pref.preferenceString("lastQuestion")
 	
@@ -171,24 +169,24 @@ class PreferenceState(val pref: SharedPreferences) {
 		}
 }
 
-suspend fun PreferenceState.appMeta(): AppMeta.Data {
-	val day = millisToDaysCumulative(System.currentTimeMillis())
-	val last = appMeta
-	if(last != null && last.at == day) return last.data
-	
-	val data = fetch(URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/app_meta.json"))
-		.toJsonLoose(AppMeta.Data.serializer())
-	appMeta = AppMeta(data, at = day)
-	return data
-}
+// suspend fun PreferenceState.appMeta(): AppMeta.Data {
+// 	val day = millisToDaysCumulative(System.currentTimeMillis())
+// 	val last = appMeta
+// 	if(last != null && last.at == day) return last.data
+//	
+// 	val data = fetch(URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/app_meta.json"))
+// 		.toJsonLoose(AppMeta.Data.serializer())
+// 	appMeta = AppMeta(data, at = day)
+// 	return data
+// }
 
-@Serializable
-class AppMeta(val data: Data, val at: Long) {
-	@Serializable
-	class Data(
-		val hcsVersion: String
-	)
-}
+// @Serializable
+// class AppMeta(val data: Data, val at: Long) {
+// 	@Serializable
+// 	class Data(
+// 		val hcsVersion: String
+// 	)
+// }
 
 @Serializable
 data class QuickTestInfo(

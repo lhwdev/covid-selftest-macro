@@ -11,7 +11,8 @@
 ## 토큰
 여기서는 토큰을 세가지 종류, UsersIdToken, UsersToken, UserToken으로 구분하도록 하겠습니다. (제가 붙인 이름임)
 이름 그대로 'users-'로 시작하는 토큰은 사용자 그룹에 대한 토큰입니다.
-각 토큰은 jwt 형식으로 `Bearer xxx.yyy.zzz`의 형식을 띕니다. (xxx, yyy, zzz는 Base64 인코딩됨)  
+~~각 토큰은 jwt 형식으로 `Bearer xxx.yyy.zzz`의 형식을 띕니다. (xxx, yyy, zzz는 Base64 인코딩됨)~~
+예전 버전에는 그랬는데 이제 아니네요.
 
 ## 기본 url
 - 공통 url: `https://hcs.eduro.go.kr`

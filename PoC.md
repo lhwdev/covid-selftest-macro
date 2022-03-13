@@ -2,6 +2,9 @@
 코틀린 기반 구현체는 api 폴더에서 찾아볼 수 있습니다. 단 파일의 이름을 이해하기 쉽도록 바꾸어서
 실제 api의 주소와 다를 수 있습니다.
 
+아래 나오는 모든 api의 경우 response header는 `X-Client-Version`을 포함합니다. 나중에
+이 정보를 저장해두었다가 자가진단 제출을 할 때(`/registerServey`) 쓰면 됩니다.
+
 교육청의 가상 보안키보드 패치 이후 추가된 transkey 관련 PoC는 이곳에 없습니다.
 쓸 시간도 없고, 보안상의 이유로 공개하지 않습니다.
 
@@ -139,8 +142,8 @@
     "deviceUuid": "<기기 uuid>" // 공식 앱 사용시에 들어감, ""로 비워둬도 됨
   }
   ```
-  `<transkey>` 부분은 [여기를 참고하세요. (비공개)](https://github.com/lhwdev/covid-selftest-macro-transkey/blob/master/PoC.md)  
-  지금 만들고는 있는데 한참 걸릴겁니다. 차라리 transkey 소스코드(비공개)를 보세요.
+  `<transkey>` 부분은 [여기를 참고하세요.](https://github.com/lhwdev/covid-selftest-macro-transkey/blob/master/PoC.md)  
+  지금 만들고는 있는데 한참 걸릴겁니다. 차라리 transkey 소스코드를 보세요.
 
 * 출력:
   - 로그인 성공 시: json
@@ -269,7 +272,7 @@
   ```json5
   {
     "deviceUuid": "",
-    "rspns00": "Y", // 어느 하나라도 문제가 있어서 등교가 불가능하면(1, 3, 4, 5번 '예' 또는 2번 '양성) N, 아니면 Y
+    "rspns00": "Y", // 어느 하나라도 문제가 있어서 등교가 불가능하면(1, 3번 '예' 또는 2번 '양성) N, 아니면 Y
     "rspns01": "1", // 1. 학생 본인이 코로나19 감염에 의심되는 아래의 임상증상이 있나요?: "1"=아니오, "2"=예
     "rspns02": "1", // 3. 학생 본인 또는 동거인이 PCR 검사를 받고 그 결과를 기다리고 있나요?: "1"=아니오, "0"=예
     "rspns03": "1", // 2. 학생은 오늘 신속항원검사(자가진단)를 실시했나요?: "1"=실시하지 않음, null=실시함
@@ -287,7 +290,8 @@
     "rspns15": null,
     "upperToken": "<UserToken>",
     "upperUserNameEncpt": "홍길동", // 제출한 사람 이름. 공식 사이트에서는 다른 사람이 대신 제출한 경우 그 이름이 들어가나, 실제로는 아무 이름이나 넣어도 됨
-    "clientVersion": "1.8.8" // 메뉴 바에서 뜨는 UI ver. 버전을 적으면 됨. 어떤 방식으로 작동하는지는 확인 필요
+    "clientVersion": "1.9.2" // 메뉴 바에서 뜨는 UI ver. 버전에 대응되고 X-Client-Version 헤더 값을 넣으면 됨.
+    // clientVersion이 일치하지 않으면 자가진단을 거부함.
   }
   ```
 * 출력: json

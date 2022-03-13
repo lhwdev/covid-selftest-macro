@@ -1,18 +1,16 @@
+import { join } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { copy } from "https://deno.land/std@0.128.0/fs/mod.ts";
 
-import { join, resolve } from "https://deno.land/std@0.107.0/path/mod.ts";
-import { copy } from "https://deno.land/std@0.107.0/fs/mod.ts";
 
+export default async function publishMain(input: string, output: string) {
+  const src = join(input, "src");
+  const publicDir = join(input, "public");
 
-export default async function publishMain(inputBase: string, outputBase: string) {
-  const src = join(inputBase, "src");
-  const public = join(inputBase, "public");
-
-  const output = join(outputBase, "output");
   const outputSrc = join(output, "src"); // compatibility between meta and app-meta branch
 
   // 1. Minify
   await onDirectory(src);
-  await copy(public, output, { overwrite: true });
+  await copy(publicDir, output, { overwrite: true });
 
   async function onDirectory(dir: string) {
     for await (const entry of Deno.readDir(dir)) {
@@ -48,4 +46,5 @@ export default async function publishMain(inputBase: string, outputBase: string)
 
 
   // 2. Publish
+  
 }

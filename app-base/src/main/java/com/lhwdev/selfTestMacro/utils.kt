@@ -4,7 +4,7 @@ package com.lhwdev.selfTestMacro
 
 import android.content.Context
 import android.widget.Toast
-import kotlinx.coroutines.CancellationException
+import com.lhwdev.utils.rethrowIfNeeded
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -20,7 +20,7 @@ inline fun <R> tryAtMost(
 		try {
 			return block()
 		} catch(th: Throwable) {
-			if(th is CancellationException) throw th
+			th.rethrowIfNeeded()
 			if(!errorFilter(th)) throw th
 			trialCount++
 			if(trialCount >= maxTrial) throw th

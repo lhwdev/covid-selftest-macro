@@ -1,5 +1,6 @@
 package com.lhwdev.selfTestMacro.repository
 
+import com.lhwdev.fetch.http.BasicSession
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.database.DbUserGroup
@@ -25,6 +26,8 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		var token: UsersToken? = null
 	}
 	
+	private var anonymousSession = BasicSession()
+	
 	private val sessions = mutableMapOf<UserInfoKey, MySession>()
 	private val usersCache = mutableMapOf<UserInfoKey, User>()
 	// private val apiLoginCache: MutableMap<UsersIdToken, UsersToken> = mutableMapOf()
@@ -41,7 +44,13 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		institute: InstituteInfo,
 		userCode: String
 	) = sessions.getOrPut(UserInfoKey(institute.code, userCode)) {
-		MySession(requestUrlBody = institute.requestUrlBody)
+		val previous = anonymousSession
+		anonymousSession = BasicSession()
+		
+		MySession(
+			requestUrlBody = institute.requestUrlBody,
+			cookieManager = previous.cookieManager ?: CookieManager(null, CookiePolicy.ACCEPT_ALL)
+		)
 	}
 	
 	override fun getSession(group: DbUserGroup): MySession = getSession(
@@ -115,7 +124,7 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		regionCode: String?,
 		schoolLevelCode: Int,
 		name: String
-	): List<InstituteInfo> = SessionManager.anySession.getSchoolData(
+	): List<InstituteInfo> = anonymousSession.getSchoolData(
 		regionCode = regionCode,
 		schoolLevelCode = "$schoolLevelCode",
 		name = name

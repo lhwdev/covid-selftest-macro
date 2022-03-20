@@ -168,7 +168,7 @@ abstract class DebugContext(
 		try {
 			onShowErrorInfo(info, description)
 		} catch(th: Throwable) {
-			if(th is CancellationException) throw th
+			th.rethrowIfNeeded()
 			onLightError("showErrorInfo failed", throwable = th)
 		}
 	}

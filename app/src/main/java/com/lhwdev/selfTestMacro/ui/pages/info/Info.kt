@@ -26,10 +26,10 @@ import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.pages.intro.showPrivacyPolicy
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
+import com.lhwdev.utils.rethrowIfNeeded
 import com.vanpra.composematerialdialogs.Content
 import com.vanpra.composematerialdialogs.Title
 import com.vanpra.composematerialdialogs.showDialogAsync
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -99,7 +99,7 @@ fun Info(): Unit = MaterialTheme(
 								App.github.meta.developerInfo.get()
 									.toJson(InfoUserStructure.Detail.serializer(), anyContentType = true)
 							} catch(th: Throwable) {
-								if(th is CancellationException) throw th
+								th.rethrowIfNeeded()
 								navigator.showDialogAsync {
 									Title { Text("정보를 불러오지 못했습니다.") }
 									Content { Text(th.stackTraceToString()) }

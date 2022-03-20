@@ -17,8 +17,8 @@ import com.lhwdev.selfTestMacro.replaced
 import com.lhwdev.selfTestMacro.repository.ui.showSelfTestFailedDialog
 import com.lhwdev.selfTestMacro.tryAtMost
 import com.lhwdev.selfTestMacro.ui.UiContext
+import com.lhwdev.utils.rethrowIfNeeded
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
 import java.io.File
 import java.util.WeakHashMap
 
@@ -75,7 +75,7 @@ class SelfTestManagerImpl(
 					submitBulkSelfTest(group, users, fromUi = false)
 				}
 			} catch(th: Throwable) {
-				if(th is CancellationException) throw th
+				th.rethrowIfNeeded()
 				debugContext.onError("자가진단을 실패했습니다?!", throwable = th)
 			}
 		}
@@ -121,7 +121,7 @@ class SelfTestManagerImpl(
 				
 				return operation()
 			} catch(th: Throwable) {
-				if(th is CancellationException) throw th
+				th.rethrowIfNeeded()
 				val causes = mutableSetOf<HcsAppError.ErrorCause>()
 				val diagnostic = SelfTestDiagnosticInfo()
 				var isSerious = false
@@ -348,7 +348,7 @@ class SelfTestManagerImpl(
 			val (session, _) = ensureSessionLoaded(user.userGroup)
 			Status(session.getUserInfo(user.usersInstitute, user.apiUser()))
 		} catch(th: Throwable) {
-			if(th is CancellationException) throw th
+			th.rethrowIfNeeded()
 			debugContext.onError(
 				message = "${user.name}의 현재 상태를 불러오지 못했어요.",
 				throwable = th,
@@ -476,7 +476,7 @@ class SelfTestManagerImpl(
 			
 			results
 		} catch(th: Throwable) {
-			if(th is CancellationException) throw th
+			th.rethrowIfNeeded()
 			emptyList()
 		}
 	}

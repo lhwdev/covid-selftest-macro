@@ -129,7 +129,6 @@ internal fun jsonObjectOrStringScope(): JsonObjectScope = if(sDebugFetch) {
 internal fun Bodies.jsonObject(scope: JsonObjectScope): DataBody = when(scope) {
 	is JsonObjectScopeImpl -> jsonObject(scope.build())
 	is JsonObjectScopeToString -> jsonObject(scope.build())
-	else -> error("???")
 }
 
 

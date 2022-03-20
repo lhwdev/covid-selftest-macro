@@ -6,7 +6,7 @@ import kotlin.native.concurrent.SharedImmutable
 
 
 @StructureBuilder
-abstract class JsonObjectScope {
+sealed class JsonObjectScope {
 	@Suppress("UNUSED_PARAMETER")
 	abstract infix fun String.set(value: Nothing?)
 	
@@ -34,7 +34,7 @@ abstract class JsonObjectScope {
 }
 
 @StructureBuilder
-abstract class JsonArrayScope {
+sealed class JsonArrayScope {
 	abstract fun add(value: Nothing?)
 	
 	abstract fun add(value: Number?)
@@ -163,20 +163,6 @@ internal val ESCAPE_STRINGS: Array<String?> = arrayOfNulls<String>(93).apply {
 	this['\n'.code] = "\\n"
 	this['\r'.code] = "\\r"
 	this[0x0c] = "\\f"
-}
-
-@SharedImmutable
-internal val ESCAPE_MARKERS: ByteArray = ByteArray(93).apply {
-	for(c in 0..0x1f) {
-		this[c] = 1.toByte()
-	}
-	this['"'.code] = '"'.code.toByte()
-	this['\\'.code] = '\\'.code.toByte()
-	this['\t'.code] = 't'.code.toByte()
-	this['\b'.code] = 'b'.code.toByte()
-	this['\n'.code] = 'n'.code.toByte()
-	this['\r'.code] = 'r'.code.toByte()
-	this[0x0c] = 'f'.code.toByte()
 }
 
 internal fun Appendable.printQuoted(value: String) {

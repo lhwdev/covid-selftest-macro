@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.navigation
 
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.*
 import kotlinx.coroutines.CoroutineScope
 
 
@@ -32,7 +31,7 @@ class RouteInstance(val route: Route) {
 
 
 @Stable
-var sDebugNavigation: Boolean = false
+var sDebugNavigation: Boolean by mutableStateOf(false)
 
 
 class NavigatorImpl : Navigator {
@@ -44,13 +43,13 @@ class NavigatorImpl : Navigator {
 	override fun pushRoute(route: RouteInstance) {
 		list.add(route)
 		if(sDebugNavigation) println("pushRoute $route")
-		if(route.route is RouteObserver) route.route.onRouteAdded(this)
+		route.route[OnRouteAdded](this)
 	}
 	
 	override fun popLastRoute(): Boolean {
 		val route = list.removeLastOrNull() ?: return false
 		if(sDebugNavigation) println("popLastRoute $route")
-		if(route.route is RouteObserver) route.route.onRouteRemoved(this)
+		route.route[OnRouteRemoved](this)
 		return true
 	}
 	
@@ -80,13 +79,16 @@ class NavigatorImpl : Navigator {
 class CurrentNavigator(
 	val rootNavigator: Navigator,
 	val currentRouteInstance: RouteInstance,
-	val coroutineScope: CoroutineScope,
-	parent: CurrentNavigator?
+	val coroutineScope: CoroutineScope
 ) : Navigator by rootNavigator {
 	val currentRoute: Route get() = currentRouteInstance.route
 	
-	var parent: CurrentNavigator? = parent
-		internal set
+	var parent: CurrentNavigator? = null
+		private set
+	
+	val parentOrSelf: CurrentNavigator get() = parent ?: this
+	
+	var isVisible: Boolean by mutableStateOf(true)
 	
 	val isRoot: Boolean get() = routes.firstOrNull() == currentRouteInstance
 	val isTop: Boolean get() = routes.last() == currentRouteInstance
@@ -102,6 +104,10 @@ class CurrentNavigator(
 			}
 		}
 	
+	internal fun updateState(parent: CurrentNavigator?, isVisible: Boolean) {
+		this.parent = parent
+		this.isVisible = isVisible
+	}
 	
 	fun popRoute(): Boolean {
 		return removeRoute(currentRouteInstance)

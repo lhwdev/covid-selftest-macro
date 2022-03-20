@@ -20,6 +20,12 @@ fun EmptyRestartable(content: @Composable () -> Unit) {
 @Composable
 inline fun changed(value: Any?): Boolean = currentComposer.changed(value)
 
+@Composable
+fun assertConstant(value: Any?) {
+	val last = remember { value }
+	if(last != value) error("assertConstant: $value is not consistent from $last")
+}
+
 
 @Composable
 fun <T> lazyState(

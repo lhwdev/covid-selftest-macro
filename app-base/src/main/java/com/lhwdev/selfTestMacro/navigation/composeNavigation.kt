@@ -14,6 +14,7 @@ import com.google.accompanist.insets.navigationBarsWithImePadding
 import com.lhwdev.selfTestMacro.debug.LocalDebugContext
 import com.lhwdev.selfTestMacro.debug.rememberDebugContext
 import com.lhwdev.selfTestMacro.ui.LocalSnackbarHost
+import com.lhwdev.selfTestMacro.ui.assertConstant
 
 
 val LocalGlobalNavigator = compositionLocalOf<Navigator> { error("not provided") }
@@ -29,7 +30,8 @@ inline val LocalNavigator: CurrentNavigator
 @Composable
 fun RouteContent(navigator: CurrentNavigator) {
 	val route = navigator.currentRoute
-	Surface(color = if(route.isOpaque) Color.Transparent else Color.White) {
+	
+	Surface(color = if(route[IsOpaque]) Color.Transparent else Color.White) {
 		val snackbarHostState = remember { SnackbarHostState() }
 		val debugContext = rememberDebugContext(contextName = route.name ?: "(ComposeRoute)")
 		
@@ -39,7 +41,8 @@ fun RouteContent(navigator: CurrentNavigator) {
 			LocalDebugContext provides debugContext
 		) {
 			Box {
-				route.content()
+				assertConstant(route.content)
+				route.content!!()
 				SnackbarHost(snackbarHostState, modifier = Modifier.navigationBarsWithImePadding())
 			}
 		}

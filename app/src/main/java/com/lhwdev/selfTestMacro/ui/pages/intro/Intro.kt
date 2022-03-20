@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Route
-import com.lhwdev.selfTestMacro.navigation.copy
+import com.lhwdev.selfTestMacro.navigation.RouteTransitionBlock
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
 
@@ -64,8 +64,8 @@ private fun Intro() {
 					TextButton(
 						onClick = {
 							navigator.replaceRoute(
-								SetupRoute().copy(
-									transition = FadeRouteTransition(animationSpec = tween(durationMillis = 500))
+								SetupRoute().withExtras(
+									RouteTransitionBlock to FadeRouteTransition(animationSpec = tween(durationMillis = 500))
 								)
 							)
 						},

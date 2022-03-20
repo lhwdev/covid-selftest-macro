@@ -25,7 +25,7 @@ import com.lhwdev.selfTestMacro.lifecycle.Lifecycle
 import com.lhwdev.selfTestMacro.lifecycle.rememberLifecycle
 import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
-import com.lhwdev.selfTestMacro.navigation.copy
+import com.lhwdev.selfTestMacro.navigation.RouteTransitionBlock
 import com.lhwdev.selfTestMacro.showToast
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.LocalPreference
@@ -96,7 +96,7 @@ fun Splash() {
 			MainRoute
 		}
 		
-		navigator.replaceRoute(route.copy(transition = FadeRouteTransition()))
+		navigator.replaceRoute(route.withExtras(RouteTransitionBlock to FadeRouteTransition()))
 	}
 	
 }

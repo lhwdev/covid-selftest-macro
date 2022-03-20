@@ -127,7 +127,7 @@ public data class InstituteInfo(
 	 * Normally form of `https://???hcs.eduro.go.kr/v2` where `???` comes the code of Ministry of Education, i.e.,
 	 * 'sen', 'dge'.
 	 */
-	val requestUrlV2: URL get() = URL("https://$requestUrlBody/v2")
+	public val requestUrlV2: URL get() = URL("https://$requestUrlBody/v2")
 	
 	/**
 	 * The base url for request such as [registerSurvey], [getClassList].
@@ -135,7 +135,7 @@ public data class InstituteInfo(
 	 * Normally form of `https://???hcs.eduro.go.kr` where `???` comes the code of Ministry of Education, i.e.,
 	 * 'sen', 'dge'.
 	 */
-	val requestUrl: URL get() = URL("https://$requestUrlBody")
+	public val requestUrl: URL get() = URL("https://$requestUrlBody")
 }
 
 
@@ -189,7 +189,7 @@ public data class UsersIdentifier(
 @Serializable
 public data class User(
 	/**
-	 * The unique identifier of user.
+	 * The identifier of user. This seems to unique in one [institute][InstituteInfo].
 	 */
 	@SerialName("userPNo") val userCode: String,
 	

@@ -2,8 +2,8 @@ package com.lhwdev.selfTestMacro.database
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import com.lhwdev.selfTestMacro.LazyListBase
 import com.lhwdev.selfTestMacro.api.InstituteInfo
+import com.lhwdev.selfTestMacro.lazyMap
 
 
 class AppDatabase(val holder: PreferenceHolder) {
@@ -26,10 +26,7 @@ class AppDatabase(val holder: PreferenceHolder) {
 	)
 	
 	val DbTestTarget.Group.allUsers: List<DbUser>
-		get() = object : LazyListBase<DbUser>(userIds.size) {
-			override fun createAt(index: Int): DbUser = users.users.getValue(userIds[index])
-			override fun contains(element: DbUser): Boolean = element.id in userIds
-		}
+		get() = userIds.lazyMap { users.users.getValue(it) }
 	
 	val DbTestTarget.Single.user: DbUser get() = users.users.getValue(userId)
 	val DbTestTarget.allUsers: List<DbUser>
@@ -58,5 +55,6 @@ class AppDatabase(val holder: PreferenceHolder) {
 			}
 		}
 	
-	val DbUserGroup.allUsers: List<DbUser> get() = userIds.map { users.users.getValue(it) }
+	val DbUserGroup.allUsers: List<DbUser> get() = userIds.lazyMap { users.users.getValue(it) }
+	val DbUserGroup.mainUser: DbUser get() = users.users.getValue(userIds.first())
 }

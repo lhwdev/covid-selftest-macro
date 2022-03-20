@@ -44,7 +44,7 @@ interface Session {
 }
 
 class BasicSession(
-	override val cookieManager: CookieManager = CookieManager(null, CookiePolicy.ACCEPT_ALL),
+	override val cookieManager: CookieManager? = CookieManager(null, CookiePolicy.ACCEPT_ALL),
 	override var keepAlive: Boolean? = null
 ) : Session
 
@@ -67,3 +67,5 @@ suspend inline fun Session.fetch(
 	method: FetchMethod? = null, headers: Map<String, String> = emptyMap(),
 	body: FetchBody? = null
 ): FetchResult = fetch(URL(url), method, headers, body)
+
+val NoneSession: Session = BasicSession(cookieManager = null)

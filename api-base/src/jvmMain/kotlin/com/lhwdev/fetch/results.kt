@@ -3,8 +3,8 @@
 package com.lhwdev.fetch
 
 import com.lhwdev.fetch.headers.contentType
+import com.lhwdev.io.runInterruptibleGracefully
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -51,7 +51,7 @@ suspend fun <T> FetchResult.toJson(
 }
 
 suspend fun FetchResult.getText(charset: Charset = this.charset): String = use {
-	runInterruptible(Dispatchers.IO) {
+	runInterruptibleGracefully(Dispatchers.IO) {
 		val value = rawResponse.reader(charset = charset).readText()
 		rawResponse.close()
 		value

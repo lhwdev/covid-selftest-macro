@@ -3,8 +3,8 @@
 package com.lhwdev.fetch.http
 
 import com.lhwdev.fetch.*
+import com.lhwdev.io.runInterruptibleGracefully
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runInterruptible
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -42,7 +42,7 @@ fun interface HttpInterceptor : FetchInterceptor {
 
 val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, headers, session, body, _ ->
 	val cookieManager = session?.cookieManager
-	if(sDebugFetch) runInterruptible(Dispatchers.IO) {
+	if(sDebugFetch) runInterruptibleGracefully(Dispatchers.IO) {
 		println("")
 		
 		val lastCookieManager = threadLocalCookieHandler
@@ -150,7 +150,7 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 		} finally {
 			if(session != null) setThreadLocalCookieHandler(lastCookieManager)
 		}
-	} else runInterruptible(Dispatchers.IO) { // without debug logging
+	} else runInterruptibleGracefully(Dispatchers.IO) { // without debug logging
 		val lastCookieManager = threadLocalCookieHandler
 		if(cookieManager != null) setThreadLocalCookieHandler(cookieManager)
 		
@@ -213,7 +213,7 @@ private class HttpResultImpl(val connection: HttpURLConnection) : FetchResult {
 			return connection.inputStream
 		}
 	
-	override suspend fun close(): Unit = runInterruptible(Dispatchers.IO) {
+	override suspend fun close(): Unit = runInterruptibleGracefully(Dispatchers.IO) {
 		connection.disconnect()
 	}
 	

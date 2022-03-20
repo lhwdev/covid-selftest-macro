@@ -20,7 +20,7 @@ import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.MediumContentColor
 import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
-import com.lhwdev.selfTestMacro.ui.pages.main.iconFor
+import com.lhwdev.selfTestMacro.ui.pages.common.iconFor
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupParameters
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
 import com.vanpra.composematerialdialogs.promptYesNoDialog

@@ -82,6 +82,7 @@ private fun EditUserDetail(
 	
 	when(target) {
 		is DbTestTarget.Single -> Column {
+			val user = with(pref.db) { target.user }
 			ListItem(
 				icon = {
 					Icon(
@@ -89,9 +90,13 @@ private fun EditUserDetail(
 						contentDescription = null
 					)
 				},
-				text = { Text(with(pref.db) { target.user.institute.name }) },
-				secondaryText = { Text("자가진단 예약: ${group.scheduleInfo()}") }
+				text = { Text("자가진단 예약: ${group.scheduleInfo()}") },
+				secondaryText = { Text(user.institute.name) }
 			)
+			
+			ListItem(modifier = Modifier.clickAction {
+				navigator.showChangeAnswerDialog(user)
+			}) { Text("설문 응답 바꾸기") }
 			
 			ListItem(modifier = Modifier.clickAction {
 				val doDelete = navigator.promptYesNoDialog(

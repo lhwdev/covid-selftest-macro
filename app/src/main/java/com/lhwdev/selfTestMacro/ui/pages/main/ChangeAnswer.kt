@@ -34,16 +34,23 @@ fun Navigator.showChangeAnswerDialog(user: DbUser) = showFullDialogAsync(Route(n
 		pref.db.users = users.copy(
 			users = users.users.replacedValue(user, user.copy(answer = answer))
 		)
-	})
+	}, "확인")
 }
 
-suspend fun Navigator.promptSelectAnswerDialog(title: String, user: DbUser) = showFullDialog<Answer> { dismiss ->
-	SelectAnswer(title, user, onResult = dismiss)
+suspend fun Navigator.promptSelectAnswerDialog(
+	title: String,
+	user: DbUser,
+	positiveText: String = "확인"
+) = showFullDialog<Answer> { dismiss ->
+	SelectAnswer(title, user, onResult = dismiss, positiveText)
 }
 
 @Composable
 private fun MaterialDialogScope.SelectAnswer(
-	title: String, user: DbUser, onResult: (Answer) -> Unit
+	title: String,
+	user: DbUser,
+	onResult: (Answer) -> Unit,
+	positiveText: String
 ): Unit = AutoSystemUi(
 	statusBarMode = OnScreenSystemUiMode.Immersive()
 ) { scrims ->
@@ -73,7 +80,7 @@ private fun MaterialDialogScope.SelectAnswer(
 				PositiveButton(onClick = {
 					onResult(answer)
 					requestClose()
-				})
+				}) { Text(positiveText) }
 				
 				NegativeButton(onClick = requestClose)
 			}

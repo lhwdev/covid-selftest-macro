@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 fun FloatingMaterialDialogScope.OneUserDetail(
 	group: DbTestGroup,
 	user: DbUser,
-	status: Status,
+	status: Status?,
 	statusKey: MutableState<Int>
 ) {
 	val navigator = LocalNavigator
@@ -40,6 +40,7 @@ fun FloatingMaterialDialogScope.OneUserDetail(
 	
 	Content(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 		val text = when(status) {
+			null -> "로딩 중"
 			is Status.NotSubmitted -> "자가진단 제출 안함"
 			is Status.Submitted -> (status.suspicious?.displayText ?: "정상") + " (${status.time})"
 		}
@@ -62,7 +63,7 @@ fun FloatingMaterialDialogScope.OneUserDetail(
 			enabled = !submitNowInProgress,
 			colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryContainer),
 			onClick = {
-				val scope = navigator.parent!!.coroutineScope
+				val scope = navigator.parentOrSelf.coroutineScope
 				val uiContext = UiContext(
 					context = context,
 					navigator = navigator,
@@ -72,8 +73,19 @@ fun FloatingMaterialDialogScope.OneUserDetail(
 					scope = scope
 				)
 				scope.launch {
+					val answer = navigator.promptSelectAnswerDialog(
+						title = "자가진단 제출하기",
+						user = user,
+						positiveText = "제출"
+					) ?: return@launch
+					
 					submitNowInProgress = true
-					selfTestManager.submitSelfTestNow(uiContext, group = group, users = listOf(user))
+					// > `Note: users may not be derived from database, rather arbitrary modified data to change answer etc.`
+					selfTestManager.submitSelfTestNow(
+						uiContext,
+						group = group,
+						users = listOf(user.copy(answer = answer))
+					)
 					submitNowInProgress = false
 					statusKey.value++
 				}

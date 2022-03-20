@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.fetch
+import com.lhwdev.io.runInterruptibleGracefully
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.debug.LocalDebugContext
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
@@ -29,7 +30,6 @@ import com.lhwdev.selfTestMacro.ui.utils.AutoSizeText
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
@@ -72,7 +72,7 @@ fun InfoUsersDetail(detail: InfoUserStructure.Detail) {
 						value =
 							try { // I know, this would be insane, but putting Glide or Coil is overkill for only this
 								val response = fetch(detail.profile).rawResponse
-								runInterruptible {
+								runInterruptibleGracefully {
 									response.use {
 										BitmapFactory.decodeStream(it)
 									}.asImageBitmap()

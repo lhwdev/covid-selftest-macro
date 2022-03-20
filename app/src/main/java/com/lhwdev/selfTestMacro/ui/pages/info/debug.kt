@@ -8,8 +8,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import com.lhwdev.github.repo.Repository
 import com.lhwdev.selfTestMacro.App
+import com.lhwdev.selfTestMacro.debug.sIncludeLogcatInLog
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
@@ -19,7 +21,7 @@ import com.vanpra.composematerialdialogs.*
 import kotlinx.serialization.json.Json
 
 
-fun Navigator.showDebugWindow() = showDialogAsync {
+fun Navigator.showDebugWindow() = showDialogAsync(maxHeight = Dp.Infinity) {
 	val pref = LocalPreference.current
 	val navigator = LocalNavigator
 	val scope = rememberCoroutineScope()
@@ -67,6 +69,12 @@ fun Navigator.showDebugWindow() = showDialogAsync {
 		ListItem(modifier = Modifier.clickable {
 			pref.isDebugCheckEnabled = !pref.isDebugCheckEnabled
 		}) { Text("체크 ${if(pref.isDebugCheckEnabled) "끄기" else "켜기"}") }
+		
+		ListItem(modifier = Modifier.clickable {
+			val new = pref.includeLogcatInLog
+			pref.includeLogcatInLog = !new
+			sIncludeLogcatInLog = new
+		}) { Text("디버그 정보에 로그캣 포함 ${if(pref.includeLogcatInLog) "끄기" else "켜기"}") }
 		
 		ListItem(modifier = Modifier.clickable {
 			navigator.pushRoute(IntroRoute)

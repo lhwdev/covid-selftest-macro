@@ -1,5 +1,6 @@
 package com.lhwdev.selfTestMacro.ui.pages.info
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -9,6 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lhwdev.fetch.toJson
@@ -18,7 +23,6 @@ import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.openWebsite
 import com.lhwdev.selfTestMacro.ui.*
-import com.lhwdev.selfTestMacro.ui.common.LinkedText
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.pages.intro.showPrivacyPolicy
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
@@ -60,86 +64,79 @@ fun Info(): Unit = MaterialTheme(
 			)
 			
 			Column(
-				modifier = Modifier
-					.padding(24.dp)
-					.fillMaxSize()
+				modifier = Modifier.fillMaxSize()
 			) {
 				Spacer(Modifier.weight(4f))
 				
-				Text(
-					"자가진단 매크로",
-					style = MaterialTheme.typography.h3,
-					color = with(MaterialTheme.colors) { if(isLight) onPrimary else lerp(onSurface, primary, .2f) }
-				)
-				Spacer(Modifier.height(12.dp))
-				
-				Row(
-					verticalAlignment = Alignment.CenterVertically,
-					horizontalArrangement = Arrangement.spacedBy(8.dp)
-				) {
-					Text(App.version.toString(), style = MaterialTheme.typography.h5, color = MediumContentColor)
-					Text(App.flavor, style = MaterialTheme.typography.h6, color = MediumContentColor)
-				}
-				
-				Spacer(Modifier.weight(1f))
-				
-				Spacer(Modifier.weight(2f))
-				
-				Row {
-					Text("개발자: ")
-					LinkedText(
-						"lhwdev (이현우)",
-						onClick = {
-							scope.launch {
-								val data = withContext(Dispatchers.Default) {
-									try {
-										App.github.meta.developerInfo.get()
-											.toJson(InfoUserStructure.Detail.serializer(), anyContentType = true)
-									} catch(th: Throwable) {
-										if(th is CancellationException) throw th
-										navigator.showDialogAsync {
-											Title { Text("정보를 불러오지 못했습니다.") }
-											Content { Text(th.stackTraceToString()) }
-										}
-										null
-									}
-								} ?: return@launch
-								
-								navigator.showDialogAsync(maxHeight = Dp.Infinity) {
-									InfoUsersDetail(data)
-								}
-							}
-						}
+				// Header
+				Column(Modifier.padding(24.dp)) {
+					Text(
+						"자가진단 매크로",
+						style = MaterialTheme.typography.h3,
+						color = with(MaterialTheme.colors) { if(isLight) onPrimary else lerp(onSurface, primary, .2f) }
 					)
+					Spacer(Modifier.height(12.dp))
+					
+					Row(
+						verticalAlignment = Alignment.CenterVertically,
+						horizontalArrangement = Arrangement.spacedBy(8.dp),
+						// modifier = Modifier.clickable(
+						// 	interactionSource = remember { MutableInteractionSource() },
+						// 	indication = null
+						// ) {}
+					) {
+						Text(App.version.toString(), style = MaterialTheme.typography.h5, color = MediumContentColor)
+						Text(App.flavor, style = MaterialTheme.typography.h6, color = MediumContentColor)
+					}
 				}
 				
-				// Spacer(Modifier.height(8.dp))
+				Spacer(Modifier.weight(3f))
 				
-				LinkedText(
-					"개발에 도움을 주신 분들",
-					onClick = { navigator.showSpecialThanks() }
-				)
+				ListItem(Modifier.clickable {
+					scope.launch {
+						val data = withContext(Dispatchers.Default) {
+							try {
+								App.github.meta.developerInfo.get()
+									.toJson(InfoUserStructure.Detail.serializer(), anyContentType = true)
+							} catch(th: Throwable) {
+								if(th is CancellationException) throw th
+								navigator.showDialogAsync {
+									Title { Text("정보를 불러오지 못했습니다.") }
+									Content { Text(th.stackTraceToString()) }
+								}
+								null
+							}
+						} ?: return@launch
+						
+						navigator.showDialogAsync(maxHeight = Dp.Infinity) {
+							InfoUsersDetail(data)
+						}
+					}
+				}) {
+					val text = buildAnnotatedString {
+						append("개발자: ")
+						withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("lhwdev (이현우)") }
+					}
+					Text(text)
+				}
 				
-				Spacer(Modifier.height(8.dp))
+				ListItem(Modifier.clickable { navigator.showSpecialThanks() }) { Text("개발에 도움을 주신 분들") }
 				
-				LinkedText(
-					"오픈소스 라이센스",
-					onClick = { navigator.pushRoute { OpenSources() } }
-				)
 				
-				Spacer(Modifier.height(28.dp))
+				ListItem(
+					modifier = Modifier.clickable { navigator.pushRoute { OpenSources() } }
+				) { Text("오픈소스 라이센스") }
 				
-				LinkedText(
-					"개인정보 처리방침",
-					onClick = { navigator.showPrivacyPolicy() }
-				)
+				ListItem(
+					modifier = Modifier.clickable { navigator.showPrivacyPolicy() }
+				) { Text("개인정보 처리방침") }
 				
 				Spacer(Modifier.weight(8.5f))
 				
 				Column(
 					modifier = Modifier
 						.fillMaxWidth()
-						.align(Alignment.CenterHorizontally),
+						.padding(12.dp),
 					horizontalAlignment = Alignment.CenterHorizontally
 				) {
 					Row {
@@ -150,7 +147,7 @@ fun Info(): Unit = MaterialTheme(
 						Spacer(Modifier.width(10.dp))
 						
 						RoundButton(onClick = {
-							context.openWebsite("https://discord.link/hcs")
+							context.openWebsite("https://discord.io/hcs-macro")
 						}) { Text("디스코드 서버") }
 					}
 					
@@ -168,8 +165,6 @@ fun Info(): Unit = MaterialTheme(
 						}
 					}
 				}
-				
-				Spacer(Modifier.height(12.dp))
 			}
 		}
 	}

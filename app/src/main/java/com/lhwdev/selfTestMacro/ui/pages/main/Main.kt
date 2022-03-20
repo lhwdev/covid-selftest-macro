@@ -24,7 +24,6 @@ import com.lhwdev.selfTestMacro.database.allUsersCount
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.navigation.pushRoute
-import com.lhwdev.selfTestMacro.navigation.showRouteAsync
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.ui.*
@@ -172,7 +171,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 			Spacer(Modifier.height(32.dp))
 			RoundButton(
 				onClick = {
-					navigator.showRouteAsync(SetupRoute())
+					navigator.pushRoute(SetupRoute())
 				},
 				icon = { Icon(painterResource(R.drawable.ic_add_24), contentDescription = null) }
 			) {
@@ -247,7 +246,7 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 			GroupStatusView(selectedTestGroup, statusKey)
 		}
 		is DbTestTarget.Single -> {
-			SingleStatusView(target, statusKey)
+			SingleStatusView(selectedTestGroup, statusKey)
 		}
 	}
 	

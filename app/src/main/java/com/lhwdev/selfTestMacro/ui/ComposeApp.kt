@@ -19,10 +19,7 @@ import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.debug.*
 import com.lhwdev.selfTestMacro.debuggingWithIde
-import com.lhwdev.selfTestMacro.navigation.ComposeNavigationHost
-import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
-import com.lhwdev.selfTestMacro.navigation.NavigatorImpl
-import com.lhwdev.selfTestMacro.navigation.pushRoute
+import com.lhwdev.selfTestMacro.navigation.*
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.createDefaultSelfTestManager
 import com.lhwdev.selfTestMacro.repository.defaultSelfTestManager
@@ -58,7 +55,7 @@ fun ComposeApp(activity: Activity) {
 		val navigator = NavigatorImpl()
 		
 		navigator.pushRoute(
-			transition = FadeRouteTransition(animationSpec = tween(durationMillis = 400))
+			Route(RouteTransitionBlock to FadeRouteTransition(animationSpec = tween(durationMillis = 400)))
 		) { Splash() }
 		
 		navigator

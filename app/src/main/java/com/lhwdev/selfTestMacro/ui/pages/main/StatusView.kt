@@ -2,45 +2,49 @@ package com.lhwdev.selfTestMacro.ui.pages.main
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
-import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupStatus
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.Status
 import com.lhwdev.selfTestMacro.repository.SuspiciousKind
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.LocalPreference
+import com.lhwdev.selfTestMacro.ui.changed
+import com.lhwdev.selfTestMacro.ui.lazyState
 import com.lhwdev.selfTestMacro.ui.pages.common.promptSelectUserInGroupDialog
+import com.lhwdev.selfTestMacro.ui.pages.common.showGroupTestStatusDialog
+import com.lhwdev.selfTestMacro.ui.primaryActive
+import com.lhwdev.selfTestMacro.ui.utils.AutoSizeText
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.lhwdev.selfTestMacro.ui.utils.SmallIconButton
-import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
 
 
 @Composable
 internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
-	target: DbTestTarget.Single,
+	group: DbTestGroup,
 	statusKey: MutableState<Int>
 ) {
+	val target = group.target as DbTestTarget.Single
 	val pref = LocalPreference.current
 	val selfTestManager = LocalSelfTestManager.current
+	val user = with(pref.db) { target.user }
 	
 	if(changed(target)) statusKey.value++
 	val status = lazyState(null, key = statusKey.value) {
-		with(pref.db) { selfTestManager.getCurrentStatus(target.user) }
+		selfTestManager.getCurrentStatus(user)
 	}.value
 	
 	Row(verticalAlignment = Alignment.CenterVertically) {
@@ -63,9 +67,9 @@ internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
 	Spacer(Modifier.height(16.dp))
 	
 	when(status) {
-		null -> Text("불러오는 중...", style = MaterialTheme.typography.h3)
+		null -> AutoSizeText("불러오는 중...", style = MaterialTheme.typography.h3)
 		is Status.Submitted -> {
-			Text(status.suspicious.displayText, style = MaterialTheme.typography.h3)
+			AutoSizeText(status.suspicious.displayText, style = MaterialTheme.typography.h3)
 			
 			Spacer(Modifier.height(20.dp))
 			
@@ -75,8 +79,13 @@ internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
 				color = MaterialTheme.colors.primaryActive
 			)
 		}
-		is Status.NotSubmitted -> Text("제출하지 않음", style = MaterialTheme.typography.h3)
+		is Status.NotSubmitted -> AutoSizeText("제출하지 않음", style = MaterialTheme.typography.h3)
 	}
+	
+	Spacer(Modifier.height(12.dp))
+	
+	val allStatus = if(status == null) emptyMap() else mapOf(user to status)
+	StatusAction(allStatus, group, statusKey, statusReady = status != null)
 }
 
 @Suppress("unused")
@@ -145,18 +154,18 @@ internal fun ColumnScope.GroupStatusView(group: DbTestGroup, statusKey: MutableS
 		Spacer(Modifier.height(16.dp))
 		
 		if(groupStatus == null) {
-			Text("불러오는 중...", style = MaterialTheme.typography.h3)
+			AutoSizeText("불러오는 중...", style = MaterialTheme.typography.h3)
 		} else {
 			val noSpecial = groupStatus.symptom.isEmpty() && groupStatus.quarantined.isEmpty()
 			
 			if(groupStatus.notSubmittedCount == 0) {
 				if(noSpecial) {
-					Text("모두 정상", style = MaterialTheme.typography.h3)
+					AutoSizeText("모두 정상", style = MaterialTheme.typography.h3)
 				} else {
-					Text("이상 있음", style = MaterialTheme.typography.h3)
+					AutoSizeText("이상 있음", style = MaterialTheme.typography.h3)
 				}
 			} else {
-				Text(
+				AutoSizeText(
 					"자가진단 ${groupStatus.notSubmittedCount}명 미완료",
 					style = MaterialTheme.typography.h4
 				)
@@ -165,35 +174,54 @@ internal fun ColumnScope.GroupStatusView(group: DbTestGroup, statusKey: MutableS
 			if(!noSpecial) {
 				Spacer(Modifier.height(18.dp))
 				
-				if(groupStatus.symptom.isNotEmpty()) Text(
+				if(groupStatus.symptom.isNotEmpty()) AutoSizeText(
 					"유증상자: ${groupStatus.symptom.joinToString { it.name }}",
 					style = MaterialTheme.typography.body1
 				)
-				if(groupStatus.quarantined.isNotEmpty()) Text(
+				if(groupStatus.quarantined.isNotEmpty()) AutoSizeText(
 					"자가격리 중: ${groupStatus.quarantined.joinToString { it.name }}",
 					style = MaterialTheme.typography.body1
 				)
 			}
 		}
+	}
+	Spacer(Modifier.height(12.dp))
+	
+	StatusAction(allStatus, group, statusKey, statusReady = groupStatus != null)
+}
+
+@Composable
+private fun StatusAction(
+	allStatus: Map<DbUser, Status>,
+	group: DbTestGroup,
+	statusKey: MutableState<Int>,
+	statusReady: Boolean
+) {
+	val navigator = LocalNavigator
+	val scope = rememberCoroutineScope()
+	val pref = LocalPreference.current
+	
+	val target = group.target
+	
+	Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+		val allStatusState = rememberUpdatedState(allStatus)
+		RoundButton(
+			onClick = {
+				navigator.showGroupTestStatusDialog(group, statusKey, allStatusBlock = { allStatusState.value })
+			},
+			enabled = statusReady,
+			colors = ButtonDefaults.textButtonColors()
+		) {
+			Text("자세히 보기")
+		}
 		
-		Spacer(Modifier.height(12.dp))
-		
-		Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-			val allStatusState = rememberUpdatedState(allStatus)
-			RoundButton(
-				onClick = {
-					navigator.showUserDetailsDialog(group, statusKey, allStatusBlock = { allStatusState.value })
-				},
-				colors = ButtonDefaults.textButtonColors()
-			) {
-				Text("자세히 보기")
-			}
-			
-			RoundButton(
-				onClick = {
-					if(users.size == 1) {
-						navigator.showChangeAnswerDialog(users[0])
-					} else scope.launch {
+		RoundButton(
+			onClick = {
+				when(target) {
+					is DbTestTarget.Single ->
+						navigator.showChangeAnswerDialog(with(pref.db) { target.user })
+					
+					is DbTestTarget.Group -> scope.launch {
 						val changeTarget = navigator.promptSelectUserInGroupDialog(
 							title = "응답을 수정할 대상 선택",
 							target = target,
@@ -203,85 +231,13 @@ internal fun ColumnScope.GroupStatusView(group: DbTestGroup, statusKey: MutableS
 							navigator.showChangeAnswerDialog(changeTarget)
 						}
 					}
-				},
-				colors = ButtonDefaults.textButtonColors()
-			) {
-				Text("응답 수정")
-			}
-		}
-	}
-}
-
-
-private fun Navigator.showUserDetailsDialog(
-	group: DbTestGroup, statusKey: MutableState<Int>, allStatusBlock: () -> Map<DbUser, Status>
-) = showDialogAsync {
-	val target = group.target as DbTestTarget.Group
-	Title { Text("${target.name}의 자가진단 현황") }
-	ListContent {
-		val allStatus = allStatusBlock()
-		for((user, status) in allStatus) ListItem(
-			icon = {
-				val icon = when(status) {
-					is Status.Submitted -> if(status.suspicious == null) {
-						R.drawable.ic_check_24
-					} else {
-						R.drawable.ic_warning_24
-					}
-					Status.NotSubmitted -> R.drawable.ic_clear_24
 				}
-				
-				Icon(painterResource(icon), contentDescription = null)
 			},
-			// trailing = { Icon(painterResource(R.drawable.ic_arrow_right_24), contentDescription = null) },
-			modifier = Modifier.clickable {
-				showDialogAsync {
-					OneUserDetail(group, user, allStatusBlock().getValue(user), statusKey)
-				}
-			}
+			colors = ButtonDefaults.textButtonColors()
 		) {
-			Row {
-				val text = buildAnnotatedString {
-					append(user.name)
-					
-					withStyle(SpanStyle(color = MediumContentColor)) {
-						append(": ")
-					}
-					
-					when(status) {
-						is Status.Submitted -> {
-							if(status.suspicious == null) withStyle(
-								SpanStyle(
-									color = Color(onLight = Color(0xff285db9), onDark = Color(0xffadcbff))
-								)
-							) {
-								append("정상")
-							} else withStyle(
-								SpanStyle(
-									color = Color(onLight = Color(0xfffd2f5f), onDark = Color(0xffffa6aa))
-								)
-							) {
-								append(status.suspicious.displayText)
-							}
-							
-							append(' ')
-							append("(${status.time})")
-						}
-						
-						Status.NotSubmitted -> withStyle(SpanStyle(MediumContentColor)) {
-							append("미제출")
-						}
-					}
-					
-				}
-				
-				Text(text)
-			}
+			Text("응답 수정")
 		}
 	}
-	
-	Buttons {
-		Button(onClick = { statusKey.value++ }) { Text("새로고침") }
-		PositiveButton(onClick = requestClose)
-	}
 }
+
+

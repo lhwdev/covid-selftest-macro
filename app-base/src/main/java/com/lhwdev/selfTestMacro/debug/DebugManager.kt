@@ -1,7 +1,9 @@
 package com.lhwdev.selfTestMacro.debug
 
 import android.content.Context
+import android.util.Log
 import com.lhwdev.selfTestMacro.App
+import com.lhwdev.utils.willRethrowError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -54,6 +56,10 @@ abstract class DebugManager {
 	}
 	
 	open fun onErrorFromContext(context: DebugContext, error: ErrorInfo, forceShow: Boolean) {
+		if(error.throwable != null && error.throwable.willRethrowError()) {
+			Log.w("DebugManager", "Rethrowing error", error.throwable)
+			throw error.throwable
+		}
 		val id = identifierOf(error)
 		
 		val previous = pendingErrors[id]

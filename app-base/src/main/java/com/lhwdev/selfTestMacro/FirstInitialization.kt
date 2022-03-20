@@ -8,6 +8,7 @@ import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.debug.debugCheck
 import com.lhwdev.selfTestMacro.debug.logOutput
+import com.lhwdev.selfTestMacro.debug.sIncludeLogcatInLog
 import com.lhwdev.selfTestMacro.navigation.sDebugNavigation
 import com.lhwdev.selfTestMacro.ui.utils.sDebugAnimateListAsComposable
 import java.io.File
@@ -56,6 +57,7 @@ object FirstInitialization {
 			sDebugFetch = pref.isDebugFetchEnabled
 			sDebugNavigation = pref.isNavigationDebugEnabled
 			sDebugAnimateListAsComposable = pref.isNavigationDebugEnabled
+			sIncludeLogcatInLog = pref.includeLogcatInLog
 			
 			val repository = preferenceState.virtualServer
 			if(repository != null) {

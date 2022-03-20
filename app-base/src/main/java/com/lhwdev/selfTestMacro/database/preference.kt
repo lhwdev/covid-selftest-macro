@@ -29,6 +29,7 @@ class PreferenceState(pref: SharedPreferences) : PreferenceHolder(pref) {
 	
 	var isDebugEnabled by preferenceBoolean("isDebugEnabled", false)
 	var isDebugCheckEnabled by preferenceBoolean("isDebugCheckEnabled", false)
+	var includeLogcatInLog by preferenceBoolean("includeLogcatInLog", false)
 	var virtualServer by preferenceSerialized("isVirtualServer", Repository.serializer().nullable, null)
 	var isDebugFetchEnabled by preferenceBoolean("isDebugFetchEnabled", false)
 	var isNavigationDebugEnabled by preferenceBoolean("isDebugAnimateListAsComposableEnabled", false)

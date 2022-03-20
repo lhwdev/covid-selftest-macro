@@ -19,7 +19,7 @@ suspend fun <T> Navigator.showDialog(
 	maxHeight: Dp = FloatingDialogMaxHeight,
 	content: @Composable FloatingMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit
 ): T? = showRouteFactory { removeRoute ->
-	DialogRoute(onRouteRemoved = { removeRoute(null) }) {
+	DialogRoute(OnRouteRemoved to { removeRoute(null) }) {
 		MaterialDialog(
 			onCloseRequest = { removeRoute(null) },
 			modifier = modifier,
@@ -53,7 +53,7 @@ fun Navigator.showDialogAsync(
 ) {
 	showRouteFactoryAsync { removeRoute ->
 		val removeRouteUnit = { removeRoute(null) }
-		DialogRoute(onRouteRemoved = removeRouteUnit) {
+		DialogRoute(OnRouteRemoved to { removeRoute(null) }) {
 			MaterialDialog(
 				onCloseRequest = removeRouteUnit,
 				modifier = modifier,
@@ -64,19 +64,17 @@ fun Navigator.showDialogAsync(
 	}
 }
 
-private val sFullscreenDialogRoute: ContentRouteFactory<Any?> =
-	{ content, removeRoute -> FullDialogRoute(content = content, onRouteRemoved = { removeRoute(null) }) }
 
 suspend fun <T> Navigator.showFullDialog(
 	route: Route = Route.Empty,
 	properties: DialogProperties = DialogProperties(),
 	content: @Composable (FullMaterialDialogScope.(dismiss: (T) -> Unit) -> Unit)
-): T? = showRouteFactory { remoteRoute ->
-	FullDialogRoute(onRouteRemoved = { remoteRoute(null) }) {
+): T? = showRouteFactory { removeRoute ->
+	FullDialogRoute(OnRouteRemoved to { removeRoute(null) }) {
 		FullMaterialDialog(
-			onCloseRequest = { remoteRoute(null) },
+			onCloseRequest = { removeRoute(null) },
 			properties = properties
-		) { content(remoteRoute) }
+		) { content(removeRoute) }
 	}
 }
 
@@ -85,9 +83,9 @@ fun Navigator.showFullDialogAsync(
 	properties: DialogProperties = DialogProperties(),
 	content: @Composable (FullMaterialDialogScope.(dismiss: () -> Unit) -> Unit)
 ) {
-	showRouteFactoryAsync { remoteRoute ->
-		val removeRouteUnit = { remoteRoute(null) }
-		FullDialogRoute(onRouteRemoved = removeRouteUnit) {
+	showRouteFactoryAsync { removeRoute ->
+		val removeRouteUnit = { removeRoute(null) }
+		FullDialogRoute(OnRouteRemoved to { removeRoute(null) }) {
 			FullMaterialDialog(
 				onCloseRequest = removeRouteUnit,
 				properties = properties

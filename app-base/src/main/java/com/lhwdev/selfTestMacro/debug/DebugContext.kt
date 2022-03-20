@@ -1,8 +1,10 @@
 package com.lhwdev.selfTestMacro.debug
 
 import android.util.Log
+import com.lhwdev.io.runInterruptibleGracefully
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.debuggingWithIde
+import com.lhwdev.utils.rethrowIfNeeded
 import kotlinx.coroutines.*
 import java.io.File
 
@@ -13,6 +15,9 @@ private inline fun <T> T?.merge(other: T?, merger: (T, T) -> T): T? = when {
 	this == other -> this
 	else -> merger(this, other)
 }
+
+
+var sIncludeLogcatInLog = false
 
 
 class ErrorInfo(
@@ -119,12 +124,16 @@ abstract class DebugContext(
 	}
 	
 	fun onLightError(error: ErrorInfo, shortLog: Boolean = false) {
+		error.throwable?.rethrowIfNeeded()
+		
 		manager.workScope.launch {
 			onLightErrorSuspend(error, shortLog)
 		}
 	}
 	
 	suspend fun onLightErrorSuspend(error: ErrorInfo, shortLog: Boolean) {
+		error.throwable?.rethrowIfNeeded()
+		
 		Log.e("ERROR", "(${error.location}) ${error.message}", error.throwable)
 		
 		val showInfo = error.severity > Severity.light
@@ -196,13 +205,13 @@ abstract class DebugContext(
 		
 	""".trimIndent()
 	
-	private suspend fun getLogcat(): String = runInterruptible(Dispatchers.IO) {
+	private suspend fun getLogcat(): String = if(sIncludeLogcatInLog) runInterruptibleGracefully(Dispatchers.IO) {
 		val command = arrayOf("logcat", "-d", "-v", "threadtime")
 		
 		@Suppress("BlockingMethodInNonBlockingContext")
 		val process = Runtime.getRuntime().exec(command)
 		process.inputStream.reader().use { it.readText() }
-	}
+	} else "(no logcat)"
 }
 
 

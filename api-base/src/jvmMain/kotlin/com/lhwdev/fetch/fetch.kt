@@ -2,6 +2,7 @@
 
 package com.lhwdev.fetch
 
+import com.lhwdev.fetch.headers.ContentType
 import com.lhwdev.fetch.http.HttpInterceptorImpl
 import com.lhwdev.fetch.http.Session
 import kotlinx.coroutines.Dispatchers
@@ -63,17 +64,18 @@ interface DataBody : FetchBody {
 	
 	fun writeDebug(out: OutputStream): Unit = error("debug not capable")
 	val debugAvailable: Boolean get() = false
-	val contentType: String?
+	val contentType: ContentType?
 }
 
-inline fun DataBody(contentType: String?, crossinline onWrite: (OutputStream) -> Unit): DataBody = object : DataBody {
-	override fun write(out: OutputStream) {
-		onWrite(out)
+inline fun DataBody(contentType: ContentType?, crossinline onWrite: (OutputStream) -> Unit): DataBody =
+	object : DataBody {
+		override fun write(out: OutputStream) {
+			onWrite(out)
+		}
+		
+		override val contentType: ContentType?
+			get() = contentType
 	}
-	
-	override val contentType: String?
-		get() = contentType
-}
 
 
 interface FetchMethod

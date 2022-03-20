@@ -2,6 +2,7 @@
 
 package com.lhwdev.fetch
 
+import com.lhwdev.fetch.headers.ContentType
 import com.lhwdev.fetch.headers.ContentTypes
 import com.lhwdev.io.JsonObjectScope
 import com.lhwdev.io.JsonObjectScopeImpl
@@ -43,14 +44,14 @@ interface WriterDataBody : DataBody {
 }
 
 inline fun WriterDataBody(
-	contentType: String?,
+	contentType: ContentType?,
 	crossinline onWrite: (Writer) -> Unit
 ): WriterDataBody = object : WriterDataBody {
 	override fun write(out: Writer) {
 		onWrite(out)
 	}
 	
-	override val contentType: String?
+	override val contentType: ContentType?
 		get() = contentType
 }
 
@@ -64,7 +65,7 @@ fun <T> Bodies.json(serializer: KSerializer<T>, value: T, json: Json = Json): Da
 		out.write(json.encodeToString(serializer, value))
 	}
 	
-	override val contentType: String get() = "application/json;charset=utf-8"
+	override val contentType: ContentType get() = ContentTypes.json
 	
 	override fun writeDebug(out: Writer) {
 		val config = Json(from = json) { prettyPrint = true }
@@ -82,7 +83,7 @@ fun Bodies.jsonObject(json: JsonObject): DataBody = object : WriterDataBody {
 		out.write(json.toString())
 	}
 	
-	override val contentType: String get() = ContentTypes.json
+	override val contentType: ContentType get() = ContentTypes.json
 	
 	override val debugAvailable: Boolean get() = true
 	override fun writeDebug(out: Writer) {
@@ -144,7 +145,7 @@ internal fun Bodies.form(scope: FormScope): DataBody = object : WriterDataBody {
 		out.write(scope.build())
 	}
 	
-	override val contentType: String get() = "application/x-www-form-urlencoded;charset=utf-8"
+	override val contentType: ContentType get() = ContentTypes.form
 	
 	override fun writeDebug(out: Writer) {
 		out.write(scope.build())

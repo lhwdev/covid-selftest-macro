@@ -2,6 +2,7 @@
 
 package com.lhwdev.fetch
 
+import com.lhwdev.fetch.headers.ContentTypes
 import com.lhwdev.fetch.headers.contentType
 import com.lhwdev.io.runInterruptibleGracefully
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +45,7 @@ suspend fun <T> FetchResult.toJson(
 	charset: Charset = this.charset,
 	anyContentType: Boolean = false
 ): T = withContext(Dispatchers.Default) {
-	check(anyContentType || contentType?.mediaType == MediaTypes.json) {
+	check(anyContentType || contentType?.mediaType == ContentTypes.json) {
 		"Content-Type of fetched resource is not application/json: $contentType"
 	}
 	from.decodeFromString(serializer, getText(charset))

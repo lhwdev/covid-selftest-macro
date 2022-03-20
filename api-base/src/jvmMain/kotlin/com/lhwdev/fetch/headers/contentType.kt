@@ -9,10 +9,11 @@ import java.nio.charset.Charset
 
 
 object ContentTypes {
-	const val plainText = "text/plain;charset=utf-8"
-	const val binary = "application/octet-stream"
+	val plainText = ContentType("text/plain", charset = Charsets.UTF_8)
+	val binary = ContentType("application/octet-stream", charset = null)
 	
-	const val json = "application/json;charset=utf-8"
+	val json = ContentType("application/json", charset = Charsets.UTF_8)
+	val form = ContentType("application/x-www-form-urlencoded", charset = Charsets.UTF_8)
 }
 
 
@@ -26,12 +27,19 @@ var MutableFetchHeaders.contentType: ContentType?
 	}
 
 
-class ContentType(val mediaType: String, val charsetName: String? = null, val boundary: String? = null) : FetchHeader {
+data class ContentType(
+	val mediaType: String,
+	val charsetName: String?,
+	val boundary: String? = null
+) : FetchHeader {
+	constructor(mediaType: String, charset: Charset?, boundary: String? = null) :
+		this(mediaType, charset?.name(), boundary)
+	
 	companion object {
 		val Key = FetchHeaderKey("Content-Type") { contentTypeOf(it) }
 	}
 	
-	val charset: Charset get() = charsetName?.let { charset(it) } ?: Charsets.UTF_8
+	val charset: Charset? get() = charsetName?.let { charset(it) }
 	
 	override fun serialize(): String = buildString {
 		append(mediaType)
@@ -51,7 +59,7 @@ class ContentType(val mediaType: String, val charsetName: String? = null, val bo
 fun contentTypeOf(from: String): ContentType {
 	val list = from.split(';')
 	val mediaType = list[0].lowercase()
-	if(list.size == 1) return ContentType(mediaType)
+	if(list.size == 1) return ContentType(mediaType, charsetName = null)
 	
 	val params = list.drop(1).associate {
 		val (key, value) = it.splitTwo('=')

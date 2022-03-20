@@ -1,5 +1,8 @@
 rootProject.name = "SelfTest-Macro"
-include(":app", ":app-base", ":app-models", ":utils", ":transkey", ":api-base", ":api", ":test")
+
+// Type-safe Project Dependency Accessor
+// https://docs.gradle.org/7.4/userguide/declaring_dependencies.html#sec:type-safe-project-accessors
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 
 pluginManagement {
@@ -9,11 +12,17 @@ pluginManagement {
 	}
 	
 	resolutionStrategy.eachPlugin {
-		when(requested.id.id) {
-			"com.android.application", "com.android.library" ->
-				useModule("com.android.tools.build:gradle:7.0.1")
-			
-			else -> Unit
+		val id = requested.id.id
+		
+		// Android
+		if(id.startsWith("com.android")) { // version: also in includeBuild/build.gradle.kts
+			useModule("com.android.tools.build:gradle:7.0.0")
 		}
 	}
 }
+
+
+// Projects
+includeBuild("includeBuild")
+
+include(":app", ":app-base", ":app-models", ":utils", ":transkey", ":api-base", ":api", ":test")

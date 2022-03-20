@@ -2,8 +2,10 @@ plugins {
 	kotlin("jvm")
 	kotlin("plugin.serialization")
 	
-	`maven-publish`
-	id("com.github.johnrengelman.shadow") version "7.1.2"
+	// `maven-publish`
+	// id("com.github.johnrengelman.shadow") version "7.1.2"
+	
+	id("common-plugin")
 }
 
 /*
@@ -172,10 +174,11 @@ kotlin {
 }
 
 dependencies {
-	implementation(project(":api-base"))
-	implementation(project(":transkey"))
+	implementation(projects.apiBase)
+	implementation(projects.transkey)
 	
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.0")
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
+	implementation(libs.coroutinesAndroid)
+	
+	implementation(libs.serializationCore)
+	implementation(libs.serializationJson)
 }

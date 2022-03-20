@@ -1,6 +1,8 @@
 plugins {
 	kotlin("multiplatform")
 	kotlin("plugin.serialization")
+	
+	id("common-plugin")
 }
 
 
@@ -11,14 +13,13 @@ kotlin {
 	sourceSets {
 		val commonMain by getting {
 			dependencies {
-				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+				implementation(libs.coroutinesAndroid)
 				
-				implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.1")
-				implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+				implementation(libs.serializationCore)
+				implementation(libs.serializationJson)
 				
-				implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
+				implementation(libs.immutableCollections)
 			}
-			
 		}
 	}
 }

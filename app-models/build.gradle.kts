@@ -2,6 +2,8 @@ plugins {
 	id("com.android.library")
 	kotlin("android")
 	kotlin("plugin.serialization")
+	
+	id("common-plugin")
 }
 
 
@@ -16,13 +18,12 @@ android {
 
 
 dependencies {
-	implementation(project(":utils"))
+	implementation(projects.utils)
 	
-	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+	implementation(libs.coroutinesAndroid)
 	
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.1")
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+	implementation(libs.serializationCore)
+	implementation(libs.serializationJson)
 	
-	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
+	implementation(libs.immutableCollections)
 }

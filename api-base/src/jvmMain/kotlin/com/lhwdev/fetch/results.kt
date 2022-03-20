@@ -2,6 +2,7 @@
 
 package com.lhwdev.fetch
 
+import com.lhwdev.fetch.headers.ContentType
 import com.lhwdev.fetch.headers.ContentTypes
 import com.lhwdev.fetch.headers.contentType
 import com.lhwdev.io.runInterruptibleGracefully
@@ -39,15 +40,19 @@ fun FetchResult.requireOk() {
 
 val FetchResult.charset: Charset get() = contentType?.charset ?: Charsets.UTF_8
 
+fun FetchResult.assertContentTypeCompatible(type: ContentType, anyContentType: Boolean = false) {
+	check(anyContentType || contentType?.isCompatible(type) == true) {
+		"Content-Type of fetched resource is not ${type.mediaType}: $contentType"
+	}
+}
+
 suspend fun <T> FetchResult.toJson(
 	serializer: KSerializer<T>,
 	from: Json = Json,
 	charset: Charset = this.charset,
 	anyContentType: Boolean = false
 ): T = withContext(Dispatchers.Default) {
-	check(anyContentType || contentType?.mediaType == ContentTypes.json) {
-		"Content-Type of fetched resource is not application/json: $contentType"
-	}
+	assertContentTypeCompatible(ContentTypes.json, anyContentType)
 	from.decodeFromString(serializer, getText(charset))
 }
 

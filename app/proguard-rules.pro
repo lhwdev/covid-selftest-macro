@@ -33,3 +33,9 @@
 #    kotlinx.serialization.KSerializer serializer(...);
 #}
 
+-assumenosideeffects public class androidx.compose.runtime.ComposerKt {
+  boolean isTraceInProgress();
+  void traceEventStart(int, java.lang.String);
+  void traceEventEnd();
+}
+

@@ -1,9 +1,13 @@
+import com.lhwdev.build.*
+
 plugins {
 	id("com.android.application")
 	kotlin("android")
 	kotlin("plugin.serialization")
 	
 	id("app.cash.licensee") version "1.2.0"
+	
+	id("common-plugin")
 }
 
 repositories {
@@ -48,12 +52,12 @@ tasks.register<Copy>("updateLicenses") {
 // }
 
 android {
-	compileSdk = 31
+	setupCommon()
 	
 	defaultConfig {
 		applicationId = "com.lhwdev.selfTestMacro"
 		minSdk = 21
-		targetSdk = 30
+		targetSdk = 31
 		// 3.0.0-build01 ~ 3.0.0-build03 = 3000
 		// 3.0.0-build04 = 3001
 		versionCode = 3001
@@ -97,68 +101,41 @@ android {
 		}
 	}
 	
-	
-	buildFeatures {
-		compose = true
-	}
-	
-	compileOptions {
-		sourceCompatibility = JavaVersion.VERSION_1_8
-		targetCompatibility = JavaVersion.VERSION_1_8
-	}
-	
-	kotlinOptions {
-		freeCompilerArgs = freeCompilerArgs + listOf(
-			"-Xjvm-default=compatibility",
-			"-Xopt-in=" + listOf(
-				"kotlin.RequiresOptIn",
-				"androidx.compose.material.ExperimentalMaterialApi",
-				"androidx.compose.ui.ExperimentalComposeUiApi",
-				"androidx.compose.animation.ExperimentalAnimationApi"
-			).joinToString(separator = ",")
-		)
-		jvmTarget = "1.8"
-	}
-	
 	composeOptions {
 		// kotlinCompilerVersion = "1.5.31"
-		kotlinCompilerExtensionVersion = "1.0.5"
+		kotlinCompilerExtensionVersion = libs.versions.compose.get()
 	}
 }
 
 
 dependencies {
-	implementation(project(":app-base"))
-	implementation(project(":app-models"))
-	implementation(project(":api"))
-	implementation(project(":api-base"))
-	implementation(project(":utils"))
+	implementation(projects.appBase)
+	implementation(projects.appModels)
+	implementation(projects.api)
+	implementation(projects.apiBase)
+	implementation(projects.utils)
 	
-	implementation("com.airbnb.android:lottie-compose:4.2.2")
+	implementation(libs.lottieCompose)
 	
-	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+	implementation(libs.coroutinesAndroid)
 	
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.1")
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+	implementation(libs.serializationCore)
+	implementation(libs.serializationJson)
 	
-	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.4")
+	implementation(libs.immutableCollections)
 	
-	val compose = "1.0.5" // also kotlinCompilerExtensionVersion, app-base
-	implementation("androidx.compose.ui:ui:$compose")
-	implementation("androidx.compose.ui:ui-tooling:$compose")
-	implementation("androidx.compose.foundation:foundation:$compose")
-	// implementation("androidx.compose.animation:animation-graphics:$compose")
-	implementation("androidx.compose.material:material:$compose")
-	implementation("androidx.activity:activity-compose:1.4.0")
-	val accompanist = "0.20.3" // also in app-base
-	implementation("com.google.accompanist:accompanist-insets:$accompanist")
-	implementation("com.google.accompanist:accompanist-insets-ui:$accompanist")
-	implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanist")
+	implementation(libs.compose.ui)
+	implementation(libs.compose.uiTooling)
+	implementation(libs.compose.foundation)
+	implementation(libs.compose.material)
 	
-	implementation("androidx.appcompat:appcompat:1.4.0")
-	implementation("androidx.core:core-ktx:1.7.0")
-	testImplementation("junit:junit:4.13.2")
-	androidTestImplementation("androidx.test.ext:junit:1.1.3")
-	// androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
+	implementation(libs.accompanist.insets)
+	implementation(libs.accompanist.insetsUi)
+	implementation(libs.accompanist.systemUiController)
+	
+	implementation(libs.androidx.activity.compose)
+	implementation(libs.androidx.appcompat)
+	implementation(libs.androidx.coreKtx)
+	
+	implementation(libs.bundles.tests)
 }

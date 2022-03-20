@@ -41,6 +41,8 @@ data class ContentType(
 	
 	val charset: Charset? get() = charsetName?.let { charset(it) }
 	
+	infix fun isCompatible(other: ContentType): Boolean = mediaType == other.mediaType
+	
 	override fun serialize(): String = buildString {
 		append(mediaType)
 		if(charsetName != null) {

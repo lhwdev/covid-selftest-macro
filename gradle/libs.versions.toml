@@ -1,0 +1,48 @@
+# Versions for the whole project.
+
+[versions]
+kotlin = "1.6.10" # also in includeBuild/build.gradle.kts
+coroutine = "1.6.0"
+serialization = "1.3.2"
+androidGradle = "7.0.0" # also in settings.gradle.kts
+
+compose = "1.1.1"
+accompanist = "0.23.1"
+
+[plugins]
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+
+[libraries]
+coroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutine" }
+coroutinesAndroid = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutine" }
+
+serializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
+serializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+
+lottieCompose = "com.airbnb.android:lottie-compose:4.2.2"
+
+compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
+compose-uiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
+compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose" }
+compose-material = { module = "androidx.compose.material:material", version.ref = "compose" }
+
+accompanist-insets = { module = "com.google.accompanist:accompanist-insets", version.ref = "accompanist" }
+accompanist-insetsUi = { module = "com.google.accompanist:accompanist-insets-ui", version.ref = "accompanist" }
+accompanist-systemUiController = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist" }
+
+immutableCollections = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5"
+
+androidx-appcompat = "androidx.appcompat:appcompat:1.4.1"
+androidx-activity-compose = "androidx.activity:activity-compose:1.4.0"
+androidx-coreKtx = "androidx.core:core-ktx:1.7.0"
+
+test-junit = "junit:junit:4.13.2"
+
+
+[bundles]
+tests = ["test-junit"]
+# bundleName = ["a", "b", "c"]
+

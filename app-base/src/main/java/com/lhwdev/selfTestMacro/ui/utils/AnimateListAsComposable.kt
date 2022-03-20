@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_EXPRESSION")
+
 package com.lhwdev.selfTestMacro.ui.utils
 
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -9,6 +11,7 @@ import com.lhwdev.selfTestMacro.ui.Ref
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.toPersistentList
 import kotlin.math.max
+
 
 enum class VisibilityAnimationState(
 	val fromState: Boolean,
@@ -23,7 +26,7 @@ enum class VisibilityAnimationState(
 }
 
 @Stable
-private class AnimationListEntry<T>(val item: T, var state: VisibilityAnimationState) {
+class AnimationListEntry<T>(val item: T, var state: VisibilityAnimationState) {
 	override fun toString() = "AnimationListEntry(item=$item, state=$state)"
 }
 
@@ -31,6 +34,8 @@ private class AnimationListEntry<T>(val item: T, var state: VisibilityAnimationS
 @Stable
 var sDebugAnimateListAsComposable = false
 
+
+typealias AnimateListAsComposableContent<T> = @Composable (index: Int, item: T, visible: Boolean, container: @Composable (@Composable () -> Unit) -> Unit) -> Unit
 
 // stack design; does not support diffing
 // note that this implementation is very hacky and dirty, for proper diffing and performance.
@@ -46,17 +51,19 @@ fun <T> AnimateListAsComposable(
 		onAnimationEnd: () -> Unit,
 		content: @Composable () -> Unit
 	) -> Unit,
-	content: @Composable (index: Int, item: T, visible: Boolean, container: @Composable (@Composable () -> Unit) -> Unit) -> Unit
+	content: @Composable (List<AnimationListEntry<T>>, @Composable (AnimateListAsComposableContent<T>) -> Unit) -> Unit
 ) {
 	val scope = rememberCoroutineScope()
 	
 	// AnimateListAsComposable assigns list to other value, causing recomposition.
-	// So uses workaround, but be aware to call recompositionScope.invalidate()
+	// So uses workaround, but be aware to call recomposeId++. (here not used currentRecomposeScope as it is hard
+	// to manage where to recompose)
 	// also, AnimationListEntry.state is not backed by State, so you should also handle this.
 	var list by remember {
 		Ref(items.map { AnimationListEntry(it, VisibilityAnimationState.visible) }.toPersistentList())
 	}
-	val recomposeScope = currentRecomposeScope
+	var recomposeId by remember { mutableStateOf(0) }
+	recomposeId
 	var lastItems by remember { Ref(items.toList()) }
 	
 	/// Diff items
@@ -155,33 +162,38 @@ fun <T> AnimateListAsComposable(
 		!transparent
 	}.coerceAtLeast(0)
 	
-	Box {
-		for((index, entry) in result.withIndex()) key(key(entry.item)) {
-			val visible = index >= lastOpaqueIndex
-			content(index, entry.item, visible) { contentInner ->
-				Box(Modifier.graphicsLayer {
-					alpha = if(visible) 1f else 0f
-				}) {
-					animation(
-						entry.item,
-						entry.state,
-						{
-							val newIndex = list.indexOf(entry)
-							if(newIndex == -1) return@animation
-							when(entry.state) {
-								VisibilityAnimationState.enter -> {
-									entry.state = VisibilityAnimationState.visible
-									recomposeScope.invalidate()
-								}
-								VisibilityAnimationState.visible -> Unit // no-op
-								VisibilityAnimationState.waitingExit -> Unit // never called with this
-								VisibilityAnimationState.exit -> {
-									list = list.removeAt(newIndex)
-									recomposeScope.invalidate()
+	content(result) { realContent ->
+		Box {
+			recomposeId
+			for((index, entry) in result.withIndex()) key(key(entry.item)) {
+				val visible = index >= lastOpaqueIndex
+				realContent(index, entry.item, visible) { contentInner ->
+					Box(Modifier.graphicsLayer {
+						alpha = if(visible) 1f else 0f
+					}) {
+						recomposeId
+						
+						animation(
+							entry.item,
+							entry.state,
+							{ // onAnimationEnd
+								val newIndex = list.indexOf(entry)
+								if(newIndex == -1) return@animation
+								when(entry.state) {
+									VisibilityAnimationState.enter -> {
+										entry.state = VisibilityAnimationState.visible
+										recomposeId++
+									}
+									VisibilityAnimationState.visible -> Unit // no-op
+									VisibilityAnimationState.waitingExit -> Unit // never called with this
+									VisibilityAnimationState.exit -> {
+										list = list.removeAt(newIndex)
+										recomposeId++
+									}
 								}
 							}
-						}
-					) { contentInner() }
+						) { contentInner() }
+					}
 				}
 			}
 		}

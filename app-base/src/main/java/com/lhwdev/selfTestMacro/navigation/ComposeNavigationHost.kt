@@ -8,7 +8,11 @@ import com.lhwdev.selfTestMacro.modules.app_base.R
 import com.lhwdev.selfTestMacro.ui.EnableAutoSystemUi
 import com.lhwdev.selfTestMacro.ui.ProvideAutoWindowInsets
 import com.lhwdev.selfTestMacro.ui.utils.AnimateListAsComposable
+import com.lhwdev.selfTestMacro.ui.utils.rememberLoopLinkedList
 import com.vanpra.composematerialdialogs.FullScreenDialog
+
+
+private class RouteInfo(val hasDialog: Boolean, val navigator: CurrentNavigator)
 
 
 @Composable
@@ -16,14 +20,13 @@ fun ComposeNavigationHost(navigator: Navigator) {
 	CompositionLocalProvider(
 		LocalGlobalNavigator provides navigator
 	) {
-		var hasDialog = false
-		var parentNavigator: CurrentNavigator? = null
+		val routes = navigator.routes
 		
 		AnimateListAsComposable(
-			navigator.routes,
-			isOpaque = { it.route.isOpaque },
+			routes,
+			isOpaque = { it.route[IsOpaque] },
 			animation = { route, visible, onAnimationEnd, content ->
-				val transition = route.route as? RouteTransition ?: DefaultTransition(isOpaque = route.route.isOpaque)
+				val transition = route.route[RouteTransitionBlock]
 				transition.Transition(
 					route = route.route,
 					visibleState = visible,
@@ -31,59 +34,80 @@ fun ComposeNavigationHost(navigator: Navigator) {
 					content = content
 				)
 			}
-		) { index, route, visible, container ->
-			if(route.route is DialogRoute) hasDialog = true
-			
-			val scope = rememberCoroutineScope()
-			val currentNavigator = remember(navigator) { // route itself is key of AnimateListAsComposable
-				CurrentNavigator(
-					rootNavigator = navigator,
-					currentRouteInstance = route,
-					coroutineScope = scope,
-					parent = parentNavigator
+		) { entries, innerContent ->
+			val routeInfoList = rememberLoopLinkedList<RouteInfo>(size = entries.size)
+			innerContent { index, routeInstance, visible, container ->
+				val route = routeInstance.route
+				val isDialog = route[IsDialogRoute]
+				
+				val previous = routeInfoList.previous(index)
+				
+				// migrated from accumulating variable to support recomposition (will not pose that much performance degrade)
+				val hasDialog = previous?.hasDialog == true
+				val parentNavigator = previous?.navigator
+				
+				
+				if(route.content == null) {
+					println("[ComposeNavigationHost] warning: no content for $routeInstance!")
+					return@innerContent
+				}
+				
+				val scope = rememberCoroutineScope()
+				val currentNavigator = remember(navigator) { // route itself is key of AnimateListAsComposable
+					CurrentNavigator(
+						rootNavigator = navigator,
+						currentRouteInstance = routeInstance,
+						coroutineScope = scope
+					)
+				}
+				currentNavigator.updateState(parent = parentNavigator, isVisible = visible)
+				
+				routeInfoList.updateCurrent(
+					index, RouteInfo(
+						hasDialog = hasDialog,
+						navigator = currentNavigator
+					)
 				)
-			}
-			currentNavigator.parent = parentNavigator
-			parentNavigator = currentNavigator
-			
-			val content = @Composable {
-				container {
-					EnabledRoute(enabled = index == navigator.routes.lastIndex) {
-						RouteContent(currentNavigator)
-					}
-				}
-			}
-			
-			if(route.route !is DialogRoute && hasDialog) { // to avoid routes hidden below Dialog
-				FullScreenDialog(onDismissRequest = { navigator.removeRoute(route) }, solid = true) {
-					val dialogLayout = LocalView.current
-					
-					DisposableEffect(visible) {
-						// such a dirty workaround!
-						val dialog = (dialogLayout.parent as View).getTag(R.id.FullScreenDialog_Dialog) as Dialog
-						if(visible) {
-							dialog.show()
-						} else {
-							dialog.hide()
+				
+				val content = @Composable {
+					container {
+						EnabledRoute(route = route, enabled = index == entries.lastIndex) {
+							RouteContent(currentNavigator)
 						}
-						onDispose {}
-					}
-					
-					ProvideAutoWindowInsets {
-						content()
 					}
 				}
-			} else {
-				content()
+				
+				if(!isDialog && hasDialog) { // to avoid routes hidden below Dialog
+					FullScreenDialog(onDismissRequest = { navigator.removeRoute(routeInstance) }, solid = true) {
+						val dialogLayout = LocalView.current
+						
+						DisposableEffect(visible) {
+							// such a dirty workaround!
+							val dialog = (dialogLayout.parent as View).getTag(R.id.FullScreenDialog_Dialog) as Dialog
+							if(visible) {
+								dialog.show()
+							} else {
+								dialog.hide()
+							}
+							onDispose {}
+						}
+						
+						ProvideAutoWindowInsets {
+							content()
+						}
+					}
+				} else {
+					content()
+				}
 			}
 		}
 	}
 }
 
 @Composable
-private fun EnabledRoute(enabled: Boolean, content: @Composable () -> Unit) {
+private fun EnabledRoute(route: Route, enabled: Boolean, content: @Composable () -> Unit) {
+	println("route $route enabled=$enabled")
 	EnableAutoSystemUi(enabled) {
 		content()
 	}
 }
-

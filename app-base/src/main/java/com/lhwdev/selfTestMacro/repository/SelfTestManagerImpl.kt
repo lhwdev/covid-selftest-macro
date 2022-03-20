@@ -39,10 +39,6 @@ fun Context.createDefaultSelfTestManager(debugContext: DebugContext): SelfTestMa
 )
 
 
-private fun userInfoKeyHash(userCode: String, instituteCode: String) =
-	userCode.hashCode() * 31 + instituteCode.hashCode()
-
-
 private const val sPrefPrefix = "SelfTestManager"
 
 /**
@@ -66,7 +62,7 @@ class SelfTestManagerImpl(
 	override var debugContext: DebugContext,
 	override val database: AppDatabase,
 	val defaultCoroutineScope: CoroutineScope
-) : SelfTestManager {
+) : SelfTestManagerBase() {
 	override val schedules: SelfTestSchedulesImpl = object : SelfTestSchedulesImpl(
 		context = context,
 		holder = context.preferenceHolderOf("$sPrefPrefix-schedule"),
@@ -235,173 +231,6 @@ class SelfTestManagerImpl(
 	}
 	
 	
-	/// Session management
-	// TODO: persistence
-	
-	private val apiLoginCache: MutableMap<UsersIdToken, UsersToken> = mutableMapOf()
-	private val apiUsersCache: MutableMap<UserInfoKey, User> = mutableMapOf()
-	
-	
-	@Suppress("EqualsOrHashCode")
-	private class UserInfoKey(val userCode: String, val instituteCode: String) {
-		override fun hashCode(): Int = userInfoKeyHash(userCode, instituteCode)
-	}
-	
-	private val keysCache = mutableListOf<UserInfoKey>()
-	
-	private fun keyFor(userCode: String, instituteCode: String): UserInfoKey {
-		val hash = userInfoKeyHash(userCode, instituteCode)
-		
-		keysCache.find {
-			it.hashCode() == hash && userCode == it.userCode && instituteCode == it.instituteCode
-		}?.let { return it }
-		
-		val new = UserInfoKey(userCode, instituteCode)
-		keysCache += new
-		return new
-	}
-	
-	private fun keyFor(user: DbUser) = keyFor(user.userCode, user.institute.code)
-	private fun keyFor(user: User) = keyFor(user.userCode, user.instituteCode)
-	
-	private fun getSessionInfo(
-		userCode: String,
-		institute: InstituteInfo
-	): SessionManager.SessionInfo {
-		return SessionManager.sessionInfoFor(keyFor(userCode, institute.code))
-	}
-	
-	private fun getSessionInfo(group: DbUserGroup) = getSessionInfo(
-		userCode = with(database) { group.allUsers.first().userCode },
-		institute = group.institute
-	)
-	
-	private suspend fun loadSession(
-		info: SessionManager.SessionInfo,
-		usersIdentifier: UsersIdentifier,
-		password: String,
-		institute: InstituteInfo
-	): UsersToken? {
-		if(!info.sessionFullyLoaded) {
-			val result = tryAtMost(maxTrial = 3) {
-				info.session.validatePassword(institute, usersIdentifier.token, password)
-			}
-			if(result is PasswordResult.Success) {
-				apiLoginCache[usersIdentifier.token] = result.token
-				info.sessionFullyLoaded = true
-				return result.token
-			} else debugContext.onLightError(message = "password wrong?")
-		}
-		
-		return apiLoginCache[usersIdentifier.token]
-	}
-	
-	private suspend fun loadSession(info: SessionManager.SessionInfo, group: DbUserGroup) = loadSession(
-		info = info,
-		usersIdentifier = group.usersIdentifier,
-		password = group.password,
-		institute = group.institute
-	)
-	
-	private suspend fun ensureSessionLoaded(group: DbUserGroup): Pair<Session, UsersToken> {
-		val info = getSessionInfo(group)
-		val token = loadSession(info, group)
-		if(token == null) {
-			val error = IllegalStateException("UserToken was not loaded")
-			debugContext.onThrowError(message = "SelfTestManagerImpl: apiUser // 2", throwable = error)
-			throw error
-		}
-		return info.session to token
-	}
-	
-	override suspend fun createSession(): TempSession = object : TempSession {
-		private val sessionInfo = SessionManager.newDetachedSessionInfo()
-		override val session: Session get() = sessionInfo.session
-		
-		override fun register(userCode: String, instituteCode: String) {
-			SessionManager.attachSessionInfo(sessionInfo, keyFor(userCode, instituteCode))
-			sessionInfo.sessionFullyLoaded = true
-		}
-	}
-	
-	
-	private suspend fun DbUser.apiUser(): User {
-		val key = keyFor(this)
-		
-		// 1. fast path #1
-		apiUsersCache[key]?.let { return it }
-		
-		// 2. slow path
-		val group = with(database) { userGroup }
-		
-		val (session, token) = ensureSessionLoaded(group)
-		
-		val users = session.getUserGroup(group.institute, token)
-		var result: User? = null
-		
-		users.forEach {
-			val userKey = keyFor(it)
-			apiUsersCache[userKey] = it
-			if(userKey == key) result = it
-		}
-		return result ?: apiUsersCache[key]!!
-	}
-	
-	
-	/// Apis for wizard
-	
-	override suspend fun findSchool(
-		regionCode: String?,
-		schoolLevelCode: Int,
-		name: String
-	): List<InstituteInfo> = SessionManager.anySession.getSchoolData(
-		regionCode = regionCode,
-		schoolLevelCode = "$schoolLevelCode",
-		name = name
-	)
-	
-	override suspend fun findUser(
-		session: Session,
-		institute: InstituteInfo,
-		name: String,
-		birthday: String,
-		loginType: LoginType
-	): UsersIdentifier = session.findUser(
-		institute = institute,
-		name = name,
-		birthday = birthday,
-		loginType = loginType
-	)
-	
-	override suspend fun validatePassword(
-		session: Session,
-		institute: InstituteInfo,
-		token: UsersIdToken,
-		password: String
-	): PasswordResult = session.validatePassword(
-		institute = institute,
-		token = token,
-		password = password
-	)
-	
-	override suspend fun getUserGroup(
-		session: Session,
-		institute: InstituteInfo,
-		token: UsersToken
-	): List<User> = session.getUserGroup(
-		institute = institute,
-		token = token
-	)
-	
-	override suspend fun getUserInfo(
-		session: Session,
-		institute: InstituteInfo,
-		user: User
-	): UserInfo = session.getUserInfo(
-		institute = institute,
-		user = user
-	)
-	
 	override fun addTestGroupToDb(usersToAdd: List<WizardUser>, targetGroup: DbTestGroup?, isAllGrouped: Boolean) {
 		// group by 'master user'
 		val usersMap = usersToAdd.groupBy { it.master }
@@ -542,7 +371,6 @@ class SelfTestManagerImpl(
 	 */
 	private suspend fun AppDatabase.submitSelfTest(user: DbUser, fromUi: Boolean): SubmitResult {
 		val group = user.userGroup
-		val info = getSessionInfo(group)
 		
 		return handleError(
 			operationName = "자가진단 제출",
@@ -550,9 +378,8 @@ class SelfTestManagerImpl(
 			target = user,
 			onError = { SubmitResult.Failed(user, it.causes, it.diagnosticItem, it.cause) }
 		) {
-			val session = tryAtMost(maxTrial = 3) {
-				loadSession(info, group)
-				info.session
+			val (session, _) = tryAtMost(maxTrial = 3) {
+				ensureSessionLoaded(group)
 			}
 			
 			val answer = user.answer

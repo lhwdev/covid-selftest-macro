@@ -3,22 +3,17 @@ package com.lhwdev.selfTestMacro.repository
 import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
-import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.AppDatabase
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbUser
+import com.lhwdev.selfTestMacro.database.DbUserGroup
 import com.lhwdev.selfTestMacro.debug.DebugContext
 import com.lhwdev.selfTestMacro.ui.UiContext
 
 
 val LocalSelfTestManager = compositionLocalOf<SelfTestManager> { error("not provided") }
 
-
-interface TempSession {
-	val session: Session
-	fun register(userCode: String, instituteCode: String)
-}
 
 @Immutable
 data class MasterUser(
@@ -40,13 +35,16 @@ enum class SelfTestInitiator(val isFromUi: Boolean) {
 
 
 interface SelfTestManager {
+	interface SelfTestSession : HcsSession
+	
+	
 	var context: Context
 	val database: AppDatabase
 	var debugContext: DebugContext
 	
 	val schedules: SelfTestSchedules
 	
-	suspend fun createSession(): TempSession
+	fun getSession(group: DbUserGroup): SelfTestSession
 	
 	suspend fun findSchool(
 		regionCode: String?,
@@ -55,7 +53,7 @@ interface SelfTestManager {
 	): List<InstituteInfo>
 	
 	suspend fun findUser(
-		session: Session,
+		session: SelfTestSession,
 		institute: InstituteInfo,
 		name: String,
 		birthday: String,
@@ -63,20 +61,20 @@ interface SelfTestManager {
 	): UsersIdentifier
 	
 	suspend fun validatePassword(
-		session: Session,
+		session: SelfTestSession,
 		institute: InstituteInfo,
 		token: UsersIdToken,
 		password: String
 	): PasswordResult
 	
 	suspend fun getUserGroup(
-		session: Session,
+		session: SelfTestSession,
 		institute: InstituteInfo,
 		token: UsersToken
 	): List<User>
 	
 	suspend fun getUserInfo(
-		session: Session,
+		session: SelfTestSession,
 		institute: InstituteInfo,
 		user: User
 	): UserInfo

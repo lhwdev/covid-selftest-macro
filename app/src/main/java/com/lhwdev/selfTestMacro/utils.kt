@@ -106,10 +106,16 @@ data class UserLoginInfo(
 	// 	)
 	// }
 	
-	suspend fun findUser(session: Session): UserIdentifier {
+	suspend fun findUser(session: Session, pref: PreferenceState): UserIdentifier {
+		val setting = pref.setting!!
+		val instituteNew = session.getSchoolData(
+			regionCode = setting.region,
+			schoolLevelCode = setting.level.toString(),
+			name = setting.schoolName
+		)
 		return session.findUser(
 			institute,
-			GetUserTokenRequestBody(institute, identifier.mainUserName, birthday, loginType)
+			GetUserTokenRequestBody(institute, identifier.mainUserName, birthday, loginType, instituteNew.searchKey)
 		)
 	}
 }

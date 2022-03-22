@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 			val user = pref.user!! // note: may change
 			
 			val detailedUserInfo = try {
-				val usersIdentifier = user.findUser(session)
+				val usersIdentifier = user.findUser(session, pref)
 				val usersToken = (session.validatePassword(
 					institute,
 					usersIdentifier,

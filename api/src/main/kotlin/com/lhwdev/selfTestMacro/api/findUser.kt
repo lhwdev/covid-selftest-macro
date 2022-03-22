@@ -34,6 +34,7 @@ data class GetUserTokenRequestBody internal constructor(
 	@SerialName("birthday") val encryptedBirthday: String,
 	@SerialName("stdntPNo") val pageNumber: Int? = null,
 	@SerialName("loginType") val loginType: LoginType,
+	@SerialName("searchKey") val searchKey: InstituteSearchKey
 )
 
 @Serializable(UsersIdToken.Serializer::class)
@@ -53,9 +54,16 @@ suspend fun GetUserTokenRequestBody(
 	institute: InstituteInfo,
 	name: String,
 	birthday: String,
-	loginType: LoginType
+	loginType: LoginType,
+	searchKey: InstituteSearchKey
 ) =
-	GetUserTokenRequestBody(institute.code, encrypt(name), encrypt(birthday), loginType = loginType)
+	GetUserTokenRequestBody(
+		institute.code,
+		encrypt(name),
+		encrypt(birthday),
+		loginType = loginType,
+		searchKey = searchKey
+	)
 
 /*
  * admnYn: "N"

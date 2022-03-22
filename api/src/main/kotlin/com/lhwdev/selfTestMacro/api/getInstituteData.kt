@@ -10,13 +10,32 @@ import com.lhwdev.fetch.queryUrlParamsToString
 import com.lhwdev.selfTestMacro.sCommonUrl
 import com.lhwdev.selfTestMacro.sDefaultFakeHeader
 import com.lhwdev.selfTestMacro.toJsonLoose
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import java.net.URL
 
 
 @Serializable
-data class InstituteInfoResponse(@SerialName("schulList") val instituteList: List<InstituteInfo>)
+data class InstituteInfoResponse(
+	@SerialName("key") val searchKey: InstituteSearchKey,
+	@SerialName("schulList") val instituteList: List<InstituteInfo>
+)
+
+@Serializable(with = InstituteSearchKey.Serializer::class)
+data class InstituteSearchKey(val key: String) {
+	object Serializer : KSerializer<InstituteSearchKey> {
+		override val descriptor = PrimitiveSerialDescriptor(InstituteSearchKey::class.java.name, PrimitiveKind.STRING)
+		override fun deserialize(decoder: Decoder) = InstituteSearchKey(decoder.decodeString())
+		override fun serialize(encoder: Encoder, value: InstituteSearchKey) {
+			encoder.encodeString(value.key)
+		}
+	}
+}
 
 @Serializable
 data class InstituteInfo(

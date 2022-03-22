@@ -1,6 +1,5 @@
 package com.lhwdev.fetch.http
 
-
 import com.lhwdev.fetch.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
@@ -8,6 +7,7 @@ import kotlinx.coroutines.withContext
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
+
 
 private val sHttpProtocols = listOf("http", "https")
 

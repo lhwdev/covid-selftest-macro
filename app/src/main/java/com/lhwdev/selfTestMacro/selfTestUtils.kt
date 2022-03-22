@@ -81,7 +81,7 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 			// ) { token ->
 			// 	singleOfUserGroup(session.getUserGroup(institute, token)) ?: return
 			// }
-			val usersIdentifier = loginInfo.findUser(session)
+			val usersIdentifier = loginInfo.findUser(session, pref)
 			
 			val usersToken =
 				(session.validatePassword(institute, usersIdentifier, loginInfo.password) as? PasswordResult.Success

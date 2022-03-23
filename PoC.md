@@ -31,6 +31,7 @@
 * 결과: json
   ```json5
   {
+    "key": "<SearchKey>",
     "schulList": [
       {
         "kraOrgNm": "<기관 이름>",
@@ -96,7 +97,8 @@
     "orgCode": "<기관 코드>",
     "name": "<사용자 이름/암호화>",
     "birthday": "<생일: 6자리/암호화>",
-    "loginType": "school/univ/office"
+    "loginType": "school/univ/office",
+    "searchKey": "<SearchKey>" // searchSchool 등에서 받은 정보
     // "stdntPNo": <페이지 번호> // 보통 필요없음
   }
   ```

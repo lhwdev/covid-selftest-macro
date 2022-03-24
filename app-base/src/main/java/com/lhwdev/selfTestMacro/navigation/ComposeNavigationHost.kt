@@ -6,13 +6,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalView
 import com.lhwdev.selfTestMacro.modules.app_base.R
 import com.lhwdev.selfTestMacro.ui.EnableAutoSystemUi
-import com.lhwdev.selfTestMacro.ui.ProvideAutoWindowInsets
+import com.lhwdev.selfTestMacro.ui.ProvideRootAutoWindowInsets
 import com.lhwdev.selfTestMacro.ui.utils.AnimateListAsComposable
 import com.lhwdev.selfTestMacro.ui.utils.rememberLoopLinkedList
 import com.vanpra.composematerialdialogs.FullScreenDialog
 
 
-private class RouteInfo(val hasDialog: Boolean, val navigator: CurrentNavigator)
+private data class RouteInfo(val hasDialog: Boolean, val navigator: CurrentNavigator)
 
 
 @Composable
@@ -42,7 +42,6 @@ fun ComposeNavigationHost(navigator: Navigator) {
 				
 				val previous = routeInfoList.previous(index)
 				
-				// migrated from accumulating variable to support recomposition (will not pose that much performance degrade)
 				val hasDialog = previous?.hasDialog == true
 				val parentNavigator = previous?.navigator
 				
@@ -64,7 +63,7 @@ fun ComposeNavigationHost(navigator: Navigator) {
 				
 				routeInfoList.updateCurrent(
 					index, RouteInfo(
-						hasDialog = hasDialog,
+						hasDialog = hasDialog || isDialog,
 						navigator = currentNavigator
 					)
 				)
@@ -77,6 +76,7 @@ fun ComposeNavigationHost(navigator: Navigator) {
 					}
 				}
 				
+				println("isDialog=$isDialog hasDialog=$hasDialog: route $route")
 				if(!isDialog && hasDialog) { // to avoid routes hidden below Dialog
 					FullScreenDialog(onDismissRequest = { navigator.removeRoute(routeInstance) }, solid = true) {
 						val dialogLayout = LocalView.current
@@ -92,7 +92,7 @@ fun ComposeNavigationHost(navigator: Navigator) {
 							onDispose {}
 						}
 						
-						ProvideAutoWindowInsets {
+						ProvideRootAutoWindowInsets {
 							content()
 						}
 					}
@@ -100,13 +100,13 @@ fun ComposeNavigationHost(navigator: Navigator) {
 					content()
 				}
 			}
+			println(routeInfoList.array.contentToString())
 		}
 	}
 }
 
 @Composable
 private fun EnabledRoute(route: Route, enabled: Boolean, content: @Composable () -> Unit) {
-	println("route $route enabled=$enabled")
 	EnableAutoSystemUi(enabled) {
 		content()
 	}

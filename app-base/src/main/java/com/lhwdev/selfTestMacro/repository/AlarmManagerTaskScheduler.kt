@@ -8,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.core.content.getSystemService
 import com.lhwdev.selfTestMacro.database.*
-import com.lhwdev.selfTestMacro.debug.debugFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
@@ -129,7 +128,7 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 		intentCache.getOrPut(schedule) { schedulerIntent(schedule) }
 	
 	private fun scheduleAlarm(schedule: TaskSchedule) {
-		debugFlow("scheduleAlarm $schedule")
+		scheduleLog { "scheduleAlarm $schedule" }
 		val intent = schedulerIntentCached(schedule)
 		val timeMillis = schedule.timeMillis
 		
@@ -141,7 +140,7 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 	}
 	
 	private fun cancelAlarm(schedule: TaskSchedule) {
-		debugFlow("cancelAlarm $schedule")
+		scheduleLog { "cancelAlarm $schedule" }
 		val intent = schedulerIntentCached(schedule)
 		manager.cancel(intent)
 		

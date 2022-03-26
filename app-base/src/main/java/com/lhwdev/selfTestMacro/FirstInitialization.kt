@@ -10,6 +10,7 @@ import com.lhwdev.selfTestMacro.debug.debugCheck
 import com.lhwdev.selfTestMacro.debug.logOutput
 import com.lhwdev.selfTestMacro.debug.sIncludeLogcatInLog
 import com.lhwdev.selfTestMacro.navigation.sDebugNavigation
+import com.lhwdev.selfTestMacro.repository.sDebugScheduleEnabled
 import com.lhwdev.selfTestMacro.ui.utils.sDebugAnimateListAsComposable
 import java.io.File
 import java.net.URL
@@ -56,6 +57,7 @@ object FirstInitialization {
 			debugCheck = pref.isDebugCheckEnabled
 			sDebugFetch = pref.isDebugFetchEnabled
 			sDebugNavigation = pref.isNavigationDebugEnabled
+			sDebugScheduleEnabled = pref.isScheduleDebugEnabled
 			sDebugAnimateListAsComposable = pref.isNavigationDebugEnabled
 			sIncludeLogcatInLog = pref.includeLogcatInLog
 			

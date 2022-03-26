@@ -33,6 +33,7 @@ class PreferenceState(pref: SharedPreferences) : PreferenceHolder(pref) {
 	var virtualServer by preferenceSerialized("isVirtualServer", Repository.serializer().nullable, null)
 	var isDebugFetchEnabled by preferenceBoolean("isDebugFetchEnabled", false)
 	var isNavigationDebugEnabled by preferenceBoolean("isDebugAnimateListAsComposableEnabled", false)
+	var isScheduleDebugEnabled by preferenceBoolean("isScheduleDebugEnabled", false)
 	
 	var isFirstTime by preferenceBoolean("first", true)
 	

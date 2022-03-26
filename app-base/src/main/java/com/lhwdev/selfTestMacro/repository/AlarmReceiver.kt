@@ -27,6 +27,7 @@ class AlarmReceiver : BroadcastReceiver() {
 				)
 			)
 		}
+		scheduleLog { "AlarmReceiver: code=$scheduleCode" }
 		val schedule = selfTestManager.schedules.getSchedule(scheduleCode) ?: run {
 			selfTestManager.debugContext.onLightError(
 				"자가진단 예약이 실행되려 했지만, 해당하는 일정을 찾을 수 없어요.",
@@ -37,6 +38,7 @@ class AlarmReceiver : BroadcastReceiver() {
 			)
 			return
 		}
+		scheduleLog { "AlarmReceiver: schedule=$schedule" }
 		if(schedule.tasks.size > 1) {
 			val serviceIntent = Intent(context, ScheduleService::class.java)
 			serviceIntent.putExtra("code", scheduleCode)

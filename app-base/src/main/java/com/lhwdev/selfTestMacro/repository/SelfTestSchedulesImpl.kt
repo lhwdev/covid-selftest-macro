@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.lhwdev.selfTestMacro.database.*
@@ -18,6 +19,13 @@ private const val sDayMillis = 1000 * 60 * 60 * 24
 
 internal fun dayOf(millis: Long) = millis / sDayMillis // NOTE: how about leap second? It may be affected
 internal fun today() = dayOf(System.currentTimeMillis())
+
+
+var sDebugScheduleEnabled = false
+
+internal inline fun scheduleLog(message: () -> String) {
+	if(sDebugScheduleEnabled) Log.d("Schedules", message())
+}
 
 
 private val schedulerFlags = PendingIntent.FLAG_UPDATE_CURRENT or if(Build.VERSION.SDK_INT >= 23) {
@@ -87,7 +95,10 @@ abstract class SelfTestSchedulesImpl(
 				targetDay = today
 			}
 			
-			createTasks().also { tasksCache = it }
+			createTasks().also {
+				tasksCache = it
+				scheduleLog { "updateAndGetTasks: ${dumpDebug(oneLine = false)}" }
+			}
 		} else {
 			tasksCache
 		}
@@ -337,6 +348,7 @@ abstract class SelfTestSchedulesImpl(
 				}
 				listOf(user)
 			}
+			scheduleLog { "onTask: $task group=$group users=$users" }
 			
 			onScheduledSubmitSelfTest(group, users)
 		}
@@ -355,10 +367,10 @@ abstract class SelfTestSchedulesImpl(
 		"tasks" set diagnosticGroup("tasks") {
 			val schedules = ArrayDeque(scheduler.schedules)
 			for((index, task) in scheduler.allTasks.withIndex()) {
-				if(!scheduler.canTaskScheduled(task, schedules.first())) schedules.removeFirst()
+				while(!scheduler.canTaskScheduled(task, schedules.first())) schedules.removeFirst()
 				if(schedules.isEmpty()) break
 				
-				"$index" set diagnosticGroup("$index") {
+				"$index" set diagnosticGroup("taskEntry") {
 					"schedule" set schedules.first().code
 					"task" set task
 				}

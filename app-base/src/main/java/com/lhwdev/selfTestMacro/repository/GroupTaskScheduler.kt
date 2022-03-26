@@ -103,6 +103,7 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 		}
 		
 		schedules = newSchedules
+		scheduleLog { "GroupTaskScheduler: tasks updated newSchedules=$newSchedules" }
 		onScheduleUpdated()
 	}
 	

@@ -15,6 +15,7 @@ import com.lhwdev.selfTestMacro.debug.sIncludeLogcatInLog
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
+import com.lhwdev.selfTestMacro.repository.sDebugScheduleEnabled
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.pages.intro.IntroRoute
 import com.vanpra.composematerialdialogs.*
@@ -83,6 +84,11 @@ fun Navigator.showDebugWindow() = showDialogAsync(maxHeight = Dp.Infinity) {
 		ListItem(modifier = Modifier.clickable {
 			pref.isNavigationDebugEnabled = !pref.isNavigationDebugEnabled
 		}) { Text("AnimateListAsComposable & navigation 디버깅 ${if(pref.isNavigationDebugEnabled) "끄기" else "켜기"}") }
+		
+		ListItem(modifier = Modifier.clickable {
+			pref.isScheduleDebugEnabled = !pref.isScheduleDebugEnabled
+			sDebugScheduleEnabled = pref.isScheduleDebugEnabled
+		}) { Text("SelfTestSchedule 등 예약 디버깅 ${if(pref.isScheduleDebugEnabled) "끄기" else "켜기"}") }
 		
 		ListItem { Text("에러 로깅 활성화됨") }
 	}

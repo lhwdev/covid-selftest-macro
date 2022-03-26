@@ -12,6 +12,7 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TextFieldDefaults.indicatorLine
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
@@ -36,7 +37,7 @@ fun ClickableTextFieldDecoration(
 	content: @Composable () -> Unit
 ) {
 	Box(
-		modifier = Modifier
+		modifier = modifier
 			.defaultMinSize(
 				minWidth = TextFieldDefaults.MinWidth,
 				minHeight = TextFieldDefaults.MinHeight
@@ -49,7 +50,8 @@ fun ClickableTextFieldDecoration(
 				indication = LocalIndication.current,
 				enabled = enabled,
 				onClick = onClick
-			)
+			),
+		contentAlignment = Alignment.CenterStart
 	) {
 		TextFieldDefaults.TextFieldDecorationBox(
 			// [value] is only used to determine if the text is empty. See TextFieldImpl.kt.

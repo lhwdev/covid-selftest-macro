@@ -2,12 +2,14 @@ package com.lhwdev.selfTestMacro.ui.utils
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -22,7 +24,6 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.TopAppBar
 import kotlinx.coroutines.launch
 
@@ -83,46 +84,6 @@ fun SmallIconButton(
 	}
 }
 
-
-@Composable
-fun RoundButton(
-	onClick: () -> Unit,
-	modifier: Modifier = Modifier,
-	enabled: Boolean = true,
-	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-	border: BorderStroke? = null,
-	colors: ButtonColors = ButtonDefaults.textButtonColors(contentColor = DefaultContentColor),
-	contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-	elevation: ButtonElevation? = null,
-	icon: @Composable (() -> Unit)? = null,
-	trailingIcon: @Composable (() -> Unit)? = null,
-	text: @Composable RowScope.() -> Unit
-) {
-	val shape = RoundedCornerShape(percent = 100)
-	Button(
-		onClick = onClick,
-		modifier = modifier,
-		enabled = enabled,
-		interactionSource = interactionSource,
-		elevation = elevation,
-		shape = shape,
-		border = border,
-		colors = colors,
-		contentPadding = contentPadding
-	) {
-		if(icon == null && trailingIcon == null) Spacer(Modifier.width(4.dp))
-		if(icon != null) {
-			Box(Modifier.size(18.dp)) { icon() }
-			Spacer(Modifier.width(8.dp))
-		}
-		text()
-		if(icon == null && trailingIcon == null) Spacer(Modifier.width(4.dp))
-		if(trailingIcon != null) {
-			Spacer(Modifier.width(8.dp))
-			Box(Modifier.size(18.dp)) { trailingIcon() }
-		}
-	}
-}
 
 @Composable
 fun IconOnlyTopAppBar(

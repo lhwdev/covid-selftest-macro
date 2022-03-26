@@ -180,6 +180,17 @@ public data class UsersIdentifier(
 
 
 /**
+ * A class which represents user group.
+ * Can be acquired from [getUserGroup].
+ */
+public data class UserGroup(
+	val users: List<User>
+) {
+	val mainUser: User get() = users.first()
+}
+
+
+/**
  * A class that is needed to interact with fundamental apis of hcs.
  * This can be obtained from [getUserGroup].
  *

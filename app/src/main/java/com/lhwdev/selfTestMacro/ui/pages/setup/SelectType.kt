@@ -3,6 +3,8 @@ package com.lhwdev.selfTestMacro.ui.pages.setup
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,8 +14,9 @@ import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
-import com.lhwdev.selfTestMacro.ui.utils.DropdownPicker
+import com.lhwdev.selfTestMacro.ui.utils.ExposedDropdownMenuField
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
+import com.lhwdev.selfTestMacro.ui.utils.myTextFieldColors
 import kotlinx.coroutines.launch
 
 
@@ -66,8 +69,18 @@ internal fun WizardSelectType(model: SetupModel, parameters: SetupParameters, wi
 					
 					Spacer(Modifier.weight(5f))
 					
-					DropdownPicker(
-						dropdown = { onDismiss ->
+					val (expanded, setExpanded) = remember { mutableStateOf(false) }
+					ExposedDropdownMenuField(
+						expanded = expanded,
+						onExpandedChange = setExpanded,
+						isEmpty = model.instituteInfo == null,
+						label = { Text("기관 유형") },
+						colors = TextFieldDefaults.myTextFieldColors(),
+						modifier = Modifier.padding(8.dp).fillMaxWidth(),
+						fieldContent = {
+							Text(model.instituteInfo?.type?.displayName ?: "")
+						},
+						dropdownContent = {
 							val institutes = /*InstituteType.values()*/
 								arrayOf(InstituteType.school) // TODO: support all types
 							for(type in institutes) DropdownMenuItem(onClick = {
@@ -81,18 +94,13 @@ internal fun WizardSelectType(model: SetupModel, parameters: SetupParameters, wi
 								if(previousSelect == null || previousSelect::class != newSelect::class) {
 									model.instituteInfo = newSelect
 								}
-								onDismiss()
+								setExpanded(false)
 								wizard.next()
 							}) {
 								Text(type.displayName)
 							}
-						},
-						isEmpty = model.instituteInfo == null,
-						label = { Text("기관 유형") },
-						modifier = Modifier.padding(8.dp)
-					) {
-						Text(model.instituteInfo?.type?.displayName ?: "")
-					}
+						}
+					)
 					
 					Spacer(Modifier.weight(8f))
 				}

@@ -29,7 +29,7 @@ import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.primaryActive
-import com.lhwdev.selfTestMacro.ui.utils.DropdownPicker
+import com.lhwdev.selfTestMacro.ui.utils.ExposedDropdownMenuField
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
 
@@ -177,52 +177,57 @@ internal fun ColumnScope.WizardSchoolInfo(
 				.fillMaxWidth()
 				.padding(8.dp)
 			
-			DropdownPicker(
-				dropdown = { onDismiss ->
+			val (levelExpanded, setLevelExpanded) = remember { mutableStateOf(false) }
+			ExposedDropdownMenuField(
+				expanded = levelExpanded,
+				onExpandedChange = setLevelExpanded,
+				isEmpty = model.schoolLevel == 0,
+				isError = notFulfilled.value == 0,
+				label = { Text("학교 단계") },
+				modifier = commonModifier,
+				fieldContent = {
+					Text(sSchoolLevels[model.schoolLevel] ?: "")
+				},
+				dropdownContent = {
 					for((code, name) in sSchoolLevels.entries) DropdownMenuItem(onClick = {
 						model.schoolLevel = code
 						notFulfilled.value = -1
 						complete = false
-						onDismiss()
+						setLevelExpanded(false)
 					}) {
 						Text(name)
 					}
-				},
-				isEmpty = model.schoolLevel == 0,
-				isErrorValue = notFulfilled.value == 0,
-				label = { Text("학교 단계") },
-				modifier = commonModifier
-			) {
-				Text(sSchoolLevels[model.schoolLevel] ?: "")
-			}
+				}
+			)
 			
-			DropdownPicker(
-				dropdown = { onDismiss ->
-					DropdownMenuItem(onClick = {
-						model.regionCode = null
-						notFulfilled.value = -1
-						complete = false
-						onDismiss()
-					}) {
-						Text("전국에서 검색", color = MaterialTheme.colors.primaryActive)
-					}
-					
-					for((code, name) in sRegions.entries) DropdownMenuItem(onClick = {
+			val (regionExpanded, setRegionExpanded) = remember { mutableStateOf(false) }
+			ExposedDropdownMenuField(
+				expanded = regionExpanded,
+				onExpandedChange = setRegionExpanded,
+				isEmpty = model.regionCode == "",
+				isError = notFulfilled.value == 1,
+				label = { Text("지역") },
+				modifier = commonModifier,
+				fieldContent = {
+					Text(if(model.regionCode == null) "(전국에서 검색)" else sRegions[model.regionCode] ?: "")
+				},
+				dropdownContent = {
+					fun onPick(code: String?) = ({
 						model.regionCode = code
 						notFulfilled.value = -1
 						complete = false
-						onDismiss()
-					}) {
+						setRegionExpanded(false)
+					})
+					
+					DropdownMenuItem(onClick = onPick(null)) {
+						Text("전국에서 검색", color = MaterialTheme.colors.primaryActive)
+					}
+					
+					for((code, name) in sRegions.entries) DropdownMenuItem(onClick = onPick(code)) {
 						Text(name)
 					}
-				},
-				isEmpty = model.regionCode == "",
-				isErrorValue = notFulfilled.value == 1,
-				label = { Text("지역") },
-				modifier = commonModifier
-			) {
-				Text(if(model.regionCode == null) "(전국에서 검색)" else sRegions[model.regionCode] ?: "")
-			}
+				}
+			)
 			
 			TextField(
 				value = model.schoolName,

@@ -1,6 +1,7 @@
 package com.lhwdev.selfTestMacro.ui.pages.main
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
@@ -23,7 +25,10 @@ import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.showToast
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.MediumContentColor
+import com.lhwdev.selfTestMacro.ui.Scrims
+import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.common.TestTargetListItem
@@ -134,21 +139,10 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 			minute: Int,
 			setTime: (hour: Int, minute: Int) -> Unit,
 			modifier: Modifier = Modifier
-		) {
-			TextFieldDecoration(
-				label = { Text(label) },
-				inputState = if(hour == -1) InputPhase.UnfocusedEmpty else InputPhase.UnfocusedNotEmpty,
-				modifier = modifier.padding(8.dp),
-				innerModifier = Modifier.clickable {
-					// val dialog = TimePickerDialog(
-					// 	context,
-					// 	R.style.AppTheme_Dialog,
-					// 	{ _, h, m ->
-					// 		setTime(h, m)
-					// 	},
-					// 	hour.coerceAtLeast(0), minute, false
-					// )
-					// dialog.show()
+		) = Box(
+			modifier
+				.padding(8.dp)
+				.clickable {
 					navigator.showDialogAsync { dismiss ->
 						TimePickerDialog(
 							initialHour = if(hour == -1) 7 else hour,
@@ -161,16 +155,23 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 						)
 					}
 				}
-			) {
-				if(hour != -1) {
-					val text = buildAnnotatedString {
-						append(if(hour == 0) "12" else "$hour".padStart(2, padChar = '0'))
-						withStyle(SpanStyle(color = MediumContentColor)) { append(":") }
-						append("$minute".padStart(2, padChar = '0'))
+		) {
+			TextFieldDefaults.TextFieldDecorationBox(
+				value = if(hour == -1) "" else "a",
+				label = { Text(label) },
+				innerTextField = {
+					if(hour != -1) {
+						val text = buildAnnotatedString {
+							append(if(hour == 0) "12" else "$hour".padStart(2, padChar = '0'))
+							withStyle(SpanStyle(color = MediumContentColor)) { append(":") }
+							append("$minute".padStart(2, padChar = '0'))
+						}
+						Text(text)
 					}
-					Text(text)
-				}
-			}
+				},
+				enabled = true, singleLine = true, visualTransformation = VisualTransformation.None,
+				interactionSource = remember { MutableInteractionSource() }
+			)
 		}
 		
 		

@@ -28,16 +28,16 @@ val WindowInsets.isVisible: Boolean
 		return isVisible(density, direction)
 	}
 
-val WindowInsets.isVisibleState: State<Boolean>
-	@Composable get() {
-		val pair = rememberUpdatedState(LocalDensity.current to LocalLayoutDirection.current)
-		return remember {
-			derivedStateOf {
-				val (density, direction) = pair.value
-				isVisible(density, direction)
-			}
+@Composable
+fun WindowInsets.rememberIsVisible(): State<Boolean> {
+	val pair = rememberUpdatedState(LocalDensity.current to LocalLayoutDirection.current)
+	return remember {
+		derivedStateOf {
+			val (density, direction) = pair.value
+			isVisible(density, direction)
 		}
 	}
+}
 
 fun WindowInsets.isVisible(density: Density, direction: LayoutDirection): Boolean {
 	return getTop(density) != 0 ||
@@ -163,7 +163,6 @@ fun AutoSystemUi(
 		val isDark = LocalContentColor.current.isDarkColor()
 		val nav = LocalNavigator
 		if(enabledState) SideEffect {
-			println("navigationBar color isDark=$isDark route=${nav.currentRoute}")
 			controller.navigationBarDarkContentEnabled = isDark
 		}
 	}

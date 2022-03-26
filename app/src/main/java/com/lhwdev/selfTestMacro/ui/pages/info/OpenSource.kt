@@ -118,7 +118,7 @@ fun OpenSources() {
 			}
 		) {
 			if(items != null && extras != null) Box(Modifier.fillMaxSize()) {
-				OpenSourcesContent(items!!, extras!!, scrims.navigationBarSpacer)
+				OpenSourcesContent(items, extras, scrims.navigationBarSpacer)
 				
 				Box(Modifier.align(Alignment.BottomCenter)) {
 					scrims.navigationBar()

@@ -71,12 +71,11 @@ internal fun (@Suppress("unused") ColumnScope).SingleStatusView(
 		is Status.Submitted -> {
 			AutoSizeText(status.suspicious.displayText, style = MaterialTheme.typography.h3)
 			
-			Spacer(Modifier.height(20.dp))
+			Spacer(Modifier.height(10.dp))
 			
 			Text(
 				status.time,
-				style = MaterialTheme.typography.h6,
-				color = MaterialTheme.colors.primaryActive
+				style = MaterialTheme.typography.h6
 			)
 		}
 		is Status.NotSubmitted -> AutoSizeText("제출하지 않음", style = MaterialTheme.typography.h3)
@@ -117,6 +116,7 @@ internal fun ColumnScope.GroupStatusView(group: DbTestGroup, statusKey: MutableS
 			is Status.Submitted -> when(status.suspicious) {
 				SuspiciousKind.symptom -> symptom += user
 				SuspiciousKind.quarantined -> quarantined += user
+				else -> Unit
 			}
 			is Status.NotSubmitted -> notSubmitted++
 		}

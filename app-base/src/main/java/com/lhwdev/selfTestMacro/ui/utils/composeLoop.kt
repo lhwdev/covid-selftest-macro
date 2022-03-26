@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.ui.utils
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 
 
 @Composable
@@ -13,7 +12,11 @@ inline fun <reified T> rememberLoopLinkedList(size: Int): LoopLinkedList<T> {
 
 
 // WARNING: does not fit for general purposes as it ignores recomposition entirely
-class LoopLinkedList<T>(@PublishedApi internal var array: Array<T?>) {
+@Stable
+class LoopLinkedList<T>(array: Array<T?>) {
+	@PublishedApi
+	internal var array: Array<T?> by mutableStateOf(array)
+	
 	fun previous(index: Int): T? = array.getOrNull(index - 1)
 	
 	fun updateCurrent(index: Int, value: T) {

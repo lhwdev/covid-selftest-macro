@@ -18,12 +18,12 @@ object ContentTypes {
 
 
 val FetchHeaders.contentType: ContentType?
-	get() = this[ContentType.Key]
+	get() = this[ContentType]
 
 var MutableFetchHeaders.contentType: ContentType?
-	get() = this[ContentType.Key]
+	get() = this[ContentType]
 	set(value) {
-		this[ContentType.Key] = value
+		this[ContentType] = value
 	}
 
 
@@ -35,14 +35,15 @@ data class ContentType(
 	constructor(mediaType: String, charset: Charset?, boundary: String? = null) :
 		this(mediaType, charset?.name(), boundary)
 	
-	companion object {
-		val Key = FetchHeaderKey("Content-Type") { contentTypeOf(it) }
+	companion object : FetchHeaderKey<ContentType>("Content-Type") {
+		override fun parse(value: String): ContentType = contentTypeOf(value)
 	}
 	
 	val charset: Charset? get() = charsetName?.let { charset(it) }
 	
 	infix fun isCompatible(other: ContentType): Boolean = mediaType == other.mediaType
 	
+	override fun toString(): String = serialize()
 	override fun serialize(): String = buildString {
 		append(mediaType)
 		if(charsetName != null) {
@@ -58,7 +59,7 @@ data class ContentType(
 
 
 // https://datatracker.ietf.org/doc/html/rfc7231#section-3.1.1.1
-fun contentTypeOf(from: String): ContentType {
+private fun contentTypeOf(from: String): ContentType {
 	val list = from.split(';')
 	val mediaType = list[0].lowercase()
 	if(list.size == 1) return ContentType(mediaType, charsetName = null)

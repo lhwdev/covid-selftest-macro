@@ -85,16 +85,9 @@ interface FetchHeader {
 	fun serialize(): String
 }
 
-interface FetchHeaderKey<T : FetchHeader> {
-	val key: String
-	fun parse(value: String): T
+abstract class FetchHeaderKey<T : FetchHeader>(val key: String) {
+	abstract fun parse(value: String): T
 }
-
-inline fun <T : FetchHeader> FetchHeaderKey(key: String, crossinline parse: (String) -> T): FetchHeaderKey<T> =
-	object : FetchHeaderKey<T> {
-		override val key: String = key
-		override fun parse(value: String): T = parse(value)
-	}
 
 interface FetchHeaders {
 	operator fun <T : FetchHeader> get(key: FetchHeaderKey<T>): T?

@@ -68,7 +68,7 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 			}
 			val contentType = body?.contentType
 			if(contentType != null) {
-				connection.setRequestProperty("Content-Type", contentType)
+				connection.setRequestProperty("Content-Type", contentType.serialize())
 				println("    \u001B[96mContent-Type\u001B[0m: \u001B[97m$contentType\u001b[0m (set by HttpBody)")
 			}
 			
@@ -166,7 +166,7 @@ val HttpInterceptorImpl: HttpInterceptor = HttpInterceptor { url, method, header
 				connection.setRequestProperty(k, v)
 			}
 			val contentType = body?.contentType
-			if(contentType != null) connection.setRequestProperty("Content-Type", contentType)
+			if(contentType != null) connection.setRequestProperty("Content-Type", contentType.serialize())
 			if(session != null) {
 				if(session.keepAlive == true) {
 					connection.setRequestProperty("Connection", "keep-alive")

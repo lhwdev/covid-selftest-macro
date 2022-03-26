@@ -20,5 +20,5 @@ gradlePlugin {
 
 dependencies {
 	compileOnly(libs.versions.kotlin.map { "org.jetbrains.kotlin:kotlin-gradle-plugin:$it" })
-	compileOnly("com.android.tools.build:gradle:7.0.0")
+	compileOnly("com.android.tools.build:gradle:7.0.1")
 }

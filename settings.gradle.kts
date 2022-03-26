@@ -16,7 +16,7 @@ pluginManagement {
 		
 		// Android
 		if(id.startsWith("com.android")) { // version: also in includeBuild/build.gradle.kts
-			useModule("com.android.tools.build:gradle:7.0.0")
+			useModule("com.android.tools.build:gradle:${requested.version}")
 		}
 	}
 }

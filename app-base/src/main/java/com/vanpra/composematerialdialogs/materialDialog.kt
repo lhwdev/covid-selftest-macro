@@ -18,9 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.lhwdev.selfTestMacro.ui.AppliedUiPaddings
 import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.ProvideAppliedUiPaddings
 import com.lhwdev.selfTestMacro.ui.SystemUiMode
 
 
@@ -106,7 +104,7 @@ fun MaterialDialog(
 			properties = properties
 		) {
 			AutoSystemUi(
-				onScreenMode = null,
+				onScreen = null,
 				ime = SystemUiMode.Default
 			) {
 				Box(
@@ -132,15 +130,8 @@ fun MaterialDialog(
 						border = border,
 						elevation = elevation
 					) {
-						ProvideAppliedUiPaddings(
-							AppliedUiPaddings(
-								statusBar = true,
-								navigationBar = true
-							)
-						) {
-							Column {
-								FloatingMaterialDialogScope(info, this).content()
-							}
+						Column {
+							FloatingMaterialDialogScope(info, this).content()
 						}
 					}
 				}

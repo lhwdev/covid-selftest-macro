@@ -56,7 +56,7 @@ fun Splash() {
 	
 	Surface(color = MaterialTheme.colors.primarySurface) {
 		AutoSystemUi(
-			onScreenMode = OnScreenSystemUiMode.Immersive()
+			onScreen = OnScreenSystemUiMode.Immersive()
 		) { scrims ->
 			scrims.statusBar()
 			

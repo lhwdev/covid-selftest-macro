@@ -31,7 +31,7 @@ internal fun WizardSelectType(model: SetupModel, parameters: SetupParameters, wi
 	) {
 		AutoSystemUi(
 			enabled = wizard.isCurrent,
-			onScreenMode = OnScreenSystemUiMode.Immersive()
+			onScreen = OnScreenSystemUiMode.Immersive()
 		) { scrims ->
 			scrims.statusBar()
 			

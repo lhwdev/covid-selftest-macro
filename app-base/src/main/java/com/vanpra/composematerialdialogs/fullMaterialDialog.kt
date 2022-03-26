@@ -34,16 +34,16 @@ import java.util.UUID
 
 @Composable
 fun FullMaterialDialog(
-	onCloseRequest: () -> Unit,
+	onDismissRequest: () -> Unit,
 	properties: DialogProperties,
 	content: @Composable FullMaterialDialogScope.() -> Unit
 ) {
 	MaterialDialogBase(
-		onCloseRequest = onCloseRequest
+		onCloseRequest = onDismissRequest
 	) { info ->
-		FullScreenDialog(onDismissRequest = onCloseRequest, properties = properties) {
+		FullScreenDialog(onDismissRequest = onDismissRequest, properties = properties) {
 			AutoSystemUi(
-				onScreenMode = null,
+				onScreen = null,
 				ime = SystemUiMode.Default
 			) {
 				FullMaterialDialogScope(info).content()

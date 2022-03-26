@@ -72,7 +72,7 @@ suspend fun <T> Navigator.showFullDialog(
 ): T? = showRouteFactory { removeRoute ->
 	FullDialogRoute(OnRouteRemoved to { removeRoute(null) }) {
 		FullMaterialDialog(
-			onCloseRequest = { removeRoute(null) },
+			onDismissRequest = { removeRoute(null) },
 			properties = properties
 		) { content(removeRoute) }
 	}
@@ -87,7 +87,7 @@ fun Navigator.showFullDialogAsync(
 		val removeRouteUnit = { removeRoute(null) }
 		FullDialogRoute(OnRouteRemoved to { removeRoute(null) }) {
 			FullMaterialDialog(
-				onCloseRequest = removeRouteUnit,
+				onDismissRequest = removeRouteUnit,
 				properties = properties
 			) { content(removeRouteUnit) }
 		}

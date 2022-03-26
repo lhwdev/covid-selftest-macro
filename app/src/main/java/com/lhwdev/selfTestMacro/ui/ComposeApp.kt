@@ -69,17 +69,15 @@ fun ComposeApp(activity: Activity) {
 			CompositionLocalProvider(
 				LocalSelfTestManager provides selfTestManager
 			) {
-				ProvideAutoWindowInsets {
-					Box {
-						if(pref.virtualServer != null) Text(
-							"가상 서버",
-							modifier = Modifier
-								.background(Color.Black.copy(alpha = .3f))
-								.align(Alignment.TopEnd)
-						)
-						
-						ComposeNavigationHost(navigator)
-					}
+				Box {
+					if(pref.virtualServer != null) Text(
+						"가상 서버",
+						modifier = Modifier
+							.background(Color.Black.copy(alpha = .3f))
+							.align(Alignment.TopEnd)
+					)
+					
+					ComposeNavigationHost(navigator)
 				}
 			}
 			

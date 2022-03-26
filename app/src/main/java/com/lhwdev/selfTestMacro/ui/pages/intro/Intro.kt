@@ -33,7 +33,7 @@ private fun Intro() {
 		color = MaterialTheme.colors.primarySurfaceColored,
 		contentColor = contentColorFor(MaterialTheme.colors.primary)
 	) {
-		AutoSystemUi(onScreenMode = OnScreenSystemUiMode.Immersive()) { scrims ->
+		AutoSystemUi(onScreen = OnScreenSystemUiMode.Immersive()) { scrims ->
 			scrims.statusBar()
 			
 			Column(Modifier.weight(1f).padding(32.dp)) {

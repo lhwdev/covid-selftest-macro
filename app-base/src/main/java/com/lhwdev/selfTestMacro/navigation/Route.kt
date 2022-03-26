@@ -58,6 +58,8 @@ data class Route(
 		extras = extras.mergeExtras(other.extras),
 		content = other.content ?: content,
 	)
+	
+	override fun toString(): String = "Route(name=$name, ${extras?.toString() ?: "extras={}"})"
 }
 
 fun Map<Route.Key<*>, *>.mergeExtras(other: Map<Route.Key<*>, *>): Map<Route.Key<*>, *> {

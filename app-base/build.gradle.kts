@@ -18,7 +18,6 @@ android {
 	}
 	
 	composeOptions {
-		// kotlinCompilerVersion = "1.5.31"
 		kotlinCompilerExtensionVersion = libs.versions.compose.get()
 	}
 }
@@ -42,12 +41,12 @@ dependencies {
 	implementation(libs.compose.ui)
 	implementation(libs.compose.uiTooling)
 	implementation(libs.compose.foundation)
+	implementation(libs.compose.foundationLayout)
 	implementation(libs.compose.material)
 	
 	implementation(libs.androidx.activity.compose)
 	
-	implementation(libs.accompanist.insets)
-	implementation(libs.accompanist.insetsUi)
+	// implementation(libs.accompanist.insetsUi)
 	implementation(libs.accompanist.systemUiController)
 	
 	implementation(libs.androidx.appcompat)

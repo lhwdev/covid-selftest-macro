@@ -45,7 +45,7 @@ internal fun WizardInstituteInfo(
 	
 	AutoSystemUi(
 		enabled = wizard.isCurrent,
-		navigationBarMode = OnScreenSystemUiMode.Immersive()
+		navigationBars = OnScreenSystemUiMode.Immersive()
 	) { scrims ->
 		Scaffold(
 			topBar = {

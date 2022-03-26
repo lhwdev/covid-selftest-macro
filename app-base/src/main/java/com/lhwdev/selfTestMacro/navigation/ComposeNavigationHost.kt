@@ -6,7 +6,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalView
 import com.lhwdev.selfTestMacro.modules.app_base.R
 import com.lhwdev.selfTestMacro.ui.EnableAutoSystemUi
-import com.lhwdev.selfTestMacro.ui.ProvideRootAutoWindowInsets
 import com.lhwdev.selfTestMacro.ui.utils.AnimateListAsComposable
 import com.lhwdev.selfTestMacro.ui.utils.rememberLoopLinkedList
 import com.vanpra.composematerialdialogs.FullScreenDialog
@@ -76,7 +75,6 @@ fun ComposeNavigationHost(navigator: Navigator) {
 					}
 				}
 				
-				println("isDialog=$isDialog hasDialog=$hasDialog: route $route")
 				if(!isDialog && hasDialog) { // to avoid routes hidden below Dialog
 					FullScreenDialog(onDismissRequest = { navigator.removeRoute(routeInstance) }, solid = true) {
 						val dialogLayout = LocalView.current
@@ -92,15 +90,12 @@ fun ComposeNavigationHost(navigator: Navigator) {
 							onDispose {}
 						}
 						
-						ProvideRootAutoWindowInsets {
-							content()
-						}
+						content()
 					}
 				} else {
 					content()
 				}
 			}
-			println(routeInfoList.array.contentToString())
 		}
 	}
 }

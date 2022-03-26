@@ -52,7 +52,7 @@ private fun MaterialDialogScope.SelectAnswer(
 	onResult: (Answer) -> Unit,
 	positiveText: String
 ): Unit = AutoSystemUi(
-	statusBarMode = OnScreenSystemUiMode.Immersive()
+	statusBars = OnScreenSystemUiMode.Immersive()
 ) { scrims ->
 	Scaffold(
 		topBar = {

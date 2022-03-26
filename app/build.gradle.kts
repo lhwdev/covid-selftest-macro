@@ -16,6 +16,8 @@ repositories {
 
 licensee {
 	allow("Apache-2.0")
+	allow("EPL-1.0")
+	allowUrl("http://www.opensource.org/licenses/bsd-license.php")
 	// allow("MIT")
 	
 	// see https://github.com/airbnb/lottie-android/issues/1865
@@ -127,10 +129,9 @@ dependencies {
 	implementation(libs.compose.ui)
 	implementation(libs.compose.uiTooling)
 	implementation(libs.compose.foundation)
+	implementation(libs.compose.foundationLayout)
 	implementation(libs.compose.material)
 	
-	implementation(libs.accompanist.insets)
-	implementation(libs.accompanist.insetsUi)
 	implementation(libs.accompanist.systemUiController)
 	
 	implementation(libs.androidx.activity.compose)

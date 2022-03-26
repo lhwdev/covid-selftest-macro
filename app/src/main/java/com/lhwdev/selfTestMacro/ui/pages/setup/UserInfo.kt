@@ -22,7 +22,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.insets.LocalWindowInsets
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.DangerousHcsApi
 import com.lhwdev.selfTestMacro.api.PasswordResult
@@ -241,7 +240,7 @@ private fun WizardStudentInfo(
 	Surface(color = blendSurface) {
 		AutoSystemUi(
 			enabled = wizard.isCurrent,
-			onScreenMode = OnScreenSystemUiMode.Immersive()
+			onScreen = OnScreenSystemUiMode.Immersive()
 		) { scrims ->
 			val addingSameInstituteUser = model.addingSameInstituteUser
 			
@@ -284,7 +283,7 @@ private fun WizardStudentInfo(
 					
 					// header
 					AnimatedContent(
-						targetState = LocalWindowInsets.current.ime.isVisible
+						targetState = WindowInsets.ime.isVisible
 					) { // For legibility: ime may hide TextField
 						if(it) Column {
 							TopAppBar(

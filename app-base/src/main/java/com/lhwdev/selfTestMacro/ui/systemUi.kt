@@ -1,6 +1,5 @@
 package com.lhwdev.selfTestMacro.ui
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -9,38 +8,42 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.google.accompanist.insets.*
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 
 
-data class AppliedUiPaddings(
-	val statusBar: Boolean = false,
-	val navigationBar: Boolean = false,
-	val ime: Boolean = false,
-) {
-	fun merge(other: AppliedUiPaddings): AppliedUiPaddings = AppliedUiPaddings(
-		statusBar = other.statusBar || statusBar,
-		navigationBar = other.navigationBar || navigationBar,
-		ime = other.ime || ime
-	)
-}
+// https://issuetracker.google.com/issues/217770337
+val WindowInsets.isVisible: Boolean
+	@Composable get() {
+		val density = LocalDensity.current
+		val direction = LocalLayoutDirection.current
+		
+		return isVisible(density, direction)
+	}
 
-@SuppressLint("CompositionLocalNaming")
-val sLocalAppliedUiPaddings = compositionLocalOf { AppliedUiPaddings() }
-val LocalAppliedUiPaddings: CompositionLocal<AppliedUiPaddings> = sLocalAppliedUiPaddings
+val WindowInsets.isVisibleState: State<Boolean>
+	@Composable get() {
+		val pair = rememberUpdatedState(LocalDensity.current to LocalLayoutDirection.current)
+		return remember {
+			derivedStateOf {
+				val (density, direction) = pair.value
+				isVisible(density, direction)
+			}
+		}
+	}
 
-@Composable
-fun ProvideAppliedUiPaddings(paddings: AppliedUiPaddings, content: @Composable () -> Unit) {
-	CompositionLocalProvider(
-		sLocalAppliedUiPaddings provides LocalAppliedUiPaddings.current.merge(paddings),
-		content = content
-	)
+fun WindowInsets.isVisible(density: Density, direction: LayoutDirection): Boolean {
+	return getTop(density) != 0 ||
+		getBottom(density) != 0 ||
+		getLeft(density, direction) != 0 ||
+		getRight(density, direction) != 0
 }
 
 
@@ -75,55 +78,10 @@ fun rememberPreviewUiController(): SystemUiController = LocalPreviewUiController
 // val isSystemUiDarkContentAvailable: Boolean = Build.VERSION.SDK_INT >= 23
 
 
-
 private val LocalIsImeVisible: ProvidableCompositionLocal<Boolean> =
 	compositionLocalOf { error("not provided") }
 
 val isImeVisible: Boolean @Composable get() = LocalIsImeVisible.current
-
-
-@Composable
-fun ProvideIsImeVisible(content: @Composable () -> Unit) {
-	val view = LocalView.current
-	var state by remember { mutableStateOf(false) }
-	
-	DisposableEffect(view) {
-		ViewCompat.setOnApplyWindowInsetsListener(view.rootView) { _, insets ->
-			val s = insets.isVisible(WindowInsetsCompat.Type.ime())
-			state = s
-			insets
-		}
-		
-		onDispose { ViewCompat.setOnApplyWindowInsetsListener(view, null) }
-	}
-	
-	CompositionLocalProvider(LocalIsImeVisible provides state) {
-		content()
-	}
-}
-
-
-@Composable
-fun ProvideAutoWindowInsets(
-	consumeWindowInsets: Boolean = true,
-	windowInsetsAnimationsEnabled: Boolean = true,
-	content: @Composable () -> Unit
-) {
-	ProvideIsImeVisible {
-		val isImeVisible = isImeVisible
-		
-		ProvideWindowInsets(
-			consumeWindowInsets = consumeWindowInsets,
-			windowInsetsAnimationsEnabled = windowInsetsAnimationsEnabled
-		) {
-			ProvideAppliedUiPaddings(
-				AppliedUiPaddings(navigationBar = isImeVisible)
-			) {
-				content()
-			}
-		}
-	}
-}
 
 
 @Composable
@@ -150,27 +108,27 @@ fun EnableAutoSystemUi(enabled: Boolean, content: @Composable () -> Unit) {
 @Composable
 fun AutoSystemUi(
 	enabled: Boolean = true,
-	onScreenMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
+	onScreen: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	ime: SystemUiMode? = SystemUiMode.Default,
 	content: @Composable ColumnScope.(Scrims) -> Unit
 ) {
 	AutoSystemUi(
 		enabled = enabled,
-		statusBarMode = onScreenMode,
-		navigationBarMode = onScreenMode,
+		statusBars = onScreen,
+		navigationBars = onScreen,
 		ime = ime,
 		content = content
 	)
 }
 
 // note that this does not clean up
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AutoSystemUi(
 	enabled: Boolean = true,
-	statusBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
-	navigationBarMode: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
+	statusBars: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
+	navigationBars: OnScreenSystemUiMode? = OnScreenSystemUiMode.Immersive(),
 	ime: SystemUiMode? = SystemUiMode.Default,
-	appliedUiPaddings: AppliedUiPaddings = LocalAppliedUiPaddings.current,
 	content: @Composable ColumnScope.(Scrims) -> Unit,
 ) {
 	val realEnabled = enabled and LocalAutoSystemUiEnabled.current
@@ -182,15 +140,14 @@ fun AutoSystemUi(
 	fun StatusBarScrim(color: Color) {
 		Box(
 			Modifier
-				.statusBarsHeight()
+				.windowInsetsTopHeight(WindowInsets.statusBars)
 				.fillMaxWidth()
 				.background(color)
 		)
 		
 		val isDark = LocalContentColor.current.isDarkColor()
-		if(enabledState) DisposableEffect(Unit) {
+		if(enabledState) SideEffect {
 			controller.statusBarDarkContentEnabled = isDark
-			onDispose {}
 		}
 	}
 	
@@ -198,76 +155,73 @@ fun AutoSystemUi(
 	fun NavigationBarScrim(color: Color) {
 		Box(
 			Modifier
-				.navigationBarsHeight()
+				.windowInsetsBottomHeight(WindowInsets.navigationBars)
 				.fillMaxWidth()
 				.background(color)
 		)
 		
 		val isDark = LocalContentColor.current.isDarkColor()
-		if(enabledState) DisposableEffect(Unit) {
+		val nav = LocalNavigator
+		if(enabledState) SideEffect {
+			println("navigationBar color isDark=$isDark route=${nav.currentRoute}")
 			controller.navigationBarDarkContentEnabled = isDark
-			onDispose {}
 		}
 	}
 	
-	val statusBarState by rememberUpdatedState(
-		if(appliedUiPaddings.statusBar) null else statusBarMode
-	)
-	val navigationBarState by rememberUpdatedState(
-		if(appliedUiPaddings.navigationBar) null else navigationBarMode
-	)
-	val imeState = if(appliedUiPaddings.ime) null else ime
+	val statusBarsState by rememberUpdatedState(statusBars)
+	val navigationBarsState by rememberUpdatedState(navigationBars)
 	
+	val statusBarsInset = WindowInsets.statusBars
+	val navigationBarsInset = WindowInsets.navigationBars
+	val imeInset = WindowInsets.ime
 	
 	val scrims = remember {
 		Scrims(
 			statusBar = {
-				val statusBar = statusBarState
+				val statusBar = statusBarsState
 				if(statusBar is OnScreenSystemUiMode.Immersive) {
 					StatusBarScrim(statusBar.scrimColor)
 				}
 			},
 			statusBarSpacer = {
-				if(statusBarState is OnScreenSystemUiMode.Immersive)
-					Spacer(Modifier.statusBarsHeight().fillMaxWidth())
+				if(statusBarsState is OnScreenSystemUiMode.Immersive)
+					Spacer(Modifier.windowInsetsTopHeight(statusBarsInset).fillMaxWidth())
 			},
 			navigationBar = {
-				val navigationBar = navigationBarState
+				val navigationBar = navigationBarsState
 				if(navigationBar is OnScreenSystemUiMode.Immersive) {
 					NavigationBarScrim(navigationBar.scrimColor)
 				}
 			},
 			navigationBarSpacer = {
-				if(statusBarState is OnScreenSystemUiMode.Immersive)
-					Spacer(Modifier.navigationBarsHeight().fillMaxWidth())
+				if(statusBarsState is OnScreenSystemUiMode.Immersive)
+					Spacer(Modifier.windowInsetsBottomHeight(navigationBarsInset).fillMaxWidth())
 			}
 		)
 	}
 	
 	@Suppress("RedundantExplicitType")
 	var modifier: Modifier = Modifier
-	if(imeState is SystemUiMode.Default) modifier = modifier.imePadding()
+	if(ime is SystemUiMode.Default) modifier = modifier.windowInsetsPadding(imeInset)
 	// if(statusBarMode is OnScreenSystemUiMode.Opaque) modifier = modifier.statusBarsPadding()
 	// if(navigationBarMode is OnScreenSystemUiMode.Opaque) modifier = modifier.navigationBarsPadding()
 	
-	ProvideAppliedUiPaddings(
-		AppliedUiPaddings(
-			statusBar = statusBarMode != null,
-			navigationBar = navigationBarMode != null,
-			ime = ime != null
-		)
+	if(statusBars != null) modifier = modifier.consumedWindowInsets(statusBarsInset)
+	if(navigationBars != null) modifier = modifier.consumedWindowInsets(navigationBarsInset)
+	if(ime != null) modifier = modifier.consumedWindowInsets(imeInset)
+	
+	Column(
+		modifier
 	) {
-		Column(modifier) {
-			if(statusBarMode is OnScreenSystemUiMode.Opaque)
-				StatusBarScrim(statusBarMode.scrimColor)
-			
-			Column(Modifier.weight(1f)) {
-				content(scrims)
-			}
-			
-			if(navigationBarMode is OnScreenSystemUiMode.Opaque)
-				NavigationBarScrim(navigationBarMode.scrimColor)
+		if(statusBars is OnScreenSystemUiMode.Opaque)
+			StatusBarScrim(statusBars.scrimColor)
+		
+		Column(Modifier.weight(1f)) {
+			content(scrims)
 		}
+		
+		if(navigationBars is OnScreenSystemUiMode.Opaque)
+			NavigationBarScrim(navigationBars.scrimColor)
 	}
 }
 
@@ -330,7 +284,7 @@ fun AutoScaffold(
 		topBar = topBar,
 		bottomBar = bottomBar,
 		snackbarHost = {
-			Box(Modifier.navigationBarsWithImePadding()) {
+			Box(Modifier.safeContentPadding()) {
 				snackbarHost(it)
 			}
 		},

@@ -13,9 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.insets.Insets
-import com.google.accompanist.insets.LocalWindowInsets
-import com.google.accompanist.insets.WindowInsets
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.lhwdev.selfTestMacro.FirstInitialization
 import com.lhwdev.selfTestMacro.MainApplication
@@ -105,18 +102,6 @@ fun PreviewBase(statusBar: Boolean = false, navigator: Navigator) {
 			LocalPreview provides true,
 			LocalDebugContext provides debugContext,
 			LocalGlobalNavigator provides navigator,
-			LocalWindowInsets provides remember {
-				object : WindowInsets {
-					override val ime: WindowInsets.Type = ImmutableWindowInsetsType()
-					override val navigationBars: WindowInsets.Type = ImmutableWindowInsetsType()
-					override val statusBars: WindowInsets.Type = ImmutableWindowInsetsType(
-						layoutInsets = Insets.Insets(top = with(density) { 30.dp.roundToPx() })
-					)
-					override val systemBars: WindowInsets.Type = ImmutableWindowInsetsType()
-					override val systemGestures: WindowInsets.Type = ImmutableWindowInsetsType()
-					override val displayCutout: WindowInsets.Type = ImmutableWindowInsetsType()
-				}
-			},
 			LocalPreviewUiController provides uiController
 		) {
 			Box {
@@ -154,13 +139,3 @@ private fun initializeStubApp(context: Context) {
 		)
 	}
 }
-
-
-private class ImmutableWindowInsetsType(
-	override val layoutInsets: Insets = Insets.Empty,
-	override val animatedInsets: Insets = Insets.Empty,
-	override val isVisible: Boolean = false,
-	override val animationInProgress: Boolean = false,
-	override val animationFraction: Float = 0f,
-) : WindowInsets.Type
-

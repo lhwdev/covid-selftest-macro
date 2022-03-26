@@ -63,7 +63,7 @@ internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, w
 	Surface(color = MaterialTheme.colors.surface) {
 		AutoSystemUi(
 			enabled = wizard.isCurrent,
-			onScreenMode = OnScreenSystemUiMode.Opaque(Color.Transparent)
+			onScreen = OnScreenSystemUiMode.Opaque(Color.Transparent)
 		) {
 			if(parameters.endRoute != null) IconOnlyTopAppBar(
 				navigationIcon = painterResource(R.drawable.ic_clear_24),

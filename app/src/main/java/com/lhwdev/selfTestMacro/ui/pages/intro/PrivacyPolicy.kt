@@ -32,7 +32,7 @@ fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
 	val link = App.github.privacyPolicy.webUrl.toString()
 	
 	AutoSystemUi(
-		navigationBarMode = OnScreenSystemUiMode.Immersive(ScrimNavSurfaceColor)
+		navigationBars = OnScreenSystemUiMode.Immersive(ScrimNavSurfaceColor)
 	) { scrims ->
 		val uriHandler = LocalUriHandler.current
 		

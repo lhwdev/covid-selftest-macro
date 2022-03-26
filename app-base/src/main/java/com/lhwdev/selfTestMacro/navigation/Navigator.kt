@@ -89,6 +89,7 @@ class CurrentNavigator(
 	val parentOrSelf: CurrentNavigator get() = parent ?: this
 	
 	var isVisible: Boolean by mutableStateOf(true)
+		private set
 	
 	val isRoot: Boolean get() = routes.firstOrNull() == currentRouteInstance
 	val isTop: Boolean get() = routes.last() == currentRouteInstance

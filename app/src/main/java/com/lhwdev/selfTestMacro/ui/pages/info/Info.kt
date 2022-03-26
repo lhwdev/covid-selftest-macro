@@ -46,7 +46,7 @@ fun Info(): Unit = MaterialTheme(
 	
 	Surface(color = MaterialTheme.colors.primarySurface) {
 		AutoSystemUi(
-			onScreenMode = OnScreenSystemUiMode.Opaque(Color.Transparent)
+			onScreen = OnScreenSystemUiMode.Opaque(Color.Transparent)
 		) {
 			TopAppBar(
 				navigationIcon = {

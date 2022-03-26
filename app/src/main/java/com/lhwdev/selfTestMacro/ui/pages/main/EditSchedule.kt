@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.ui.pages.main
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
@@ -33,6 +31,7 @@ import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.common.TestTargetListItem
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
+import com.lhwdev.selfTestMacro.ui.utils.ClickableTextFieldDecoration
 import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
 import com.lhwdev.selfTestMacro.ui.utils.TimePickerDialog
 import com.vanpra.composematerialdialogs.*
@@ -139,10 +138,9 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 			minute: Int,
 			setTime: (hour: Int, minute: Int) -> Unit,
 			modifier: Modifier = Modifier
-		) = Box(
-			modifier
-				.padding(8.dp)
-				.clickable {
+		) {
+			ClickableTextFieldDecoration(
+				onClick = {
 					navigator.showDialogAsync { dismiss ->
 						TimePickerDialog(
 							initialHour = if(hour == -1) 7 else hour,
@@ -154,24 +152,20 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 							cancel = dismiss
 						)
 					}
-				}
-		) {
-			TextFieldDefaults.TextFieldDecorationBox(
-				value = if(hour == -1) "" else "a",
-				label = { Text(label) },
-				innerTextField = {
-					if(hour != -1) {
-						val text = buildAnnotatedString {
-							append(if(hour == 0) "12" else "$hour".padStart(2, padChar = '0'))
-							withStyle(SpanStyle(color = MediumContentColor)) { append(":") }
-							append("$minute".padStart(2, padChar = '0'))
-						}
-						Text(text)
-					}
 				},
-				enabled = true, singleLine = true, visualTransformation = VisualTransformation.None,
-				interactionSource = remember { MutableInteractionSource() }
-			)
+				isEmpty = hour == -1,
+				label = { Text(label) },
+				modifier = modifier.padding(8.dp)
+			) {
+				if(hour != -1) {
+					val text = buildAnnotatedString {
+						append(if(hour == 0) "12" else "$hour".padStart(2, padChar = '0'))
+						withStyle(SpanStyle(color = MediumContentColor)) { append(":") }
+						append("$minute".padStart(2, padChar = '0'))
+					}
+					Text(text)
+				}
+			}
 		}
 		
 		

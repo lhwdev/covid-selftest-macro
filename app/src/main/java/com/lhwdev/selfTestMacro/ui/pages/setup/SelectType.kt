@@ -76,7 +76,7 @@ internal fun WizardSelectType(model: SetupModel, parameters: SetupParameters, wi
 						isEmpty = model.instituteInfo == null,
 						label = { Text("기관 유형") },
 						colors = TextFieldDefaults.myTextFieldColors(),
-						modifier = Modifier.padding(8.dp).fillMaxWidth(),
+						fieldModifier = Modifier.padding(8.dp).fillMaxWidth(),
 						fieldContent = {
 							Text(model.instituteInfo?.type?.displayName ?: "")
 						},

@@ -184,7 +184,7 @@ internal fun ColumnScope.WizardSchoolInfo(
 				isEmpty = model.schoolLevel == 0,
 				isError = notFulfilled.value == 0,
 				label = { Text("학교 단계") },
-				modifier = commonModifier,
+				fieldModifier = commonModifier,
 				fieldContent = {
 					Text(sSchoolLevels[model.schoolLevel] ?: "")
 				},
@@ -207,7 +207,7 @@ internal fun ColumnScope.WizardSchoolInfo(
 				isEmpty = model.regionCode == "",
 				isError = notFulfilled.value == 1,
 				label = { Text("지역") },
-				modifier = commonModifier,
+				fieldModifier = commonModifier,
 				fieldContent = {
 					Text(if(model.regionCode == null) "(전국에서 검색)" else sRegions[model.regionCode] ?: "")
 				},

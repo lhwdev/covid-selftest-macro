@@ -23,7 +23,6 @@ private val sApplyObserverHandle = Snapshot.registerApplyObserver { modified, _ 
  *
  * Additionally, writes to it are transacted as part of the [Snapshot] system.
  *
- * @param value the wrapped value
  * @param policy a policy to control how changes are handled in a mutable snapshot.
  *
  * @see SnapshotMutationPolicy

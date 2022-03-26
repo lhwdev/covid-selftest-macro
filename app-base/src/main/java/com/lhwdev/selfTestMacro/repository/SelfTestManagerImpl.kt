@@ -345,7 +345,7 @@ class SelfTestManagerImpl(
 	
 	override suspend fun getCurrentStatus(user: DbUser): Status? = with(database) {
 		try {
-			val (session, _) = ensureSessionLoaded(user.userGroup)
+			val (session, _) = ensureSessionAuthorized(user.userGroup)
 			Status(session.getUserInfo(user.usersInstitute, user.apiUser()))
 		} catch(th: Throwable) {
 			th.rethrowIfNeeded()
@@ -369,17 +369,17 @@ class SelfTestManagerImpl(
 	 * - 앱을 켜면 알림이 실행되지 않았는 적이 있는지 여부 확인 및 버그 제보 제안
 	 * - 백그라운드 업데이트(3.1.0에 구현 예정)
 	 */
-	private suspend fun AppDatabase.submitSelfTest(user: DbUser, fromUi: Boolean): SubmitResult {
+	private suspend fun submitSelfTest(user: DbUser, fromUi: Boolean): SubmitResult = with(database) {
 		val group = user.userGroup
 		
-		return handleError(
+		handleError(
 			operationName = "자가진단 제출",
 			fromUi = fromUi,
 			target = user,
 			onError = { SubmitResult.Failed(user, it.causes, it.diagnosticItem, it.cause) }
 		) {
 			val (session, _) = tryAtMost(maxTrial = 3) {
-				ensureSessionLoaded(group)
+				ensureSessionAuthorized(group)
 			}
 			
 			val answer = user.answer
@@ -413,7 +413,7 @@ class SelfTestManagerImpl(
 		var lastProbableApiChange = false
 		
 		for(user in allUsers) {
-			val result = database.submitSelfTest(user, fromUi = fromUi)
+			val result = submitSelfTest(user, fromUi = fromUi)
 			
 			if(result is SubmitResult.Failed) {
 				var userSpecific = true

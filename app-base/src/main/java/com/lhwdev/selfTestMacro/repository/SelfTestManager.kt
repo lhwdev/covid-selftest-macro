@@ -44,7 +44,11 @@ interface SelfTestManager {
 	
 	val schedules: SelfTestSchedules
 	
-	fun getSession(group: DbUserGroup): SelfTestSession
+	fun createAuthSession(institute: InstituteInfo): SelfTestSession
+	
+	fun registerAuthSession(session: SelfTestSession, institute: InstituteInfo, mainUser: User)
+	
+	fun getAuthSession(group: DbUserGroup): SelfTestSession
 	
 	suspend fun findSchool(
 		regionCode: String?,
@@ -71,7 +75,7 @@ interface SelfTestManager {
 		session: SelfTestSession,
 		institute: InstituteInfo,
 		token: UsersToken
-	): List<User>
+	): UserGroup
 	
 	suspend fun getUserInfo(
 		session: SelfTestSession,

@@ -1,6 +1,7 @@
 package com.lhwdev.selfTestMacro.repository
 
 import com.lhwdev.fetch.http.BasicSession
+import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.database.DbUserGroup
@@ -16,7 +17,7 @@ abstract class SelfTestManagerBase : SelfTestManager {
 	
 	/// Session management
 	// TODO: persistence
-	class MySession(
+	class AuthorizedSession(
 		override val requestUrlBody: String,
 		override val cookieManager: CookieManager = CookieManager(null, CookiePolicy.ACCEPT_ALL),
 		override var keepAlive: Boolean? = null
@@ -26,9 +27,9 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		var token: UsersToken? = null
 	}
 	
-	private var anonymousSession = BasicSession()
+	private var anonymousSession: Session = BasicSession()
 	
-	private val sessions = mutableMapOf<UserInfoKey, MySession>()
+	private val sessions = mutableMapOf<UserInfoKey, AuthorizedSession>()
 	private val usersCache = mutableMapOf<UserInfoKey, User>()
 	// private val apiLoginCache: MutableMap<UsersIdToken, UsersToken> = mutableMapOf()
 	// private val apiUsersCache: MutableMap<UserInfoKey, User> = mutableMapOf()
@@ -40,32 +41,47 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		constructor(user: User) : this(user.instituteCode, user.userCode)
 	}
 	
-	protected fun getSession(
+	
+	override fun getAuthSession(group: DbUserGroup): AuthorizedSession = getAuthSession(
+		institute = group.institute,
+		userCode = with(database) { group.mainUser.userCode }
+	)
+	
+	override fun registerAuthSession(
+		session: SelfTestManager.SelfTestSession,
 		institute: InstituteInfo,
-		userCode: String
-	) = sessions.getOrPut(UserInfoKey(institute.code, userCode)) {
-		val previous = anonymousSession
+		mainUser: User
+	) {
+		sessions[UserInfoKey(institute.code, mainUser.userCode)] = session as AuthorizedSession
+	}
+	
+	
+	private fun createSession(): Session = anonymousSession.also {
 		anonymousSession = BasicSession()
+	}
+	
+	override fun createAuthSession(institute: InstituteInfo): AuthorizedSession {
+		val previous = createSession()
 		
-		MySession(
+		return AuthorizedSession(
 			requestUrlBody = institute.requestUrlBody,
 			cookieManager = previous.cookieManager ?: CookieManager(null, CookiePolicy.ACCEPT_ALL)
 		)
 	}
 	
-	override fun getSession(group: DbUserGroup): MySession = getSession(
-		institute = group.institute,
-		userCode = with(database) { group.mainUser.userCode }
-	)
+	private fun getAuthSession(
+		institute: InstituteInfo,
+		userCode: String
+	) = sessions.getOrPut(UserInfoKey(institute.code, userCode)) {
+		createAuthSession(institute)
+	}
 	
-	protected suspend fun loadSession(
-		session: SelfTestManager.SelfTestSession,
-		usersIdentifier: UsersIdentifier,
-		password: String,
-		institute: InstituteInfo
-	): UsersToken? = if((session as MySession).token == null) {
+	private suspend fun authorizeSession(session: AuthorizedSession, group: DbUserGroup) = if(session.token == null) {
 		val result = tryAtMost(maxTrial = 3) {
-			session.validatePassword(institute, usersIdentifier.token, password)
+			session.validatePassword(
+				institute = group.institute,
+				token = group.usersIdentifier.token, password = group.password
+			)
 		}
 		if(result is PasswordResult.Success) {
 			session.token = result.token
@@ -78,16 +94,9 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		session.token
 	}
 	
-	private suspend fun loadSession(session: MySession, group: DbUserGroup) = loadSession(
-		session = session,
-		usersIdentifier = group.usersIdentifier,
-		password = group.password,
-		institute = group.institute
-	)
-	
-	protected suspend fun ensureSessionLoaded(group: DbUserGroup): Pair<MySession, UsersToken> {
-		val session = getSession(group)
-		val token = loadSession(session, group)
+	protected suspend fun ensureSessionAuthorized(group: DbUserGroup): Pair<AuthorizedSession, UsersToken> {
+		val session = getAuthSession(group)
+		val token = authorizeSession(session, group)
 		if(token == null) {
 			val error = IllegalStateException("UserToken was not loaded")
 			debugContext.onThrowError(message = "SelfTestManagerImpl: apiUser // 2", throwable = error)
@@ -105,9 +114,9 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		// 2. slow path
 		val group = with(database) { userGroup }
 		
-		val (session, token) = ensureSessionLoaded(group)
+		val (session, token) = ensureSessionAuthorized(group)
 		
-		val users = session.getUserGroup(group.institute, token)
+		val users = session.getUserGroup(group.institute, token).users
 		
 		users.forEach {
 			val userKey = UserInfoKey(it)
@@ -148,17 +157,24 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		institute: InstituteInfo,
 		token: UsersIdToken,
 		password: String
-	): PasswordResult = session.validatePassword(
-		institute = institute,
-		token = token,
-		password = password
-	)
+	): PasswordResult {
+		val result = session.validatePassword(
+			institute = institute,
+			token = token,
+			password = password
+		)
+		if(result is PasswordResult.Success) {
+			session as AuthorizedSession
+			session.token = result.token
+		}
+		return result
+	}
 	
 	override suspend fun getUserGroup(
 		session: SelfTestManager.SelfTestSession,
 		institute: InstituteInfo,
 		token: UsersToken
-	): List<User> = session.getUserGroup(
+	): UserGroup = session.getUserGroup(
 		institute = institute,
 		token = token
 	)

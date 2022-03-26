@@ -64,8 +64,7 @@ private suspend fun submitLogin(
 	val instituteInfo = model.instituteInfo ?: return false
 	val institute = instituteInfo.institute ?: return false
 	
-	val sessionInfo = selfTestManager.createSession()
-	val session = sessionInfo.session
+	val session = selfTestManager.createAuthSession(institute = institute)
 	
 	val userId = try {
 		log("#2. 사용자 찾기")
@@ -76,7 +75,7 @@ private suspend fun submitLogin(
 			loginType = instituteInfo.type.loginType
 		)
 	} catch(e: Throwable) {
-		th.rethrowIfNeeded()
+		e.rethrowIfNeeded()
 		model.showSnackbar("사용자를 찾을 수 없어요.", actionLabel = "확인")
 		selfTestManager.debugContext.onLightError("사용자를 찾을 수 없어요.", e)
 		return false
@@ -128,7 +127,7 @@ private suspend fun submitLogin(
 		log("#3. 비밀번호 확인")
 		selfTestManager.validatePassword(session, institute, userId.token, password)
 	} catch(e: Throwable) {
-		th.rethrowIfNeeded()
+		e.rethrowIfNeeded()
 		model.showSnackbar("비밀번호가 바르지 않아요.", actionLabel = "확인")
 		selfTestManager.debugContext.onLightError("로그인에 실패했어요.", e)
 		return false
@@ -149,7 +148,13 @@ private suspend fun submitLogin(
 			}
 		}
 		is PasswordResult.Success -> try {
-			val userList = selfTestManager.getUserGroup(session, institute, result.token)
+			val userGroup = selfTestManager.getUserGroup(session, institute, result.token)
+			
+			selfTestManager.registerAuthSession(
+				session,
+				institute = institute,
+				mainUser = userGroup.mainUser
+			)
 			
 			val master = MasterUser(
 				identifier = userId,
@@ -159,7 +164,7 @@ private suspend fun submitLogin(
 				instituteType = instituteInfo.type
 			)
 			
-			val list = userList.map {
+			val list = userGroup.users.map {
 				WizardUser(
 					user = it,
 					info = selfTestManager.getUserInfo(session, institute, it),
@@ -177,7 +182,7 @@ private suspend fun submitLogin(
 			
 			return true
 		} catch(e: Throwable) {
-			th.rethrowIfNeeded()
+			e.rethrowIfNeeded()
 			selfTestManager.debugContext.onError("사용자 정보를 불러오지 못했어요.", e)
 		}
 		

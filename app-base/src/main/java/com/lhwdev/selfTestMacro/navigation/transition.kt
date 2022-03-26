@@ -6,17 +6,12 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import com.lhwdev.selfTestMacro.ui.utils.VisibilityAnimationState
-import kotlinx.coroutines.flow.collect
 
 
 fun interface RouteTransition {
@@ -105,7 +100,10 @@ fun FadeRouteTransition(
 
 val TransitionScrimColor = Color.Black.copy(alpha = 0.7f)
 
-fun SlideRouteTransition(): RouteTransition = object : RouteTransition {
+fun SlideRouteTransition(
+	enterAnimationSpec: FiniteAnimationSpec<IntOffset> = spring(visibilityThreshold = IntOffset.VisibilityThreshold),
+	exitAnimationSpec: FiniteAnimationSpec<IntOffset> = spring(visibilityThreshold = IntOffset.VisibilityThreshold)
+): RouteTransition = object : RouteTransition {
 	@Composable
 	override fun Transition(
 		route: Route,
@@ -129,87 +127,12 @@ fun SlideRouteTransition(): RouteTransition = object : RouteTransition {
 			)
 			transition.AnimatedVisibility(
 				visible = { it },
-				enter = slideInHorizontally(initialOffsetX = { it }),
-				exit = slideOutHorizontally(targetOffsetX = { it }),
+				enter = slideInHorizontally(animationSpec = enterAnimationSpec, initialOffsetX = { it }),
+				exit = slideOutHorizontally(animationSpec = exitAnimationSpec, targetOffsetX = { it }),
 			) { content() }
 		}
 	}
 }
-
-// TODO
-fun CustomDialogRouteTransition(
-	elevation: Dp = 24.dp,
-	startPosition: (screenSize: Offset) -> Offset = { it / 2f }
-): RouteTransition = object : RouteTransition {
-	@Composable
-	override fun Transition(
-		route: Route,
-		visibleState: VisibilityAnimationState,
-		onAnimationEnd: () -> Unit,
-		content: @Composable () -> Unit
-	) {
-		val density = LocalDensity.current
-		val transition = updateRouteTransition(visibleState)
-		OnTransitionEndObserver(transition, onAnimationEnd)
-		
-		val scrimTransparency = transition.animateFloat(
-			label = "ScrimTransparency",
-			transitionSpec = {
-				if(targetState) tween(durationMillis = 250)
-				else tween(durationMillis = 160)
-			}
-		) {
-			if(it) 1f else 0f
-		}
-		
-		val contentProgress = transition.animateFloat(
-			label = "ContentProgress",
-			transitionSpec = {
-				if(targetState) tween(durationMillis = 200)
-				else tween(durationMillis = 180)
-			}
-		) {
-			if(it) 1f else 0f
-		}
-		
-		BoxWithConstraints {
-			val size = remember {
-				with(density) { Offset(maxWidth.toPx(), maxHeight.toPx()) }
-			}
-			val startPositionResult = remember {
-				startPosition(size)
-			}
-			
-			Box(
-				Modifier
-					.matchParentSize()
-					.graphicsLayer { alpha = scrimTransparency.value }
-					.background(color = TransitionScrimColor)
-			)
-			
-			// in this version, scale is not supported for transition...
-			
-			Box(
-				Modifier.graphicsLayer {
-					val progress = contentProgress.value
-					alpha = progress
-					
-					val scale = if(visibleState.targetState) {
-						0.7f + progress * 0.3f
-					} else {
-						0.75f + progress * 0.25f
-					}
-					
-					scaleX = scale
-					scaleY = scale
-					translationX = startPositionResult.x - size.x / 2
-					// shadowElevation = with(density) { elevation.toPx() }
-				}
-			) { content() }
-		}
-	}
-}
-
 
 private val sDefaultOpaqueRouteTransition: RouteTransition = SlideRouteTransition()
 fun DefaultOpaqueRouteTransition(): RouteTransition = sDefaultOpaqueRouteTransition

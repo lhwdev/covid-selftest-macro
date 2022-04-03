@@ -200,12 +200,14 @@ fun AutoSystemUi(
 	scrims.statusBarsItem = data.statusBarUiItem(mode = statusBars)
 	scrims.navigationBarsItem = data.navigationBarUiItem(mode = navigationBars)
 	
-	@Suppress("RedundantExplicitType")
 	var modifier: Modifier = Modifier
-	if(ime is SystemUiMode.Default) modifier = modifier.windowInsetsPadding(WindowInsets.ime)
 	
 	if(statusBars != null) modifier = modifier.consumedWindowInsets(WindowInsets.statusBars)
 	if(navigationBars != null) modifier = modifier.consumedWindowInsets(WindowInsets.navigationBars)
+	
+	// need to come after `modifier.consumedWindowInsets(WindowInsets.navigationBars)`
+	if(ime is SystemUiMode.Default) modifier = modifier.windowInsetsPadding(WindowInsets.ime)
+	
 	if(ime != null) modifier = modifier.consumedWindowInsets(WindowInsets.ime)
 	
 	Column(modifier) {

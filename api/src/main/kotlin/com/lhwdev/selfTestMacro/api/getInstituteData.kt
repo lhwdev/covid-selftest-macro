@@ -17,7 +17,7 @@ public data class SearchResult(
 	@SerialName("schulList")
 	public val instituteList: List<InstituteInfo>,
 	
-	@SerialName("searchKey")
+	@SerialName("key")
 	public val searchKey: SearchKey
 )
 

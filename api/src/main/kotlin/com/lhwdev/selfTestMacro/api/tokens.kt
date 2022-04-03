@@ -9,6 +9,19 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 
+@Serializable(SearchKey.Serializer::class)
+public data class SearchKey(val token: String) {
+	public object Serializer : KSerializer<SearchKey> {
+		override val descriptor: SerialDescriptor =
+			PrimitiveSerialDescriptor(SearchKey::class.java.name, PrimitiveKind.STRING)
+		
+		override fun deserialize(decoder: Decoder): SearchKey = SearchKey(decoder.decodeString())
+		override fun serialize(encoder: Encoder, value: SearchKey) {
+			encoder.encodeString(value.token)
+		}
+	}
+}
+
 @Serializable(UsersIdToken.Serializer::class)
 public data class UsersIdToken(val token: String) {
 	public object Serializer : KSerializer<UsersIdToken> {

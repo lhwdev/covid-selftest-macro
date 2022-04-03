@@ -18,6 +18,7 @@ public suspend fun Session.findUser(
 	name: String,
 	birthday: String,
 	loginType: LoginType,
+	searchKey: SearchKey,
 	pageNumber: Int? = null
 ): UsersIdentifier = fetch(
 	institute.requestUrlV2["findUser"],
@@ -27,7 +28,8 @@ public suspend fun Session.findUser(
 		"orgCode" set institute.code
 		"name" set encrypt(name)
 		"birthday" set encrypt(birthday)
-		"stdntPNo" set pageNumber
+		if(pageNumber != null) "stdntPNo" set pageNumber
+		"searchKey" set searchKey.token
 		"loginType" set loginType.name
 	}
 ).toJsonLoose(UsersIdentifier.serializer())

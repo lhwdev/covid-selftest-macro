@@ -3,26 +3,31 @@
 package com.lhwdev.selfTestMacro.api
 
 import com.lhwdev.fetch.get
-import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
-import com.lhwdev.fetch.http.fetch
 import com.lhwdev.fetch.queryUrlParamsToString
 import com.lhwdev.fetch.sDefaultFakeHeader
-import com.lhwdev.selfTestMacro.*
+import com.lhwdev.selfTestMacro.sCommonUrl
+import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-private data class InstituteInfoResponse(@SerialName("schulList") val instituteList: List<InstituteInfo>)
+public data class SearchResult(
+	@SerialName("schulList")
+	public val instituteList: List<InstituteInfo>,
+	
+	@SerialName("searchKey")
+	public val searchKey: SearchKey
+)
 
 
 // 학교: lctnScCode=03&schulCrseScCode=4&orgName=...&loginType=school
-public suspend fun Session.getSchoolData(
+public suspend fun Session.searchSchool(
 	regionCode: String?,
 	schoolLevelCode: String,
 	name: String
-): List<InstituteInfo> {
+): SearchResult {
 	var params = arrayOf(
 		"schulCrseScCode" to schoolLevelCode,
 		"orgName" to name,
@@ -32,13 +37,12 @@ public suspend fun Session.getSchoolData(
 	
 	return fetch(
 		url = sCommonUrl.get("searchSchool", *params),
-		method = HttpMethod.get,
 		headers = sDefaultFakeHeader
-	).toJsonLoose(InstituteInfoResponse.serializer()).instituteList
+	).toJsonLoose(SearchResult.serializer())
 }
 
 // 대학: orgName=...&loginType=univ
-public suspend fun Session.getUniversityData(
+public suspend fun Session.searchUniversity(
 	name: String
 ): List<InstituteInfo> {
 	val params = queryUrlParamsToString(
@@ -46,12 +50,12 @@ public suspend fun Session.getUniversityData(
 		"loginType" to "univ"
 	)
 	
-	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose(InstituteInfoResponse.serializer()).instituteList
+	return fetch(url = sCommonUrl["searchSchool?$params"], headers = sDefaultFakeHeader)
+		.toJsonLoose(SearchResult.serializer()).instituteList
 }
 
 // 교육행정기관: orgName=...&loginType=office
-public suspend fun Session.getOfficeData(
+public suspend fun Session.searchOffice(
 	name: String
 ): List<InstituteInfo> {
 	val params = queryUrlParamsToString(
@@ -59,8 +63,8 @@ public suspend fun Session.getOfficeData(
 		"loginType" to "office"
 	)
 	
-	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose(InstituteInfoResponse.serializer()).instituteList
+	return fetch(url = sCommonUrl["searchSchool?$params"], headers = sDefaultFakeHeader)
+		.toJsonLoose(SearchResult.serializer()).instituteList
 }
 
 /*
@@ -101,7 +105,7 @@ public suspend fun Session.getAvailableSigCodes(
 }
 
 // 학원: lctnScCode=..&sigCode=....&orgName=...&isAcademySearch=true&loginType=office
-public suspend fun Session.getAcademyData(
+public suspend fun Session.searchAcademy(
 	regionCode: String,
 	sigCode: String,
 	name: String
@@ -114,7 +118,7 @@ public suspend fun Session.getAcademyData(
 		"isAcademySearch" to "true"
 	)
 	
-	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
-		.toJsonLoose(InstituteInfoResponse.serializer()).instituteList
+	return fetch(url = sCommonUrl["searchSchool?$params"], headers = sDefaultFakeHeader)
+		.toJsonLoose(SearchResult.serializer()).instituteList
 }
 

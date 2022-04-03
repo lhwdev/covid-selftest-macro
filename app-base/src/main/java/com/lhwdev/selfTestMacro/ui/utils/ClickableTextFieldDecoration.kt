@@ -3,6 +3,7 @@ package com.lhwdev.selfTestMacro.ui.utils
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
@@ -15,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.input.VisualTransformation
 
@@ -22,6 +24,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 @Composable
 fun ClickableTextFieldDecoration(
 	isEmpty: Boolean,
+	isFocused: Boolean = false,
 	onClick: () -> Unit,
 	modifier: Modifier = Modifier,
 	enabled: Boolean = true,
@@ -45,6 +48,8 @@ fun ClickableTextFieldDecoration(
 			.clip(shape)
 			.background(colors.backgroundColor(enabled).value)
 			.indicatorLine(enabled, isError, interactionSource, colors)
+			.focusProperties { canFocus = isFocused }
+			.focusable(enabled, interactionSource)
 			.clickable(
 				interactionSource = interactionSource,
 				indication = LocalIndication.current,

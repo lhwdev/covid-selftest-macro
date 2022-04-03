@@ -4,6 +4,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 
 
 val Colors.primarySurfaceColored: Color
@@ -40,3 +41,6 @@ val DisabledContentColor: Color
 @Composable
 fun Color(onLight: Color, onDark: Color): Color =
 	if(MaterialTheme.colors.isLight) onLight else onDark
+
+
+val Color.isDark: Boolean get() = luminance() < 0.5f

@@ -19,9 +19,13 @@ import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.replacedValue
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.LocalPreference
+import com.lhwdev.selfTestMacro.ui.SelfTestQuestions
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.pages.common.iconFor
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.SelectionChip
 import com.vanpra.composematerialdialogs.*
 
@@ -61,7 +65,7 @@ private fun MaterialDialogScope.SelectAnswer(
 				navigationIcon = {
 					SimpleIconButton(icon = R.drawable.ic_clear_24, contentDescription = "닫기", onClick = requestClose)
 				},
-				statusBarScrim = scrims.statusBar
+				statusBarScrim = scrims.statusBars
 			)
 		}
 	) {
@@ -85,7 +89,7 @@ private fun MaterialDialogScope.SelectAnswer(
 				NegativeButton(onClick = requestClose)
 			}
 			
-			scrims.navigationBar()
+			scrims.navigationBars()
 		}
 	}
 }

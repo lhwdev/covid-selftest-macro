@@ -4,10 +4,14 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.clearAndSetSemantics
 
 
 @Composable
@@ -35,12 +39,17 @@ fun ExposedDropdownMenuField(
 	) {
 		ClickableTextFieldDecoration(
 			isEmpty = isEmpty,
+			isFocused = expanded,
 			onClick = { onExpandedChange(!expanded) },
 			enabled = enabled,
 			label = label,
 			leadingIcon = leadingIcon,
 			trailingIcon = {
-				ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+				Icon(
+					Icons.Filled.ArrowDropDown,
+					contentDescription = "Trailing icon for exposed dropdown menu",
+					modifier = Modifier.clearAndSetSemantics {}.rotate(if(expanded) 180f else 360f)
+				)
 			},
 			isError = false,
 			shape = shape,
@@ -50,8 +59,9 @@ fun ExposedDropdownMenuField(
 		ExposedDropdownMenu(
 			expanded = expanded,
 			onDismissRequest = { onExpandedChange(false) },
-			modifier = dropdownContentModifier,
-			content = dropdownContent
-		)
+			modifier = dropdownContentModifier
+		) {
+			dropdownContent()
+		}
 	}
 }

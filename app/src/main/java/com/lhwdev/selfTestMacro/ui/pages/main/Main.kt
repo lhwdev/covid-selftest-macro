@@ -26,7 +26,9 @@ import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.LocalPreference
+import com.lhwdev.selfTestMacro.ui.UiContext
+import com.lhwdev.selfTestMacro.ui.changed
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.icons.ExpandMore
 import com.lhwdev.selfTestMacro.ui.icons.Icons
@@ -35,6 +37,7 @@ import com.lhwdev.selfTestMacro.ui.pages.common.scheduleInfo
 import com.lhwdev.selfTestMacro.ui.pages.edit.EditUsers
 import com.lhwdev.selfTestMacro.ui.pages.info.Info
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.showFullDialogAsync
@@ -54,7 +57,7 @@ private fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 			scaffoldState = scaffoldState,
 			topBar = {
 				var showMoreActions by remember { mutableStateOf(false) }
-				TopAppBar(
+				com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar(
 					title = { Text("코로나19 자가진단 매크로") },
 					actions = {
 						SimpleIconButton(
@@ -81,7 +84,7 @@ private fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 							}
 						}
 					},
-					statusBarScrim = { scrims.statusBar() }
+					statusBarScrim = { scrims.statusBars() }
 				)
 			},
 			modifier = Modifier.weight(1f)
@@ -97,7 +100,7 @@ private fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 			}
 		}
 		
-		scrims.navigationBar()
+		scrims.navigationBars()
 	}
 	
 }

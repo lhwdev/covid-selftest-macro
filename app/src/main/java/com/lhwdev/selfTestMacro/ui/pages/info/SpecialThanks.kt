@@ -14,10 +14,10 @@ import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
-import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.common.LinkedText
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.vanpra.composematerialdialogs.Buttons
 import com.vanpra.composematerialdialogs.PositiveButton
 import com.vanpra.composematerialdialogs.showDialogAsync
@@ -29,7 +29,7 @@ import kotlinx.coroutines.withContext
 internal fun Navigator.showSpecialThanks() = showFullDialogAsync {
 	AutoSystemUi { scrims ->
 		TopAppBar(
-			title = {}, statusBarScrim = scrims.statusBar,
+			title = {}, statusBarScrim = scrims.statusBars,
 			navigationIcon = {
 				IconButton(onClick = requestClose) {
 					Icon(painterResource(R.drawable.ic_arrow_back_24), contentDescription = "뒤로")
@@ -47,7 +47,7 @@ internal fun Navigator.showSpecialThanks() = showFullDialogAsync {
 			PositiveButton(requestClose)
 		}
 		
-		scrims.navigationBar()
+		scrims.navigationBars()
 	}
 }
 

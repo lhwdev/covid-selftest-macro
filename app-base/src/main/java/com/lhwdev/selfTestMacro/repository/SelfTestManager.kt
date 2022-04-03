@@ -54,13 +54,14 @@ interface SelfTestManager {
 		regionCode: String?,
 		schoolLevelCode: Int,
 		name: String
-	): List<InstituteInfo>
+	): SearchResult
 	
 	suspend fun findUser(
 		session: SelfTestSession,
 		institute: InstituteInfo,
 		name: String,
 		birthday: String,
+		searchKey: SearchKey,
 		loginType: LoginType
 	): UsersIdentifier
 	

@@ -23,6 +23,9 @@ import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.openWebsite
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.systemUi.ScrimNavSurfaceColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.DeserializationStrategy
@@ -105,7 +108,7 @@ fun OpenSources() {
 	) { scrims ->
 		Scaffold(
 			topBar = {
-				TopAppBar(
+				com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar(
 					title = { Text("오픈소스 라이센스") },
 					navigationIcon = {
 						SimpleIconButton(
@@ -113,21 +116,21 @@ fun OpenSources() {
 							contentDescription = "뒤로 가기",
 							onClick = { navigator.popRoute() })
 					},
-					statusBarScrim = scrims.statusBar
+					statusBarScrim = scrims.statusBars
 				)
 			}
 		) {
 			if(items != null && extras != null) Box(Modifier.fillMaxSize()) {
-				OpenSourcesContent(items, extras, scrims.navigationBarSpacer)
+				OpenSourcesContent(items, extras, scrims.navigationBarsSpacer)
 				
 				Box(Modifier.align(Alignment.BottomCenter)) {
-					scrims.navigationBar()
+					scrims.navigationBars()
 				}
 			} else Column {
 				ListItem { Text("로딩 중...", color = DisabledContentColor) }
 				
 				Box(Modifier.wrapContentSize(align = Alignment.BottomCenter)) {
-					scrims.navigationBar()
+					scrims.navigationBars()
 				}
 			}
 		}
@@ -196,7 +199,7 @@ fun OpenSourcesList(groupId: String, items: List<LicenseItem>, extra: OpenSource
 	AutoSystemUi { scrims ->
 		Scaffold(
 			topBar = {
-				TopAppBar(
+				com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar(
 					title = { Text(groupId) },
 					navigationIcon = {
 						SimpleIconButton(
@@ -204,7 +207,7 @@ fun OpenSourcesList(groupId: String, items: List<LicenseItem>, extra: OpenSource
 							contentDescription = "뒤로 가기",
 							onClick = { navigator.popRoute() })
 					},
-					statusBarScrim = scrims.statusBar
+					statusBarScrim = scrims.statusBars
 				)
 			}
 		) {
@@ -234,7 +237,7 @@ fun OpenSourcesList(groupId: String, items: List<LicenseItem>, extra: OpenSource
 					}
 				}
 				
-				scrims.navigationBar()
+				scrims.navigationBars()
 			}
 		}
 	}
@@ -249,7 +252,7 @@ fun OpenSourcesDetail(item: LicenseItem) {
 	AutoSystemUi { scrims ->
 		Scaffold(
 			topBar = {
-				TopAppBar(
+				com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar(
 					navigationIcon = {
 						SimpleIconButton(
 							icon = R.drawable.ic_arrow_back_24, contentDescription = "뒤로 가기",
@@ -257,7 +260,7 @@ fun OpenSourcesDetail(item: LicenseItem) {
 						)
 					},
 					title = { Text("오픈소스 정보") },
-					statusBarScrim = scrims.statusBar,
+					statusBarScrim = scrims.statusBars,
 					backgroundColor = Color.Transparent,
 					elevation = 0.dp
 				)

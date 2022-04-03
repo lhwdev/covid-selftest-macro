@@ -12,8 +12,12 @@ import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.navigation.RouteTransitionBlock
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.DefaultContentColor
+import com.lhwdev.selfTestMacro.ui.PreviewBase
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
+import com.lhwdev.selfTestMacro.ui.primarySurfaceColored
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
 
 
 val IntroRoute: Route = Route("Intro") { Intro() }
@@ -34,7 +38,7 @@ private fun Intro() {
 		contentColor = contentColorFor(MaterialTheme.colors.primary)
 	) {
 		AutoSystemUi(onScreen = OnScreenSystemUiMode.Immersive()) { scrims ->
-			scrims.statusBar()
+			scrims.statusBars()
 			
 			Column(Modifier.weight(1f).padding(32.dp)) {
 				Spacer(Modifier.weight(5f))
@@ -75,7 +79,7 @@ private fun Intro() {
 				}
 			}
 			
-			scrims.navigationBar()
+			scrims.navigationBars()
 		}
 	}
 }

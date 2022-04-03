@@ -25,6 +25,8 @@ import com.lhwdev.selfTestMacro.openWebsite
 import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.pages.intro.showPrivacyPolicy
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.lhwdev.utils.rethrowIfNeeded
 import com.vanpra.composematerialdialogs.Content

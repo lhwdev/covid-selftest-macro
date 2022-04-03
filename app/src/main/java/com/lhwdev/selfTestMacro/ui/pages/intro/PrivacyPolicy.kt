@@ -24,7 +24,11 @@ import com.lhwdev.github.repo.GithubContentType
 import com.lhwdev.selfTestMacro.App
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.navigation.Navigator
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.DefaultContentColor
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.systemUi.ScrimNavSurfaceColor
+import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.vanpra.composematerialdialogs.showFullDialogAsync
 
 
@@ -45,7 +49,7 @@ fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
 							Icon(painterResource(R.drawable.ic_open_in_browser_24), contentDescription = "브라우저에서 열기")
 						}
 					},
-					statusBarScrim = scrims.statusBar
+					statusBarScrim = scrims.statusBars
 				)
 			}
 		) {
@@ -88,11 +92,11 @@ fun Navigator.showPrivacyPolicy(): Unit = showFullDialogAsync {
 						modifier = Modifier.padding(top = 32.dp, start = 12.dp, end = 12.dp, bottom = 24.dp)
 					)
 					
-					scrims.navigationBarSpacer()
+					scrims.navigationBarsSpacer()
 				} else {
 					Text("불러오는 중...", modifier = Modifier.padding(32.dp).align(Alignment.TopCenter))
 				}
-				Box(Modifier.align(Alignment.BottomStart)) { scrims.navigationBar() }
+				Box(Modifier.align(Alignment.BottomStart)) { scrims.navigationBars() }
 			}
 		}
 	}

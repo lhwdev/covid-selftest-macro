@@ -23,13 +23,13 @@ import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.showToast
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.MediumContentColor
-import com.lhwdev.selfTestMacro.ui.Scrims
-import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.common.TestTargetListItem
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.Scrims
+import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
 import com.lhwdev.selfTestMacro.ui.utils.ClickableTextFieldDecoration
 import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
@@ -92,7 +92,7 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 		title = { Text("자가진단 예약") },
 		backgroundColor = Color.Transparent,
 		elevation = 0.dp,
-		statusBarScrim = scrims.statusBar
+		statusBarScrim = scrims.statusBars
 	)
 	Divider()
 	
@@ -297,5 +297,5 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 		NegativeButton(onClick = requestClose)
 	}
 	
-	scrims.navigationBar()
+	scrims.navigationBars()
 }

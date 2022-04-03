@@ -18,8 +18,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.SystemUiMode
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.SystemUiMode
 
 
 @Composable

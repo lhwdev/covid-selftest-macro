@@ -133,7 +133,7 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		regionCode: String?,
 		schoolLevelCode: Int,
 		name: String
-	): List<InstituteInfo> = anonymousSession.getSchoolData(
+	): SearchResult = anonymousSession.searchSchool(
 		regionCode = regionCode,
 		schoolLevelCode = "$schoolLevelCode",
 		name = name
@@ -144,11 +144,13 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		institute: InstituteInfo,
 		name: String,
 		birthday: String,
+		searchKey: SearchKey,
 		loginType: LoginType
 	): UsersIdentifier = session.findUser(
 		institute = institute,
 		name = name,
 		birthday = birthday,
+		searchKey = searchKey,
 		loginType = loginType
 	)
 	

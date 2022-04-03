@@ -27,12 +27,12 @@ import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.RouteTransitionBlock
 import com.lhwdev.selfTestMacro.showToast
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.LocalPreference
-import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.pages.info.showDebugWindow
 import com.lhwdev.selfTestMacro.ui.pages.intro.IntroRoute
 import com.lhwdev.selfTestMacro.ui.pages.main.MainRoute
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
@@ -58,7 +58,7 @@ fun Splash() {
 		AutoSystemUi(
 			onScreen = OnScreenSystemUiMode.Immersive()
 		) { scrims ->
-			scrims.statusBar()
+			scrims.statusBars()
 			
 			Box {
 				LottieAnimation(
@@ -77,7 +77,7 @@ fun Splash() {
 				)
 			}
 			
-			scrims.navigationBar()
+			scrims.navigationBars()
 		}
 	}
 	

@@ -18,17 +18,18 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
+import com.lhwdev.selfTestMacro.api.SearchKey
 import com.lhwdev.selfTestMacro.debug.LocalDebugContext
 import com.lhwdev.selfTestMacro.debug.log
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.sRegions
 import com.lhwdev.selfTestMacro.sSchoolLevels
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
-import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.primaryActive
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.ExposedDropdownMenuField
 import com.vanpra.composematerialdialogs.*
 import kotlinx.coroutines.launch
@@ -58,7 +59,7 @@ internal fun WizardInstituteInfo(
 							onClick = parameters.endRoute
 						)
 					}),
-					statusBarScrim = { scrims.statusBar() }
+					statusBarScrim = { scrims.statusBars() }
 				)
 			},
 			modifier = Modifier.weight(1f)
@@ -76,7 +77,7 @@ internal fun WizardInstituteInfo(
 			}
 		}
 		
-		scrims.navigationBar()
+		scrims.navigationBars()
 	}
 }
 
@@ -119,16 +120,17 @@ internal fun ColumnScope.WizardSchoolInfo(
 	var complete by remember { mutableStateOf(false) }
 	
 	fun findSchool() = scope.launch find@{
-		fun selectSchool(info: InstituteInfo) {
+		fun selectSchool(info: InstituteInfo, searchKey: SearchKey) {
 			model.institute = info
 			model.schoolName = info.name
+			setupModel.searchKey = searchKey
 			complete = true
 			wizard.next()
 		}
 		
 		val snackbarHostState = setupModel.scaffoldState.snackbarHostState
 		
-		val schools = runCatching {
+		val searchResult = runCatching {
 			log("#1. 학교 정보 찾기")
 			selfTestManager.findSchool(
 				regionCode = model.regionCode,
@@ -139,6 +141,7 @@ internal fun ColumnScope.WizardSchoolInfo(
 			debugContext.onError("학교를 찾지 못했어요.", exception)
 			return@find
 		}
+		val schools = searchResult.instituteList
 		
 		if(schools.isEmpty()) {
 			snackbarHostState.showSnackbar("학교를 찾지 못했어요.", "확인")
@@ -151,10 +154,10 @@ internal fun ColumnScope.WizardSchoolInfo(
 				institutes = schools,
 				onSelect = {
 					removeRoute()
-					if(it != null) selectSchool(it)
+					if(it != null) selectSchool(it, searchResult.searchKey)
 				}
 			)
-		} else selectSchool(schools[0])
+		} else selectSchool(schools[0], searchResult.searchKey)
 	}
 	
 	

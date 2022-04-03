@@ -4,6 +4,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.InstituteType
+import com.lhwdev.selfTestMacro.api.SearchKey
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.repository.WizardUser
 
@@ -25,6 +26,7 @@ internal class SetupModel {
 	
 	var addingSameInstituteUser by mutableStateOf<AddSameInstituteUser?>(null)
 	var instituteInfo by mutableStateOf<InstituteInfoModel?>(null)
+	var searchKey by mutableStateOf<SearchKey?>(null)
 	
 	var userName by mutableStateOf("")
 	var userBirth by mutableStateOf("")

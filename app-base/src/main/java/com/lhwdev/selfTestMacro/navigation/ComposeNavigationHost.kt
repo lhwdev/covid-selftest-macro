@@ -5,7 +5,7 @@ import android.view.View
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalView
 import com.lhwdev.selfTestMacro.modules.app_base.R
-import com.lhwdev.selfTestMacro.ui.EnableAutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.EnableAutoSystemUi
 import com.lhwdev.selfTestMacro.ui.utils.AnimateListAsComposable
 import com.lhwdev.selfTestMacro.ui.utils.rememberLoopLinkedList
 import com.vanpra.composematerialdialogs.FullScreenDialog

@@ -12,8 +12,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.utils.ExposedDropdownMenuField
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.myTextFieldColors
@@ -36,7 +36,7 @@ internal fun WizardSelectType(model: SetupModel, parameters: SetupParameters, wi
 			enabled = wizard.isCurrent,
 			onScreen = OnScreenSystemUiMode.Immersive()
 		) { scrims ->
-			scrims.statusBar()
+			scrims.statusBars()
 			
 			if(parameters.endRoute != null) IconOnlyTopAppBar(
 				navigationIcon = painterResource(R.drawable.ic_clear_24),
@@ -106,7 +106,7 @@ internal fun WizardSelectType(model: SetupModel, parameters: SetupParameters, wi
 				}
 			}
 			
-			scrims.navigationBar()
+			scrims.navigationBars()
 		}
 	}
 }

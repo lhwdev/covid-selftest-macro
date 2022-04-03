@@ -15,14 +15,14 @@ import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.database.removeTestGroups
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.showRouteFactoryAsync
-import com.lhwdev.selfTestMacro.ui.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.MediumContentColor
-import com.lhwdev.selfTestMacro.ui.TopAppBar
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.pages.common.iconFor
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupParameters
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.vanpra.composematerialdialogs.promptYesNoDialog
 import com.vanpra.composematerialdialogs.showDialogAsync
 import kotlinx.coroutines.launch
@@ -88,7 +88,7 @@ fun EditUsers() {
 							}
 						},
 						backgroundColor = MaterialTheme.colors.surface,
-						statusBarScrim = scrims.statusBar
+						statusBarScrim = scrims.statusBars
 					)
 					AnimatedVisibility(
 						visible = selection.isNotEmpty(),
@@ -162,7 +162,7 @@ fun EditUsers() {
 							},
 							backgroundColor = MaterialTheme.colors.onSurface.copy(alpha = 0.05f)
 								.compositeOver(MaterialTheme.colors.surface),
-							statusBarScrim = scrims.statusBar
+							statusBarScrim = scrims.statusBars
 						)
 					}
 				}
@@ -171,7 +171,7 @@ fun EditUsers() {
 					Box(Modifier.weight(1f)) {
 						EditUsersContent(selection = selection)
 					}
-					scrims.navigationBar()
+					scrims.navigationBars()
 				}
 			}
 		}

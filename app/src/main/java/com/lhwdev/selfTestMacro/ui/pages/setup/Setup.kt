@@ -16,7 +16,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.navigation.Route
-import com.lhwdev.selfTestMacro.ui.AutoScaffold
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
@@ -53,10 +52,10 @@ internal const val sSetupPagesCount = 4
 private fun SetupWizardView(model: SetupModel, parameters: SetupParameters) {
 	var pageIndex by remember { mutableStateOf(0) }
 	
-	AutoScaffold(
+	Scaffold(
 		scaffoldState = model.scaffoldState,
 		snackbarHost = {
-			Box(Modifier.padding(bottom = 40.dp)) {
+			Box(Modifier.safeContentPadding().padding(bottom = 40.dp)) {
 				SnackbarHost(it)
 			}
 		}

@@ -34,7 +34,11 @@ import com.lhwdev.selfTestMacro.repository.MasterUser
 import com.lhwdev.selfTestMacro.repository.SelfTestManager
 import com.lhwdev.selfTestMacro.repository.WizardUser
 import com.lhwdev.selfTestMacro.showToastSuspendAsync
-import com.lhwdev.selfTestMacro.ui.*
+import com.lhwdev.selfTestMacro.ui.DefaultContentColor
+import com.lhwdev.selfTestMacro.ui.EmptyRestartable
+import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.ui.systemUi.isVisible
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.lhwdev.utils.rethrowIfNeeded
@@ -61,6 +65,7 @@ private suspend fun submitLogin(
 	val name = model.userName
 	val birth = model.userBirth
 	val instituteInfo = model.instituteInfo ?: return false
+	val searchKey = model.searchKey ?: return false
 	val institute = instituteInfo.institute ?: return false
 	
 	val session = selfTestManager.createAuthSession(institute = institute)
@@ -71,6 +76,7 @@ private suspend fun submitLogin(
 			session = session,
 			institute = institute,
 			name = name, birthday = birth,
+			searchKey = searchKey,
 			loginType = instituteInfo.type.loginType
 		)
 	} catch(e: Throwable) {
@@ -228,7 +234,7 @@ private fun WizardStudentInfo(
 	
 	
 	EmptyRestartable {
-		val requestShowCondition = isImeVisible
+		val requestShowCondition = WindowInsets.ime.isVisible
 		if(wizard.isCurrent) DisposableEffect(Unit) {
 			if(requestShowCondition) nameRef.requestFocus()
 			onDispose {}
@@ -286,7 +292,7 @@ private fun WizardStudentInfo(
 						targetState = WindowInsets.ime.isVisible
 					) { // For legibility: ime may hide TextField
 						if(it) Column {
-							TopAppBar(
+							com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar(
 								title = { Text("사용자 정보 입력") },
 								navigationIcon = if(parameters.endRoute == null) null else ({
 									IconButton(onClick = parameters.endRoute) {
@@ -295,15 +301,15 @@ private fun WizardStudentInfo(
 								}),
 								backgroundColor = Color.Transparent,
 								elevation = 0.dp,
-								statusBarScrim = scrims.statusBar
+								statusBarScrim = scrims.statusBars
 							)
 						} else Column {
 							if(parameters.endRoute != null) IconOnlyTopAppBar(
 								navigationIcon = painterResource(R.drawable.ic_clear_24),
 								contentDescription = "닫기",
 								onClick = parameters.endRoute,
-								statusBarScrim = scrims.statusBar
-							) else scrims.statusBar()
+								statusBarScrim = scrims.statusBars
+							) else scrims.statusBars()
 							
 							Spacer(Modifier.height(40.dp))
 							
@@ -353,7 +359,7 @@ private fun WizardStudentInfo(
 				}
 			}
 			
-			scrims.navigationBar()
+			scrims.navigationBars()
 		}
 	}
 }

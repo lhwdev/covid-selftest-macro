@@ -25,17 +25,17 @@ public enum class InstituteType(public val displayName: String, public val login
  */
 public enum class LoginType {
 	/**
-	 * From school by [getSchoolData].
+	 * From school by [searchSchool].
 	 */
 	school,
 	
 	/**
-	 * From university by [getUniversityData].
+	 * From university by [searchUniversity].
 	 */
 	univ,
 	
 	/**
-	 * From office by [getOfficeData], and from academy by [getAcademyData].
+	 * From office by [searchOffice], and from academy by [searchAcademy].
 	 */
 	office
 }
@@ -49,8 +49,8 @@ public enum class SchoolLevel {
 }
 
 /**
- * The information of institute that can be obtained from [getSchoolData], [getUniversityData], [getOfficeData],
- * or [getAcademyData].
+ * The information of institute that can be obtained from [searchSchool], [searchUniversity], [searchOffice],
+ * or [searchAcademy].
  *
  * This class is also used broadly around apis to get `atptOfcdcConctUrl`. (url for Si/Do)
  */

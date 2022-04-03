@@ -3,7 +3,6 @@ package com.lhwdev.selfTestMacro.api
 import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
-import com.lhwdev.fetch.http.fetch
 
 
 // you must inform user when using this api: https://hcs.eduro.go.kr/agreement
@@ -40,7 +39,7 @@ public suspend fun Session.registerPassword(
 	body = Bodies.jsonObject {
 		"password" set encrypt(password)
 		"deviceUuid" set deviceUuid
-		"upperToken" set upperUserToken?.token
+		if(upperUserToken != null) "upperToken" set upperUserToken.token
 	}
 ).getText().toBooleanStrict() // TODO: confirm this
 

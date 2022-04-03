@@ -26,7 +26,18 @@ fun interface HttpInterceptor : FetchInterceptor {
 		if(method !is HttpMethod? || body !is DataBody?) return null
 		if(url.protocol !in sHttpProtocols) return null
 		
-		return intercept(url, method ?: HttpMethod.get, headers, session, body, interceptorChain)
+		return intercept(
+			url = url,
+			method = when {
+				method != null -> method
+				body == null -> HttpMethod.get // following common behavior
+				else -> HttpMethod.post
+			},
+			headers = headers,
+			session = session,
+			body = body,
+			interceptorChain = interceptorChain
+		)
 	}
 	
 	suspend fun intercept(

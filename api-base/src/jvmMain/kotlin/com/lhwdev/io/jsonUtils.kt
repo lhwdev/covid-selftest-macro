@@ -7,14 +7,13 @@ import kotlin.native.concurrent.SharedImmutable
 
 @StructureBuilder
 sealed class JsonObjectScope {
-	@Suppress("UNUSED_PARAMETER")
 	abstract infix fun String.set(value: Nothing?)
 	
-	abstract infix fun String.set(value: Number?)
+	abstract infix fun String.set(value: Number)
 	
-	abstract infix fun String.set(value: String?)
+	abstract infix fun String.set(value: String)
 	
-	abstract infix fun String.set(value: Boolean?)
+	abstract infix fun String.set(value: Boolean)
 	
 	inline infix fun String.jsonObject(block: JsonObjectScope.() -> Unit) {
 		jsonObject(this, jsonObjectScope(this).apply(block))
@@ -37,11 +36,11 @@ sealed class JsonObjectScope {
 sealed class JsonArrayScope {
 	abstract fun add(value: Nothing?)
 	
-	abstract fun add(value: Number?)
+	abstract fun add(value: Number)
 	
-	abstract fun add(value: String?)
+	abstract fun add(value: String)
 	
-	abstract fun add(value: Boolean?)
+	abstract fun add(value: Boolean)
 	
 	inline fun addObject(block: JsonObjectScope.() -> Unit) {
 		addObject(jsonObjectScope().apply(block))
@@ -72,15 +71,15 @@ class JsonObjectScopeImpl : JsonObjectScope() {
 		content[this] = JsonNull
 	}
 	
-	override infix fun String.set(value: Number?) {
+	override infix fun String.set(value: Number) {
 		content[this] = JsonPrimitive(value)
 	}
 	
-	override infix fun String.set(value: String?) {
+	override infix fun String.set(value: String) {
 		content[this] = JsonPrimitive(value)
 	}
 	
-	override infix fun String.set(value: Boolean?) {
+	override infix fun String.set(value: Boolean) {
 		content[this] = JsonPrimitive(value)
 	}
 	
@@ -109,15 +108,15 @@ class JsonArrayScopeImpl : JsonArrayScope() {
 		content += JsonPrimitive(null as String?)
 	}
 	
-	override fun add(value: Number?) {
+	override fun add(value: Number) {
 		content += JsonPrimitive(value)
 	}
 	
-	override fun add(value: String?) {
+	override fun add(value: String) {
 		content += JsonPrimitive(value)
 	}
 	
-	override fun add(value: Boolean?) {
+	override fun add(value: Boolean) {
 		content += JsonPrimitive(value)
 	}
 	
@@ -214,21 +213,17 @@ class JsonObjectScopeToString(val builder: Appendable) : JsonObjectScope() {
 		entry(this, NULL)
 	}
 	
-	override fun String.set(value: Number?) {
-		entry(this, if(value == null) NULL else value.toString())
+	override fun String.set(value: Number) {
+		entry(this, value.toString())
 	}
 	
-	override fun String.set(value: Boolean?) {
-		entry(this, if(value == null) NULL else value.toString())
+	override fun String.set(value: Boolean) {
+		entry(this, value.toString())
 	}
 	
-	override fun String.set(value: String?) {
+	override fun String.set(value: String) {
 		entry(this)
-		if(value == null) {
-			builder.append(NULL)
-		} else {
-			builder.printQuoted(value)
-		}
+		builder.printQuoted(value)
 	}
 	
 	override fun jsonObjectScope(key: String): JsonObjectScope {
@@ -284,21 +279,17 @@ class JsonArrayScopeToString(val builder: Appendable) : JsonArrayScope() {
 		entry(NULL)
 	}
 	
-	override fun add(value: Number?) {
-		entry(if(value == null) NULL else value.toString())
+	override fun add(value: Number) {
+		entry(value.toString())
 	}
 	
-	override fun add(value: String?) {
+	override fun add(value: String) {
 		entry()
-		if(value == null) {
-			builder.append(NULL)
-		} else {
-			builder.printQuoted(value)
-		}
+		builder.printQuoted(value)
 	}
 	
-	override fun add(value: Boolean?) {
-		entry(if(value == null) NULL else value.toString())
+	override fun add(value: Boolean) {
+		entry(value.toString())
 	}
 	
 	override fun jsonObjectScope(): JsonObjectScope {

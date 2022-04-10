@@ -74,6 +74,11 @@ fun <T> Bodies.json(serializer: KSerializer<T>, value: T, json: Json = Json): Da
 		println(result)
 	}
 	
+	override fun dump(): String {
+		val config = Json(from = json) { prettyPrint = true }
+		return config.encodeToString(serializer, value)
+	}
+	
 	override val debugAvailable: Boolean get() = true
 }
 
@@ -89,30 +94,32 @@ fun Bodies.jsonObject(json: JsonObject): DataBody = object : WriterDataBody {
 	override fun writeDebug(out: Writer) {
 		out.write(json.toString())
 		fun dump(json: JsonElement, indent: String): Unit = when(json) {
-			JsonNull -> println("\u001b[96mnull\u001b[0m")
+			JsonNull -> println("null")
 			is JsonObject -> {
-				println("\u001b[96m{")
+				println("{")
 				for((key, value) in json.entries) {
 					print("$indent  ")
-					print("\u001b[91m\"$key\"\u001b[0m: ")
+					print("\"$key\": ")
 					dump(value, "$indent    ")
 				}
-				println("$indent\u001b[96m}")
+				println("$indent}")
 			}
 			is JsonArray -> {
-				println("\u001b[96m[")
+				println("[")
 				for(value in json) {
 					print("$indent  ")
 					dump(value, "$indent    ")
 				}
-				println("$indent\u001b[96m]")
+				println("$indent]")
 			}
 			is JsonPrimitive -> {
-				println("\u001b[0m$json")
+				println("$json")
 			}
 		}
 		dump(json, "")
 	}
+	
+	override fun dump(): String = json.toString()
 }
 
 fun Bodies.jsonObject(json: String): DataBody = WriterDataBody(contentType = ContentTypes.json) {
@@ -149,11 +156,13 @@ internal fun Bodies.form(scope: FormScope): DataBody = object : WriterDataBody {
 	
 	override fun writeDebug(out: Writer) {
 		out.write(scope.build())
-		println("\u001b[90m(html form)")
+		println("(html form)")
 		for((key, value) in scope.content) {
-			println("\u001b[91m$key\u001b[0m=\u001b[96m$value\u001b[0m")
+			println("$key=$value")
 		}
 	}
+	
+	override fun dump(): String = "form " + scope.content.entries.joinToString { (k, v) -> "$k=$v" }
 	
 	override val debugAvailable: Boolean get() = true
 }

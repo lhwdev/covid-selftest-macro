@@ -14,30 +14,43 @@ import java.net.URLDecoder
 import java.util.LinkedList
 
 
+interface FetchRequest {
+	val url: URL
+	val method: FetchMethod?
+	val headers: Map<String, String>
+	val session: Session?
+	val body: FetchBody?
+	
+	fun dump(): String {
+		var text = "$this/$method headers=(${headers.entries.joinToString { (k, v) -> "$k=$v" }}"
+		if(session != null) text += " session=$session"
+		if(body != null) text += " body=${body?.dump()}"
+		return text
+	}
+}
+
+class FetchRequestImpl(
+	override val url: URL,
+	override val method: FetchMethod?,
+	override val headers: Map<String, String>,
+	override val session: Session?,
+	override val body: FetchBody?
+) : FetchRequest
+
+
 fun interface FetchInterceptor {
-	suspend fun intercept(
-		url: URL,
-		method: FetchMethod?, headers: Map<String, String>,
-		session: Session?, body: FetchBody?,
-		interceptorChain: InterceptorChain
-	): FetchResult?
+	suspend fun intercept(request: FetchRequest, interceptorChain: InterceptorChain): FetchResult?
 }
 
 suspend inline fun FetchInterceptor.ensureIntercepted(
-	url: URL,
-	method: FetchMethod?, headers: Map<String, String>,
-	session: Session?, body: FetchBody?,
+	request: FetchRequest,
 	interceptorChain: InterceptorChain
-): FetchResult = intercept(url, method, headers, session, body, interceptorChain)
-	?: interceptorChain.interceptNext(url, method, headers, session, body)
+): FetchResult = intercept(request, interceptorChain)
+	?: interceptorChain.interceptNext(request)
 
 class InterceptorChain(private val list: List<FetchInterceptor>, private val index: Int) {
-	suspend fun interceptNext(
-		url: URL,
-		method: FetchMethod?, headers: Map<String, String>,
-		session: Session?, body: FetchBody?
-	): FetchResult {
-		return nextInterceptor().ensureIntercepted(url, method, headers, session, body, nextChain())
+	suspend fun interceptNext(request: FetchRequest): FetchResult {
+		return nextInterceptor().ensureIntercepted(request, nextChain())
 	}
 	
 	fun nextChain(): InterceptorChain {
@@ -57,7 +70,9 @@ class InterceptorChain(private val list: List<FetchInterceptor>, private val ind
 val sFetchInterceptors = LinkedList<FetchInterceptor>(listOf(HttpInterceptorImpl))
 
 
-interface FetchBody
+interface FetchBody {
+	fun dump(): String = toString()
+}
 
 interface DataBody : FetchBody {
 	fun write(out: OutputStream)
@@ -73,8 +88,7 @@ inline fun DataBody(contentType: ContentType?, crossinline onWrite: (OutputStrea
 			onWrite(out)
 		}
 		
-		override val contentType: ContentType?
-			get() = contentType
+		override val contentType: ContentType? = contentType
 	}
 
 
@@ -133,12 +147,11 @@ class MutableFetchHeadersBuilder : MutableFetchHeaders {
 
 @Suppress("CanBeParameter", "MemberVisibilityCanBePrivate")
 class FetchIoException(
-	val debugInfo: String,
-	val interceptorDescription: String,
+	request: FetchRequest, // note: potential memory leakage
 	val responseCode: Int,
 	val responseMessage: String,
 	cause: Throwable? = null
-) : IOException("Fetch error($interceptorDescription: $debugInfo) $responseCode $responseMessage", cause)
+) : IOException("Fetch error $responseCode $responseMessage\nRequest: ${request.dump()}", cause)
 
 
 var sDebugFetch = false
@@ -149,11 +162,11 @@ internal fun readableUrl(url: String): String {
 	if(index == -1) return url
 	val link = url.substring(0, index)
 	val attrs = url.substring(index + 1)
-	return "\u001B[0m$link\u001B[0m?.. (urlParams: " + attrs.split('&').joinToString {
+	return "$link?.. (urlParams: " + attrs.split('&').joinToString {
 		val eqIndex = it.indexOf('=')
 		val k = it.substring(0, eqIndex)
 		val v = URLDecoder.decode(it.substring(eqIndex + 1), "UTF-8")
-		"\u001B[91m$k \u001B[96m= \u001B[97m'$v'\u001B[0m"
+		"$k='$v'"
 	} + ")"
 }
 
@@ -167,15 +180,17 @@ suspend inline fun fetch(
 	body: FetchBody? = null
 ): FetchResult = fetch(url, method, MutableFetchHeadersBuilder().apply(headers).build(), session, body)
 
-suspend fun fetch(
+suspend inline fun fetch(
 	url: URL,
 	method: FetchMethod? = null,
 	headers: Map<String, String> = emptyMap(),
 	session: Session? = null,
 	body: FetchBody? = null
-): FetchResult = withContext(Dispatchers.IO) main@{
+): FetchResult = fetch(FetchRequestImpl(url, method, headers, session, body))
+
+suspend fun fetch(request: FetchRequest): FetchResult = withContext(Dispatchers.IO) main@{
 	val interceptor = sFetchInterceptors.firstOrNull() ?: error("no interceptors")
-	interceptor.ensureIntercepted(url, method, headers, session, body, InterceptorChain(sFetchInterceptors, 0))
+	interceptor.ensureIntercepted(request, InterceptorChain(sFetchInterceptors, 0))
 }
 
 suspend inline fun fetch(

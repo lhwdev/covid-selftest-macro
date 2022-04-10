@@ -19,7 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
--printmapping obfuscation/mapping.txt
+-printmapping build/obfuscation/mapping.txt
 
 # kotlinx.serialization
 #-keepattributes *Annotation*, InnerClasses

@@ -2,18 +2,20 @@ package com.lhwdev.selfTestMacro.ui.pages.setup
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.VisibleForTesting
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.rememberPagerState
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
@@ -21,7 +23,6 @@ import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import kotlinx.coroutines.launch
-import kotlin.math.max
 
 
 fun SetupRoute(parameters: SetupParameters = SetupParameters.Default): Route =
@@ -48,9 +49,11 @@ internal val SetupWizard.isCurrent get() = currentIndex == index
 
 internal const val sSetupPagesCount = 4
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 private fun SetupWizardView(model: SetupModel, parameters: SetupParameters) {
-	var pageIndex by remember { mutableStateOf(0) }
+	val pagerState = rememberPagerState()
+	val scope = rememberCoroutineScope()
 	
 	Scaffold(
 		scaffoldState = model.scaffoldState,
@@ -60,16 +63,16 @@ private fun SetupWizardView(model: SetupModel, parameters: SetupParameters) {
 			}
 		}
 	) {
-		WizardPager(pageIndex = pageIndex) { index ->
-			val wizard = SetupWizard(index, pageIndex, sSetupPagesCount) {
-				pageIndex = it
+		HorizontalPager(count = sSetupPagesCount, state = pagerState, userScrollEnabled = false) { index ->
+			val wizard = SetupWizard(index, pagerState.currentPage, sSetupPagesCount) {
+				scope.launch { pagerState.animateScrollToPage(it) }
 			}
 			SetupWizardPage(model, parameters, wizard)
 		}
 	}
 	
-	BackHandler(enabled = pageIndex != 0) {
-		pageIndex--
+	BackHandler(enabled = pagerState.currentPage != 0) {
+		scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
 	}
 }
 
@@ -82,54 +85,6 @@ internal fun SetupWizardPage(model: SetupModel, parameters: SetupParameters, wiz
 		2 -> WizardUserInfo(model, parameters, wizard)
 		3 -> WizardSelectUsers(model, parameters, wizard)
 		else -> error("unknown page")
-	}
-}
-
-
-private const val sPreloadPages = 0
-
-@Composable
-private fun WizardPager(
-	pageIndex: Int,
-	content: @Composable (index: Int) -> Unit
-) {
-	var maxLoads by remember { mutableStateOf(1) }
-	
-	BoxWithConstraints(Modifier.clipToBounds()) {
-		val scope = rememberCoroutineScope()
-		val width = maxWidth
-		val widthPx = with(LocalDensity.current) { width.roundToPx() }
-		
-		var targetPage by remember { mutableStateOf(pageIndex) }
-		val scrollState = remember { ScrollState(pageIndex) }
-		
-		fun scrollTo(target: Int) {
-			if(target !in 0 until sSetupPagesCount) return
-			targetPage = target
-			scope.launch {
-				scrollState.animateScrollTo(target * widthPx)
-			}
-		}
-		
-		if(pageIndex != targetPage) {
-			maxLoads = max(maxLoads, pageIndex + 1)
-			scrollTo(pageIndex)
-		}
-		
-		Row(
-			modifier = Modifier.horizontalScroll(
-				scrollState,
-				enabled = false
-			)
-		) {
-			for(index in 0 until sSetupPagesCount) {
-				Box(Modifier.requiredWidth(width)) {
-					if(index < maxLoads +
-						if(scrollState.isScrollInProgress) sPreloadPages else 0
-					) content(index)
-				}
-			}
-		}
 	}
 }
 

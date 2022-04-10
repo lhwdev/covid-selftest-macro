@@ -42,7 +42,6 @@ internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, w
 	val userList = model.userList
 	
 	if(userList.isEmpty()) {
-		wizard.before()
 		return
 	}
 	

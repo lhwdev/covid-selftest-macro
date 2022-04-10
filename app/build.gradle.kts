@@ -133,6 +133,7 @@ dependencies {
 	implementation(libs.compose.material)
 	
 	implementation(libs.accompanist.systemUiController)
+	implementation(libs.accompanist.pager)
 	
 	implementation(libs.androidx.activity.compose)
 	implementation(libs.androidx.appcompat)

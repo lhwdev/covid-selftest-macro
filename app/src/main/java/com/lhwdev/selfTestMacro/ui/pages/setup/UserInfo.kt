@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
 internal fun WizardUserInfo(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
 	when(model.instituteInfo) {
 		is InstituteInfoModel.School -> WizardStudentInfo(model, parameters, wizard)
-		null -> wizard.before()
+		null -> Unit
 	}
 }
 

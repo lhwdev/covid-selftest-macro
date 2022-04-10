@@ -2,7 +2,6 @@
 
 package com.lhwdev.selfTestMacro.ui
 
-import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -29,7 +28,7 @@ import kotlinx.coroutines.Dispatchers
 
 
 @Composable
-fun ComposeApp(activity: Activity) {
+fun ComposeApp() {
 	val context = LocalContext.current
 	
 	val pref = remember(context) { context.preferenceState }

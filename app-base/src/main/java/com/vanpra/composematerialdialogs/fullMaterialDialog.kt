@@ -6,8 +6,8 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -92,8 +92,8 @@ fun FullScreenDialog(
 			solid = solid
 		).apply {
 			setContent(composition) {
-				Box(
-					Modifier
+				Surface(
+					modifier = Modifier
 						.semantics { dialog() }
 						.fillMaxSize(),
 				) {

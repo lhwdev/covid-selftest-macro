@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
 		initializeNotificationChannel()
 		
 		setContent {
-			ComposeApp(this)
+			ComposeApp()
 		}
 	}
 }

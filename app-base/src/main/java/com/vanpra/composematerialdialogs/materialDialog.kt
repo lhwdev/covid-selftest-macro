@@ -18,8 +18,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
-import com.lhwdev.selfTestMacro.ui.systemUi.SystemUiMode
 
 
 @Composable
@@ -96,6 +94,8 @@ fun MaterialDialog(
 	elevation: Dp = 24.dp,
 	content: @Composable FloatingMaterialDialogScope.() -> Unit
 ) {
+	val imeInset = WindowInsets.ime
+	
 	MaterialDialogBase(
 		onCloseRequest = onCloseRequest
 	) { info ->
@@ -103,37 +103,43 @@ fun MaterialDialog(
 			onDismissRequest = onCloseRequest,
 			properties = properties
 		) {
-			AutoSystemUi(
-				onScreen = null,
-				ime = SystemUiMode.Default
+			Box(
+				Modifier
+					.windowInsetsPadding(imeInset)
+					.fillMaxSize() // insets are consumed by itself so need not safeContentPadding(); it would cause problems
+					.pointerInput(Unit) {
+						if(properties.dismissOnClickOutside) detectTapGestures(
+							onPress = { onCloseRequest() }
+						)
+					},
+				contentAlignment = Alignment.Center
 			) {
-				Box(
-					Modifier
-						.fillMaxSize(fraction = 1f - .03f) // some guard; shadow gets clipped as this dialog cannot be drawn behind app bar
+				// val focusRequester = FocusRequester()
+				
+				Surface(
+					modifier = modifier
+						.fillMaxWidth(fraction = .81f)
+						.sizeIn(maxHeight = maxHeight)
+						// .focusRequester(focusRequester)
 						.pointerInput(Unit) {
-							if(properties.dismissOnClickOutside) detectTapGestures(
-								onPress = { onCloseRequest() }
-							)
+							// override dismissOnClickOutside
+							if(properties.dismissOnClickOutside) detectTapGestures()
 						},
-					contentAlignment = Alignment.Center
+					shape = shape,
+					color = backgroundColor,
+					border = border,
+					elevation = elevation
 				) {
-					Surface(
-						modifier = modifier
-							.fillMaxWidth(fraction = .81f)
-							.sizeIn(maxHeight = maxHeight)
-							.pointerInput(Unit) {
-								// override dismissOnClickOutside
-								if(properties.dismissOnClickOutside) detectTapGestures()
-							},
-						shape = shape,
-						color = backgroundColor,
-						border = border,
-						elevation = elevation
-					) {
-						Column {
-							FloatingMaterialDialogScope(info, this).content()
-						}
+					Column {
+						FloatingMaterialDialogScope(info, this).content()
 					}
+					
+					// LaunchedEffect(Unit) {
+					// 	if(info.hasFocusOnShow) return@LaunchedEffect
+					//	
+					// 	awaitFrame()
+					// 	focusRequester.requestFocus()
+					// }
 				}
 			}
 		}

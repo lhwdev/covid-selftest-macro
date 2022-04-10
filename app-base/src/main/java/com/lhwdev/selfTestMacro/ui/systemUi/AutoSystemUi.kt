@@ -164,8 +164,8 @@ private class AutoSystemUiData(val systemUiController: SystemUiController) {
 		mode = mode,
 		heightModifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars),
 		setColor = { isDark ->
-			systemUiController.statusBarDarkContentEnabled = isDark
-			// systemUiController.setStatusBarColor(color = Color.Transparent, darkIcons = isDark)
+			// systemUiController.statusBarDarkContentEnabled = isDark
+			systemUiController.setStatusBarColor(color = Color.Transparent, darkIcons = isDark)
 		}
 	)
 	
@@ -174,8 +174,12 @@ private class AutoSystemUiData(val systemUiController: SystemUiController) {
 		mode = mode,
 		heightModifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars),
 		setColor = { isDark ->
-			systemUiController.navigationBarDarkContentEnabled = isDark
-			// systemUiController.setNavigationBarColor(color = Color.Transparent, darkIcons = isDark)
+			// systemUiController.navigationBarDarkContentEnabled = isDark
+			systemUiController.setNavigationBarColor(
+				color = Color.Transparent,
+				darkIcons = isDark,
+				navigationBarContrastEnforced = false
+			)
 		}
 	)
 }
@@ -206,9 +210,10 @@ fun AutoSystemUi(
 	if(navigationBars != null) modifier = modifier.consumedWindowInsets(WindowInsets.navigationBars)
 	
 	// need to come after `modifier.consumedWindowInsets(WindowInsets.navigationBars)`
-	if(ime is SystemUiMode.Default) modifier = modifier.windowInsetsPadding(WindowInsets.ime)
-	
-	if(ime != null) modifier = modifier.consumedWindowInsets(WindowInsets.ime)
+	if(ime != null) modifier = when(ime) {
+		is SystemUiMode.Default -> modifier.windowInsetsPadding(WindowInsets.ime)
+		else -> modifier.consumedWindowInsets(WindowInsets.ime)
+	}
 	
 	Column(modifier) {
 		if(statusBars is OnScreenSystemUiMode.Opaque)

@@ -1,10 +1,12 @@
 package com.lhwdev.selfTestMacro
 
 import android.content.Context
-import com.lhwdev.fetch.*
+import com.lhwdev.fetch.FetchResult
+import com.lhwdev.fetch.InterceptorChain
 import com.lhwdev.fetch.http.HttpInterceptor
-import com.lhwdev.fetch.http.HttpMethod
-import com.lhwdev.fetch.http.Session
+import com.lhwdev.fetch.http.HttpRequest
+import com.lhwdev.fetch.sDebugFetch
+import com.lhwdev.fetch.sFetchInterceptors
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.debug.debugCheck
 import com.lhwdev.selfTestMacro.debug.logOutput
@@ -13,7 +15,6 @@ import com.lhwdev.selfTestMacro.navigation.sDebugNavigation
 import com.lhwdev.selfTestMacro.repository.sDebugScheduleEnabled
 import com.lhwdev.selfTestMacro.ui.utils.sDebugAnimateListAsComposable
 import java.io.File
-import java.net.URL
 import javax.net.ssl.SSLHandshakeException
 
 
@@ -73,26 +74,20 @@ object FirstInitialization {
 }
 
 
+// TODO: will be discarded after migration HcsSession 
 /**
  * hcs.eduro.go.kr(senhcs, dgehcs, ...) returns HTTP 519 if session cookie is not valid.
  */
 object SelfTestHttpErrorRetryInterceptor : HttpInterceptor {
-	override suspend fun intercept(
-		url: URL,
-		method: HttpMethod,
-		headers: Map<String, String>,
-		session: Session?,
-		body: DataBody?,
-		interceptorChain: InterceptorChain
-	): FetchResult {
+	override suspend fun intercept(request: HttpRequest, interceptorChain: InterceptorChain): FetchResult {
 		val next = tryAtMost(maxTrial = 10, errorFilter = { it is SSLHandshakeException }) {
-			interceptorChain.interceptNext(url, method, headers, session, body)
+			interceptorChain.interceptNext(request)
 		}
 		
-		if("eduro.go.kr" !in url.path) return next
+		if("eduro.go.kr" !in request.url.path) return next
 		
 		if(next.responseCode == 591 && "Set-Cookie" in next) {
-			return interceptorChain.interceptNext(url, method, headers, session, body)
+			return interceptorChain.interceptNext(request)
 		}
 		
 		if(next.responseCode == 592) {

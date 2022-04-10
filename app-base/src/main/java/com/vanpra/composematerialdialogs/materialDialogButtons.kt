@@ -56,7 +56,7 @@ private fun ButtonsBase(content: @Composable () -> Unit) {
 	Box(
 		Modifier
 			.fillMaxWidth()
-			.padding(top = 8.dp, bottom = 8.dp, end = 8.dp)
+			.padding(top = 8.dp, bottom = 12.dp, end = 8.dp)
 			.layoutId("buttons")
 	) {
 		Layout(

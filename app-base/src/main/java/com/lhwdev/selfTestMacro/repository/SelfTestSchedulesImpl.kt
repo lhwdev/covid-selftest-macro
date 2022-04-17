@@ -95,13 +95,15 @@ abstract class SelfTestSchedulesImpl(
 				targetDay = today
 			}
 			
-			createTasks().also {
-				tasksCache = it
-				scheduleLog { "updateAndGetTasks: ${dumpDebug(oneLine = false)}" }
-			}
+			createTasks().also { tasksCache = it }
 		} else {
 			tasksCache
 		}
+	}
+	
+	fun onScheduleUpdated() {
+		updateAndGetTasks()
+		dump()
 	}
 	
 	private fun DbTestGroup.nextTime(): LongRange {
@@ -182,6 +184,7 @@ abstract class SelfTestSchedulesImpl(
 						userId = null, // because the time is stable, we can do all the users at once.
 						timeMillis = timeRange.first
 					)
+					modified = true
 				}
 				schedule.altogether -> { // unstable
 					// remove left group tasks (last one + in case database is changed)
@@ -356,6 +359,8 @@ abstract class SelfTestSchedulesImpl(
 		override fun updateNextDays(previousDay: Long) {
 			targetDay = previousDay + 1
 			updateAndGetTasks()
+			
+			dump()
 		}
 	}
 	
@@ -367,14 +372,32 @@ abstract class SelfTestSchedulesImpl(
 		"tasks" set diagnosticGroup("tasks") {
 			val schedules = ArrayDeque(scheduler.schedules)
 			for((index, task) in scheduler.allTasks.withIndex()) {
-				while(!scheduler.canTaskScheduled(task, schedules.first())) schedules.removeFirst()
-				if(schedules.isEmpty()) break
+				val schedule = if(schedules.isEmpty()) {
+					null
+				} else {
+					var removedCount = 0
+					while(schedules.isNotEmpty() && !scheduler.canTaskScheduled(task, schedules.first())) {
+						val removed = schedules.removeFirst()
+						"removedSchedule${removedCount}" set removed
+						removedCount++
+					}
+					schedules.firstOrNull()
+				}
 				
-				"$index" set diagnosticGroup("taskEntry") {
-					"schedule" set schedules.first().code
+				"$index" set diagnosticGroup("TaskEntry") {
+					"schedule" set schedule?.code
 					"task" set task
 				}
 			}
 		}
+	}
+	
+	
+	private fun dump() {
+		scheduleLog { "init SelfTestSchedulesImpl: ${dumpDebug(oneLine = false)}" }
+	}
+	
+	init {
+		dump()
 	}
 }

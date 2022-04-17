@@ -122,20 +122,23 @@ fun DiagnosticElement<*>.localizedData(): String {
 fun DiagnosticObject.dumpDebug(oneLine: Boolean): String = getDiagnosticInformation().dumpDebug(oneLine = oneLine)
 
 fun DiagnosticItem.dumpDebug(oneLine: Boolean): String = buildString {
-	fun dump(item: DiagnosticItem, depth: Int): Any = when(item) {
-		is DiagnosticElement<*> -> {
-			append("  ".repeat(depth - 1))
-			if(depth != 0) append("|-")
-			append(" ")
-			append(item.name)
-			append(": ")
-			append(item.data)
-		}
-		is DiagnosticItemGroup -> {
-			append(item.name)
-			for(child in item.children) {
-				append('\n')
-				dump(child, depth + 1)
+	fun dump(item: DiagnosticItem, depth: Int) {
+		append("  ".repeat(depth))
+		when(item) {
+			is DiagnosticElement<*> -> {
+				if(depth != 0) append("|-")
+				append(" ")
+				append(item.name)
+				append(": ")
+				append(item.data)
+			}
+			is DiagnosticItemGroup -> {
+				append(item.name)
+				append(":")
+				for(child in item.children) {
+					append('\n')
+					dump(child, depth + 1)
+				}
 			}
 		}
 	}

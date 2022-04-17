@@ -529,6 +529,6 @@ class SelfTestManagerImpl(
 	}
 	
 	override fun onScheduleUpdated() {
-		schedules.updateAndGetTasks()
+		schedules.onScheduleUpdated()
 	}
 }

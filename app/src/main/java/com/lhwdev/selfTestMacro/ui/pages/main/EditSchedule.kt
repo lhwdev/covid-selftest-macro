@@ -193,7 +193,7 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 		
 		
 		/// random
-		ScheduleTypeHead(ScheduleType.random, "렌덤 시간")
+		ScheduleTypeHead(ScheduleType.random, "매일 렌덤 시간")
 		
 		AnimateHeight(
 			visible = type == ScheduleType.random,
@@ -254,8 +254,8 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 	// }
 	
 	CheckBoxListItem(
-		checked = excludeWeekend, onCheckChanged = { excludeWeekend = it }
-	) { Text("주말에는 자가진단하지 않기") }
+		checked = !excludeWeekend, onCheckChanged = { excludeWeekend = !it }
+	) { Text("주말에도 자가진단하기") }
 	
 	Spacer(Modifier.height(4.dp))
 	

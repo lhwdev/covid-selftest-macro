@@ -140,7 +140,7 @@ fun NumberPicker(
 						onValueChange = change@{
 							if(it.text.length > maxLength) return@change
 							setInput(it)
-							input.text.toIntOrNull()?.let { newValue -> setValue(newValue) }
+							it.text.toIntOrNull()?.let { newValue -> setValue(newValue) }
 						},
 						textStyle = MaterialTheme.typography.h4.copy(textAlign = TextAlign.Center),
 						keyboardOptions = KeyboardOptions(

@@ -16,13 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.lhwdev.selfTestMacro.R
-import com.lhwdev.selfTestMacro.lifecycle.Lifecycle
-import com.lhwdev.selfTestMacro.lifecycle.rememberLifecycle
 import com.lhwdev.selfTestMacro.navigation.FadeRouteTransition
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.RouteTransitionBlock
@@ -33,6 +32,7 @@ import com.lhwdev.selfTestMacro.ui.pages.intro.IntroRoute
 import com.lhwdev.selfTestMacro.ui.pages.main.MainRoute
 import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
+import com.lhwdev.selfTestMacro.utils.LocalLifecycleState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
@@ -51,7 +51,7 @@ fun Splash() {
 		speed = 1.3f
 	)
 	
-	val lifecycle by rememberLifecycle()
+	val lifecycle by LocalLifecycleState.current
 	
 	
 	Surface(color = MaterialTheme.colors.primarySurface) {
@@ -84,7 +84,7 @@ fun Splash() {
 	LaunchedEffect(Unit) {
 		delay(1300)
 		
-		snapshotFlow { navigator.isTop && lifecycle >= Lifecycle.resumed }
+		snapshotFlow { navigator.isTop && lifecycle >= Lifecycle.State.RESUMED }
 			.takeWhile { !it }
 			.collect()
 		

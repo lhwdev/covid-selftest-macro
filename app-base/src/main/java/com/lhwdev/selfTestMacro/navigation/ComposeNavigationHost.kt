@@ -41,6 +41,7 @@ fun ComposeNavigationHost(navigator: Navigator) {
 				
 				val previous = routeInfoList.previous(index)
 				
+				val isActive = routeInstance == routes.last()
 				val hasDialog = previous?.hasDialog == true
 				val parentNavigator = previous?.navigator
 				
@@ -58,7 +59,7 @@ fun ComposeNavigationHost(navigator: Navigator) {
 						coroutineScope = scope
 					)
 				}
-				currentNavigator.updateState(parent = parentNavigator, isVisible = visible)
+				currentNavigator.updateState(parent = parentNavigator, isVisible = visible, isActive = isActive)
 				
 				routeInfoList.updateCurrent(
 					index, RouteInfo(

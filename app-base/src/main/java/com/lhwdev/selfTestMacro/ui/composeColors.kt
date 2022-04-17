@@ -11,7 +11,11 @@ val Colors.primarySurfaceColored: Color
 	@Composable get() = if(isLight) primary else lerp(surface, primary, .3f)
 
 val Colors.primaryContainer: Color
-	@Composable get() = lerp(surface, primary, .2f)
+	@Composable get() = if(isLight) {
+		lerp(surface, primary, .2f)
+	} else {
+		lerp(surface, primary, .5f)
+	}
 
 /**
  * A color that is used for texts, icons, and small elements on the background or surface.

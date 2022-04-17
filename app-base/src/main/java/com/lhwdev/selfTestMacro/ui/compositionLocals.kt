@@ -5,10 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.lhwdev.selfTestMacro.database.PreferenceState
 import com.lhwdev.selfTestMacro.debug.LocalDebugContext
 import com.lhwdev.selfTestMacro.debug.UiDebugContext
+import com.lhwdev.selfTestMacro.utils.LocalLifecycleState
+import com.lhwdev.selfTestMacro.utils.observeAsState
 
 
 val LocalPreference = compositionLocalOf<PreferenceState> { error("not provided") }
@@ -26,8 +29,11 @@ fun AppCompositionLocalsPack(
 	content: @Composable () -> Unit
 ) {
 	CompositionLocalProvider(
+		LocalLifecycleState provides LocalLifecycleOwner.current.lifecycle.observeAsState(),
+		
 		LocalPreference provides preference,
 		LocalDebugContext provides debugContext,
+		
 		content = content
 	)
 }

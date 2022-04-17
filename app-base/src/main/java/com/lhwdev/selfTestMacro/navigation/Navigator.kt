@@ -91,6 +91,9 @@ class CurrentNavigator(
 	var isVisible: Boolean by mutableStateOf(true)
 		private set
 	
+	var isActive: Boolean by mutableStateOf(true)
+		private set
+	
 	val isRoot: Boolean get() = routes.firstOrNull() == currentRouteInstance
 	val isTop: Boolean get() = routes.last() == currentRouteInstance
 	
@@ -105,9 +108,10 @@ class CurrentNavigator(
 			}
 		}
 	
-	internal fun updateState(parent: CurrentNavigator?, isVisible: Boolean) {
+	internal fun updateState(parent: CurrentNavigator?, isVisible: Boolean, isActive: Boolean) {
 		this.parent = parent
 		this.isVisible = isVisible
+		this.isActive = isActive
 	}
 	
 	fun popRoute(): Boolean {

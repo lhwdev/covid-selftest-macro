@@ -112,7 +112,7 @@ internal fun ColumnScope.WizardSchoolInfo(
 	wizard: SetupWizard
 ) {
 	val scope = rememberCoroutineScope()
-	val context = LocalContext.current
+	LocalContext.current
 	val selfTestManager = LocalSelfTestManager.current
 	val navigator = LocalNavigator
 	val debugContext = LocalDebugContext.current

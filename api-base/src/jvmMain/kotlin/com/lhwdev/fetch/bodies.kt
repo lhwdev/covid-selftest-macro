@@ -45,11 +45,14 @@ interface WriterDataBody : DataBody {
 
 inline fun WriterDataBody(
 	contentType: ContentType?,
+	dumpContent: String? = null,
 	crossinline onWrite: (Writer) -> Unit
 ): WriterDataBody = object : WriterDataBody {
 	override fun write(out: Writer) {
 		onWrite(out)
 	}
+	
+	override fun dump(): String = dumpContent ?: "(data)"
 	
 	override val contentType: ContentType?
 		get() = contentType
@@ -57,8 +60,11 @@ inline fun WriterDataBody(
 
 
 
-fun Bodies.binary(array: ByteArray): DataBody = DataBody(contentType = ContentTypes.binary) { it.write(array) }
-fun Bodies.text(text: String): DataBody = WriterDataBody(contentType = ContentTypes.plainText) { it.write(text) }
+fun Bodies.binary(array: ByteArray, contentType: ContentType? = ContentTypes.binary): DataBody =
+	DataBody(contentType = contentType) { it.write(array) }
+
+fun Bodies.text(text: String, contentType: ContentType? = ContentTypes.plainText): DataBody =
+	WriterDataBody(contentType = contentType, dumpContent = text) { it.write(text) }
 
 fun <T> Bodies.json(serializer: KSerializer<T>, value: T, json: Json = Json): DataBody = object : WriterDataBody {
 	override fun write(out: Writer) {
@@ -122,9 +128,7 @@ fun Bodies.jsonObject(json: JsonObject): DataBody = object : WriterDataBody {
 	override fun dump(): String = json.toString()
 }
 
-fun Bodies.jsonObject(json: String): DataBody = WriterDataBody(contentType = ContentTypes.json) {
-	it.write(json)
-}
+fun Bodies.jsonObject(json: String): DataBody = text(json, contentType = ContentTypes.json)
 
 @PublishedApi
 internal fun jsonObjectOrStringScope(): JsonObjectScope = if(sDebugFetch) {

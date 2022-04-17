@@ -12,6 +12,8 @@ import java.io.OutputStream
 import java.net.URL
 import java.net.URLDecoder
 import java.util.LinkedList
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 
 
 interface FetchRequest {
@@ -22,7 +24,7 @@ interface FetchRequest {
 	val body: FetchBody?
 	
 	fun dump(): String {
-		var text = "$this/$method headers=(${headers.entries.joinToString { (k, v) -> "$k=$v" }}"
+		var text = "$method $url headers=(${headers.entries.joinToString { (k, v) -> "'$k'='$v'" }})"
 		if(session != null) text += " session=$session"
 		if(body != null) text += " body=${body?.dump()}"
 		return text
@@ -68,6 +70,14 @@ class InterceptorChain(private val list: List<FetchInterceptor>, private val ind
 
 
 val sFetchInterceptors = LinkedList<FetchInterceptor>(listOf(HttpInterceptorImpl))
+private val sFetchInterceptorChain = InterceptorChain(sFetchInterceptors, 0)
+
+class FetchInterceptorContext(val interceptorChain: InterceptorChain) :
+	AbstractCoroutineContextElement(FetchInterceptorContext), CoroutineContext.Element {
+	override val key = Key
+	
+	companion object Key : CoroutineContext.Key<FetchInterceptorContext>
+}
 
 
 interface FetchBody {
@@ -188,9 +198,12 @@ suspend inline fun fetch(
 	body: FetchBody? = null
 ): FetchResult = fetch(FetchRequestImpl(url, method, headers, session, body))
 
-suspend fun fetch(request: FetchRequest): FetchResult = withContext(Dispatchers.IO) main@{
-	val interceptor = sFetchInterceptors.firstOrNull() ?: error("no interceptors")
-	interceptor.ensureIntercepted(request, InterceptorChain(sFetchInterceptors, 0))
+suspend fun fetch(
+	request: FetchRequest
+): FetchResult = withContext(Dispatchers.IO) {
+	val chain = coroutineContext[FetchInterceptorContext]?.interceptorChain ?: sFetchInterceptorChain
+	
+	chain.interceptNext(request)
 }
 
 suspend inline fun fetch(

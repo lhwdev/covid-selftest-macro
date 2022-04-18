@@ -91,14 +91,10 @@ abstract class SelfTestSchedulesImpl(
 	 */
 	final override fun updateAndGetTasks(): List<SelfTestTask> {
 		val today = today()
-		return if(targetDay != today) {
-			// lastDay may be intentionally set to the next day from [updateTomorrow].
-			if(targetDay < today) {
-				targetDay = today
-			}
+		return if(targetDay < today) {
+			targetDay = today
 			
 			createTasks().also {
-				tasksCache = it
 				scheduleLog { "updateAndGetTasks: ${dumpDebug(oneLine = false)}" }
 			}
 		} else {
@@ -374,16 +370,17 @@ abstract class SelfTestSchedulesImpl(
 	
 	// Diagnostic
 	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticGroup("SelfTestSchedulesImpl") {
+		"targetDay" set "$targetDay (today: ${today()})"
 		"tasks" set diagnosticGroup("tasks") {
 			val schedules = ArrayDeque(scheduler.schedules)
-			for((index, task) in scheduler.allTasks.withIndex()) {
+			var removedCount = 0
+			for((index, task) in tasksCache.withIndex()) {
 				val schedule = if(schedules.isEmpty()) {
 					null
 				} else {
-					var removedCount = 0
 					while(schedules.isNotEmpty() && !scheduler.canTaskScheduled(task, schedules.first())) {
 						val removed = schedules.removeFirst()
-						"schedule${removedCount}" set removed
+						"unusedSchedule.${removedCount}" set removed
 						removedCount++
 					}
 					schedules.firstOrNull()
@@ -395,6 +392,7 @@ abstract class SelfTestSchedulesImpl(
 				}
 			}
 		}
+		"scheduler" set scheduler
 	}
 	
 	

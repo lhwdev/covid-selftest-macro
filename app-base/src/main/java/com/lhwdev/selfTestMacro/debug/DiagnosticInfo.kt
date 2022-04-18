@@ -53,11 +53,15 @@ inline fun diagnosticElements(block: DiagnosticItemGroupBuilder.() -> Unit): Lis
 inline fun diagnosticGroup(
 	name: String,
 	localizedName: String? = null,
+	extendFrom: DiagnosticItem? = null,
 	block: DiagnosticItemGroupBuilder.() -> Unit
 ): DiagnosticItemGroup = SimpleDiagnosticItemGroup(
 	name = name,
 	localizedName = localizedName,
-	children = diagnosticElements(block)
+	children = diagnosticElements {
+		if(extendFrom != null) addAll(extendFrom)
+		block()
+	}
 )
 
 class BuildingDiagnosticElement<T : Any>(
@@ -89,6 +93,13 @@ class DiagnosticItemGroupBuilder {
 	
 	fun add(item: DiagnosticItem) {
 		list.add(item)
+	}
+	
+	fun addAll(item: DiagnosticItem) {
+		when(item) {
+			is DiagnosticElement<*> -> list += item
+			is DiagnosticItemGroup -> list += item.children
+		}
 	}
 	
 	infix fun String.set(element: DiagnosticObject) {

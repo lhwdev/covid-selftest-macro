@@ -8,7 +8,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.core.content.getSystemService
 import com.lhwdev.selfTestMacro.database.*
+import com.lhwdev.selfTestMacro.debug.DiagnosticItem
+import com.lhwdev.selfTestMacro.debug.diagnosticGroup
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
@@ -75,9 +78,11 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 		// if(schedule.timeMillis < System.currentTimeMillis()) return
 	}
 	
-	override suspend fun onSchedule(schedule: TaskSchedule, coroutineScope: CoroutineScope) {
+	override fun onSchedule(schedule: TaskSchedule, coroutineScope: CoroutineScope): Job? {
 		val index = schedules.indexOf(schedule)
 		val next = schedules.getOrNull(index + 1)
+		
+		val job = super.onSchedule(schedule, coroutineScope)
 		
 		val today = dayOf(currentTimeMillis())
 		val updateTomorrow = if(next == null) {
@@ -92,7 +97,7 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 			scheduleAlarm(newNext)
 		}
 		
-		super.onSchedule(schedule, coroutineScope)
+		return job
 	}
 	
 	protected abstract fun updateNextDays(previousDay: Long)
@@ -141,10 +146,16 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 	
 	/// Etc
 	
-	open fun cleanOldSchedules() {
-		val current = currentTimeMillis()
-		
-		val index = schedules.indexOfFirst { it.timeMillis > current }
-		if(index > 0) schedules = schedules.drop(index)
+	// open fun cleanOldSchedules() { // cleaned by GroupTaskScheduler
+	// 	val current = currentTimeMillis()
+	//	
+	// 	val index = schedules.indexOfFirst { it.timeMillis > current }
+	// 	if(index > 0) schedules = schedules.drop(index)
+	// }
+	
+	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticGroup(
+		"AlarmManagerTaskScheduler", extendFrom = super.getDiagnosticInformation()
+	) {
+		"alarmSchedule" set alarmSchedule
 	}
 }

@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.ui.utils
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,8 +33,6 @@ fun SelectionChip(
 	modifier: Modifier = Modifier,
 	content: @Composable RowScope.() -> Unit
 ) {
-	val selectedAnimation = updateTransition(selected, label = "selected")
-	
 	Surface(
 		onClick = { setSelected(!selected) },
 		shape = RoundedCornerShape(8.dp),

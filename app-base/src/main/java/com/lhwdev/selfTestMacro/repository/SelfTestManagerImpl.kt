@@ -388,6 +388,7 @@ class SelfTestManagerImpl(
 				questionSuspicious = answer.suspicious,
 				questionQuickTestResult = answer.quickTestResult,
 				questionWaitingResult = answer.waitingResult,
+				clientVersion = session.clientVersion,
 				upperUserName = answer.message
 			)
 			
@@ -484,7 +485,7 @@ class SelfTestManagerImpl(
 	
 	override suspend fun onSubmitSchedule(schedule: SelfTestSchedule) {
 		schedule as SelfTestSchedulesImpl.Schedule
-		schedules.scheduler.onSchedule(schedule.schedule, defaultCoroutineScope)
+		schedules.scheduler.onSchedule(schedule.schedule, defaultCoroutineScope)?.join()
 	}
 	
 	

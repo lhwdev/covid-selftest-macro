@@ -1,8 +1,8 @@
 package com.lhwdev.selfTestMacro.repository
 
-import com.lhwdev.selfTestMacro.debug.TraceItems
-import com.lhwdev.selfTestMacro.debug.log
+import com.lhwdev.selfTestMacro.debug.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -28,7 +28,7 @@ import kotlinx.serialization.Serializable
  * Why I thought so?
  */
 @TraceItems
-abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskScheduler<T> {
+abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskScheduler<T>, DiagnosticObject {
 	@Serializable
 	data class TaskSchedule(
 		val code: Int,
@@ -67,23 +67,18 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 			return
 		}
 		
-		val now = currentTimeMillis()
-		
 		val lastSchedules = ArrayDeque(schedules)
 		var currentSchedule = lastSchedules.removeFirstOrNull()
 			?: scheduleSet(newTasks.first().timeMillis)
-		val newSchedules = mutableListOf(currentSchedule)
+		val newSchedules = mutableListOf<TaskSchedule>()
 		
 		// Tasks are cheap, need not diff or anything, maybe?
-		outer@ for(task in newTasks) {
+		for(task in newTasks) {
 			if(task.ignoredByScheduler) continue
-			
-			while(currentSchedule.timeMillis <= now) {
-				currentSchedule = lastSchedules.removeFirstOrNull() ?: break@outer
-			}
 			
 			// reuse current existing schedule
 			if(canTaskScheduled(task, currentSchedule)) {
+				newSchedules += currentSchedule
 				onTaskScheduled(task, currentSchedule)
 				continue
 			}
@@ -114,6 +109,10 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 		onScheduleUpdated()
 	}
 	
+	/**
+	 * Note: called inside [updateTasks], so do not use other variables rather than arguments. Using something like
+	 * [schedules] would lead to incorrect behavior.
+	 */
 	protected open fun onTaskScheduled(task: T, schedule: TaskSchedule) {}
 	
 	protected abstract suspend fun onTask(task: T)
@@ -123,7 +122,9 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 		return tasks.drop(index).takeWhile { canTaskScheduled(it, schedule) }
 	}
 	
-	open suspend fun onSchedule(schedule: TaskSchedule, coroutineScope: CoroutineScope) {
+	open fun onSchedule(schedule: TaskSchedule, coroutineScope: CoroutineScope): Job? {
+		scheduleLog { "onSchedule: tasks=$tasks schedule=$schedule" }
+		
 		val index = tasks.indexOfFirst { it.timeMillis >= schedule.timeMillis }
 		if(index != 0) {
 			error("[GroupTaskScheduler] onSchedule: schedule order miss: target task $index != 0")
@@ -132,20 +133,23 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 		
 		if(currentTasks.isEmpty()) {
 			log("[GroupTaskScheduler] onSchedule: currentTasks is empty")
-			return
+			return null
 		}
 		
-		var last = currentTasks.first()
-		for(task in currentTasks) {
-			val interval = task.timeMillis - last.timeMillis
-			delay(interval)
-			
-			coroutineScope.launch { onTask(task) }
-			
-			last = task
+		val job = coroutineScope.launch {
+			var last = currentTasks.first()
+			for(task in currentTasks) {
+				val interval = task.timeMillis - last.timeMillis
+				delay(interval)
+				
+				launch { onTask(task) } // all children jobs are joined when calling Job.join()
+				
+				last = task
+			}
 		}
 		
 		tasks = tasks.drop(currentTasks.size)
+		return job
 	}
 	
 	/**
@@ -167,9 +171,23 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 	
 	/// Unsafe schedule operations: managing [schedules] or related [tasks] is not related
 	
+	/**
+	 * Note: called inside [updateTasks], so do not use other variables rather than arguments. Using something like
+	 * [schedules] would lead to incorrect behavior.
+	 */
 	protected abstract fun scheduleSet(time: Long): TaskSchedule
 	
+	/**
+	 * Note: called inside [updateTasks], so do not use other variables rather than arguments. Using something like
+	 * [schedules] would lead to incorrect behavior.
+	 */
 	protected abstract fun scheduleCancel(schedule: TaskSchedule)
 	
 	protected abstract fun onScheduleUpdated()
+	
+	
+	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticGroup("GroupTaskScheduler") {
+		"tasks" set tasks
+		"schedules" set schedules
+	}
 }

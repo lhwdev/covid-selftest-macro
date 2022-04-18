@@ -1,8 +1,12 @@
 package com.lhwdev.selfTestMacro.repository
 
+import com.lhwdev.fetch.FetchBody
+import com.lhwdev.fetch.FetchMethod
+import com.lhwdev.fetch.FetchResult
 import com.lhwdev.selfTestMacro.api.*
 import java.net.CookieManager
 import java.net.CookiePolicy
+import java.net.URL
 
 
 interface SelfTestApi {
@@ -16,6 +20,18 @@ interface SelfTestApi {
 		override var clientVersion: String = ""
 		
 		var token: UsersToken? = null
+		
+		override suspend fun fetch(
+			url: URL,
+			method: FetchMethod?,
+			headers: Map<String, String>,
+			body: FetchBody?
+		): FetchResult = super.fetch(url, method, headers, body).also {
+			val clientVersion = it["X-Client-Version"]
+			if(clientVersion != null) {
+				this.clientVersion = clientVersion
+			}
+		}
 	}
 	
 	suspend fun findSchool(

@@ -100,7 +100,8 @@ abstract class SynchronizedMutableStateImpl<T>(override val policy: SnapshotMuta
 		}
 		
 		fun apply() {
-			check(cache != sEmpty) { "Tried to apply but cache == sEmpty" }
+			if(cache != sEmpty) return
+			
 			// Is there better way to do this?
 			if(Snapshot.current == Snapshot.global { Snapshot.current }) {
 				@Suppress("UNCHECKED_CAST")

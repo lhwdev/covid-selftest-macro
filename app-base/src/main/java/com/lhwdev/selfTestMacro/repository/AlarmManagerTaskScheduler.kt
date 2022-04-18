@@ -37,15 +37,7 @@ abstract class AlarmManagerTaskScheduler<T : TaskItem>(
 	private val manager = context.getSystemService<AlarmManager>()!!
 	
 	
-	protected open fun currentTimeMillis(): Long = System.currentTimeMillis()
-	
-	
 	/// Tasks
-	override var taskId: Long by holder.preferenceLong(
-		key = "taskId",
-		defaultValue = Long.MIN_VALUE
-	)
-	
 	override fun canTaskScheduled(task: T, schedule: TaskSchedule): Boolean =
 		task.timeMillis - schedule.timeMillis in 0..sSetExactInterval
 	

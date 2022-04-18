@@ -15,6 +15,8 @@ import com.lhwdev.selfTestMacro.debug.sIncludeLogcatInLog
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.navigation.pushRoute
+import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
+import com.lhwdev.selfTestMacro.repository.SelfTestSchedulesImpl
 import com.lhwdev.selfTestMacro.repository.sDebugScheduleEnabled
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.pages.intro.IntroRoute
@@ -26,6 +28,7 @@ fun Navigator.showDebugWindow() = showDialogAsync(maxHeight = Dp.Infinity) {
 	val pref = LocalPreference.current
 	val navigator = LocalNavigator
 	val scope = rememberCoroutineScope()
+	val selfTestManager = LocalSelfTestManager.current
 	
 	Title { Text("개발자 모드") }
 	ListContent {
@@ -89,6 +92,10 @@ fun Navigator.showDebugWindow() = showDialogAsync(maxHeight = Dp.Infinity) {
 			pref.isScheduleDebugEnabled = !pref.isScheduleDebugEnabled
 			sDebugScheduleEnabled = pref.isScheduleDebugEnabled
 		}) { Text("SelfTestSchedule 등 예약 디버깅 ${if(pref.isScheduleDebugEnabled) "끄기" else "켜기"}") }
+		
+		ListItem(modifier = Modifier.clickable {
+			(selfTestManager.schedules as SelfTestSchedulesImpl).recreateTasks()
+		}) { Text("SelfTestSchedule 스케줄 재생성") }
 		
 		ListItem { Text("에러 로깅 활성화됨") }
 	}

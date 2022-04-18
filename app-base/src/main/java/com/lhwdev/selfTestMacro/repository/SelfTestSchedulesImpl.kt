@@ -17,7 +17,9 @@ import kotlin.random.Random
 
 private const val sDayMillis = 1000 * 60 * 60 * 24
 
-internal fun dayOf(millis: Long) = millis / sDayMillis // NOTE: how about leap second? It may be affected
+internal fun dayOf(millis: Long) =
+	millis / sDayMillis // 'The number of seconds per day are fixed with Unix timestamps.'
+
 internal fun today() = dayOf(System.currentTimeMillis())
 
 
@@ -42,10 +44,10 @@ private val schedulerFlags = PendingIntent.FLAG_UPDATE_CURRENT or if(Build.VERSI
  *   less error-prone, and performant.
  * - to show useful information in [NotificationStatus], like 'self test 3/5 ongoing'
  *
- * [SelfTestSchedules] also saves task list in [tasks] which is used by schedulers. All schedule creation and update is
+ * [SelfTestSchedules] also saves task list in tasks which is used by schedulers. All schedule creation and update is
  * handled by this class.
  *
- * [tasks] are reset every day.
+ * Tasks are reset every day.
  */
 abstract class SelfTestSchedulesImpl(
 	context: Context,
@@ -95,15 +97,22 @@ abstract class SelfTestSchedulesImpl(
 				targetDay = today
 			}
 			
-			createTasks().also { tasksCache = it }
+			createTasks().also {
+				tasksCache = it
+				scheduleLog { "updateAndGetTasks: ${dumpDebug(oneLine = false)}" }
+			}
 		} else {
 			tasksCache
 		}
 	}
 	
+	fun recreateTasks() {
+		targetDay = Long.MIN_VALUE
+		updateAndGetTasks()
+	}
+	
 	fun onScheduleUpdated() {
 		updateAndGetTasks()
-		dump()
 	}
 	
 	private fun DbTestGroup.nextTime(): LongRange {
@@ -111,6 +120,7 @@ abstract class SelfTestSchedulesImpl(
 		fun calendarFor(schedule: DbTestSchedule.Fixed): Calendar {
 			val calendar = calendarCache
 			calendar.timeInMillis = targetDay * sDayMillis // reset to the target day
+			
 			
 			// calendar[Calendar.SECOND] = 0 // as set in `calendar.timeInMillis = ...`
 			// calendar[Calendar.MILLISECOND] = 0
@@ -158,8 +168,6 @@ abstract class SelfTestSchedulesImpl(
 	}
 	
 	private fun createTasks(): List<SelfTestTask> {
-		val list = ArrayList<SelfTestTask>(database.users.users.size)
-		
 		val old = ArrayDeque(tasksCache)
 		val new = ArrayList<SelfTestTask>(/* initialCapacity = */ old.size)
 		var modified = false
@@ -179,7 +187,7 @@ abstract class SelfTestSchedulesImpl(
 						new += last
 						continue
 					}
-					list += SelfTestTask(
+					new += SelfTestTask(
 						testGroupId = group.id,
 						userId = null, // because the time is stable, we can do all the users at once.
 						timeMillis = timeRange.first
@@ -263,7 +271,7 @@ abstract class SelfTestSchedulesImpl(
 			scheduler.updateTasks(new)
 		}
 		
-		return list
+		return new
 	}
 	
 	
@@ -289,9 +297,8 @@ abstract class SelfTestSchedulesImpl(
 		
 		for(index in targetTasks.indices) {
 			val task = targetTasks[index]
-			val result = results.getOrNull(index)
 			
-			val logId = when(result) {
+			val logId = when(results.getOrNull(index)) {
 				null -> -1
 				is SubmitResult.Success -> null
 				else -> if(logIndex < logRange.last - logRange.first) {
@@ -316,7 +323,7 @@ abstract class SelfTestSchedulesImpl(
 	
 	
 	val scheduler = object : AlarmManagerTaskScheduler<SelfTestTask>(
-		initialTasks = updateAndGetTasks(),
+		initialTasks = tasksCache,
 		context = context,
 		holder = database.holder
 	) {
@@ -359,8 +366,6 @@ abstract class SelfTestSchedulesImpl(
 		override fun updateNextDays(previousDay: Long) {
 			targetDay = previousDay + 1
 			updateAndGetTasks()
-			
-			dump()
 		}
 	}
 	
@@ -378,14 +383,14 @@ abstract class SelfTestSchedulesImpl(
 					var removedCount = 0
 					while(schedules.isNotEmpty() && !scheduler.canTaskScheduled(task, schedules.first())) {
 						val removed = schedules.removeFirst()
-						"removedSchedule${removedCount}" set removed
+						"schedule${removedCount}" set removed
 						removedCount++
 					}
 					schedules.firstOrNull()
 				}
 				
 				"$index" set diagnosticGroup("TaskEntry") {
-					"schedule" set schedule?.code
+					"schedule" set schedule
 					"task" set task
 				}
 			}
@@ -393,11 +398,7 @@ abstract class SelfTestSchedulesImpl(
 	}
 	
 	
-	private fun dump() {
-		scheduleLog { "init SelfTestSchedulesImpl: ${dumpDebug(oneLine = false)}" }
-	}
-	
 	init {
-		dump()
+		updateAndGetTasks()
 	}
 }

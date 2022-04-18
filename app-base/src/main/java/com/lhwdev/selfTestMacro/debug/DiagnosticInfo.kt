@@ -123,11 +123,12 @@ fun DiagnosticObject.dumpDebug(oneLine: Boolean): String = getDiagnosticInformat
 
 fun DiagnosticItem.dumpDebug(oneLine: Boolean): String = buildString {
 	fun dump(item: DiagnosticItem, depth: Int) {
-		append("  ".repeat(depth))
+		append("\t".repeat(depth))
+		if(depth != 0) append("|-")
+		append(" ")
+		
 		when(item) {
 			is DiagnosticElement<*> -> {
-				if(depth != 0) append("|-")
-				append(" ")
 				append(item.name)
 				append(": ")
 				append(item.data)

@@ -33,15 +33,12 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 	data class TaskSchedule(
 		val code: Int,
 		val timeMillis: Long
-	)
+	) {
+		override fun toString(): String = "TaskSchedule(code=$code, timeMillis=${timeMillis.millisToDeltaString()})"
+	}
 	
 	
 	/// Task: lightweight
-	
-	protected abstract var taskId: Long
-	
-	override fun nextTaskId(): Long = taskId++
-	
 	
 	/**
 	 * This should be sorted by [TaskItem.timeMillis].
@@ -49,6 +46,9 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 	private var tasks: List<T> = initialTasks
 	
 	override val allTasks: List<T> get() = tasks
+	
+	
+	open fun currentTimeMillis(): Long = System.currentTimeMillis()
 	
 	final override fun updateTasks(tasks: List<T>) {
 		val lastTasks = this.tasks
@@ -67,14 +67,20 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 			return
 		}
 		
+		val now = currentTimeMillis()
+		
 		val lastSchedules = ArrayDeque(schedules)
 		var currentSchedule = lastSchedules.removeFirstOrNull()
 			?: scheduleSet(newTasks.first().timeMillis)
 		val newSchedules = mutableListOf(currentSchedule)
 		
 		// Tasks are cheap, need not diff or anything, maybe?
-		for(task in newTasks) {
+		outer@ for(task in newTasks) {
 			if(task.ignoredByScheduler) continue
+			
+			while(currentSchedule.timeMillis <= now) {
+				currentSchedule = lastSchedules.removeFirstOrNull() ?: break@outer
+			}
 			
 			// reuse current existing schedule
 			if(canTaskScheduled(task, currentSchedule)) {
@@ -85,6 +91,7 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 			while(lastSchedules.isNotEmpty() && lastSchedules.first().timeMillis < task.timeMillis) {
 				val last = lastSchedules.removeFirst()
 				scheduleCancel(last)
+				scheduleLog { "remove schedule $last" }
 			}
 			
 			val next = lastSchedules.firstOrNull()

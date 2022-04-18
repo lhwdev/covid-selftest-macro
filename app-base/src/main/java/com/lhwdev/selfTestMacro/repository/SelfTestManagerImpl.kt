@@ -21,6 +21,7 @@ import com.lhwdev.utils.rethrowIfNeeded
 import kotlinx.coroutines.*
 import java.io.File
 import java.util.WeakHashMap
+import kotlin.time.Duration
 
 
 @PublishedApi
@@ -532,3 +533,7 @@ class SelfTestManagerImpl(
 		schedules.onScheduleUpdated()
 	}
 }
+
+
+fun Long.millisToDeltaString(now: Long = System.currentTimeMillis()): String =
+	with(Duration) { (this@millisToDeltaString - now).milliseconds }.toString()

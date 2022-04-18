@@ -23,6 +23,9 @@ data class SelfTestTask(
 	
 	override val ignoredByScheduler: Boolean
 		get() = result != null
+	
+	override fun toString(): String =
+		"SelfTestTask(testGroupId=$testGroupId, userId=$userId, timeMillis=${timeMillis.millisToDeltaString()}, result=$result)"
 }
 
 

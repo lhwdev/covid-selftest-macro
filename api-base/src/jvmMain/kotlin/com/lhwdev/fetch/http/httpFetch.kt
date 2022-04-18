@@ -242,11 +242,13 @@ private class HttpResultImpl(override val request: FetchRequest, val connection:
 	// fetch headers
 	private val cache = mutableMapOf<FetchHeaderKey<*>, FetchHeader?>()
 	
+	override fun get(key: String): String? = connection.getHeaderField(key)
+	
 	@Suppress("UNCHECKED_CAST")
 	override fun <T : FetchHeader> get(key: FetchHeaderKey<T>): T? = cache.getOrPut(key) {
 		connection.getHeaderField(key.key)?.let { key.parse(it) }
 	} as T?
 	
 	override fun contains(key: FetchHeaderKey<*>): Boolean = get(key) != null
-	override fun contains(key: String): Boolean = connection.getHeaderField(key) != null
+	override fun contains(key: String): Boolean = get(key) != null
 }

@@ -8,7 +8,6 @@ import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.isOk
 import com.lhwdev.selfTestMacro.android.utils.activeNetworkCommon
-import com.lhwdev.selfTestMacro.api.DangerousHcsApi
 import com.lhwdev.selfTestMacro.api.QuickTestResult
 import com.lhwdev.selfTestMacro.api.SurveyData
 import com.lhwdev.selfTestMacro.api.registerSurvey
@@ -395,7 +394,6 @@ class SelfTestManagerImpl(
 				upperUserName = answer.message
 			)
 			
-			@OptIn(DangerousHcsApi::class)
 			val data = api.registerSurvey(
 				session = session,
 				institute = user.usersInstitute,

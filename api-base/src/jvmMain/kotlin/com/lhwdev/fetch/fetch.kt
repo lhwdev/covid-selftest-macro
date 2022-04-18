@@ -115,6 +115,7 @@ abstract class FetchHeaderKey<T : FetchHeader>(val key: String) {
 
 interface FetchHeaders {
 	operator fun <T : FetchHeader> get(key: FetchHeaderKey<T>): T?
+	operator fun get(key: String): String?
 	operator fun contains(key: FetchHeaderKey<*>): Boolean
 	operator fun contains(key: String): Boolean
 }
@@ -129,6 +130,9 @@ class MutableFetchHeadersBuilder : MutableFetchHeaders {
 	private val stringMap = mutableMapOf<String, String>()
 	
 	override fun <T : FetchHeader> get(key: FetchHeaderKey<T>): T? = map[key] as T?
+	override fun get(key: String): String? =
+		stringMap[key] ?: map.entries.find { it.key.key == key }?.value?.serialize()
+	
 	override fun contains(key: FetchHeaderKey<*>): Boolean = key in map || key.key in stringMap
 	override fun contains(key: String): Boolean = map.keys.any { it.key == key } || key in stringMap
 	override fun <T : FetchHeader> set(key: FetchHeaderKey<T>, value: T?) {

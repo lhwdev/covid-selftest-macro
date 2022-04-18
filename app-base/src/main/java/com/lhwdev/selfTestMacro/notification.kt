@@ -9,6 +9,9 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 operator fun NotificationManagerCompat.set(id: Int, tag: String? = null, value: Notification?) {
@@ -74,14 +77,17 @@ object AppNotifications {
 		importance = NotificationManagerCompat.IMPORTANCE_LOW,
 		priority = NotificationCompat.PRIORITY_LOW
 	) {
+		private val dateFormat = SimpleDateFormat("MM/dd kk:mm", Locale.US)
+		
 		fun notificationOf(
 			context: Context,
 			target: String,
-			time: String?
+			time: Long?
 		) = context.buildNotification {
 			setContentTitle("${target}의 건강상태 자가진단을 완료했어요.")
 			if(time != null) {
-				setContentText("${time}에 자가진단을 제출했어요.") // TODO: suspicious/quarantined status view
+				// TODO: suspicious/quarantined status view
+				setContentText("${dateFormat.format(Date(time))}에 자가진단을 제출했어요.")
 			}
 		}
 	}

@@ -11,7 +11,6 @@ import com.lhwdev.selfTestMacro.database.AppDatabase
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.database.allUsersCount
 import com.lhwdev.selfTestMacro.set
-import java.util.Date
 
 
 /**
@@ -80,7 +79,7 @@ class NotificationStatus(val schedule: SelfTestSchedules, val database: AppDatab
 						"$anyName 등 ${allUsersCount}명"
 					},
 					time = if(allUsersCount == 1) {
-						Date(anyTask.timeMillis).toString()
+						anyTask.timeMillis
 					} else {
 						null
 					}

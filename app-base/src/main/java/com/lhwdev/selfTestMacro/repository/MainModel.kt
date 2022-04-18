@@ -96,7 +96,7 @@ fun Status(info: UserInfo): Status = when {
 	info.isHealthy != null && info.lastRegisterAt != null ->
 		Status.Submitted(
 			suspicious = info.suspiciousKind,
-			time = formatRegisterTime(info.lastRegisterAt!!),
+			time = "오늘 " + formatRegisterTime(info.lastRegisterAt!!),
 			answer = info.answer!!
 		)
 	else -> Status.NotSubmitted
@@ -104,4 +104,4 @@ fun Status(info: UserInfo): Status = when {
 
 
 private fun formatRegisterTime(time: String): String =
-	"오늘 " + time.substring(time.indexOf(' ') + 1, time.lastIndexOf('.'))
+	time.substring(time.indexOf(' ') + 1, time.lastIndexOf('.'))

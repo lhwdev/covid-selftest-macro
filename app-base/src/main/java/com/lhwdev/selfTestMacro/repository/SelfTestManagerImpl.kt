@@ -8,7 +8,10 @@ import com.lhwdev.fetch.fetch
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.isOk
 import com.lhwdev.selfTestMacro.android.utils.activeNetworkCommon
-import com.lhwdev.selfTestMacro.api.*
+import com.lhwdev.selfTestMacro.api.DangerousHcsApi
+import com.lhwdev.selfTestMacro.api.QuickTestResult
+import com.lhwdev.selfTestMacro.api.SurveyData
+import com.lhwdev.selfTestMacro.api.registerSurvey
 import com.lhwdev.selfTestMacro.database.*
 import com.lhwdev.selfTestMacro.debug.DebugContext
 import com.lhwdev.selfTestMacro.debug.DiagnosticObject
@@ -53,7 +56,7 @@ private const val sPrefPrefix = "SelfTestManager"
  * Nowadays [SelfTestManager] focuses on:
  *
  * - database management
- * - translating calls to api implementation like [Session.registerSurvey] (although it is merely wrapper so far)
+ * - translating calls to api implementation like [Session.registerSurvey] (which is done by [api]: [SelfTestApi])
  * - fluent and user-friendly error handling
  * - scheduling self test
  */
@@ -347,7 +350,7 @@ class SelfTestManagerImpl(
 	override suspend fun getCurrentStatus(user: DbUser): Status? = with(database) {
 		try {
 			val (session, _) = ensureSessionAuthorized(user.userGroup)
-			Status(session.getUserInfo(user.usersInstitute, user.apiUser()))
+			Status(api.getUserInfo(session, user.usersInstitute, user.apiUser()))
 		} catch(th: Throwable) {
 			th.rethrowIfNeeded()
 			debugContext.onError(
@@ -393,7 +396,8 @@ class SelfTestManagerImpl(
 			)
 			
 			@OptIn(DangerousHcsApi::class)
-			val data = session.registerSurvey(
+			val data = api.registerSurvey(
+				session = session,
 				institute = user.usersInstitute,
 				user = user.apiUser(),
 				name = user.name,

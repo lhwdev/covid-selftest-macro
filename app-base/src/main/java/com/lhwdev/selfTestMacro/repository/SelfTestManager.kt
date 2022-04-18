@@ -44,45 +44,13 @@ interface SelfTestManager {
 	
 	val schedules: SelfTestSchedules
 	
+	val api: SelfTestApi
+	
 	fun createAuthSession(institute: InstituteInfo): SelfTestSession
 	
 	fun registerAuthSession(session: SelfTestSession, institute: InstituteInfo, mainUser: User)
 	
 	fun getAuthSession(group: DbUserGroup): SelfTestSession
-	
-	suspend fun findSchool(
-		regionCode: String?,
-		schoolLevelCode: Int,
-		name: String
-	): SearchResult
-	
-	suspend fun findUser(
-		session: SelfTestSession,
-		institute: InstituteInfo,
-		name: String,
-		birthday: String,
-		searchKey: SearchKey,
-		loginType: LoginType
-	): UsersIdentifier
-	
-	suspend fun validatePassword(
-		session: SelfTestSession,
-		institute: InstituteInfo,
-		token: UsersIdToken,
-		password: String
-	): PasswordResult
-	
-	suspend fun getUserGroup(
-		session: SelfTestSession,
-		institute: InstituteInfo,
-		token: UsersToken
-	): UserGroup
-	
-	suspend fun getUserInfo(
-		session: SelfTestSession,
-		institute: InstituteInfo,
-		user: User
-	): UserInfo
 	
 	fun addTestGroupToDb(usersToAdd: List<WizardUser>, targetGroup: DbTestGroup?, isAllGrouped: Boolean)
 	

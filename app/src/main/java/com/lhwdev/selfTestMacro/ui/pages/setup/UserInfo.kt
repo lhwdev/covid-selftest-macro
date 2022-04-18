@@ -72,7 +72,7 @@ private suspend fun submitLogin(
 	
 	val userId = try {
 		log("#2. 사용자 찾기")
-		selfTestManager.findUser(
+		selfTestManager.api.findUser(
 			session = session,
 			institute = institute,
 			name = name, birthday = birth,
@@ -130,7 +130,7 @@ private suspend fun submitLogin(
 	// validate & login with password
 	val result = try {
 		log("#3. 비밀번호 확인")
-		selfTestManager.validatePassword(session, institute, userId.token, password)
+		selfTestManager.api.validatePassword(session, institute, userId.token, password)
 	} catch(e: Throwable) {
 		e.rethrowIfNeeded()
 		model.showSnackbar("비밀번호가 바르지 않아요.", actionLabel = "확인")
@@ -153,7 +153,7 @@ private suspend fun submitLogin(
 			}
 		}
 		is PasswordResult.Success -> try {
-			val userGroup = selfTestManager.getUserGroup(session, institute, result.token)
+			val userGroup = selfTestManager.api.getUserGroup(session, institute, result.token)
 			
 			selfTestManager.registerAuthSession(
 				session,
@@ -172,7 +172,7 @@ private suspend fun submitLogin(
 			val list = userGroup.users.map {
 				WizardUser(
 					user = it,
-					info = selfTestManager.getUserInfo(session, institute, it),
+					info = selfTestManager.api.getUserInfo(session, institute, it),
 					master = master
 				)
 			}

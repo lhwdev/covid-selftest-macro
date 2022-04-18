@@ -132,7 +132,7 @@ internal fun ColumnScope.WizardSchoolInfo(
 		
 		val searchResult = runCatching {
 			log("#1. 학교 정보 찾기")
-			selfTestManager.findSchool(
+			selfTestManager.api.findSchool(
 				regionCode = model.regionCode,
 				schoolLevelCode = model.schoolLevel,
 				name = model.schoolName

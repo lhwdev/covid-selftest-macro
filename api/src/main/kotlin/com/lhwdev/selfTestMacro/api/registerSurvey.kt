@@ -6,15 +6,11 @@ import com.lhwdev.fetch.Bodies
 import com.lhwdev.fetch.get
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
-import com.lhwdev.fetch.http.fetch
 import com.lhwdev.fetch.json
 import com.lhwdev.fetch.sDefaultFakeHeader
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
-
-internal const val sClientVersion: String = "1.8.8"
 
 
 /**
@@ -26,7 +22,7 @@ public data class SurveyData(
 	val questionSuspicious: Boolean,
 	val questionQuickTestResult: QuickTestResult,
 	val questionWaitingResult: Boolean,
-	val clientVersion: String = sClientVersion,
+	val clientVersion: String,
 	val deviceUuid: String = "",
 	val upperUserToken: UserToken? = null, // null for default
 	val upperUserName: String? = null // null for default
@@ -51,7 +47,7 @@ public data class SurveyData(
 @Serializable // JsonEncodeDefaults should be used
 public data class ApiSurveyData(
 	val deviceUuid: String = "",
-	val clientVersion: String = sClientVersion,
+	val clientVersion: String,
 	@Serializable(with = YesNoSerializer::class) val rspns00: Boolean = true,
 	val rspns01: String = "1",
 	val rspns02: String = "1",

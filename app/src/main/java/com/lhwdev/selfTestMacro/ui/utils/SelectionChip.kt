@@ -13,6 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,10 +42,11 @@ fun SelectionChip(
 		color = with(MaterialTheme.colors) { if(selected) primaryContainer else surface },
 		border = if(selected) null else BorderStroke(width = 1.dp, color = MaterialTheme.colors.onSurface),
 		contentColor = MaterialTheme.colors.onSurface,
-		modifier = modifier.height(32.dp)
+		role = Role.Checkbox,
+		modifier = modifier.height(32.dp).semantics { this.selected = selected }
 	) {
 		Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-			AnimatedVisibility(selected) {
+			AnimatedVisibility(selected, modifier = Modifier.clearAndSetSemantics {}) {
 				CompositionLocalProvider(LocalContentColor provides MaterialTheme.colors.onSurface) {
 					trailingIconSelected()
 				}

@@ -2,6 +2,7 @@ package com.lhwdev.selfTestMacro.ui.pages.main
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.ListItem
@@ -103,7 +104,10 @@ fun (@Suppress("unused") ColumnScope).SelectAnswerContent(answer: Answer, setAns
 			Column {
 				Text(question.content)
 				Spacer(Modifier.height(8.dp))
-				Row(Modifier.padding(start = 2.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+				Row(
+					modifier = Modifier.padding(start = 2.dp).selectableGroup(),
+					horizontalArrangement = Arrangement.spacedBy(10.dp)
+				) {
 					for((item, text) in question.displayTexts) {
 						SelectionChip(
 							selected = answer[question] == item,

@@ -100,7 +100,7 @@ abstract class SynchronizedMutableStateImpl<T>(override val policy: SnapshotMuta
 		}
 		
 		fun apply() {
-			if(cache != sEmpty) return
+			if(cache == sEmpty) return
 			
 			// Is there better way to do this?
 			if(Snapshot.current == Snapshot.global { Snapshot.current }) {

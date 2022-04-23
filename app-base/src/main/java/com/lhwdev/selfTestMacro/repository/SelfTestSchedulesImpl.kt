@@ -86,6 +86,20 @@ abstract class SelfTestSchedulesImpl(
 		private set
 	
 	
+	// Views
+	
+	override fun getTask(testGroup: DbTestGroup, user: DbUser?): SelfTestTask? =
+		tasksCache.find { it.testGroupId == testGroup.id && it.userId == user?.id }
+	
+	override fun getTasks(testGroup: DbTestGroup): List<SelfTestTask> =
+		tasksCache.filter { it.testGroupId == testGroup.id }
+	
+	override fun getSchedule(code: Int): Schedule? =
+		scheduler.getSchedule(code)?.let { Schedule(it) }
+	
+	
+	/// Schedule Updates
+	
 	/**
 	 * Note that this task is not sorted by [SelfTestTask.timeMillis].
 	 */
@@ -313,8 +327,6 @@ abstract class SelfTestSchedulesImpl(
 			updateAndGetTasks()
 		}
 	}
-	
-	override fun getSchedule(code: Int): Schedule? = scheduler.getSchedule(code)?.let { Schedule(it) }
 	
 	
 	// Diagnostic

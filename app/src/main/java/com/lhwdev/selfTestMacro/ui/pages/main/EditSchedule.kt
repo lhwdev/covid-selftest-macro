@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbTestSchedule
-import com.lhwdev.selfTestMacro.database.DbTestTarget
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupInfo
@@ -32,9 +31,13 @@ import com.lhwdev.selfTestMacro.ui.systemUi.Scrims
 import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
 import com.lhwdev.selfTestMacro.ui.utils.ClickableTextFieldDecoration
-import com.lhwdev.selfTestMacro.ui.utils.TextCheckbox
 import com.lhwdev.selfTestMacro.ui.utils.TimePickerDialog
 import com.vanpra.composematerialdialogs.*
+
+private class Time(val hour: Int, val minute: Int)
+
+private fun DbTestSchedule.Fixed.toTime() = Time(hour, minute)
+private fun Time.toFixed() = DbTestSchedule.Fixed(hour, minute)
 
 
 internal fun Navigator.showScheduleSelfTest(
@@ -68,18 +71,11 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 		)
 	}
 	
-	var hour by remember {
-		mutableStateOf((group.schedule as? DbTestSchedule.Fixed)?.hour ?: -1)
-	}
-	var minute by remember {
-		mutableStateOf((group.schedule as? DbTestSchedule.Fixed)?.minute ?: 0)
-	}
+	var fixedTime by remember { mutableStateOf((group.schedule as? DbTestSchedule.Fixed)?.toTime()) }
 	
 	val random = group.schedule as? DbTestSchedule.Random
-	var fromHour by remember { mutableStateOf(random?.from?.hour ?: -1) }
-	var fromMinute by remember { mutableStateOf(random?.from?.minute ?: 0) }
-	var toHour by remember { mutableStateOf(random?.to?.hour ?: -1) }
-	var toMinute by remember { mutableStateOf(random?.to?.minute ?: 0) }
+	var randomFrom by remember { mutableStateOf(random?.from?.toTime()) }
+	var randomTo by remember { mutableStateOf(random?.to?.toTime()) }
 	
 	var excludeWeekend by remember { mutableStateOf(group.excludeWeekend) }
 	var altogether by remember { mutableStateOf(group.schedule.altogether) }
@@ -134,34 +130,34 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 		@Composable
 		fun ScheduleTime(
 			label: String,
-			hour: Int,
-			minute: Int,
-			setTime: (hour: Int, minute: Int) -> Unit,
+			time: Time?,
+			initialTimeForPicker: Time = Time(hour = 7, minute = 0),
+			setTime: (Time) -> Unit,
 			modifier: Modifier = Modifier
 		) {
 			ClickableTextFieldDecoration(
 				onClick = {
 					navigator.showDialogAsync { dismiss ->
 						TimePickerDialog(
-							initialHour = if(hour == -1) 7 else hour,
-							initialMinute = minute,
+							initialHour = time?.hour ?: initialTimeForPicker.hour,
+							initialMinute = time?.minute ?: initialTimeForPicker.minute,
 							setTime = { h, m ->
-								setTime(h, m)
+								setTime(Time(h, m))
 								dismiss()
 							},
 							cancel = dismiss
 						)
 					}
 				},
-				isEmpty = hour == -1,
+				isEmpty = time == null,
 				label = { Text(label) },
 				modifier = modifier.padding(8.dp)
 			) {
-				if(hour != -1) {
+				if(time != null) {
 					val text = buildAnnotatedString {
-						append(if(hour == 0) "12" else "$hour".padStart(2, padChar = '0'))
+						append(if(time.hour == 0) "12" else "${time.hour}".padStart(2, padChar = '0'))
 						withStyle(SpanStyle(color = MediumContentColor)) { append(":") }
-						append("$minute".padStart(2, padChar = '0'))
+						append("${time.minute}".padStart(2, padChar = '0'))
 					}
 					Text(text)
 				}
@@ -181,12 +177,8 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 		) {
 			ScheduleTime(
 				label = "시간 설정",
-				hour = hour,
-				minute = minute,
-				setTime = { h, m ->
-					hour = h
-					minute = m
-				},
+				time = fixedTime,
+				setTime = { fixedTime = it },
 				modifier = Modifier.fillMaxWidth()
 			)
 		}
@@ -208,24 +200,19 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 				Row(verticalAlignment = Alignment.CenterVertically) {
 					ScheduleTime(
 						label = "범위 시작",
-						hour = fromHour, minute = fromMinute,
-						modifier = Modifier.weight(1f),
-						setTime = { h, m ->
-							fromHour = h
-							fromMinute = m
-						}
+						time = randomFrom,
+						setTime = { randomFrom = it },
+						modifier = Modifier.weight(1f)
 					)
 					
 					Text("~", style = MaterialTheme.typography.body1)
 					
 					ScheduleTime(
 						label = "범위 끝",
-						hour = toHour, minute = toMinute,
+						time = randomTo,
+						initialTimeForPicker = randomFrom ?: Time(hour = 7, minute = 0),
 						modifier = Modifier.weight(1f),
-						setTime = { h, m ->
-							toHour = h
-							toMinute = m
-						}
+						setTime = { randomTo = it }
 					)
 				}
 				
@@ -265,21 +252,24 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 			val schedule = when(type) {
 				ScheduleType.none -> DbTestSchedule.None
 				ScheduleType.fixed -> {
-					if(hour == -1) {
+					val time = fixedTime
+					if(time == null) {
 						context.showToast("시간을 선택해주세요.")
 						return@submit
 					}
-					DbTestSchedule.Fixed(hour = hour, minute = minute)
+					time.toFixed()
 				}
 				ScheduleType.random -> {
-					if(fromHour == -1 || toHour == -1) {
+					val from = randomFrom
+					val to = randomTo
+					if(from == null || to == null) {
 						context.showToast("시간을 선택해주세요.")
 						return@submit
 					}
 					DbTestSchedule.Random(
-						from = DbTestSchedule.Fixed(hour = fromHour, minute = fromMinute),
-						to = DbTestSchedule.Fixed(hour = toHour, minute = toMinute),
-						altogether = true
+						from = from.toFixed(),
+						to = to.toFixed(),
+						altogether = altogether
 					)
 				}
 			}

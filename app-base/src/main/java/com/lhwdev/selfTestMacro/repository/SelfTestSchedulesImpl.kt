@@ -102,6 +102,9 @@ abstract class SelfTestSchedulesImpl(
 		}
 	}
 	
+	/**
+	 * Only for debugging purpose, as it resets [targetDay].
+	 */
 	fun recreateTasks() {
 		targetDay = Long.MIN_VALUE
 		updateAndGetTasks()
@@ -116,7 +119,6 @@ abstract class SelfTestSchedulesImpl(
 		fun calendarFor(schedule: DbTestSchedule.Fixed): Calendar {
 			val calendar = calendarCache
 			calendar.timeInMillis = targetDay * sDayMillis // reset to the target day
-			
 			
 			// calendar[Calendar.SECOND] = 0 // as set in `calendar.timeInMillis = ...`
 			// calendar[Calendar.MILLISECOND] = 0
@@ -163,111 +165,58 @@ abstract class SelfTestSchedulesImpl(
 		}
 	}
 	
+	/**
+	 * Tries to preserve old tasks as much as possible, as it is needed to implement 'do not schedule more than once
+	 * in a day' behavior.
+	 */
 	private fun createTasks(): List<SelfTestTask> {
-		val old = ArrayDeque(tasksCache)
-		val new = ArrayList<SelfTestTask>(/* initialCapacity = */ old.size)
+		val oldTasks = tasksCache.associateBy { it.identity }.toSortedMap()
+		val newTasks = ArrayList<SelfTestTask>(/* initialCapacity = */ oldTasks.size)
 		var modified = false
-		
 		outer@ for(group in database.testGroups.groups.values) {
 			val schedule = group.schedule
 			if(schedule == DbTestSchedule.None) continue
 			
 			val timeRange = group.nextTime()
 			
-			when {
-				schedule !is DbTestSchedule.Random -> { // stable!
-					check(timeRange.first == timeRange.last) // 'stable'
-					
-					val last = old.removeFirstOrNull()
-					if(last != null && last.testGroupId == group.id && last.userId == null && last.timeMillis in timeRange) {
-						new += last
-						continue
+			fun getOrCreateTask(user: DbUser?): SelfTestTask {
+				val identity = SelfTestTask.identity(testGroupId = group.id, userId = user?.id)
+				val old = oldTasks[identity]
+				return if(old != null) {
+					if(old.timeMillis !in timeRange) {
+						modified = true
+						old.copy(timeMillis = timeRange.random(random))
+					} else {
+						old
 					}
-					new += SelfTestTask(
-						testGroupId = group.id,
-						userId = null, // because the time is stable, we can do all the users at once.
-						timeMillis = timeRange.first
-					)
+				} else {
 					modified = true
-				}
-				schedule.altogether -> { // unstable
-					// remove left group tasks (last one + in case database is changed)
-					
-					var last: SelfTestTask?
-					while(true) {
-						last = old.firstOrNull()
-						if(last == null || last.testGroupId != group.id) break
-						
-						old.removeFirst()
-						
-						if(last.userId == null && last.timeMillis in timeRange) {
-							new += last
-							continue@outer
-						} else {
-							modified = true
-						}
-					}
-					
-					val timeMillis = timeRange.random(random)
-					new += SelfTestTask(
+					SelfTestTask(
 						testGroupId = group.id,
-						userId = null,
-						timeMillis = timeMillis
+						userId = user?.id,
+						timeMillis = timeRange.random(random)
 					)
 				}
-				else -> { // unstable
-					// try to retrieve from old; if users database is changed, update all
-					var i = 0
-					val users = with(database) { group.target.allUsers }
-					
-					while(i < users.size) {
-						val next = old.firstOrNull() ?: break
-						val user = users[i]
-						
-						if(next.testGroupId != group.id) {
-							break
-						}
-						
-						if(
-							next.userId == user.id && // if same user
-							next.timeMillis in timeRange // if schedule is not changed
-						) {
-							// matched
-							old.removeFirst()
-							new += next
-							i++
-							continue
-						}
-						
-						// not match, but from same test group
-						old.removeFirst()
-						modified = true
-					}
-					
-					// if not complete
-					while(i < users.size) {
-						val user = users[i]
-						val timeMillis = timeRange.random(random)
-						new += SelfTestTask(
-							testGroupId = group.id,
-							userId = user.id,
-							timeMillis = timeMillis
-						)
-						
-						modified = true
-						i++
-					}
-				}
+			}
+			
+			if(schedule.altogether) { // stable || unstable+altogether
+				newTasks += getOrCreateTask(user = null)
+			} else { // unstable
+				// try to retrieve from old; if users database is changed, update all
+				val users = with(database) { group.target.allUsers }
 				
+				for(user in users) {
+					newTasks += getOrCreateTask(user = user)
+				}
 			}
 		}
 		
 		if(modified) {
-			tasksCache = new
-			scheduler.updateTasks(new)
+			tasksCache = newTasks
+			scheduler.updateTasks(newTasks)
 		}
 		
-		return new
+		return newTasks
 	}
 	
 	
@@ -313,7 +262,7 @@ abstract class SelfTestSchedulesImpl(
 	}
 	
 	
-	/// scheduler implementation
+	/// Scheduler implementation
 	
 	protected abstract suspend fun onScheduledSubmitSelfTest(group: DbTestGroup, users: List<DbUser>?)
 	

@@ -229,16 +229,17 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 					)
 				}
 				
-				if(target is DbTestTarget.Group) {
-					TextCheckbox(
-						text = { Text("그룹원들을 동시에 자가진단") },
-						checked = altogether,
-						setChecked = { altogether = it }
-					)
-					
-					if(altogether)
-						Text("임의의 시간이 정해지면 그 때 그룹원들을 모두 자가진단합니다. 이 옵션이 체크되어 있지 않다면 정해진 범위 내에서 각각 따로 실행됩니다.")
-				}
+				// I don't think this feature is needed
+				// if(target is DbTestTarget.Group) {
+				// 	TextCheckbox(
+				// 		text = { Text("그룹원들을 동시에 자가진단") },
+				// 		checked = altogether,
+				// 		setChecked = { altogether = it }
+				// 	)
+				//	
+				// 	if(altogether)
+				// 		Text("임의의 시간이 정해지면 그 때 그룹원들을 모두 자가진단합니다. 이 옵션이 체크되어 있지 않다면 정해진 범위 내에서 각각 따로 실행됩니다.")
+				// }
 			}
 		}
 	}

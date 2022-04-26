@@ -47,4 +47,5 @@ fun Color(onLight: Color, onDark: Color): Color =
 	if(MaterialTheme.colors.isLight) onLight else onDark
 
 
+val Color.isLight: Boolean get() = luminance() >= 0.5f
 val Color.isDark: Boolean get() = luminance() < 0.5f

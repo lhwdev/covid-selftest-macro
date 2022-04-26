@@ -1,6 +1,5 @@
 package com.lhwdev.selfTestMacro.ui.pages.main
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -34,11 +33,14 @@ import com.lhwdev.selfTestMacro.ui.icons.ExpandMore
 import com.lhwdev.selfTestMacro.ui.icons.Icons
 import com.lhwdev.selfTestMacro.ui.pages.common.iconFor
 import com.lhwdev.selfTestMacro.ui.pages.common.scheduleInfo
+import com.lhwdev.selfTestMacro.ui.pages.common.showTodayScheduleDialog
 import com.lhwdev.selfTestMacro.ui.pages.edit.EditUsers
 import com.lhwdev.selfTestMacro.ui.pages.info.Info
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
 import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
+import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
+import com.lhwdev.selfTestMacro.ui.utils.dotAlarmIndicator
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.showFullDialogAsync
 import kotlinx.coroutines.launch
@@ -57,7 +59,7 @@ private fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 			scaffoldState = scaffoldState,
 			topBar = {
 				var showMoreActions by remember { mutableStateOf(false) }
-				com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar(
+				TopAppBar(
 					title = { Text("코로나19 자가진단 매크로") },
 					actions = {
 						SimpleIconButton(
@@ -106,7 +108,7 @@ private fun Main(): Unit = Surface(color = MaterialTheme.colors.surface) {
 }
 
 
-@SuppressLint("ComposableNaming") // factory
+@Suppress("ComposableNaming") // factory
 @Composable
 private fun GroupInfo(group: DbTestGroup): GroupInfo {
 	val pref = LocalPreference.current
@@ -260,27 +262,42 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 	
 	// scheduling
 	// '자가진단 예약: 꺼짐'
-	RoundButton(
-		onClick = {
-			navigator.showScheduleSelfTest(selectedGroup)
-		},
-		icon = {
-			Icon(
-				painterResource(R.drawable.ic_access_alarm_24),
-				contentDescription = null
-			)
-		},
-		trailingIcon = {
-			Icon(Icons.Filled.ExpandMore, contentDescription = null)
-		}
-	) {
-		val text = buildAnnotatedString {
-			withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("자가진단 예약") }
-			append(": ")
-			append(selectedGroup.group.scheduleInfo())
+	Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+		val anyTasksDone = remember(selectedTestGroup) {
+			selfTestManager.schedules.getTasks(selectedTestGroup)
+				.any { it.done }
 		}
 		
-		Text(text)
+		RoundButton(
+			onClick = {
+				navigator.showScheduleSelfTest(selectedGroup)
+			},
+			icon = {
+				Icon(
+					painterResource(R.drawable.ic_access_alarm_24),
+					contentDescription = null,
+					modifier = if(anyTasksDone) Modifier.dotAlarmIndicator(Color(0xffffc229)) else Modifier
+				)
+			},
+			trailingIcon = {
+				Icon(Icons.Filled.ExpandMore, contentDescription = null)
+			}
+		) {
+			val text = buildAnnotatedString {
+				withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("자가진단 예약") }
+				// TODO: hide following if screen width is small
+				append(": ")
+				append(selectedGroup.group.scheduleInfo())
+			}
+			
+			Text(text)
+		}
+		
+		IconButton(onClick = {
+			navigator.showTodayScheduleDialog(selectedTestGroup)
+		}) {
+			Icon(painterResource(R.drawable.ic_today_24), contentDescription = "오늘 예약")
+		}
 	}
 	
 	Spacer(Modifier.height(16.dp))

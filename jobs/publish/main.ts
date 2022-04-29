@@ -83,4 +83,6 @@ async function dumpAll(dir: string = resolve(".")): Promise<any> {
       obj[entry.name] = entry.name;
     }
   }
+
+  return obj;
 }

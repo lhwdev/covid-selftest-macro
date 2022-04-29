@@ -26,8 +26,6 @@ export function execContext(context: ExecContextParam): ExecContext {
   return new ExecContext(context);
 }
 
-export const exec = execContext({});
-
 export class Process {
   constructor(private options: Options, private process: Deno.Process) {}
 
@@ -68,3 +66,5 @@ export class ExecContext {
     return this.param.cwd ?? Deno.cwd();
   }
 }
+
+export const exec = execContext({});

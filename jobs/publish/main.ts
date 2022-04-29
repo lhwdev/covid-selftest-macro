@@ -73,7 +73,7 @@ export default async function publishMain(input: string, temp: string) {
   await repo.execute(["git", "push"]);
 }
 
-async function dumpAll(dir: string = resolve(".")): any {
+async function dumpAll(dir: string = resolve(".")): Promise<any> {
   const obj: any = {};
 
   for await (const entry of Deno.readDir(dir)) {

@@ -14,8 +14,9 @@ export default async function publishMain(input: string, temp: string) {
   const output = join(temp, "output");
   const outputSrc = join(output, "src"); // compatibility between meta and app-meta branch
 
+  const dirRoot = src;
   async function onDirectory(dir: string) {
-    for await (const entry of Deno.readDir(dir)) {
+    for await (const entry of Deno.readDir(join(dirRoot, dir))) {
       if (entry.isFile) await onFile(dir, entry);
       else await onDirectory(join(dir, entry.name));
     }
@@ -23,7 +24,7 @@ export default async function publishMain(input: string, temp: string) {
 
   async function onFile(dir: string, entry: Deno.DirEntry) {
     const name = entry.name;
-    const path = join(dir, name);
+    const path = join(dirRoot, dir, name);
     const index = name.lastIndexOf(".");
     const extension = index == -1 ? null : name.slice(index + 1);
     switch (extension) {
@@ -44,7 +45,7 @@ export default async function publishMain(input: string, temp: string) {
 
   /// 1. Minify
   await ensureDir(output);
-  await onDirectory(src);
+  await onDirectory(".");
   await copy(publicDir, output, { overwrite: true });
 
   /// 2. Publish

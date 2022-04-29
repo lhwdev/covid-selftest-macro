@@ -78,7 +78,7 @@ async function dumpAll(dir: string = resolve(".")): Promise<any> {
 
   for await (const entry of Deno.readDir(dir)) {
     if (entry.isDirectory) {
-      obj[entry.name] = dumpAll(join(dir, entry.name));
+      obj[entry.name] = await dumpAll(join(dir, entry.name));
     } else {
       obj[entry.name] = entry.name;
     }

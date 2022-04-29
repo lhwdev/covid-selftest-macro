@@ -58,6 +58,8 @@ export default async function publishMain(input: string, temp: string) {
     ref: config.targetRef,
   });
 
+  console.log(await dumpAll());
+
   await repo.execute(["git", "config", "user.name", context.payload.pusher.name]);
   await repo.execute(["git", "config", "user.email", context.payload.pusher.email]);
 
@@ -69,4 +71,16 @@ export default async function publishMain(input: string, temp: string) {
   await repo.execute(["git", "commit", "-m", commitMessage]);
 
   await repo.execute(["git", "push"]);
+}
+
+async function dumpAll(dir: string = resolve(".")): any {
+  const obj: any = {};
+
+  for await (const entry of Deno.readDir(dir)) {
+    if (entry.isDirectory) {
+      obj[entry.name] = dumpAll(join(dir, entry.name));
+    } else {
+      obj[entry.name] = entry.name;
+    }
+  }
 }

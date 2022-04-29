@@ -6,8 +6,6 @@ import { exec } from "../utils/execute.ts";
 import config from "./config.ts";
 
 export default async function publishMain(input: string, temp: string) {
-  input = resolve(input);
-  temp = resolve(temp);
   await ensureDir(temp);
 
   const src = join(input, "src");

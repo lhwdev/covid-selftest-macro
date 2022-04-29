@@ -56,7 +56,6 @@ export default async function publishMain(input: string, temp: string) {
     url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}`,
     ref: config.targetRef,
   });
-
   console.log(await dumpAll());
 
   await repo.execute(["git", "config", "user.name", context.payload.pusher.name]);

@@ -8,7 +8,6 @@ on:
       - reopened
 
 jobs:
-
   auto-merge:
     runs-on: ubuntu-latest
     steps:
@@ -21,4 +20,4 @@ jobs:
           deno-version: v1.x
 
       - name: main
-        run: deno run --allow-net --location https://example.com --no-check --quiet repo/jobs/auto-merge/mod.ts ${{ github.repository }} ${{ github.token }} ${{ github.event.number }}
+        run: deno run --no-check=remote --allow-net --location https://example.com --quiet repo/jobs/auto-merge/mod.ts ${{ github.repository }} ${{ github.token }} ${{ github.event.number }}

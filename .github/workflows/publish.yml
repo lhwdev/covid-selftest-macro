@@ -18,4 +18,5 @@ jobs:
           deno-version: v1.x
 
       - name: Minify and Publish files
-        run: deno run --allow-read --allow-write --unstable --quiet repo/jobs/publish/mod.ts repo output
+        # https://github.com/octokit/octokit.js/issues/2075: temporary remove check
+        run: deno run --no-check=remote --allow-read --allow-write --unstable --quiet repo/jobs/publish/mod.ts repo output

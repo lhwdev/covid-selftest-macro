@@ -7,5 +7,7 @@
   "deno.config": "jobs/deno.jsonc",
   "typescript.format.enable": false,
   "javascript.format.enable": false,
-  "editor.defaultFormatter": "denoland.vscode-deno"
+  "editor.defaultFormatter": "denoland.vscode-deno",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true
 }

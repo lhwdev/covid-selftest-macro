@@ -1,8 +1,7 @@
-import { OctokitOptions } from "https://cdn.skypack.dev/@octokit/core/dist-types/types?dts";
-
 export function getAuthString(
   token: string,
-  options: OctokitOptions,
+  // deno-lint-ignore no-explicit-any
+  options: any, // @types {import("@octokit/core/dist-types/types.d.ts").OctokitOptions}
 ): string | undefined {
   if (!token && !options.auth) {
     throw new Error("Parameter token or opts.auth is required");

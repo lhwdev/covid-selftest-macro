@@ -2,7 +2,6 @@ import * as Context from "./context.ts";
 import { getOctokitOptions, GitHub } from "./utils.ts";
 
 // octokit + plugins
-import { OctokitOptions } from "https://cdn.skypack.dev/@octokit/core/dist-types/types?dts";
 
 export const context = new Context.Context();
 
@@ -14,7 +13,8 @@ export const context = new Context.Context();
  */
 export function getOctokit(
   token: string,
-  options?: OctokitOptions,
+  // deno-lint-ignore no-explicit-any
+  options?: any, // @types {import("@octokit/core/dist-types/types.d.ts").OctokitOptions}
 ): InstanceType<typeof GitHub> {
   return new GitHub(getOctokitOptions(token, options));
 }

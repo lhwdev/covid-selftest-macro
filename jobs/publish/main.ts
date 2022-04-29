@@ -1,11 +1,13 @@
 import { context } from "../utils/github/github.ts";
-import { join } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { join, resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
 import { copy } from "https://deno.land/std@0.128.0/fs/mod.ts";
 import sparseClone from "../utils/clone-sparse.ts";
 import { exec } from "../utils/execute.ts";
 import config from "./config.ts";
 
 export default async function publishMain(input: string, temp: string) {
+  input = resolve(input);
+  temp = resolve(temp);
   const src = join(input, "src");
   const publicDir = join(input, "public");
 
@@ -49,11 +51,10 @@ export default async function publishMain(input: string, temp: string) {
   }
 
   /// 2. Publish
-  const tempRepo = join(temp, "repo");
-  const repo = exec.cd(tempRepo);
+  const repo = exec.cd(join(temp, "repo"));
 
   await sparseClone({
-    targetPath: tempRepo,
+    targetPath: repo.cwd,
     url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}`,
     ref: config.targetRef,
   });
@@ -61,11 +62,12 @@ export default async function publishMain(input: string, temp: string) {
   await repo.execute(["git", "config", "user.name", context.payload.pusher.name]);
   await repo.execute(["git", "config", "user.email", context.payload.pusher.email]);
 
-  copy(output, tempRepo, { overwrite: true });
+  copy(output, repo.cwd, { overwrite: true });
 
   const previous = context.payload.head_commit;
   const commitMessage = previous ? `🚀 Deploy@${previous.id}: ${previous.message}` : "🚀 Deploy from app-meta";
-  await repo.execute(["git", "commit", "-a", "-m", commitMessage]);
+  await repo.execute(["git", "add", "-A"]);
+  await repo.execute(["git", "commit", "-m", commitMessage]);
 
   await repo.execute(["git", "push"]);
 }

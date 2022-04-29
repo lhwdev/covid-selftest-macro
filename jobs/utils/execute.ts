@@ -1,4 +1,4 @@
-import { join } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { join, resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
 
 type Options = {
   cmd: string[];
@@ -46,7 +46,7 @@ export class ExecContext {
   cd(path: string): ExecContext {
     return new ExecContext({
       ...this.param,
-      cwd: join(this.param.cwd ?? ".", path),
+      cwd: join(resolve(this.param.cwd ?? "."), path),
     });
   }
 

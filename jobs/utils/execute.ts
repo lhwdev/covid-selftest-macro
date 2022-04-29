@@ -1,3 +1,4 @@
+import { ensureDir } from "https://deno.land/std@0.128.0/fs/ensure_dir.ts";
 import { join, resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
 
 type Options = {
@@ -44,9 +45,11 @@ export class ExecContext {
   constructor(private param: ExecContextParam) {}
 
   cd(path: string): ExecContext {
+    const newCwd = join(resolve(this.param.cwd ?? "."), path);
+    ensureDir(newCwd);
     return new ExecContext({
       ...this.param,
-      cwd: join(resolve(this.param.cwd ?? "."), path),
+      cwd: newCwd,
     });
   }
 

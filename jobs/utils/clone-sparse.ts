@@ -1,5 +1,6 @@
 import { exec } from "./execute.ts";
 import { parse } from "https://deno.land/std@0.128.0/path/mod.ts";
+
 export default async function sparseClone(
   { targetPath, url, sparsePathCone, ref }: {
     targetPath: string;
@@ -10,6 +11,7 @@ export default async function sparseClone(
 ) {
   const parsed = parse(targetPath);
   const path = exec.cd(targetPath);
+
   await exec.cd(parsed.dir).execute([
     "git",
     "clone",

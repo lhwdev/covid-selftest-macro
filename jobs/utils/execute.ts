@@ -1,5 +1,5 @@
 import { ensureDirSync } from "https://deno.land/std@0.128.0/fs/ensure_dir.ts";
-import { join, resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
 
 type Options = {
   cmd: string[];
@@ -47,8 +47,7 @@ export class ExecContext {
   constructor(private param: ExecContextParam) {}
 
   cd(path: string): ExecContext {
-    console.log(`cd ${this.param.cwd} ${path}`);
-    const newCwd = join(resolve(this.param.cwd ?? "."), path);
+    const newCwd = resolve(this.param.cwd ?? ".", path);
     ensureDirSync(newCwd);
     return new ExecContext({
       ...this.param,

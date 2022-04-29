@@ -15,7 +15,7 @@ export function executeAsync(options: Options | string[]): Process {
     return executeAsync({ cmd: options });
   }
 
-  console.log(options?.cmd);
+  console.log(options.context?.cwd);
 
   const process = Deno.run({
     cmd: [...options.cmd],

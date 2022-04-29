@@ -58,6 +58,9 @@ export default async function publishMain(input: string, temp: string) {
     ref: config.targetRef,
   });
 
+  await repo.execute(["git", "config", "user.name", context.payload.pusher.name]);
+  await repo.execute(["git", "config", "user.email", context.payload.pusher.email]);
+
   copy(output, tempRepo, { overwrite: true });
 
   const previous = context.payload.head_commit;

@@ -47,6 +47,7 @@ export class ExecContext {
   constructor(private param: ExecContextParam) {}
 
   cd(path: string): ExecContext {
+    console.log(`cd ${this.param.cwd} ${path}`);
     const newCwd = join(resolve(this.param.cwd ?? "."), path);
     ensureDirSync(newCwd);
     return new ExecContext({

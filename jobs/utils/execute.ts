@@ -1,4 +1,4 @@
-import { ensureDir } from "https://deno.land/std@0.128.0/fs/ensure_dir.ts";
+import { ensureDirSync } from "https://deno.land/std@0.128.0/fs/ensure_dir.ts";
 import { join, resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
 
 type Options = {
@@ -46,7 +46,7 @@ export class ExecContext {
 
   cd(path: string): ExecContext {
     const newCwd = join(resolve(this.param.cwd ?? "."), path);
-    ensureDir(newCwd);
+    ensureDirSync(newCwd);
     return new ExecContext({
       ...this.param,
       cwd: newCwd,

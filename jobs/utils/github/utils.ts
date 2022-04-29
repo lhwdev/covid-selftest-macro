@@ -3,7 +3,6 @@ import * as Utils from "./internal/utils.ts";
 
 // octokit + plugins
 import { Octokit } from "https://cdn.skypack.dev/@octokit/core?dts";
-import { OctokitOptions } from "https://cdn.skypack.dev/@octokit/core/dist-types/types?dts";
 import { restEndpointMethods } from "https://cdn.skypack.dev/@octokit/plugin-rest-endpoint-methods?dts";
 import { paginateRest } from "https://cdn.skypack.dev/@octokit/plugin-paginate-rest?dts";
 
@@ -30,8 +29,10 @@ export const GitHub = Octokit.plugin(
  */
 export function getOctokitOptions(
   token: string,
-  options?: OctokitOptions,
-): OctokitOptions {
+  // deno-lint-ignore no-explicit-any
+  options?: any, // @types {import("@octokit/core/dist-types/types.d.ts").OctokitOptions}
+  // deno-lint-ignore no-explicit-any
+): any {
   const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
 
   // Auth

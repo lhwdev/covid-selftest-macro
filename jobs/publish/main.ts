@@ -1,6 +1,6 @@
 import { context } from "../utils/github/github.ts";
 import { join, resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
-import { copy } from "https://deno.land/std@0.128.0/fs/mod.ts";
+import { copy, ensureDir } from "https://deno.land/std@0.128.0/fs/mod.ts";
 import sparseClone from "../utils/clone-sparse.ts";
 import { exec } from "../utils/execute.ts";
 import config from "./config.ts";
@@ -8,15 +8,13 @@ import config from "./config.ts";
 export default async function publishMain(input: string, temp: string) {
   input = resolve(input);
   temp = resolve(temp);
+  await ensureDir(temp);
+
   const src = join(input, "src");
   const publicDir = join(input, "public");
 
   const output = join(temp, "output");
   const outputSrc = join(output, "src"); // compatibility between meta and app-meta branch
-
-  /// 1. Minify
-  await onDirectory(src);
-  await copy(publicDir, output, { overwrite: true });
 
   async function onDirectory(dir: string) {
     for await (const entry of Deno.readDir(dir)) {
@@ -39,16 +37,17 @@ export default async function publishMain(input: string, temp: string) {
         const string = await Deno.readTextFile(path);
         const result = JSON.stringify(JSON.parse(string));
         const toDir = join(outputSrc, dir);
-        try {
-          Deno.mkdir(toDir, { recursive: true });
-        } catch (_) {
-          // when directory exists already, this throws error
-        }
+        await ensureDir(toDir);
         await Deno.writeTextFile(join(toDir, name), result);
         break;
       }
     }
   }
+
+  /// 1. Minify
+  await ensureDir(output);
+  await onDirectory(src);
+  await copy(publicDir, output, { overwrite: true });
 
   /// 2. Publish
   const repo = exec.cd(join(temp, "repo"));

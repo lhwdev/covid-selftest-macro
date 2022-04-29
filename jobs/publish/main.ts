@@ -1,4 +1,4 @@
-import { context } from "https://cdn.skypack.dev/@actions/github?dts";
+import { context } from "../utils/github/github.ts";
 import { join } from "https://deno.land/std@0.128.0/path/mod.ts";
 import { copy } from "https://deno.land/std@0.128.0/fs/mod.ts";
 import sparseClone from "../utils/clone-sparse.ts";

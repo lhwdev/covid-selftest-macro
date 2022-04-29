@@ -9,7 +9,7 @@
  *   * gthub access token, mostly from action token
  *   * pull request number
  */
-import { getOctokit } from "https://cdn.skypack.dev/@actions/github?dts";
+import { getOctokit } from "../utils/github/github.ts";
 import { Octokit } from "https://cdn.skypack.dev/@octokit/core?dts";
 
 import config from "./config.ts";

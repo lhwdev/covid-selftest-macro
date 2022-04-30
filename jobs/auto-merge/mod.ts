@@ -102,9 +102,11 @@ await octokit.request("PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge", {
 console.log("\u001d[96mMinifying & Publishing changes\u001d[0m");
 
 const publishPath = "pr-repo";
+const webUrl = pullInfo.data.head.repo!.html_url;
+
 await sparseClone({
   targetPath: publishPath,
-  url: pullInfo.data.head.repo!.git_url,
+  url: `https://x-access-token:${token}@${webUrl.slice(webUrl.indexOf("://") + 3)}`,
   ref: pullInfo.data.head.ref,
 });
 

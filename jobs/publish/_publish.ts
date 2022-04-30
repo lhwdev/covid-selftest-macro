@@ -28,7 +28,7 @@ export default async function publish(
   await targetDir.execute(["git", "worktree", "add", "--no-checkout", "--detach", targetDir.cwd]);
   await targetDir.execute(["git", "checkout", "-B", ref, `origin/${ref}`]);
 
-  copy(sourcePath, targetDir.cwd);
+  await copy(sourcePath, targetDir.cwd);
 
   await targetDir.execute(["git", "add", "--all", "."]);
 }

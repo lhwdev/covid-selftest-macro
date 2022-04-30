@@ -51,13 +51,16 @@ export default async function publishMain(input: string, temp: string) {
   /// 2. Publish
   const repo = exec.cd(join(temp, "repo"));
 
+  const userName = context.payload.pusher.name;
+
+  const urlBody = context.serverUrl.slice(context.serverUrl.indexOf("://") + 3);
   await sparseClone({
     targetPath: repo.cwd,
-    url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}`,
+    url: `https://${userName}:${context.token!}@${urlBody}/${context.repo.owner}/${context.repo.repo}`,
     ref: config.targetRef,
   });
 
-  await repo.execute(["git", "config", "user.name", context.payload.pusher.name]);
+  await repo.execute(["git", "config", "user.name", userName]);
   await repo.execute(["git", "config", "user.email", context.payload.pusher.email]);
 
   await copy(output, repo.cwd, { overwrite: true });

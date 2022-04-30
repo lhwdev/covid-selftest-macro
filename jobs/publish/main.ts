@@ -1,9 +1,11 @@
-import { error, notice } from "https://cdn.skypack.dev/@actions/core?dts";
 import { join } from "https://deno.land/std@0.128.0/path/mod.ts";
 import { copy, ensureDir } from "https://deno.land/std@0.128.0/fs/mod.ts";
-import { context } from "../utils/github/github.ts";
+
+import { error, notice } from "../utils/actions/core/core.ts";
+import { context } from "../utils/actions/github/github.ts";
 import sparseClone from "../utils/clone-sparse.ts";
 import { exec } from "../utils/execute.ts";
+
 import config from "./config.ts";
 
 export default async function publishMain(input: string, temp: string) {

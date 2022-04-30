@@ -8,7 +8,7 @@ import { exec } from "../utils/execute.ts";
 
 import config from "./config.ts";
 
-export default async function publishMain(input: string, temp: string, token: string) {
+export default async function publishMain(input: string, temp: string, token: string, message: string) {
   await ensureDir(temp);
 
   const src = join(input, "src");
@@ -72,7 +72,7 @@ export default async function publishMain(input: string, temp: string, token: st
   await copy(output, repo.cwd, { overwrite: true });
 
   const previous = context.payload.head_commit;
-  const commitMessage = previous ? `🚀 Deploy@${previous.id}: ${previous.message}` : "🚀 Deploy from app-meta";
+  const commitMessage = previous ? `🚀 ${message}@${previous.id}: ${previous.message}` : `🚀 ${message} from app-meta`;
 
   const needsCommit = !!(await repo.executeAsync(["git", "status", "--porcelain"]).resultText());
   if (needsCommit) {

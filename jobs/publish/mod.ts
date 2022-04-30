@@ -12,4 +12,4 @@
 import publishMain from "./main.ts";
 
 const [inputBase, outputBase, token] = Deno.args;
-await publishMain(inputBase, outputBase, token);
+await publishMain(inputBase, outputBase, token, "Deploy");

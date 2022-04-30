@@ -1,6 +1,7 @@
-import { context } from "../utils/github/github.ts";
+import { error, notice } from "https://cdn.skypack.dev/@actions/core?dts";
 import { join } from "https://deno.land/std@0.128.0/path/mod.ts";
 import { copy, ensureDir } from "https://deno.land/std@0.128.0/fs/mod.ts";
+import { context } from "../utils/github/github.ts";
 import sparseClone from "../utils/clone-sparse.ts";
 import { exec } from "../utils/execute.ts";
 import config from "./config.ts";
@@ -32,14 +33,17 @@ export default async function publishMain(input: string, temp: string) {
         break;
       }
 
-      case "json": {
-        const string = await Deno.readTextFile(path);
-        const result = JSON.stringify(JSON.parse(string));
-        const toDir = join(outputSrc, dir);
-        await ensureDir(toDir);
-        await Deno.writeTextFile(join(toDir, name), result);
-        break;
-      }
+      case "json":
+        try {
+          const string = await Deno.readTextFile(path);
+          const result = JSON.stringify(JSON.parse(string));
+          const toDir = join(outputSrc, dir);
+          await ensureDir(toDir);
+          await Deno.writeTextFile(join(toDir, name), result);
+          break;
+        } catch (e) {
+          error(e, { title: `Minify content @${join(dir, name)}` });
+        }
     }
   }
 
@@ -56,7 +60,7 @@ export default async function publishMain(input: string, temp: string) {
   const urlBody = context.serverUrl.slice(context.serverUrl.indexOf("://") + 3);
   await sparseClone({
     targetPath: repo.cwd,
-    url: `https://x-access-token:${context.token!}@${urlBody}/${context.repo.owner}/${context.repo.repo}`,
+    url: `https://x-access-token:${context.token}@${urlBody}/${context.repo.owner}/${context.repo.repo}`,
     ref: config.targetRef,
   });
 
@@ -75,7 +79,7 @@ export default async function publishMain(input: string, temp: string) {
 
     await repo.execute(["git", "push"]);
   } else {
-    console.log("skip commit as nothing has changed");
+    notice("skip commit as nothing has changed", { title: "Publish" });
     await repo.execute(["git", "status"]);
   }
 }

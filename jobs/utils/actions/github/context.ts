@@ -20,7 +20,7 @@ export class Context {
   apiUrl: string;
   serverUrl: string;
   graphqlUrl: string;
-  token: string | undefined;
+  token: string;
 
   /**
    * Hydrate the context from the environment

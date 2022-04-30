@@ -1,4 +1,4 @@
-import { ensureDirSync } from "https://deno.land/std@0.128.0/fs/ensure_dir.ts";
+import { ensureDirSync } from "https://deno.land/std@0.128.0/fs/mod.ts";
 import { resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
 import { readLines } from "https://deno.land/std@0.128.0/io/mod.ts";
 

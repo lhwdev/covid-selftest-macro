@@ -1,5 +1,5 @@
 // Originally pulled from https://github.com/JasonEtco/actions-toolkit/blob/main/src/context.ts
-import { getInput } from "https://cdn.skypack.dev/@actions/core?dts";
+import { getInput } from "../core/core.ts";
 import { WebhookPayload } from "./interfaces.ts";
 
 export class Context {

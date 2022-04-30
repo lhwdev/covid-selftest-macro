@@ -1,6 +1,6 @@
 /**
  * Minifies and publishes the content of meta branch into app-meta.
- * 
+ *
  * Requirements:
  * - Repository:
  *   * Cloned to meta branch (secure) so that this js file exists
@@ -11,5 +11,5 @@
  */
 import publishMain from "./main.ts";
 
-const [inputBase, outputBase] = Deno.args;
-await publishMain(inputBase, outputBase);
+const [inputBase, outputBase, token] = Deno.args;
+await publishMain(inputBase, outputBase, token);

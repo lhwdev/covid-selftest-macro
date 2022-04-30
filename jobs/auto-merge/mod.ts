@@ -107,4 +107,4 @@ await sparseClone({
 });
 
 const publishMain = (await import("../publish/main.ts")).default;
-await publishMain(publishPath, "output");
+await publishMain(publishPath, "output", token);

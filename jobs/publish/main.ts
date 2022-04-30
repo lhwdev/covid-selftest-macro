@@ -8,7 +8,7 @@ import { exec } from "../utils/execute.ts";
 
 import config from "./config.ts";
 
-export default async function publishMain(input: string, temp: string) {
+export default async function publishMain(input: string, temp: string, token: string) {
   await ensureDir(temp);
 
   const src = join(input, "src");
@@ -62,7 +62,7 @@ export default async function publishMain(input: string, temp: string) {
   const urlBody = context.serverUrl.slice(context.serverUrl.indexOf("://") + 3);
   await sparseClone({
     targetPath: repo.cwd,
-    url: `https://x-access-token:${context.token}@${urlBody}/${context.repo.owner}/${context.repo.repo}.git`,
+    url: `https://x-access-token:${token}@${urlBody}/${context.repo.owner}/${context.repo.repo}.git`,
     ref: config.targetRef,
   });
 

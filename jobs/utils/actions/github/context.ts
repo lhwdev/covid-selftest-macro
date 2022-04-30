@@ -1,5 +1,4 @@
 // Originally pulled from https://github.com/JasonEtco/actions-toolkit/blob/main/src/context.ts
-import { getInput } from "../core/core.ts";
 import { WebhookPayload } from "./interfaces.ts";
 
 export class Context {
@@ -20,7 +19,6 @@ export class Context {
   apiUrl: string;
   serverUrl: string;
   graphqlUrl: string;
-  token: string;
 
   /**
    * Hydrate the context from the environment
@@ -49,7 +47,6 @@ export class Context {
     this.apiUrl = Deno.env.get("GITHUB_API_URL") ?? `https://api.github.com`;
     this.serverUrl = Deno.env.get("GITHUB_SERVER_URL") ?? `https://github.com`;
     this.graphqlUrl = Deno.env.get("GITHUB_GRAPHQL_URL") ?? `https://api.github.com/graphql`;
-    this.token = getInput("token");
   }
 
   get issue(): { owner: string; repo: string; number: number } {

@@ -16,8 +16,6 @@ export function executeAsync(options: Options | string[]): Process {
     return executeAsync({ cmd: options });
   }
 
-  console.log(options.context?.cwd);
-
   return new Process(options);
 }
 

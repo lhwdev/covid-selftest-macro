@@ -1,5 +1,5 @@
 import { context } from "../utils/github/github.ts";
-import { join, resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { join } from "https://deno.land/std@0.128.0/path/mod.ts";
 import { copy, ensureDir } from "https://deno.land/std@0.128.0/fs/mod.ts";
 import sparseClone from "../utils/clone-sparse.ts";
 import { exec } from "../utils/execute.ts";
@@ -74,18 +74,4 @@ export default async function publishMain(input: string, temp: string) {
   } else {
     console.log("skip commit as nothing has changed");
   }
-}
-
-async function dumpAll(dir: string = resolve(".")): Promise<any> {
-  const obj: any = {};
-
-  for await (const entry of Deno.readDir(dir)) {
-    if (entry.isDirectory) {
-      obj[entry.name] = await dumpAll(join(dir, entry.name));
-    } else {
-      obj[entry.name] = entry.name;
-    }
-  }
-
-  return obj;
 }

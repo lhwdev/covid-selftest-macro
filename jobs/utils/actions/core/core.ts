@@ -128,12 +128,12 @@ export function addPath(inputPath: string): void {
  * @returns   string
  */
 export function getInput(name: string, options?: InputOptions): string {
-  const val: string = Deno.env.get(`INPUT_${name.replace(/ /g, "_").toUpperCase()}`) || "";
-  if (options && options.required && !val) {
+  const val = Deno.env.get(`INPUT_${name.replace(/ /g, "_").toUpperCase()}`) || "";
+  if (options?.required && !val) {
     throw new Error(`Input required and not supplied: ${name}`);
   }
 
-  if (options && options.trimWhitespace === false) {
+  if (options?.trimWhitespace === false) {
     return val;
   }
 

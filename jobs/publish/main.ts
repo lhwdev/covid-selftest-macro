@@ -56,7 +56,7 @@ export default async function publishMain(input: string, temp: string) {
   const urlBody = context.serverUrl.slice(context.serverUrl.indexOf("://") + 3);
   await sparseClone({
     targetPath: repo.cwd,
-    url: `https://${userName}:${context.token!}@${urlBody}/${context.repo.owner}/${context.repo.repo}`,
+    url: `https://x-access-token:${context.token!}@${urlBody}/${context.repo.owner}/${context.repo.repo}`,
     ref: config.targetRef,
   });
 

@@ -64,10 +64,16 @@ export default async function publishMain(input: string, temp: string) {
 
   const previous = context.payload.head_commit;
   const commitMessage = previous ? `🚀 Deploy@${previous.id}: ${previous.message}` : "🚀 Deploy from app-meta";
-  await repo.execute(["git", "add", "-A"]);
-  await repo.execute(["git", "commit", "-m", commitMessage]);
 
-  await repo.execute(["git", "push"]);
+  const needsCommit = !!(await repo.executeAsync(["git", "status", "--porcelain"]).resultText());
+  if (needsCommit) {
+    await repo.execute(["git", "add", "-A"]);
+    await repo.execute(["git", "commit", "-m", commitMessage]);
+
+    await repo.execute(["git", "push"]);
+  } else {
+    console.log("skip commit as nothing has changed");
+  }
 }
 
 async function dumpAll(dir: string = resolve(".")): Promise<any> {

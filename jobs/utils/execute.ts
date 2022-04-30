@@ -1,5 +1,6 @@
 import { ensureDirSync } from "https://deno.land/std@0.128.0/fs/ensure_dir.ts";
 import { resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { readLines } from "https://deno.land/std@0.128.0/io/mod.ts";
 
 type Options = {
   cmd: string[];
@@ -17,29 +18,62 @@ export function executeAsync(options: Options | string[]): Process {
 
   console.log(options.context?.cwd);
 
-  const process = Deno.run({
-    cmd: [...options.cmd],
-    cwd: options.context?.cwd,
-  });
-
-  return new Process(options, process);
+  return new Process(options);
 }
 
 export function execContext(context: ExecContextParam): ExecContext {
   return new ExecContext(context);
 }
 
+type StdIo = number | "inherit" | "piped";
+
 export class Process {
-  constructor(private options: Options, private process: Deno.Process) {}
+  private stdOptions: {
+    out: StdIo;
+  };
+  private process: Deno.Process | undefined = undefined;
+
+  constructor(private options: Options) {
+    this.stdOptions = { out: "inherit" };
+  }
+
+  private createProcess() {
+    const process = Deno.run({
+      cmd: [...this.options.cmd],
+      cwd: this.options.context?.cwd,
+      stdout: this.stdOptions.out,
+    });
+    this.process = process;
+    return process;
+  }
+
+  private getProcess() {
+    return this.process ?? this.createProcess();
+  }
 
   async join(): Promise<number> {
-    const status = await this.process.status();
+    const process = this.getProcess();
+
+    const status = await process.status();
     if (!status.success) {
       throw new Error(
         `Process ${this.options.cmd} failed with code ${status.code}`,
       );
     }
     return status.code;
+  }
+
+  async resultText(): Promise<string> {
+    const process = this.getProcess();
+    this.stdOptions.out = "piped";
+
+    let text = "";
+    for await (const line of readLines(process.stdout!)) {
+      text += line;
+      text += "\n";
+    }
+    await this.join();
+    return text;
   }
 }
 

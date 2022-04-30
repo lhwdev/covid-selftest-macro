@@ -73,5 +73,6 @@ export default async function publishMain(input: string, temp: string) {
     await repo.execute(["git", "push"]);
   } else {
     console.log("skip commit as nothing has changed");
+    await repo.execute(["git", "status"]);
   }
 }

@@ -9,7 +9,8 @@
  *   * Output: ${args[1]}/output/..
  * - Arguments: as specified in above, [input directory, output directory]
  */
+import { context } from "../utils/actions/github/github.ts";
 import publishMain from "./main.ts";
 
 const [inputBase, outputBase, token] = Deno.args;
-await publishMain(inputBase, outputBase, token, "Deploy");
+await publishMain(inputBase, outputBase, token, "Deploy", context.payload.pusher.name, context.payload.pusher.email);

@@ -8,7 +8,14 @@ import { exec } from "../utils/execute.ts";
 
 import config from "./config.ts";
 
-export default async function publishMain(input: string, temp: string, token: string, message: string) {
+export default async function publishMain(
+  input: string,
+  temp: string,
+  token: string,
+  message: string,
+  userName: string,
+  userEmail: string,
+) {
   await ensureDir(temp);
 
   const src = join(input, "src");
@@ -57,8 +64,6 @@ export default async function publishMain(input: string, temp: string, token: st
   /// 2. Publish
   const repo = exec.cd(join(temp, "repo"));
 
-  const userName = context.payload.pusher.name;
-
   const urlBody = context.serverUrl.slice(context.serverUrl.indexOf("://") + 3);
   await sparseClone({
     targetPath: repo.cwd,
@@ -67,7 +72,7 @@ export default async function publishMain(input: string, temp: string, token: st
   });
 
   await repo.execute(["git", "config", "user.name", userName]);
-  await repo.execute(["git", "config", "user.email", context.payload.pusher.email]);
+  await repo.execute(["git", "config", "user.email", userEmail]);
 
   await copy(output, repo.cwd, { overwrite: true });
 

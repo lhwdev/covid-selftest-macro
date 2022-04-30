@@ -99,7 +99,16 @@ await octokit.request("PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge", {
     .data.head.repo?.full_name}`,
 });
 
-console.log("\u001d[96mMinifying & Publishing changes\u001d[0m");
+console.log("\u001b[96mMinifying & Publishing changes\u001b[0m");
+
+const commits = await octokit.request(
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
+  {
+    owner,
+    repo,
+    pull_number: pullNumber,
+  },
+);
 
 const publishPath = "pr-repo";
 const webUrl = pullInfo.data.head.repo!.html_url;
@@ -111,4 +120,5 @@ await sparseClone({
 });
 
 const publishMain = (await import("../publish/main.ts")).default;
-await publishMain(publishPath, "output", token, "Auto merge");
+const author = commits.data[commits.data.length - 1].commit.author!;
+await publishMain(publishPath, "output", token, "Auto merge", author.name!, author.email!);

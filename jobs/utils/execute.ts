@@ -64,8 +64,8 @@ export class Process {
   }
 
   async resultText(): Promise<string> {
-    const process = this.getProcess();
     this.stdOptions.out = "piped";
+    const process = this.getProcess();
 
     let text = "";
     for await (const line of readLines(process.stdout!)) {

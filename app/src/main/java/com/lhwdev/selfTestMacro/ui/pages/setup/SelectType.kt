@@ -12,10 +12,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.R
 import com.lhwdev.selfTestMacro.api.InstituteType
+import com.lhwdev.selfTestMacro.navigation.LocalNavigator
+import com.lhwdev.selfTestMacro.ui.pages.main.MainRoute
 import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.systemUi.OnScreenSystemUiMode
 import com.lhwdev.selfTestMacro.ui.utils.ExposedDropdownMenuField
 import com.lhwdev.selfTestMacro.ui.utils.IconOnlyTopAppBar
+import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.lhwdev.selfTestMacro.ui.utils.myTextFieldColors
 import kotlinx.coroutines.launch
 
@@ -26,6 +29,7 @@ val AppBarHeight = 56.dp
 
 @Composable
 internal fun WizardSelectType(model: SetupModel, parameters: SetupParameters, wizard: SetupWizard) {
+	val navigator = LocalNavigator
 	val scope = rememberCoroutineScope()
 	
 	Surface(
@@ -54,6 +58,11 @@ internal fun WizardSelectType(model: SetupModel, parameters: SetupParameters, wi
 							"기관 유형을 선택해주세요",
 							actionLabel = "확인"
 						)
+					}
+				},
+				extra = {
+					if(parameters.initial) RoundButton(onClick = { navigator.replaceRoute(MainRoute) }) {
+						Text("추가하지 않기")
 					}
 				},
 				modifier = Modifier.weight(1f)

@@ -10,7 +10,7 @@ class AppDatabase(val holder: PreferenceHolder) {
 	var testGroups: DbTestGroups by holder.preferenceSerialized(
 		key = "testGroups",
 		serializer = DbTestGroups.serializer(),
-		defaultValue = DbTestGroups()
+		defaultValue = DbTestGroups(revision = 0)
 	)
 	
 	var userGroups: DbUserGroups by holder.preferenceSerialized(
@@ -19,11 +19,12 @@ class AppDatabase(val holder: PreferenceHolder) {
 		defaultValue = DbUserGroups()
 	)
 	
-	var users: DbUsers by holder.preferenceSerialized(
+	val usersState = holder.preferenceSerialized(
 		key = "users",
 		serializer = DbUsers.serializer(),
 		defaultValue = DbUsers()
 	)
+	var users: DbUsers by usersState
 	
 	val DbTestTarget.Group.allUsers: List<DbUser>
 		get() = userIds.lazyMap { users.users.getValue(it) }

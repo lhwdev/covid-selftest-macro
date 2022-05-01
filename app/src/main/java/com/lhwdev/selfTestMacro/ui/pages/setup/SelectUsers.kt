@@ -72,7 +72,7 @@ internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, w
 			
 			WizardCommon(
 				wizard,
-				wizardFulfilled = if(pref.isFirstTime) enabled.isNotEmpty() else true,
+				wizardFulfilled = if(pref.db.users.users.isEmpty()) enabled.isNotEmpty() else true,
 				showNotFulfilledWarning = {
 					scope.launch {
 						model.showSnackbar("사용자를 최소 한 명 선택해주세요")
@@ -89,7 +89,6 @@ internal fun WizardSelectUsers(model: SetupModel, parameters: SetupParameters, w
 						parameters.endRoute != null -> parameters.endRoute.invoke()
 						
 						navigator.routes.size == 1 -> {
-							pref.isFirstTime = false
 							navigator.clearRoute()
 							navigator.pushRoute(MainRoute)
 						}

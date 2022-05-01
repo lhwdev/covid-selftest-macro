@@ -22,7 +22,7 @@ var sIncludeLogcatInLog = false
 
 class ErrorInfo(
 	val message: String,
-	val throwable: Throwable?,
+	val throwable: Throwable? = null,
 	val diagnostics: List<DiagnosticObject> = emptyList(),
 	val location: String = invokeLocationDescription(depth = 1),
 	val severity: DebugContext.Severity
@@ -161,7 +161,7 @@ abstract class DebugContext(
 	
 	// Internals
 	
-	private suspend fun showErrorInfo(
+	suspend fun showErrorInfo(
 		info: ErrorInfo,
 		description: String
 	) {

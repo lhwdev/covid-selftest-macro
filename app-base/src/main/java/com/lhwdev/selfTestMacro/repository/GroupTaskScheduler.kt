@@ -115,7 +115,7 @@ abstract class GroupTaskScheduler<T : TaskItem>(initialTasks: List<T>) : TaskSch
 	 */
 	protected open fun onTaskScheduled(task: T, schedule: TaskSchedule) {}
 	
-	protected abstract suspend fun onTask(task: T)
+	abstract suspend fun onTask(task: T)
 	
 	fun tasksForSchedule(schedule: TaskSchedule): List<T> {
 		val index = tasks.indexOfFirst { it.timeMillis >= schedule.timeMillis }

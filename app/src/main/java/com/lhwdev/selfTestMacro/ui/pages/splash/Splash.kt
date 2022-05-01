@@ -88,9 +88,7 @@ fun Splash() {
 			.takeWhile { !it }
 			.collect()
 		
-		val initialFirst = pref.isFirstTime
-		
-		val route = if(initialFirst || pref.db.testGroups.groups.isEmpty()) {
+		val route = if(pref.db.testGroups.groups.isEmpty()) {
 			IntroRoute
 		} else {
 			MainRoute

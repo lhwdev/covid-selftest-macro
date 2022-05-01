@@ -51,7 +51,7 @@ data class SelfTestTask(
 abstract class SelfTestSchedules {
 	abstract val tasksCache: List<SelfTestTask>
 	
-	abstract fun updateAndGetTasks(): List<SelfTestTask>
+	abstract fun updateTasks(): List<SelfTestTask>
 	
 	abstract fun getTask(testGroup: DbTestGroup, user: DbUser?): SelfTestTask?
 	

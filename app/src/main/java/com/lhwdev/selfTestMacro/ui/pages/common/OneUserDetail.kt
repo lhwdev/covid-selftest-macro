@@ -1,24 +1,27 @@
-package com.lhwdev.selfTestMacro.ui.pages.main
+package com.lhwdev.selfTestMacro.ui.pages.common
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.ListItem
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.database.DbUser
+import com.lhwdev.selfTestMacro.debug.DebugContext
+import com.lhwdev.selfTestMacro.debug.ErrorInfo
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
+import com.lhwdev.selfTestMacro.repository.SelfTestSchedulesImpl
 import com.lhwdev.selfTestMacro.repository.Status
 import com.lhwdev.selfTestMacro.showToastSuspendAsync
+import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.SelfTestQuestions
 import com.lhwdev.selfTestMacro.ui.UiContext
+import com.lhwdev.selfTestMacro.ui.pages.main.promptSelectAnswerDialog
+import com.lhwdev.selfTestMacro.ui.pages.main.showChangeAnswerDialog
 import com.lhwdev.selfTestMacro.ui.primaryContainer
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import com.vanpra.composematerialdialogs.*
@@ -91,6 +94,25 @@ fun FloatingMaterialDialogScope.OneUserDetail(
 				}
 			}
 		) { Text(if(submitNowInProgress) "제출하는 중" else "지금 자가진단 제출") }
+		
+		if(LocalPreference.current.isDebugEnabled) {
+			val scope = rememberCoroutineScope()
+			TextButton(onClick = {
+				val schedules = selfTestManager.schedules as SelfTestSchedulesImpl
+				val task = schedules.getTask(group, user) ?: schedules.getTasks(group).find { it.userId == null }
+				
+				scope.launch {
+					if(task == null) {
+						selfTestManager.debugContext.showErrorInfo(
+							ErrorInfo(message = "task가 없어요!!", severity = DebugContext.Severity.light),
+							description = "저런"
+						)
+					} else {
+						schedules.scheduler.onTask(task)
+					}
+				}
+			}) { Text("(디버깅) 예약실행 시뮬레이션") }
+		}
 	}
 	
 	Buttons {

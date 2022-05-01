@@ -35,8 +35,6 @@ class PreferenceState(pref: SharedPreferences) : PreferenceHolder(pref) {
 	var isNavigationDebugEnabled by preferenceBoolean("isDebugAnimateListAsComposableEnabled", false)
 	var isScheduleDebugEnabled by preferenceBoolean("isScheduleDebugEnabled", false)
 	
-	var isFirstTime by preferenceBoolean("first", true)
-	
 	val db: AppDatabase = AppDatabase(this)
 	
 	var headUser by preferenceInt(key = "headUser", defaultValue = 0)

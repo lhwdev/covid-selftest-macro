@@ -10,10 +10,35 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class DbTestGroups(
+class DbTestGroups(
+	val revision: Int,
 	val groups: Map<Int, DbTestGroup> = emptyMap(),
 	val maxGroupGeneratedNameIndex: Int = 0
-)
+) {
+	fun copy(
+		revision: Int = this.revision + 1, // +1 !!!
+		groups: Map<Int, DbTestGroup> = this.groups,
+		maxGroupGeneratedNameIndex: Int = this.maxGroupGeneratedNameIndex
+	): DbTestGroups = DbTestGroups(revision, groups, maxGroupGeneratedNameIndex)
+	
+	override fun equals(other: Any?): Boolean = when {
+		this === other -> true
+		other !is DbTestGroups -> false
+		else -> revision == other.revision &&
+			groups == other.groups &&
+			maxGroupGeneratedNameIndex == other.maxGroupGeneratedNameIndex
+	}
+	
+	override fun hashCode(): Int {
+		var result = revision
+		result = 31 * result + groups.hashCode()
+		result = 31 * result + maxGroupGeneratedNameIndex
+		return result
+	}
+	
+	override fun toString(): String =
+		"DbTestGroups(revision=$revision, groups=$groups, maxGroupGeneratedNameIndex=$maxGroupGeneratedNameIndex"
+}
 
 @Serializable
 data class DbTestGroup(
@@ -101,7 +126,8 @@ data class DbUser(
 	val userBirth: String,
 	val institute: DbInstitute,
 	val userGroupId: Int,
-	val answer: Answer
+	val answer: Answer,
+	var lastScheduleAt: Long // mutable; be aware to synchronize properly
 ) : DiagnosticObject {
 	override fun getDiagnosticInformation(): DiagnosticItem = diagnosticGroup("DbUser", "사용자 정보") {
 		"id" set id
@@ -111,6 +137,7 @@ data class DbUser(
 		"institute" set institute
 		
 		"answer" set answer
+		"lastScheduleAt" set lastScheduleAt
 	}
 }
 

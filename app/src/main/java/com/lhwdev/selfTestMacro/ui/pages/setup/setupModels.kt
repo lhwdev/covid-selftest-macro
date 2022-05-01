@@ -11,13 +11,10 @@ import com.lhwdev.selfTestMacro.repository.WizardUser
 
 @Immutable
 data class SetupParameters(
+	val initial: Boolean,
 	val targetTestGroup: DbTestGroup? = null,
 	val endRoute: (() -> Unit)? = null
-) {
-	companion object {
-		val Default = SetupParameters()
-	}
-}
+)
 
 
 @Stable

@@ -10,7 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -25,12 +24,12 @@ import com.lhwdev.selfTestMacro.ui.utils.RoundButton
 import kotlinx.coroutines.launch
 
 
-fun SetupRoute(parameters: SetupParameters = SetupParameters.Default): Route =
+fun SetupRoute(parameters: SetupParameters): Route =
 	Route("Setup") { Setup(parameters) }
 
 
 @Composable
-fun Setup(parameters: SetupParameters = SetupParameters.Default) {
+fun Setup(parameters: SetupParameters) {
 	Surface(color = MaterialTheme.colors.surface) {
 		val model = remember { SetupModel() }
 		SetupWizardView(model, parameters)
@@ -116,10 +115,9 @@ internal fun WizardCommon(
 		}
 		
 		Row(verticalAlignment = Alignment.CenterVertically) {
-			SimpleIconButton(
+			if(wizard.index != 0) SimpleIconButton(
 				icon = R.drawable.ic_arrow_left_24, contentDescription = "앞으로",
-				onClick = onBefore,
-				modifier = if(wizard.index == 0) Modifier.alpha(0f) else Modifier
+				onClick = onBefore
 			)
 			
 			if(extra != null) {
@@ -150,7 +148,7 @@ internal fun WizardCommon(
 				
 				val text = when {
 					wizard.index != wizard.count - 1 -> "다음"
-					pref.isFirstTime -> "완료"
+					pref.db.users.users.isEmpty() -> "완료"
 					else -> "추가"
 				}
 				

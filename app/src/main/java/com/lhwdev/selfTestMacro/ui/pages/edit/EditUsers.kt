@@ -28,7 +28,6 @@ import com.vanpra.composematerialdialogs.showDialogAsync
 import kotlinx.coroutines.launch
 
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun EditUsers() {
 	val navigator = LocalNavigator
@@ -74,7 +73,9 @@ fun EditUsers() {
 							) {
 								DropdownMenuItem(onClick = {
 									showAddDialog = false
-									navigator.showRouteFactoryAsync { SetupRoute(SetupParameters(endRoute = { it(null) })) }
+									navigator.showRouteFactoryAsync {
+										SetupRoute(SetupParameters(initial = false, endRoute = { it(null) }))
+									}
 								}) {
 									Text("사용자 추가")
 								}
@@ -255,7 +256,9 @@ private fun EditUsersContent(
 			ListItem(
 				icon = { Icon(painterResource(R.drawable.ic_add_24), contentDescription = null) },
 				modifier = Modifier.clickable {
-					navigator.showRouteFactoryAsync { SetupRoute(SetupParameters(endRoute = { it(null) })) }
+					navigator.showRouteFactoryAsync {
+						SetupRoute(SetupParameters(initial = false, endRoute = { it(null) }))
+					}
 				}
 			) {
 				Text("사용자 추가")

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material.Icon
 import androidx.compose.material.ListItem
 import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,7 +23,6 @@ import com.lhwdev.selfTestMacro.ui.Color
 import com.lhwdev.selfTestMacro.ui.DisabledContentColor
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.MediumContentColor
-import com.lhwdev.selfTestMacro.ui.pages.main.OneUserDetail
 import com.lhwdev.selfTestMacro.ui.pages.main.displayText
 import com.vanpra.composematerialdialogs.*
 
@@ -40,19 +40,23 @@ fun Navigator.showGroupTestStatusDialog(
 			val allStatus = allStatusBlock()
 			for(user in with(LocalPreference.current.db) { target.allUsers }) {
 				val status = allStatus[user]
-				ListItem(
-					icon = if(status != null) ({
-						val icon = when(status) {
-							is Status.Submitted -> if(status.suspicious == null) {
-								R.drawable.ic_check_24
-							} else {
-								R.drawable.ic_warning_24
-							}
-							Status.NotSubmitted -> R.drawable.ic_clear_24
+				
+				// I don't know why putting 'iconContent' into ListItem(icon = ..) causes some warnings?
+				// and omitting type causes compiler error from kotlin frontend?
+				val iconContent: @Composable (() -> Unit)? = if(status != null) (@Composable {
+					val icon = when(status) {
+						is Status.Submitted -> if(status.suspicious == null) {
+							R.drawable.ic_check_24
+						} else {
+							R.drawable.ic_warning_24
 						}
-						
-						Icon(painterResource(icon), contentDescription = null)
-					}) else null,
+						Status.NotSubmitted -> R.drawable.ic_clear_24
+					}
+					
+					Icon(painterResource(icon), contentDescription = null)
+				}) else null
+				ListItem(
+					icon = iconContent,
 					// trailing = { Icon(painterResource(R.drawable.ic_arrow_right_24), contentDescription = null) },
 					modifier = Modifier.clickable(enabled = status != null) {
 						showDialogAsync {

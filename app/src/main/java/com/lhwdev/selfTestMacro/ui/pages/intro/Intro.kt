@@ -14,6 +14,7 @@ import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.navigation.RouteTransitionBlock
 import com.lhwdev.selfTestMacro.ui.DefaultContentColor
 import com.lhwdev.selfTestMacro.ui.PreviewBase
+import com.lhwdev.selfTestMacro.ui.pages.setup.SetupParameters
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
 import com.lhwdev.selfTestMacro.ui.primarySurfaceColored
 import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
@@ -68,7 +69,7 @@ private fun Intro() {
 					TextButton(
 						onClick = {
 							navigator.replaceRoute(
-								SetupRoute().withExtras(
+								SetupRoute(SetupParameters(initial = true)).withExtras(
 									RouteTransitionBlock to FadeRouteTransition(animationSpec = tween(durationMillis = 500))
 								)
 							)

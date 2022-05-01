@@ -1,14 +1,21 @@
 package com.lhwdev.selfTestMacro.ui.pages.common
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
+import com.lhwdev.selfTestMacro.repository.SelfTestTask
 import com.lhwdev.selfTestMacro.utils.millisToDuration
 import com.lhwdev.selfTestMacro.utils.toLocalizedString
 import com.vanpra.composematerialdialogs.*
 
+
+private fun SelfTestTask.timeToString() = timeMillis.millisToDuration().toLocalizedString()
 
 fun Navigator.showTodayScheduleDialog(testGroup: DbTestGroup) = showDialogAsync {
 	Title { Text("오늘 일정") }
@@ -25,10 +32,13 @@ fun Navigator.showTodayScheduleDialog(testGroup: DbTestGroup) = showDialogAsync 
 		if(testGroup.schedule.altogether) {
 			val task = tasks.first()
 			
-			Text("오늘 ${task.timeMillis.millisToDuration().toLocalizedString()}")
+			Text(task.timeToString())
+		} else Column(Modifier.verticalScroll(rememberScrollState())) {
+			for(task in tasks) {
+				val name = selfTestManager.database.users.users[task.userId!!]?.name
+				Text("$name: ${task.timeToString()}")
+			}
 		}
-		
-		
 	}
 	
 	Buttons {

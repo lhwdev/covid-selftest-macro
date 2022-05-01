@@ -21,6 +21,7 @@ import com.lhwdev.selfTestMacro.tryAtMost
 import com.lhwdev.selfTestMacro.ui.UiContext
 import com.lhwdev.utils.rethrowIfNeeded
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import java.io.File
 import java.util.WeakHashMap
 import kotlin.time.Duration
@@ -97,11 +98,9 @@ class SelfTestManagerImpl(
 		defaultCoroutineScope.launch {
 			val pref = withContext(Dispatchers.Main) { context.preferenceState }
 			
-			snapshotFlow {
-				pref.db.testGroups
-			}.collect {
-				onScheduleUpdated()
-			}
+			snapshotFlow { pref.db.testGroups }
+				.distinctUntilChangedBy { it.revision }
+				.collect { onScheduleUpdated() }
 		}
 	}
 	
@@ -270,7 +269,8 @@ class SelfTestManagerImpl(
 						suspicious = false,
 						quickTestResult = QuickTestResult.didNotConduct,
 						waitingResult = false
-					)
+					),
+					lastScheduleAt = -1
 				)
 			}
 			newUsers += dbUsers
@@ -517,6 +517,13 @@ class SelfTestManagerImpl(
 			)
 		}
 		schedules.updateStatus(group, users, results, logRange = logEntryId until selfTestLog.nextId)
+		if(!fromUi) {
+			val today = today()
+			allUsers.forEach { it.lastScheduleAt = today }
+			pushDbOperation(key = Any()) {
+				database.usersState.forceWrite()
+			}
+		}
 		
 		notificationStatus.onStatusUpdated(fromUi = fromUi)
 		notificationStatus.onSubmitSelfTest(allUsers, results)

@@ -103,17 +103,23 @@ abstract class SelfTestSchedulesImpl(
 	/**
 	 * Note that this task is not sorted by [SelfTestTask.timeMillis].
 	 */
-	final override fun updateAndGetTasks(): List<SelfTestTask> {
+	final override fun updateTasks(): List<SelfTestTask> {
 		val today = today()
-		return if(targetDay < today) {
+		if(targetDay < today) {
 			targetDay = today
-			
-			createTasks().also {
-				scheduleLog { "updateAndGetTasks: ${dumpDebug(oneLine = false)}" }
-			}
-		} else {
-			tasksCache
 		}
+		
+		return createTasks()
+		
+		// return if(targetDay < today) {
+		// 	targetDay = today
+		// 	createTasks().also {
+		// 		scheduleLog { "updateAndGetTasks: ${dumpDebug(oneLine = false)}" }
+		// 	}
+		// } else {
+		// 	scheduleLog { "updateAndGetTasks: targetDay(=$targetDay) >= today(=$today) so did not update" }
+		// 	tasksCache
+		// }
 	}
 	
 	/**
@@ -121,11 +127,12 @@ abstract class SelfTestSchedulesImpl(
 	 */
 	fun recreateTasks() {
 		targetDay = Long.MIN_VALUE
-		updateAndGetTasks()
+		updateTasks()
 	}
 	
 	fun onScheduleUpdated() {
-		updateAndGetTasks()
+		scheduleLog { "onScheduleUpdated revision=${database.testGroups.revision}" }
+		updateTasks()
 	}
 	
 	private fun DbTestGroup.nextTime(): LongRange {
@@ -185,26 +192,26 @@ abstract class SelfTestSchedulesImpl(
 	 */
 	private fun createTasks(): List<SelfTestTask> {
 		val oldTasks = tasksCache.associateBy { it.identity }.toSortedMap()
+		val usedOldTasks = mutableListOf<SelfTestTask>()
 		val newTasks = ArrayList<SelfTestTask>(/* initialCapacity = */ oldTasks.size)
-		var modified = false
+		
 		outer@ for(group in database.testGroups.groups.values) {
 			val schedule = group.schedule
 			if(schedule == DbTestSchedule.None) continue
 			
 			val timeRange = group.nextTime()
 			
-			fun getOrCreateTask(user: DbUser?): SelfTestTask {
+			fun getOrCreateTask(user: DbUser?) {
 				val identity = SelfTestTask.identity(testGroupId = group.id, userId = user?.id)
 				val old = oldTasks[identity]
-				return if(old != null) {
+				val task = if(old != null) {
+					usedOldTasks += old
 					if(old.timeMillis !in timeRange) {
-						modified = true
 						old.copy(timeMillis = timeRange.random(random))
 					} else {
 						old
 					}
 				} else {
-					modified = true
 					SelfTestTask(
 						testGroupId = group.id,
 						userId = user?.id,
@@ -214,20 +221,24 @@ abstract class SelfTestSchedulesImpl(
 			}
 			
 			if(schedule.altogether) { // stable || unstable+altogether
-				newTasks += getOrCreateTask(user = null)
+				getOrCreateTask(user = null)
 			} else { // unstable
 				// try to retrieve from old; if users database is changed, update all
 				val users = with(database) { group.target.allUsers }
 				
 				for(user in users) {
-					newTasks += getOrCreateTask(user = user)
+					getOrCreateTask(user = user)
 				}
 			}
 		}
 		
+		val modified = usedOldTasks.size < oldTasks.size
 		if(modified) {
 			tasksCache = newTasks
 			scheduler.updateTasks(newTasks)
+			scheduleLog { "createTasks: modified=true data=" + dumpDebug(oneLine = false) }
+		} else {
+			scheduleLog { "createTasks: modified=false" }
 		}
 		
 		return newTasks
@@ -235,7 +246,7 @@ abstract class SelfTestSchedulesImpl(
 	
 	
 	fun updateStatus(group: DbTestGroup, users: List<DbUser>?, results: List<SubmitResult>, logRange: IntRange) {
-		val tasks = updateAndGetTasks()
+		val tasks = updateTasks()
 		val targetTasks = when {
 			group.schedule.altogether ->
 				listOfNotNull(tasks.find { it.testGroupId == group.id && it.userId == null })
@@ -324,7 +335,7 @@ abstract class SelfTestSchedulesImpl(
 		
 		override fun updateNextDays(previousDay: Long) {
 			targetDay = previousDay + 1
-			updateAndGetTasks()
+			updateTasks()
 		}
 	}
 	
@@ -358,6 +369,6 @@ abstract class SelfTestSchedulesImpl(
 	
 	
 	init {
-		updateAndGetTasks()
+		updateTasks()
 	}
 }

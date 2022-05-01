@@ -25,22 +25,20 @@ import com.lhwdev.selfTestMacro.navigation.Route
 import com.lhwdev.selfTestMacro.navigation.pushRoute
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
-import com.lhwdev.selfTestMacro.ui.LocalPreference
-import com.lhwdev.selfTestMacro.ui.UiContext
-import com.lhwdev.selfTestMacro.ui.changed
+import com.lhwdev.selfTestMacro.ui.*
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.icons.ExpandMore
 import com.lhwdev.selfTestMacro.ui.icons.Icons
 import com.lhwdev.selfTestMacro.ui.pages.common.iconFor
 import com.lhwdev.selfTestMacro.ui.pages.common.scheduleInfo
-import com.lhwdev.selfTestMacro.ui.pages.common.showTodayScheduleDialog
 import com.lhwdev.selfTestMacro.ui.pages.edit.EditUsers
 import com.lhwdev.selfTestMacro.ui.pages.info.Info
+import com.lhwdev.selfTestMacro.ui.pages.setup.SetupParameters
 import com.lhwdev.selfTestMacro.ui.pages.setup.SetupRoute
 import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
+import com.lhwdev.selfTestMacro.ui.utils.AutoSizeText
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
-import com.lhwdev.selfTestMacro.ui.utils.dotAlarmIndicator
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.showFullDialogAsync
 import kotlinx.coroutines.launch
@@ -172,11 +170,11 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 			horizontalAlignment = Alignment.CenterHorizontally,
 			modifier = Modifier.fillMaxSize()
 		) {
-			Text("등록된 사용자가 없어요.", style = MaterialTheme.typography.h4)
+			AutoSizeText("등록된 사용자가 없어요.", style = MaterialTheme.typography.h4)
 			Spacer(Modifier.height(32.dp))
 			RoundButton(
 				onClick = {
-					navigator.pushRoute(SetupRoute())
+					navigator.pushRoute(SetupRoute(SetupParameters(initial = false)))
 				},
 				icon = { Icon(painterResource(R.drawable.ic_add_24), contentDescription = null) }
 			) {
@@ -262,42 +260,53 @@ private fun ColumnScope.MainContent(scaffoldState: ScaffoldState) {
 	
 	// scheduling
 	// '자가진단 예약: 꺼짐'
-	Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-		val anyTasksDone = remember(selectedTestGroup) {
-			selfTestManager.schedules.getTasks(selectedTestGroup)
-				.any { it.done }
-		}
-		
-		RoundButton(
-			onClick = {
-				navigator.showScheduleSelfTest(selectedGroup)
-			},
-			icon = {
-				Icon(
-					painterResource(R.drawable.ic_access_alarm_24),
-					contentDescription = null,
-					modifier = if(anyTasksDone) Modifier.dotAlarmIndicator(Color(0xffffc229)) else Modifier
+	val tasks = remember(selectedTestGroup) {
+		selfTestManager.schedules.getTasks(selectedTestGroup)
+	}
+	
+	val doneTasksCount = tasks.count { it.done }
+	
+	RoundButton(
+		onClick = { navigator.showScheduleSelfTest(selectedGroup) },
+		icon = {
+			Box {
+				Icon(painterResource(R.drawable.ic_access_alarm_24), contentDescription = null)
+				
+				val icon = when {
+					tasks.isEmpty() -> null
+					doneTasksCount == 0 -> null
+					doneTasksCount == tasks.size -> R.drawable.ic_check_24 to Color(0xff22ba35)
+					else -> R.drawable.ic_add_24 to Color(0xff1e78f7)
+				}
+				if(icon != null) {
+					Icon(
+						painterResource(icon.first),
+						contentDescription = null,
+						tint = icon.second,
+						modifier = Modifier.align(Alignment.BottomEnd).size(11.dp).offset(x = 4.dp, y = 4.dp)
+					)
+				}
+			}
+		},
+		trailingIcon = { Icon(Icons.Filled.ExpandMore, contentDescription = null) }
+	) {
+		val text = buildAnnotatedString {
+			withStyle(
+				SpanStyle(
+					fontWeight = FontWeight.Bold,
+					color = when(doneTasksCount) {
+						0 -> DefaultContentColor
+						tasks.size -> MaterialTheme.colors.primaryActive(.7f)
+						else -> MediumContentColor
+					}
 				)
-			},
-			trailingIcon = {
-				Icon(Icons.Filled.ExpandMore, contentDescription = null)
-			}
-		) {
-			val text = buildAnnotatedString {
-				withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("자가진단 예약") }
-				// TODO: hide following if screen width is small
-				append(": ")
-				append(selectedGroup.group.scheduleInfo())
-			}
-			
-			Text(text)
+			) { append("자가진단 예약") }
+			// TODO: shorten following if screen width is small
+			append(": ")
+			append(selectedGroup.group.scheduleInfo())
 		}
 		
-		IconButton(onClick = {
-			navigator.showTodayScheduleDialog(selectedTestGroup)
-		}) {
-			Icon(painterResource(R.drawable.ic_today_24), contentDescription = "오늘 예약")
-		}
+		Text(text)
 	}
 	
 	Spacer(Modifier.height(16.dp))

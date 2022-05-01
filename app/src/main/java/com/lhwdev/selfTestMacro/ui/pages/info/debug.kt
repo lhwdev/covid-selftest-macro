@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import com.lhwdev.github.repo.Repository
 import com.lhwdev.selfTestMacro.App
+import com.lhwdev.selfTestMacro.debug.dumpDebug
 import com.lhwdev.selfTestMacro.debug.sIncludeLogcatInLog
 import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
@@ -94,8 +95,16 @@ fun Navigator.showDebugWindow() = showDialogAsync(maxHeight = Dp.Infinity) {
 		}) { Text("SelfTestSchedule 등 예약 디버깅 ${if(pref.isScheduleDebugEnabled) "끄기" else "켜기"}") }
 		
 		ListItem(modifier = Modifier.clickable {
-			(selfTestManager.schedules as SelfTestSchedulesImpl).recreateTasks()
+			println((selfTestManager.schedules as SelfTestSchedulesImpl).dumpDebug(oneLine = false))
+		}) { Text("SelfTestSchedule 스케줄 덤프") }
+		
+		ListItem(modifier = Modifier.clickable {
+			selfTestManager.schedules.updateTasks()
 		}) { Text("SelfTestSchedule 스케줄 재생성") }
+		
+		ListItem(modifier = Modifier.clickable {
+			(selfTestManager.schedules as SelfTestSchedulesImpl).recreateTasks()
+		}) { Text("SelfTestSchedule 스케줄 강제 재생성") }
 		
 		ListItem { Text("에러 로깅 활성화됨") }
 	}

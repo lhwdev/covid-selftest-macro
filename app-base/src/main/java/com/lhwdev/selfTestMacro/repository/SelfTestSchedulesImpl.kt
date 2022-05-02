@@ -202,6 +202,13 @@ abstract class SelfTestSchedulesImpl(
 			val timeRange = group.nextTime()
 			
 			fun getOrCreateTask(user: DbUser?) {
+				val empty = if(user != null) {
+					dayOf(user.lastScheduleAt) == targetDay
+				} else {
+					with(database) { group.target.allUsers }.all { dayOf(it.lastScheduleAt) == targetDay }
+				}
+				if(empty) return
+				
 				val identity = SelfTestTask.identity(testGroupId = group.id, userId = user?.id)
 				val old = oldTasks[identity]
 				val task = if(old != null) {
@@ -245,16 +252,15 @@ abstract class SelfTestSchedulesImpl(
 	}
 	
 	
-	fun updateStatus(group: DbTestGroup, users: List<DbUser>?, results: List<SubmitResult>, logRange: IntRange) {
+	fun updateStatus(group: DbTestGroup, users: List<DbUser>, results: List<SubmitResult>, logRange: IntRange) {
 		val tasks = updateTasks()
 		val targetTasks = when {
 			group.schedule.altogether ->
 				listOfNotNull(tasks.find { it.testGroupId == group.id && it.userId == null })
 			
-			users == null -> tasks.filter { it.testGroupId == group.id }
-			else -> { // note: this is not called generally
+			else -> {
 				val ids = IntArray(size = users.size) { index -> users[index].id }
-				tasks.filter { it.testGroupId == group.id && it.userId != null && it.userId in ids }
+				tasks.filter { it.testGroupId == group.id && (it.userId == null || it.userId in ids) }
 			}
 		}
 		if(targetTasks.isEmpty()) {
@@ -289,7 +295,7 @@ abstract class SelfTestSchedulesImpl(
 	
 	/// Scheduler implementation
 	
-	protected abstract suspend fun onScheduledSubmitSelfTest(group: DbTestGroup, users: List<DbUser>?)
+	protected abstract suspend fun onScheduledSubmitSelfTest(group: DbTestGroup, users: List<DbUser>)
 	
 	
 	val scheduler = object : AlarmManagerTaskScheduler<SelfTestTask>(
@@ -315,7 +321,7 @@ abstract class SelfTestSchedulesImpl(
 			
 			val users = if(task.userId == null) {
 				// fixed time
-				null
+				with(database) { testGroups.groups.getValue(task.testGroupId).target.allUsers }
 			} else {
 				// random time + all different
 				val user = database.users.users[task.userId]

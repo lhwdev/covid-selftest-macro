@@ -16,6 +16,7 @@ import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.SelfTestSchedulesImpl
 import com.lhwdev.selfTestMacro.repository.Status
+import com.lhwdev.selfTestMacro.repository.millisToDeltaString
 import com.lhwdev.selfTestMacro.showToastSuspendAsync
 import com.lhwdev.selfTestMacro.ui.LocalPreference
 import com.lhwdev.selfTestMacro.ui.SelfTestQuestions
@@ -38,6 +39,7 @@ fun FloatingMaterialDialogScope.OneUserDetail(
 	val navigator = LocalNavigator
 	val selfTestManager = LocalSelfTestManager.current
 	val context = LocalContext.current
+	val debugEnabled = LocalPreference.current.isDebugEnabled
 	
 	Title { Text("${user.name}의 자가진단 현황") }
 	
@@ -56,6 +58,10 @@ fun FloatingMaterialDialogScope.OneUserDetail(
 				
 				Text("'${question.title}': ${question.displayText(status.answer[question])}")
 			}
+		}
+		
+		if(debugEnabled) ListItem {
+			Text("최근 실행한 에약: ${user.lastScheduleAt.millisToDeltaString()}")
 		}
 		
 		Spacer(Modifier.height(8.dp))
@@ -95,7 +101,7 @@ fun FloatingMaterialDialogScope.OneUserDetail(
 			}
 		) { Text(if(submitNowInProgress) "제출하는 중" else "지금 자가진단 제출") }
 		
-		if(LocalPreference.current.isDebugEnabled) {
+		if(debugEnabled) {
 			val scope = rememberCoroutineScope()
 			TextButton(onClick = {
 				val schedules = selfTestManager.schedules as SelfTestSchedulesImpl

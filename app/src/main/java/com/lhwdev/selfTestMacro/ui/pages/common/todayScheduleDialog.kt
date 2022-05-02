@@ -10,12 +10,10 @@ import com.lhwdev.selfTestMacro.database.DbTestGroup
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
 import com.lhwdev.selfTestMacro.repository.SelfTestTask
-import com.lhwdev.selfTestMacro.utils.millisToDuration
-import com.lhwdev.selfTestMacro.utils.toLocalizedString
 import com.vanpra.composematerialdialogs.*
 
 
-private fun SelfTestTask.timeToString() = timeMillis.millisToDuration().toLocalizedString()
+private fun SelfTestTask.timeToString() = timeMillis.millisToLocalizedString()
 
 fun Navigator.showTodayScheduleDialog(testGroup: DbTestGroup) = showDialogAsync {
 	Title { Text("오늘 일정") }

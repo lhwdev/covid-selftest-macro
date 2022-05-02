@@ -134,7 +134,7 @@ private fun ColumnScope.WizardSelectUsersContent(
 	isAllGrouped: Boolean,
 	setIsAllGrouped: (Boolean) -> Unit
 ) {
-	Column(modifier = Modifier.verticalScroll(rememberScrollState()).weight(1f, fill = false)) {
+	Column(modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
 		for((index, user) in userList.withIndex()) key(user) {
 			ListItem(
 				icon = {

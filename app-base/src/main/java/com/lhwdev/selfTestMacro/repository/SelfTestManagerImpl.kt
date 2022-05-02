@@ -73,10 +73,12 @@ class SelfTestManagerImpl(
 		database = database,
 		debugContext = debugContext.childContext(hint = "schedule")
 	) {
-		override suspend fun onScheduledSubmitSelfTest(group: DbTestGroup, users: List<DbUser>?) {
+		override suspend fun onScheduledSubmitSelfTest(group: DbTestGroup, users: List<DbUser>) {
 			try {
+				val today = today()
+				val usersToSubmit = users.filter { dayOf(it.lastScheduleAt) != today }
 				withContext(Dispatchers.IO) {
-					submitBulkSelfTest(group, users, fromUi = false)
+					submitBulkSelfTest(group, usersToSubmit, fromUi = false)
 				}
 			} catch(th: Throwable) {
 				th.rethrowIfNeeded()
@@ -408,15 +410,14 @@ class SelfTestManagerImpl(
 	
 	private suspend fun submitBulkSelfTest(
 		group: DbTestGroup,
-		users: List<DbUser>?,
+		users: List<DbUser>,
 		fromUi: Boolean
 	): List<SubmitResult> = transactDb { // - db synchronization, - log file(SelfTestLog) sync is deferred here
-		val allUsers = users ?: with(database) { group.target.allUsers }
 		val results = mutableListOf<SubmitResult>()
 		
 		var lastProbableApiChange = false
 		
-		for(user in allUsers) {
+		for(user in users) {
 			val result = submitSelfTest(user, fromUi = fromUi)
 			
 			if(result is SubmitResult.Failed) {
@@ -461,7 +462,7 @@ class SelfTestManagerImpl(
 	override suspend fun submitSelfTestNow(
 		uiContext: UiContext,
 		group: DbTestGroup,
-		users: List<DbUser>?
+		users: List<DbUser>
 	): List<SubmitResult> {
 		return try {
 			val results = submitBulkSelfTest(group, users, fromUi = true)
@@ -474,7 +475,7 @@ class SelfTestManagerImpl(
 					"확인"
 				)
 			} else {
-				val size = users?.size ?: group.target.allUsersCount
+				val size = users.size
 				uiContext.navigator.showSelfTestFailedDialog(results, terminated = results.size < size)
 			}
 			
@@ -493,16 +494,14 @@ class SelfTestManagerImpl(
 	
 	private suspend fun afterSelfTestSubmit(
 		group: DbTestGroup,
-		users: List<DbUser>?,
+		users: List<DbUser>,
 		results: List<SubmitResult>,
 		fromUi: Boolean
 	) {
-		val allUsers = users ?: with(database) { group.target.allUsers }
-		
 		// log entries
 		val logEntryId = selfTestLog.nextId
-		for(index in allUsers.indices) {
-			val user = allUsers[index]
+		for(index in users.indices) {
+			val user = users[index]
 			val result = results.getOrNull(index) ?: continue
 			
 			selfTestLog.logSelfTest(
@@ -512,21 +511,20 @@ class SelfTestManagerImpl(
 				message = when(result) {
 					is SubmitResult.Success -> "자가진단 성공"
 					is SubmitResult.Failed -> result.description
-					
 				}
 			)
 		}
 		schedules.updateStatus(group, users, results, logRange = logEntryId until selfTestLog.nextId)
 		if(!fromUi) {
-			val today = today()
-			allUsers.forEach { it.lastScheduleAt = today }
+			val millis = System.currentTimeMillis()
+			users.forEach { it.lastScheduleAt = millis }
 			pushDbOperation(key = Any()) {
 				database.usersState.forceWrite()
 			}
 		}
 		
 		notificationStatus.onStatusUpdated(fromUi = fromUi)
-		notificationStatus.onSubmitSelfTest(allUsers, results)
+		notificationStatus.onSubmitSelfTest(users, results)
 	}
 	
 	

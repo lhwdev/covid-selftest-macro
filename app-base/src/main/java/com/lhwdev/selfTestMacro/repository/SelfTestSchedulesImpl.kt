@@ -17,10 +17,10 @@ import kotlin.random.Random
 
 private const val sDayMillis = 1000 * 60 * 60 * 24
 
-internal fun dayOf(millis: Long) =
+fun dayOf(millis: Long) =
 	millis / sDayMillis // 'The number of seconds per day are fixed with Unix timestamps.'
 
-internal fun today() = dayOf(System.currentTimeMillis())
+fun today() = dayOf(System.currentTimeMillis())
 
 
 var sDebugScheduleEnabled = false

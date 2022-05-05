@@ -1,7 +1,13 @@
 package com.lhwdev.selfTestMacro.utils
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.produceState
 import com.lhwdev.selfTestMacro.repository.dayOf
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 
@@ -9,15 +15,38 @@ import kotlin.math.abs
 // 	with(Duration) { (this@millisToDuration - now).milliseconds }
 
 
-fun Long.millisToLocalizedString(now: Long = System.currentTimeMillis()): String = StringBuilder().also {
-	val date = Calendar.getInstance()
-	date.timeInMillis = this
-	val days = dayOf(now) - dayOf(this)
+fun Calendar.headToLocalizedString(
+	now: Long = System.currentTimeMillis()
+): String = StringBuilder().also {
 	
-	if(days != 0L) {
-		val delta = if(days > 0L) "후" else "전"
-		it.append("${abs(days)}일 $delta ")
+	when(val days = dayOf(now) - dayOf(timeInMillis)) {
+		0L -> it.append("오늘")
+		1L -> it.append("내일")
+		
+		else -> {
+			val delta = if(days > 0L) "후" else "전"
+			it.append("${abs(days)}일 $delta")
+		}
 	}
-	
-	it.append("${date[Calendar.HOUR_OF_DAY]}:${date[Calendar.MINUTE]}:${date[Calendar.SECOND]}")
 }.toString()
+
+fun Calendar.tailToLocalizedString(
+	now: Long = System.currentTimeMillis()
+): String = StringBuilder().also {
+	it.append("${this[Calendar.HOUR_OF_DAY]}:${this[Calendar.MINUTE]}:${this[Calendar.SECOND]}")
+}.toString()
+
+
+@Composable
+fun rememberTimeStateOf(unit: TimeUnit): State<Long> = produceState(System.currentTimeMillis()) {
+	val duration = TimeUnit.MILLISECONDS.convert(1, unit)
+	
+	while(isActive) {
+		val now = System.currentTimeMillis()
+		val nowDiv = now / duration
+		val targetDiv = nowDiv + 1
+		val target = targetDiv * duration
+		delay(target - now)
+		value = target
+	}
+}

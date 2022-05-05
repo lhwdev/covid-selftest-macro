@@ -21,18 +21,28 @@ import com.lhwdev.selfTestMacro.navigation.LocalNavigator
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import com.lhwdev.selfTestMacro.repository.GroupInfo
 import com.lhwdev.selfTestMacro.repository.LocalSelfTestManager
+import com.lhwdev.selfTestMacro.repository.dayOf
 import com.lhwdev.selfTestMacro.showToast
+import com.lhwdev.selfTestMacro.ui.EmptyRestartable
 import com.lhwdev.selfTestMacro.ui.MediumContentColor
 import com.lhwdev.selfTestMacro.ui.common.CheckBoxListItem
 import com.lhwdev.selfTestMacro.ui.common.SimpleIconButton
 import com.lhwdev.selfTestMacro.ui.common.TestTargetListItem
+import com.lhwdev.selfTestMacro.ui.primarySurfaceColored
 import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.systemUi.Scrims
 import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.AnimateHeight
 import com.lhwdev.selfTestMacro.ui.utils.ClickableTextFieldDecoration
 import com.lhwdev.selfTestMacro.ui.utils.TimePickerDialog
+import com.lhwdev.selfTestMacro.utils.headToLocalizedString
+import com.lhwdev.selfTestMacro.utils.rememberTimeStateOf
+import com.lhwdev.selfTestMacro.utils.tailToLocalizedString
 import com.vanpra.composematerialdialogs.*
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
+import kotlin.math.max
+import kotlin.math.min
 
 private class Time(val hour: Int, val minute: Int)
 
@@ -244,6 +254,40 @@ private fun FullMaterialDialogScope.ScheduleContent(info: GroupInfo, dismiss: ()
 	CheckBoxListItem(
 		checked = !excludeWeekend, onCheckChanged = { excludeWeekend = !it }
 	) { Text("주말에도 자가진단하기") }
+	
+	EmptyRestartable {
+		val tasks = selfTestManager.schedules.getTasks(group)
+		
+		if(tasks.isNotEmpty()) Surface(
+			color = MaterialTheme.colors.primarySurfaceColored,
+			contentColor = MaterialTheme.colors.onPrimary
+		) {
+			val now by rememberTimeStateOf(unit = TimeUnit.DAYS)
+			
+			val range = tasks.fold(Long.MAX_VALUE to Long.MIN_VALUE) { range, task ->
+				min(range.first, task.timeMillis) to max(range.second, task.timeMillis)
+			}
+			
+			val first = Calendar.getInstance().also { it.timeInMillis = range.first }
+			val last = Calendar.getInstance().also { it.timeInMillis = range.second }
+			
+			val sameDay = dayOf(range.first) == dayOf(range.second)
+			
+			ListItem(
+				text = {
+					val text = if(sameDay) {
+						"${first.headToLocalizedString(now)} " +
+							"${first.tailToLocalizedString(now)}~${last.tailToLocalizedString(now)}"
+					} else {
+						val a = first.headToLocalizedString(now) + " " + first.tailToLocalizedString(now)
+						val b = last.headToLocalizedString(now) + " " + last.tailToLocalizedString(now)
+						"$a~$b"
+					}
+					Text(text)
+				}
+			)
+		}
+	}
 	
 	Spacer(Modifier.height(4.dp))
 	

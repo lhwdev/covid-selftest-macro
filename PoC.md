@@ -106,7 +106,7 @@
     "deviceUuid": "", // 기기 uuid를 넣어도 됨
     "lctnScCode": "<학교 단계 코드>",
     "makeSession": true,
-    "password": <transkey>",
+    "password": "<transkey>",
     // "stdntPNo": <페이지 번호> // 보통 필요없음
   }
   ```
@@ -118,8 +118,8 @@
     ```json5
     {
       "token": "<UsersToken>", // Bearer (hex) 형태
-      "pInfAgrmYn": "Y/N" // 약관 동의 여부,
-      "hasPassword": true, //비번 유무 여부
+      "pInfAgrmYn": "Y/N", // 약관 동의 여부,
+      "hasPassword": true //비번 유무 여부
       // 기타 등등
     }
     ```

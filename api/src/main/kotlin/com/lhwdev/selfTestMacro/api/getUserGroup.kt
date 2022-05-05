@@ -26,7 +26,7 @@ class UserGroup(val users: List<User>, val clientVersion: String) : List<User> b
 
 
 suspend fun Session.getUserGroup(institute: InstituteInfo, token: UsersToken): UserGroup = fetch(
-	institute.requestUrl["selectUserGroup"],
+	institute.requestUrl["/v2/selectUserGroup"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Content-Type" to ContentTypes.json, "Authorization" to token.token),
 	body = "{}"

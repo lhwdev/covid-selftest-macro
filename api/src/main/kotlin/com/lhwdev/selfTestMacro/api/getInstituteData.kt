@@ -21,9 +21,15 @@ import java.net.URL
 
 
 @Serializable
-data class InstituteInfoResponse(
+class InstituteInfoResponse(
 	@SerialName("key") val searchKey: InstituteSearchKey,
 	@SerialName("schulList") val instituteList: List<InstituteInfo>
+)
+
+@Serializable
+class InstituteInfosResult(
+	val searchKey: InstituteSearchKey,
+	val list: List<InstituteResult>
 )
 
 @Serializable(with = InstituteSearchKey.Serializer::class)
@@ -44,8 +50,7 @@ data class InstituteInfo(
 	@SerialName("addres") val address: String,
 	@SerialName("atptOfcdcConctUrl") val requestUrlBody: String
 ) {
-	val requestUrl get() = URL("https://$requestUrlBody/v2")
-	val requestUrlBase get() = URL("https://$requestUrlBody")
+	val requestUrl get() = URL("https://$requestUrlBody")
 }
 
 
@@ -54,7 +59,7 @@ suspend fun Session.getSchoolData(
 	regionCode: String,
 	schoolLevelCode: String,
 	name: String
-): InstituteInfoResponse {
+): InstituteInfosResult {
 	val params = queryUrlParamsToString(
 		mapOf(
 			"lctnScCode" to regionCode,
@@ -64,8 +69,14 @@ suspend fun Session.getSchoolData(
 		)
 	)
 	
-	return fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
+	val result = fetch(url = sCommonUrl["searchSchool?$params"], method = HttpMethod.get, headers = sDefaultFakeHeader)
 		.toJsonLoose(InstituteInfoResponse.serializer())
+	return InstituteInfosResult(
+		searchKey = result.searchKey,
+		list = result.instituteList.map {
+			InstituteResult(regionCode, schoolLevelCode, LoginType.school, it)
+		}
+	)
 }
 
 // 대학: orgName=...&loginType=univ

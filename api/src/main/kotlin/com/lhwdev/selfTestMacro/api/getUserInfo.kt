@@ -59,7 +59,7 @@ data class UserInfo(
  * wrongPassCnt: 0
  */
 suspend fun Session.getUserInfo(institute: InstituteInfo, user: User): UserInfo = fetch(
-	institute.requestUrl["getUserInfo"],
+	institute.requestUrl["/v2/getUserInfo"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
 		"Content-Type" to ContentTypes.json,

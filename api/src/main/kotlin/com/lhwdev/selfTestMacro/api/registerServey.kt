@@ -67,7 +67,7 @@ suspend fun Session.registerSurvey(
 	user: User,
 	surveyData: SurveyData
 ): SurveyResult = fetch(
-	institute.requestUrlBase["registerServey"],
+	institute.requestUrl["registerServey"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
 		"Content-Type" to ContentTypes.json,

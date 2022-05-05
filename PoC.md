@@ -35,7 +35,8 @@
     "schulList": [
       {
         "kraOrgNm": "<기관 이름>",
-        "orgCode": "<기관 코드>",
+        "orgCode": "<암호화된 가변 기관 코드>",
+        "juOrgCode": "<기본 기관 코드>",
         "addres": "<주소>",
         "atptOfcdcConctUrl": "<시도 교육청 url>",
         // ...
@@ -97,7 +98,7 @@
 * 입력: json
   ```json5
   {
-    "orgCode": "<기관 코드>",
+    "orgCode": "<암호화된 가변 기관 코드>",
     "orgName": "<기관 이름>",
     "name": "<사용자 이름/암호화>",
     "birthday": "<생일: 6자리/암호화>",
@@ -174,7 +175,7 @@
   ```json5
   [
     { // 메인 사용자
-      "orgCode": "D000000000", // 기관 코드,
+      "orgCode": "D000000000", // 불변 기관 코드,
       "orgName": "<학교 이름>",
       "userPNo": "<사용자 id>",
       "userNameEncpt": "<사용자 이름>",
@@ -187,7 +188,7 @@
     },
     // 여기서부터는 한 계정에 여러명을 등록할 경우
     {
-      "orgCode": "D000000000", // 기관 코드,
+      "orgCode": "D000000000", // 불변 기관 코드,
       "userPNo": "<사용자 id>",
       "otherYn": "Y", // 메인 학생 여부
       "atptOfcdcConctUrl": "<자가진단 시/도 url>",
@@ -205,7 +206,7 @@
 * 입력: json
   ```json5
   {
-    "orgCode": "<기관 코드>",
+    "orgCode": "<불변 기관 코드>",
     "userPNo": "<사용자 id>"
   }
   ```

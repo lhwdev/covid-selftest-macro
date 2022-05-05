@@ -20,7 +20,7 @@ operator fun URL.get(childPath: String? = null) = URL(
 	this,
 	buildString {
 		append(path.removeSuffix("/"))
-		if(childPath != null) append("/$childPath")
+		if(childPath != null) append("/${childPath.removePrefix("/")}")
 	}
 )
 

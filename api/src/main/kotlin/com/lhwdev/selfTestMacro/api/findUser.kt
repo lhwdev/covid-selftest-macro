@@ -180,8 +180,23 @@ suspend fun Session.findUser(
 			"Accept" to "application/json, text/plain, */*"
 		),
 		body = Bodies.jsonObject {
+			"birthday" set encryptedBirthday
+			"deviceUuid" set ""
+			if(institute.schoolLevelCode != null) {
+				"lctnScCode" set institute.schoolLevelCode
+			}
+			"loginType" set institute.loginType.name
+			"makeSession" set makeSession
+			"name" set encryptedName
+			"orgCode" set institute.info.encryptedCode
 			"orgName" set institute.info.name
 			"password" set raonPassword
+			"searchKey" set searchKey.key
+			if(pageNumber == null) {
+				"stdntPNo" set null
+			} else {
+				"stdntPNo" set pageNumber
+			}
 		}
 	).getText()
 	

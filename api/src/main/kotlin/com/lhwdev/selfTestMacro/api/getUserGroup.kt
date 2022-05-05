@@ -16,7 +16,6 @@ import kotlinx.serialization.builtins.ListSerializer
 
 @Serializable
 data class User(
-	@SerialName("userNameEncpt") val name: String,
 	@SerialName("userPNo") val userId: String,
 	@SerialName("token") val token: UserToken
 )

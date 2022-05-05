@@ -27,7 +27,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import java.net.URL
 import java.util.Calendar
 
@@ -70,18 +69,12 @@ class MainActivity : AppCompatActivity() {
 		
 		@SuppressLint("SetTextI18n")
 		suspend fun updateCurrentState() = withContext(Dispatchers.IO) main@{
-			val institute = pref.institute!!
-			val user = pref.user!! // note: may change
+			val info = pref.info!! // note: may change
 			
 			val detailedUserInfo = try {
-				val usersIdentifier = user.findUser(session, pref)
-				val usersToken = (session.validatePassword(
-					institute,
-					usersIdentifier,
-					user.password
-				) as PasswordResult.Success).token
-				val users = session.getUserGroup(institute, usersToken)
-				session.getUserInfo(institute, singleOfUserGroup(users)!!)
+				val usersToken = info.findUser(session, this@MainActivity) ?: return@main
+				val users = session.getUserGroup(info.institute.info, usersToken)
+				session.getUserInfo(info.institute.info, singleOfUserGroup(users)!!)
 			} catch(e: Throwable) {
 				onError(e, "사용자 정보 불러오기")
 				showToastSuspendAsync("사용자 정보를 불러오지 못했습니다.")
@@ -286,9 +279,8 @@ class MainActivity : AppCompatActivity() {
 			content =
 				URL("https://raw.githubusercontent.com/wiki/lhwdev/covid-selftest-macro/notice_v4.json").readText()
 			
-			val notificationObject: NotificationObject = Json {
-				ignoreUnknownKeys = true /* loose */
-			}.decodeFromString(NotificationObject.serializer(), content)
+			val notificationObject: NotificationObject =
+				JsonLoose.decodeFromString(NotificationObject.serializer(), content)
 			
 			if(notificationObject.notificationVersion != 4) {
 				// incapable of displaying this

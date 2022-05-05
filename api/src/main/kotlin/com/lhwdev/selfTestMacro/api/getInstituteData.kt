@@ -46,7 +46,9 @@ data class InstituteSearchKey(val key: String) {
 @Serializable
 data class InstituteInfo(
 	@SerialName("kraOrgNm") val name: String,
-	@SerialName("orgCode") val code: String,
+	@SerialName("orgCode") val encryptedCode: String,
+	@SerialName("juOrgCode") val persistentCode: String,
+	
 	@SerialName("addres") val address: String,
 	@SerialName("atptOfcdcConctUrl") val requestUrlBody: String
 ) {

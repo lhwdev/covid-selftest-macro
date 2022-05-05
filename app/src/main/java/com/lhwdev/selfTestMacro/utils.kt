@@ -68,10 +68,8 @@ inline fun <R> tryAtMost(
 
 @Serializable
 data class UserLoginInfo(
-	val identifier: UserIdentifier,
-	val institute: InstituteInfo,
-	val birthday: String,
-	val loginType: LoginType,
+	val institute: InstituteResult,
+	val userQuery: UserQuery,
 	val password: String,
 	/*val unstableToken: UsersToken*/
 ) {
@@ -106,17 +104,31 @@ data class UserLoginInfo(
 	// 	)
 	// }
 	
-	suspend fun findUser(session: Session, pref: PreferenceState): UserIdentifier {
-		val setting = pref.setting!!
+	suspend fun findUser(session: Session, context: Context): UsersToken? {
+		val pref = context.preferenceState
+		val info = pref.info!!
 		val instituteNew = session.getSchoolData(
-			regionCode = setting.region,
-			schoolLevelCode = setting.level.toString(),
-			name = setting.schoolName
+			regionCode = info.institute.regionCode,
+			schoolLevelCode = info.institute.schoolLevelCode!!,
+			name = info.institute.info.name
 		)
-		return session.findUser(
-			institute,
-			GetUserTokenRequestBody(institute, identifier.mainUserName, birthday, loginType, instituteNew.searchKey)
+		val result = session.findUser(
+			institute = institute,
+			searchKey = instituteNew.searchKey,
+			userQuery = userQuery,
+			password = password
 		)
+		
+		return when(result) {
+			is FindUserResult.Failed -> {
+				withContext(Dispatchers.Main) {
+					context.showToastSuspendAsync(result.errorMessage ?: "?")
+				}
+				
+				null
+			}
+			is FindUserResult.Success -> result.token
+		}
 	}
 }
 
@@ -124,8 +136,7 @@ class PreferenceState(val pref: SharedPreferences) {
 	init {
 		// version migration
 		when(pref.getInt("lastVersion", -1)) {
-			in -1..999 -> pref.edit { clear() }
-			in 1000..1010 -> pref.edit { clear() }
+			in -1..1023 -> pref.edit { clear() }
 			BuildConfig.VERSION_CODE -> Unit // latest
 		}
 		
@@ -143,12 +154,8 @@ class PreferenceState(val pref: SharedPreferences) {
 	var hour by pref.preferenceInt("hour", -1)
 	var min by pref.preferenceInt("min", 0)
 	
-	var user: UserLoginInfo?
+	var info: UserLoginInfo?
 		by pref.preferenceSerialized("userLoginInfo", UserLoginInfo.serializer())
-	var institute: InstituteInfo?
-		by pref.preferenceSerialized("institute", InstituteInfo.serializer())
-	var setting: UserSetting?
-		by pref.preferenceSerialized("userSetting", UserSetting.serializer())
 	
 	var quickTest: QuickTestInfo?
 		by pref.preferenceSerialized("quickTest", QuickTestInfo.serializer())

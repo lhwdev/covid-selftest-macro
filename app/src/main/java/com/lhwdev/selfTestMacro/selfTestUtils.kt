@@ -39,7 +39,7 @@ suspend fun Context.singleOfUserGroup(list: List<User>) = if(list.size == 1) lis
 	null
 }
 
-suspend fun Context.surveyData(user: User, usersIdentifier: UserIdentifier, clientVersion: String): SurveyData {
+fun Context.surveyData(info: UserLoginInfo, token: UserToken, clientVersion: String): SurveyData {
 	val pref = preferenceState
 	
 	val quickTestNegative = pref.quickTest?.let {
@@ -53,8 +53,8 @@ suspend fun Context.surveyData(user: User, usersIdentifier: UserIdentifier, clie
 	val isIsolated = pref.isIsolated
 	
 	return SurveyData(
-		userToken = user.token,
-		upperUserName = usersIdentifier.mainUserName,
+		userToken = token,
+		upperUserName = info.userQuery.name,
 		rspns03 = if(quickTestNegative) null else "1",
 		rspns07 = if(quickTestNegative) "0" else null,
 		// rspns09 = if(isIsolated) "1" else "0",
@@ -66,13 +66,12 @@ suspend fun Context.surveyData(user: User, usersIdentifier: UserIdentifier, clie
 
 suspend fun Context.submitSuspend(session: Session, notification: Boolean = true, manual: Boolean) {
 	val pref = preferenceState
-	selfLog("submitSuspend ${pref.user?.identifier?.mainUserName}")
+	selfLog("submitSuspend ${pref.info?.userQuery}")
 	
 	try {
 		tryAtMost(maxTrial = 3) trial@{
-			val institute = pref.institute!!
-			val loginInfo: UserLoginInfo =
-				pref.user!! // (not valid ->) // note: `preferenceState.user` may change after val user = ...
+			// (not valid ->) // note: `preferenceState.user` may change after val user = ...
+			val info = pref.info!!
 			
 			
 			// val user = loginInfo.ensureTokenValid(
@@ -81,19 +80,14 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 			// ) { token ->
 			// 	singleOfUserGroup(session.getUserGroup(institute, token)) ?: return
 			// }
-			val usersIdentifier = loginInfo.findUser(session, pref)
+			val usersToken = info.findUser(session, this) ?: return@trial
 			
-			val usersToken =
-				(session.validatePassword(institute, usersIdentifier, loginInfo.password) as? PasswordResult.Success
-					?: error("잘못된 비밀번호입니다.")
-					).token
-			
-			val users = session.getUserGroup(institute, usersToken)
+			val users = session.getUserGroup(info.institute.info, usersToken)
 			val user = singleOfUserGroup(users) ?: return@trial
-			val surveyData = surveyData(user, usersIdentifier, users.clientVersion)
+			val surveyData = surveyData(info, user.token, users.clientVersion)
 			
 			val result = session.registerSurvey(
-				pref.institute!!,
+				info.institute.info,
 				user,
 				surveyData
 			)
@@ -102,7 +96,7 @@ suspend fun Context.submitSuspend(session: Session, notification: Boolean = true
 				pref.lastSubmit = System.currentTimeMillis()
 			}
 			
-			selfLog("submitSuspend success ${pref.user?.identifier?.mainUserName} ${result.registerAt}", force = true)
+			selfLog("submitSuspend success ${pref.info?.userQuery} ${result.registerAt}", force = true)
 			
 			if(notification) showTestCompleteNotification(result.registerAt)
 			else {

@@ -67,6 +67,6 @@ suspend fun Session.getUserInfo(institute: InstituteInfo, user: User): UserInfo 
 	),
 	body = Json.encodeToString(
 		GetUserInfoRequestBody.serializer(),
-		GetUserInfoRequestBody(institute.code, user.userId)
+		GetUserInfoRequestBody(institute.persistentCode, user.userId)
 	)
 ).toJsonLoose(UserInfo.serializer())

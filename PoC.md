@@ -51,7 +51,7 @@
 
 - 학교
   * `loginType`: 고정값 `school`
-  * `orgName`: 학교 이름
+  * `orgName`: 학교 이름 (2글자 이상; 이제 api단에서 길이가 검증됨)
   * (`lctnScCode`: 지역 코드(하단 표 참고))
   * `schulCrseScCode`: 햑교 단계 코드(하단 표 참고)
 - 대학

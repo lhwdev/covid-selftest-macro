@@ -34,7 +34,8 @@ class FirstActivity : AppCompatActivity() {
 		
 		setSupportActionBar(toolbar)
 		
-		var institute: InstituteInfo? = null
+		var institute: InstituteResult? = null
+		var searchKey: InstituteSearchKey? = null
 		
 		fun adapter(list: List<String>) =
 			object : ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list) {
@@ -83,16 +84,21 @@ class FirstActivity : AppCompatActivity() {
 			val levelCode = sSchoolLevels.getValue(input_level.text.toString())
 			
 			lifecycleScope.launch {
+				if(nameString.length <= 1) {
+					showToast("학교 이름은 2글자 이상으로 입력해주세요.")
+					return@launch
+				}
+				
 				val snackBar =
 					Snackbar.make(button_checkSchoolInfo, "잠시만 기다려주세요", Snackbar.LENGTH_INDEFINITE)
 				snackBar.show()
 				
-				fun selectInstitute(instituteInfo: InstituteInfo) {
-					institute = instituteInfo
+				fun selectInstitute(result: InstituteResult) {
+					institute = result
 					
 					// ui interaction
 					schoolName.clear()
-					schoolName.append(instituteInfo.name)
+					schoolName.append(result.info.name)
 					button_checkSchoolInfo.icon = ResourcesCompat.getDrawable(
 						resources,
 						R.drawable.ic_baseline_check_24,
@@ -102,28 +108,27 @@ class FirstActivity : AppCompatActivity() {
 					scrollView.smoothScrollTo(0, scrollView.height)
 				}
 				
-				val data = tryAtMost(maxTrial = 3) {
-					session.getSchoolData(
-						regionCode = regionCode,
-						schoolLevelCode = levelCode.toString(),
-						name = nameString
-					)
-				}
+				val data = session.getSchoolData(
+					regionCode = regionCode,
+					schoolLevelCode = levelCode.toString(),
+					name = nameString
+				)
 				
 				snackBar.dismiss()
-				if(data.instituteList.isEmpty()) {
+				if(data.list.isEmpty()) {
 					showToast("학교를 찾을 수 없습니다. 이름을 바르게 입력했는지 확인해주세요.")
 					return@launch
 				}
+				searchKey = data.searchKey
 				
-				if(data.instituteList.size == 1)
-					selectInstitute(data.instituteList[0])
+				if(data.list.size == 1)
+					selectInstitute(data.list[0])
 				else AlertDialog.Builder(this@FirstActivity).apply {
 					setTitle("학교를 선택해주세요")
 					setItems(
-						data.instituteList.map { "${it.name}(${it.address})" }.toTypedArray(),
+						data.list.map { "${it.info.name}(${it.info.address})" }.toTypedArray(),
 						DialogInterface.OnClickListener { _, which ->
-							selectInstitute(data.instituteList[which])
+							selectInstitute(data.list[which])
 						})
 				}.show()
 			}
@@ -171,16 +176,6 @@ class FirstActivity : AppCompatActivity() {
 			lifecycleScope.launch main@{
 				// TODO: show progress
 				try {
-					val userIdentifier = session.findUser(
-						instituteInfo,
-						GetUserTokenRequestBody(
-							institute = instituteInfo,
-							name = name,
-							birthday = birth,
-							loginType = LoginType.school /* TODO */
-						)
-					)
-					
 					val password = promptInput { edit, _ ->
 						setTitle("비밀번호를 입력해주세요.")
 						edit.inputType = EditorInfo.TYPE_CLASS_NUMBER
@@ -191,22 +186,27 @@ class FirstActivity : AppCompatActivity() {
 						})
 					} ?: return@main
 					
+					val userQuery = UserQuery(name = name, birthday = birth)
 					val result = catchErrorThanToast {
-						tryAtMost(maxTrial = 3) {
-							session.validatePassword(instituteInfo, userIdentifier, password)
-						}
+						session.findUser(
+							institute = instituteInfo,
+							searchKey = searchKey!!,
+							userQuery = userQuery,
+							password = password
+						)
+						
 					} ?: return@main
 					
-					if(result is PasswordResult.Failed) {
+					if(result is FindUserResult.Failed) {
 						showToastSuspendAsync(result.toString())
 						return@main
 					}
-					require(result is PasswordResult.Success)
+					require(result is FindUserResult.Success)
 					val token = result.token
 					
 					val groups = tryAtMost(maxTrial = 3) {
 						try {
-							session.getUserGroup(instituteInfo, token)
+							session.getUserGroup(instituteInfo.info, token)
 						} catch(th: Throwable) {
 							if(th.message?.contains("userNameEncpt") == true) {
 								showToastSuspendAsync("아직 여러명의 자가진단은 지원하지 않습니다.")
@@ -216,16 +216,10 @@ class FirstActivity : AppCompatActivity() {
 					} ?: return@main
 					singleOfUserGroup(groups) ?: return@main // TODO: many users
 					
-					pref.institute = instituteInfo
-					pref.user =
-						UserLoginInfo(userIdentifier, instituteInfo, birth, LoginType.school, password/*, token*/)
-					pref.setting = UserSetting(
-						loginType = LoginType.school, // TODO
-						region = sRegions.getValue(input_region.text.toString()),
-						level = sSchoolLevels.getValue(input_level.text.toString()),
-						schoolName = instituteInfo.name,
-						studentName = name,
-						studentBirth = birth
+					pref.info = UserLoginInfo(
+						institute = instituteInfo,
+						userQuery = userQuery,
+						password = password/*, token*/
 					)
 					
 					// success
@@ -243,16 +237,17 @@ class FirstActivity : AppCompatActivity() {
 			}
 		}
 		
-		pref.setting?.let { setting ->
+		pref.info?.let { info ->
 			input_loginType.setText("학교", false) // TODO
-			input_region.setText(sRegions.entries.first { it.value == setting.region }.key, false)
+			input_region.setText(sRegions.entries.first { it.value == info.institute.regionCode }.key, false)
+			val level = info.institute.schoolLevelCode!!.toInt()
 			input_level.setText(
-				sSchoolLevels.entries.first { it.value == setting.level }.key,
+				sSchoolLevels.entries.first { it.value == level }.key,
 				false
 			)
-			input_schoolName.setText(setting.schoolName)
-			input_studentName.setText(setting.studentName)
-			input_studentBirth.setText(setting.studentBirth)
+			input_schoolName.setText(info.institute.info.name)
+			input_studentName.setText(info.userQuery.name)
+			input_studentBirth.setText(info.userQuery.birthday)
 		}
 	}
 }

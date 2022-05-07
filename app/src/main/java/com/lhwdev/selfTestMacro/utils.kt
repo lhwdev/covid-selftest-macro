@@ -113,7 +113,7 @@ data class UserLoginInfo(
 			name = info.institute.info.name
 		)
 		val result = session.findUser(
-			institute = instituteNew.list.single(),
+			institute = instituteNew.list.single { it.info.persistentCode == info.institute.info.persistentCode },
 			searchKey = instituteNew.searchKey,
 			userQuery = userQuery,
 			password = password

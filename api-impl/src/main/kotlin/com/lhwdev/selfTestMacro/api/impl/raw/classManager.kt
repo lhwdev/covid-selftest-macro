@@ -1,14 +1,13 @@
 @file:Suppress("SpellCheckingInspection")
 
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.Bodies
-import com.lhwdev.fetch.fetch
+import com.lhwdev.fetch.get
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.json
-import com.lhwdev.io.decodeBase64
-import com.lhwdev.fetch.get
 import com.lhwdev.fetch.sDefaultFakeHeader
+import com.lhwdev.io.decodeBase64
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -52,10 +51,10 @@ public data class ClassInfo(
 	@SerialName("classCode") val classCode: String
 )
 
-public suspend fun getClassList(institute: InstituteInfo, manager: User): ClassList = fetch(
-	institute.requestUrl["joinClassList"],
+public suspend fun HcsSession.getClassList(token: UserToken): ClassList = fetch(
+	requestUrl["/joinClassList"],
 	method = HttpMethod.post,
-	headers = sDefaultFakeHeader + mapOf("Authorization" to manager.token.token)
+	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token)
 ).toJsonLoose(ClassList.serializer())
 
 
@@ -104,13 +103,11 @@ public data class ClassSurveyStudentStatus(
 	@SerialName("deviceUuidYn") @Serializable(YesNoSerializer::class) val installedOfficalApp: Boolean
 )
 
-public suspend fun getClassSurveyStatus(
-	institute: InstituteInfo, manager: User, classInfo: ClassInfo
-): ClassSurveyStatus = fetch(
-	institute.requestUrl["join"],
+public suspend fun HcsSession.getClassSurveyStatus(token: UserToken, classInfo: ClassInfo): ClassSurveyStatus = fetch(
+	requestUrl["/join"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
-		"Authorization" to manager.token.token
+		"Authorization" to token.token
 	),
 	body = Bodies.json(ClassInfo.serializer(), classInfo)
 ).toJsonLoose(ClassSurveyStatus.serializer())
@@ -144,13 +141,13 @@ public data class ClassSurveyStudentStatusDetail(
 	val phoneNumber: String get() = decodeBase64(phoneNumberBase64Encoded).toString(Charsets.UTF_8)
 }
 
-public suspend fun getStudentSurveyStatusDetail(
-	institute: InstituteInfo, manager: User, student: ClassSurveyStudentStatus
+public suspend fun HcsSession.getStudentSurveyStatusDetail(
+	token: UserToken, student: ClassSurveyStudentStatus
 ): ClassSurveyStudentStatusDetail = fetch(
-	institute.requestUrl["joinDetail"],
+	requestUrl["/joinDetail"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
-		"Authorization" to manager.token.token
+		"Authorization" to token.token
 	),
 	body = Bodies.json(ClassSurveyStudentStatus.serializer(), student)
 ).toJsonLoose(ClassSurveyStudentStatusDetail.serializer())

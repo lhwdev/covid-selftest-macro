@@ -25,4 +25,9 @@ pluginManagement {
 // Projects
 includeBuild("includeBuild")
 
-include(":app", ":app-base", ":app-models", ":utils", ":transkey", ":api-base", ":api", ":test")
+include(
+	":app", ":app-base", ":app-models",
+	":utils",
+	":transkey", ":api-base", ":api-impl", ":api",
+	":test"
+)

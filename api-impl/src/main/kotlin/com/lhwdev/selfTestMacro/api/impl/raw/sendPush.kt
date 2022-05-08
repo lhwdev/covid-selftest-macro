@@ -1,11 +1,10 @@
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.Bodies
+import com.lhwdev.fetch.get
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
-import com.lhwdev.fetch.http.fetch
 import com.lhwdev.fetch.jsonObject
-import com.lhwdev.fetch.get
 import com.lhwdev.fetch.sDefaultFakeHeader
 
 
@@ -27,7 +26,7 @@ import com.lhwdev.fetch.sDefaultFakeHeader
 @DangerousHcsApi
 public suspend fun Session.sendPushNotification(institute: InstituteInfo, token: UsersToken) {
 	fetch(
-		institute.requestUrl["push"],
+		institute.requestUrl["/push"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 		body = Bodies.jsonObject {

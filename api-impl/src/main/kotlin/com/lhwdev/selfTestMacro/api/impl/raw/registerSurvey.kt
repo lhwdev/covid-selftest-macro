@@ -1,6 +1,6 @@
 @file:Suppress("SpellCheckingInspection")
 
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.Bodies
 import com.lhwdev.fetch.get
@@ -27,7 +27,7 @@ public data class SurveyData(
 	val upperUserToken: UserToken? = null, // null for default
 	val upperUserName: String? = null // null for default
 ) {
-	public fun toApiSurveyData(user: User, name: String): ApiSurveyData = ApiSurveyData(
+	public fun toApiSurveyData(user: UserData, name: String): ApiSurveyData = ApiSurveyData(
 		upperUserToken = user.token,
 		upperUserName = name,
 		clientVersion = clientVersion,
@@ -78,11 +78,11 @@ public data class SurveyResult(
 @DangerousHcsApi
 public suspend fun Session.registerSurvey(
 	institute: InstituteInfo,
-	user: User,
+	user: UserData,
 	name: String,
 	surveyData: SurveyData
 ): SurveyResult = fetch(
-	institute.requestUrl["registerServey"],
+	institute.requestUrl["/registerServey"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
 		"Authorization" to user.token.token

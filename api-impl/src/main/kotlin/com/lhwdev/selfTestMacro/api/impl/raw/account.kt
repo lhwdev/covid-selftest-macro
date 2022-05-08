@@ -1,15 +1,14 @@
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpMethod
-import com.lhwdev.fetch.http.Session
 
 
 // you must inform user when using this api: https://hcs.eduro.go.kr/agreement
 @DangerousHcsApi
-public suspend fun Session.updateAgreement(institute: InstituteInfo, token: UsersIdToken) {
+public suspend fun HcsSession.updateAgreement(token: UsersIdToken) {
 	fetch(
-		institute.requestUrlV2["updatePInfAgrmYn"],
+		requestUrl["/v2/updatePInfAgrmYn"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 		body = Bodies.jsonObject {}
@@ -17,23 +16,19 @@ public suspend fun Session.updateAgreement(institute: InstituteInfo, token: User
 }
 
 
-public suspend fun Session.hasPassword(
-	institute: InstituteInfo,
-	token: UsersIdToken
-): Boolean = fetch(
-	institute.requestUrlV2["hasPassword"],
+public suspend fun HcsSession.hasPassword(token: UsersIdToken): Boolean = fetch(
+	requestUrl["/v2/hasPassword"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token)
 ).getText().toBooleanStrict()
 
-public suspend fun Session.registerPassword(
-	institute: InstituteInfo,
+public suspend fun HcsSession.registerPassword(
 	token: UsersIdToken,
 	password: String,
 	deviceUuid: String = "",
 	upperUserToken: UsersToken? = null
 ): Boolean = fetch(
-	institute.requestUrlV2["registerPassword"],
+	requestUrl["/v2/registerPassword"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 	body = Bodies.jsonObject {
@@ -47,8 +42,7 @@ public suspend fun Session.registerPassword(
 public enum class ChangePasswordResult { success, lastNotMatched, wrongNewPassword }
 
 @DangerousHcsApi
-public suspend fun Session.changePassword(
-	institute: InstituteInfo,
+public suspend fun HcsSession.changePassword(
 	token: UsersToken,
 	lastPassword: String,
 	newPassword: String
@@ -56,7 +50,7 @@ public suspend fun Session.changePassword(
 	if(newPassword.isBlank()) return ChangePasswordResult.wrongNewPassword
 	
 	val result = fetch(
-		institute.requestUrlV2["changePassword"],
+		requestUrl["/v2/changePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 		body = Bodies.jsonObject {

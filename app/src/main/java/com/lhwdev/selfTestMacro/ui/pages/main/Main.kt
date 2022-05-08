@@ -39,11 +39,9 @@ import com.lhwdev.selfTestMacro.ui.systemUi.AutoSystemUi
 import com.lhwdev.selfTestMacro.ui.systemUi.TopAppBar
 import com.lhwdev.selfTestMacro.ui.utils.AutoSizeText
 import com.lhwdev.selfTestMacro.ui.utils.RoundButton
-import com.lhwdev.selfTestMacro.utils.rememberTimeStateOf
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.showFullDialogAsync
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 
 
 val MainRoute: Route = Route("Main") { Main() }

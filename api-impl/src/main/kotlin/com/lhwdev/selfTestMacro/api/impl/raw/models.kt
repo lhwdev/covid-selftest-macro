@@ -1,7 +1,7 @@
 @file:Suppress("SpellCheckingInspection")
 @file:OptIn(ExperimentalSerializationApi::class)
 
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -90,12 +90,11 @@ public data class InstituteInfo(
 	/**
 	 * The base url fraction for most hcs operations.
 	 * This property is commonly used to get `atptOfcdcConctUrl`. (url for Si/Do)
-	 * Note that this url does not include `https://`. Instead, use [requestUrl] or [requestUrlV2].
+	 * Note that this url does not include `https://`. Instead, use [requestUrl].
 	 *
 	 * Normally form of `???hcs.eduro.go.kr` where `???` comes the code of Ministry of Education, i.e., 'sen', 'dge'.
 	 *
 	 * @see requestUrl
-	 * @see requestUrlV2
 	 */
 	@SerialName("atptOfcdcConctUrl") val requestUrlBody: String
 ) {
@@ -120,14 +119,6 @@ public data class InstituteInfo(
 		SchoolLevel.middle to "03",
 		SchoolLevel.high to "04"
 	)
-	
-	/**
-	 * v2 url for request such as [findUser], [validatePassword], [getUserGroup], [getUserInfo].
-	 *
-	 * Normally form of `https://???hcs.eduro.go.kr/v2` where `???` comes the code of Ministry of Education, i.e.,
-	 * 'sen', 'dge'.
-	 */
-	public val requestUrlV2: URL get() = URL("https://$requestUrlBody/v2")
 	
 	/**
 	 * The base url for request such as [registerSurvey], [getClassList].
@@ -184,9 +175,9 @@ public data class UsersIdentifier(
  * Can be acquired from [getUserGroup].
  */
 public data class UserGroup(
-	val users: List<User>
+	val users: List<UserData>
 ) {
-	val mainUser: User get() = users.first()
+	val mainUser: UserData get() = users.first()
 }
 
 
@@ -279,7 +270,7 @@ public data class UserInfo(
 	
 	/**
 	 * The name of user.
-	 * [User] also has [name][User.name] property, but that is not ensured to exist as if [User.isOther] is true,
+	 * [UserData] also has [name][UserData.name] property, but that is not ensured to exist as if [UserData.isOther] is true,
 	 * it becomes null.
 	 */
 	@SerialName("userName") val userName: String,

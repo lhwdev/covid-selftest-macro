@@ -1,6 +1,6 @@
 @file:Suppress("SpellCheckingInspection")
 
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.get
 import com.lhwdev.fetch.http.Session

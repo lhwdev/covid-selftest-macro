@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

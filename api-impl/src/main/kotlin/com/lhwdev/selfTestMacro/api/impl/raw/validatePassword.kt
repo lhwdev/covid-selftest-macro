@@ -1,9 +1,8 @@
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
-import com.lhwdev.fetch.http.fetch
 import com.lhwdev.io.jsonObjectString
 import com.lhwdev.selfTestMacro.transkey.Transkey
 import kotlinx.coroutines.Dispatchers
@@ -111,7 +110,7 @@ public suspend fun Session.validatePassword(
 	}
 	
 	val result = fetch(
-		institute.requestUrlV2["validatePassword"],
+		institute.requestUrl["/v2/validatePassword"],
 		method = HttpMethod.post,
 		headers = sDefaultFakeHeader + mapOf(
 			"Authorization" to token.token,

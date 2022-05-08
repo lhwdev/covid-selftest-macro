@@ -1,6 +1,6 @@
 @file:Suppress("SpellCheckingInspection")
 
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.Bodies
 import com.lhwdev.fetch.get
@@ -13,8 +13,8 @@ import kotlinx.serialization.builtins.ListSerializer
 
 
 public suspend fun Session.getUserGroup(institute: InstituteInfo, token: UsersToken): UserGroup = fetch(
-	institute.requestUrlV2["selectUserGroup"],
+	institute.requestUrl["/v2/selectUserGroup"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 	body = Bodies.jsonObject {}
-).toJsonLoose(ListSerializer(User.serializer())).let { UserGroup(it) }
+).toJsonLoose(ListSerializer(UserData.serializer())).let { UserGroup(it) }

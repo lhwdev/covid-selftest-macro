@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.http.Session
 import java.net.URL
@@ -8,7 +8,7 @@ public interface HcsSession : Session {
 	/**
 	 * The base url fraction for most hcs operations.
 	 * This property is commonly used to get `atptOfcdcConctUrl`. (url for Si/Do)
-	 * Note that this url does not include `https://`. Instead, use [requestUrl] or [requestUrlV2].
+	 * Note that this url does not include `https://`. Instead, use [requestUrl].
 	 *
 	 * Normally form of `???hcs.eduro.go.kr` where `???` comes the code of Ministry of Education, i.e., 'sen', 'dge'.
 	 *
@@ -17,15 +17,7 @@ public interface HcsSession : Session {
 	public val requestUrlBody: String
 	
 	/**
-	 * v2 url for request such as [findUser], [validatePassword], [getUserGroup], [getUserInfo].
-	 *
-	 * Normally form of `https://???hcs.eduro.go.kr/v2` where `???` comes the code of Ministry of Education, i.e.,
-	 * 'sen', 'dge'.
-	 */
-	public val requestUrlV2: URL get() = URL("https://$requestUrlBody/v2")
-	
-	/**
-	 * The base url for request such as [registerSurvey], [getClassList].
+	 * The base url for request such as [findUser], [registerSurvey], [getClassList].
 	 *
 	 * Normally form of `https://???hcs.eduro.go.kr` where `???` comes the code of Ministry of Education, i.e.,
 	 * 'sen', 'dge'.

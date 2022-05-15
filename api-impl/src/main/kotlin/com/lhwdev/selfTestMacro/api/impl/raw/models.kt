@@ -4,6 +4,8 @@
 package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.selfTestMacro.api.InternalHcsApi
+import com.lhwdev.selfTestMacro.api.Question
+import com.lhwdev.selfTestMacro.api.UnstableHcsApi
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -293,13 +295,14 @@ public data class UserInfo(
 			else -> null
 		}
 	
-	val questionQuickTestResult: QuickTestResult?
+	@OptIn(UnstableHcsApi::class)
+	val questionQuickTestResult: Question.QuickTest.Data?
 		get() = if(rspns03 == "1") {
-			QuickTestResult.didNotConduct
+			Question.QuickTest.Data.didNotConduct
 		} else {
 			when(rspns07) {
-				"0" -> QuickTestResult.negative
-				"1" -> QuickTestResult.positive
+				"0" -> Question.QuickTest.Data.negative
+				"1" -> Question.QuickTest.Data.positive
 				else -> null
 			}
 		}

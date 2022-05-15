@@ -13,7 +13,7 @@ public interface UserModel {
 	public enum class Type { user, manager }
 	
 	public interface Status : HcsTemporaryModel {
-		public val surveyResult: SurveyResult
+		public val surveyResult: SurveyResult?
 		
 		public class SurveyResult(
 			public val answers: AnswersMap,

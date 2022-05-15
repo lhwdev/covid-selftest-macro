@@ -15,6 +15,18 @@ sealed class JsonObjectScope {
 	
 	abstract infix fun String.set(value: Boolean)
 	
+	infix fun String.setNullable(value: Number?) {
+		if(value == null) set(null) else set(value)
+	}
+	
+	infix fun String.setNullable(value: String?) {
+		if(value == null) set(null) else set(value)
+	}
+	
+	infix fun String.setNullable(value: Boolean?) {
+		if(value == null) set(null) else set(value)
+	}
+	
 	inline infix fun String.jsonObject(block: JsonObjectScope.() -> Unit) {
 		jsonObject(this, jsonObjectScope(this).apply(block))
 	}
@@ -41,6 +53,18 @@ sealed class JsonArrayScope {
 	abstract fun add(value: String)
 	
 	abstract fun add(value: Boolean)
+	
+	infix fun addNullable(value: Number?) {
+		if(value == null) add(null) else add(value)
+	}
+	
+	infix fun addNullable(value: String?) {
+		if(value == null) add(null) else add(value)
+	}
+	
+	infix fun addNullable(value: Boolean?) {
+		if(value == null) add(null) else add(value)
+	}
 	
 	inline fun addObject(block: JsonObjectScope.() -> Unit) {
 		addObject(jsonObjectScope().apply(block))

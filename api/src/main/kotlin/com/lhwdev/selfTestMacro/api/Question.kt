@@ -11,13 +11,6 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.*
 
 
-@Serializable // useful for using QuickTestResult.serializer() explicitly
-public enum class QuickTestResult(public val displayLabel: String) {
-	didNotConduct("실시하지 않음"),
-	negative("음성"),
-	positive("양성")
-}
-
 private val yesNoText = mapOf(false to "없음", true to "있음")
 
 
@@ -32,7 +25,8 @@ public sealed class Question<T>(
 	public val defaultValue: T
 ) {
 	public companion object {
-		public val all: List<Question<*>> = listOf(Suspicious, QuickTest, WaitingResult)
+		public val all: List<Question<*>> =
+			@OptIn(UnstableHcsApi::class) listOf(Suspicious, QuickTest, WaitingResult)
 	}
 	
 	public class Answer<T>(public val question: Question<T>, public val value: T)
@@ -43,6 +37,7 @@ public sealed class Question<T>(
 	public fun displayText(value: T): String = displayTexts.getValue(value)
 	
 	
+	@UnstableHcsApi
 	@Serializable
 	@SerialName("suspicious")
 	public object Suspicious : Question<Boolean>(
@@ -54,17 +49,27 @@ public sealed class Question<T>(
 		defaultValue = false
 	)
 	
+	@UnstableHcsApi
 	@Serializable
 	@SerialName("quickTest")
-	public object QuickTest : Question<QuickTestResult>(
+	public object QuickTest : Question<QuickTest.Data>(
 		name = "quickTest",
 		title = "신속항원검사 결과",
 		content = "오늘(어제 저녁 포함) 신속항원검사(자가진단)를 실시했나요?",
-		displayTexts = enumValues<QuickTestResult>().associateWith { it.displayLabel },
-		valueSerializer = QuickTestResult.serializer(),
-		defaultValue = QuickTestResult.didNotConduct
-	)
+		displayTexts = enumValues<Data>().associateWith { it.displayLabel },
+		valueSerializer = Data.serializer(),
+		defaultValue = Data.didNotConduct
+	) {
+		@UnstableHcsApi
+		@Serializable // useful for using QuickTestResult.serializer() explicitly
+		public enum class Data(public val displayLabel: String) {
+			didNotConduct("실시하지 않음"),
+			negative("음성"),
+			positive("양성")
+		}
+	}
 	
+	@UnstableHcsApi
 	@Serializable
 	@SerialName("waitingResult")
 	public object WaitingResult : Question<Boolean>(
@@ -79,8 +84,23 @@ public sealed class Question<T>(
 
 
 @Serializable(with = AnswersMap.Serializer::class)
-
 public class AnswersMap(private val data: List<Question.Answer<*>>) {
+	@UnstableHcsApi
+	public val suspicious: Boolean
+		get() = this[Question.Suspicious]
+	
+	@UnstableHcsApi
+	public val quickTest: Question.QuickTest.Data
+		get() = this[Question.QuickTest]
+	
+	@UnstableHcsApi
+	public val waitingResult: Boolean
+		get() = this[Question.WaitingResult]
+	
+	@OptIn(UnstableHcsApi::class)
+	public val isHealthy: Boolean
+		get() = !suspicious && quickTest != Question.QuickTest.Data.positive && !waitingResult
+	
 	public object Serializer : KSerializer<AnswersMap> {
 		override val descriptor: SerialDescriptor = buildClassSerialDescriptor(
 			serialName = "com.lhwdev.selfTestMacro.api.QuestionsMap"

@@ -26,11 +26,3 @@ public interface HcsSession : Session {
 	
 	public var clientVersion: String
 }
-
-// public class BasicHcsSession(
-// 	override val requestUrlBody: String,
-// 	override val cookieManager: CookieManager = CookieManager(null, CookiePolicy.ACCEPT_ALL),
-// 	override var keepAlive: Boolean? = null
-// ) : HcsSession {
-// 	override var clientVersion: String = ""
-// }

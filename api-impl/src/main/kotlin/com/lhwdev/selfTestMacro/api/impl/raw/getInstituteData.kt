@@ -3,44 +3,60 @@
 package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.get
-import com.lhwdev.fetch.http.Session
-import com.lhwdev.fetch.queryUrlParamsToString
 import com.lhwdev.fetch.sDefaultFakeHeader
+import com.lhwdev.selfTestMacro.api.InstituteData
+import com.lhwdev.selfTestMacro.api.InstituteModel
+import com.lhwdev.selfTestMacro.api.InternalHcsApi
 import com.lhwdev.selfTestMacro.sCommonUrl
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
+@InternalHcsApi
 @Serializable
-public data class SearchResult(
-	@SerialName("schulList")
-	public val instituteList: List<InstituteInfo>,
+public class ApiSearchResult(
+	@SerialName("schulList") public val instituteList: List<InstituteInfo>,
 	
-	@SerialName("key")
-	public val searchKey: SearchKey
+	@SerialName("key") public val searchKey: String,
+	
+	@SerialName("sizeover") public val sizeover: Boolean
 )
 
 
-// 학교: lctnScCode=03&schulCrseScCode=4&orgName=...&loginType=school
-public suspend fun Session.searchSchool(
-	regionCode: String?,
-	schoolLevelCode: String,
+// TODO: pagination?
+@InternalHcsApi
+public suspend fun HcsSession.searchSchool(
+	level: InstituteModel.School.Level,
+	region: InstituteModel.School.Region?,
 	name: String
-): SearchResult {
+): List<InstituteData.School> {
 	var params = arrayOf(
-		"schulCrseScCode" to schoolLevelCode,
+		"schulCrseScCode" to "${level.code}",
 		"orgName" to name,
 		"loginType" to "school"
 	)
-	if(regionCode != null) params += "lctnScCode" to regionCode
+	if(region != null) params += "lctnScCode" to region.code
 	
-	return fetch(
+	val result = fetch(
 		url = sCommonUrl.get("searchSchool", *params),
 		headers = sDefaultFakeHeader
-	).toJsonLoose(SearchResult.serializer())
+	).toJsonLoose(ApiSearchResult.serializer())
+	
+	return result.instituteList.map { info ->
+		InstituteData.School(
+			identifier = info.vertificationCode,
+			name = info.name,
+			address = info.address,
+			level = level,
+			region = region ?: info.schoolRegion?.let { apiRegion ->
+				InstituteModel.School.Region.values().find { it.code == apiRegion }
+			} ?: error("could not find region for ${info.name}")
+		).also { it.internalVerificationToken = InstituteData.InternalSearchKey(result.searchKey) }
+	}
 }
 
+/*
 // 대학: orgName=...&loginType=univ
 public suspend fun Session.searchUniversity(
 	name: String
@@ -67,6 +83,7 @@ public suspend fun Session.searchOffice(
 		.toJsonLoose(SearchResult.serializer()).instituteList
 }
 
+
 /*
  * [
  *   {
@@ -85,6 +102,7 @@ public suspend fun Session.searchOffice(
  *   ...
  * ]
  */
+
 @Serializable
 public data class SigCode(
 	@SerialName("cdcValueNm") val name: String,
@@ -121,4 +139,5 @@ public suspend fun Session.searchAcademy(
 	return fetch(url = sCommonUrl["searchSchool?$params"], headers = sDefaultFakeHeader)
 		.toJsonLoose(SearchResult.serializer()).instituteList
 }
+*/
 

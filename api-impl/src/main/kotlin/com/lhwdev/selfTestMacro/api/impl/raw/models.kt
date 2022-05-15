@@ -3,15 +3,15 @@
 
 package com.lhwdev.selfTestMacro.api.impl.raw
 
+import com.lhwdev.selfTestMacro.api.InternalHcsApi
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.PrimitiveKind
 import java.net.URL
 
 
+@InternalHcsApi
 public enum class InstituteType(public val displayName: String, public val loginType: LoginType) {
 	school("학교", LoginType.school),
 	university("대학교", LoginType.univ),
@@ -54,10 +54,10 @@ public enum class SchoolLevel {
  *
  * This class is also used broadly around apis to get `atptOfcdcConctUrl`. (url for Si/Do)
  */
+@InternalHcsApi
 @Serializable
 public data class InstituteInfo(
-	@Serializable(with = TypeSerializer::class)
-	@SerialName("insttClsfCode") val type: InstituteType,
+	@SerialName("insttClsfCode") val type: String,
 	
 	/**
 	 * The korean name of institute.
@@ -69,12 +69,14 @@ public data class InstituteInfo(
 	 */
 	@SerialName("engOrgNm") val englishName: String? = null,
 	
+	@SerialName("orgCode") val vertificationCode: String,
+	
 	/**
 	 * The code of institute.
 	 * The form of `CNNNNNNNN`, where `C` is country code, like `S` for Seoul, `D` for Daegu, etc., and `N` is
 	 * number.
 	 */
-	@SerialName("orgCode") val code: String,
+	@SerialName("juOrgCode") val persistentCode: String,
 	
 	/**
 	 * The address of institute.
@@ -84,8 +86,9 @@ public data class InstituteInfo(
 	/**
 	 * The level of the school if the [type] is [InstituteType.school].
 	 */
-	@Serializable(with = SchoolLevelSerializer::class)
-	@SerialName("schulKndScCode") val schoolLevel: SchoolLevel? = null,
+	@SerialName("schulKndScCode") val schoolLevel: String? = null,
+	
+	@SerialName("lctnScCode") val schoolRegion: String? = null,
 	
 	/**
 	 * The base url fraction for most hcs operations.
@@ -98,28 +101,6 @@ public data class InstituteInfo(
 	 */
 	@SerialName("atptOfcdcConctUrl") val requestUrlBody: String
 ) {
-	public object TypeSerializer : PrimitiveMappingSerializer<InstituteType, String>(
-		rawSerializer = String.serializer(),
-		serialName = "com.lhwdev.selfTestMacro.api.InstituteInfo.type",
-		primitiveKind = PrimitiveKind.STRING,
-		
-		InstituteType.school to "5",
-		InstituteType.university to "7",
-		InstituteType.office to "4",
-		InstituteType.academy to "3"
-	)
-	
-	public object SchoolLevelSerializer : PrimitiveMappingSerializer<SchoolLevel, String>(
-		rawSerializer = String.serializer(),
-		serialName = "com.lhwdev.selfTestMacro.api.InstituteInfo.schoolLevel",
-		primitiveKind = PrimitiveKind.STRING,
-		
-		SchoolLevel.pre to "01",
-		SchoolLevel.elementary to "02",
-		SchoolLevel.middle to "03",
-		SchoolLevel.high to "04"
-	)
-	
 	/**
 	 * The base url for request such as [registerSurvey], [getClassList].
 	 *
@@ -140,6 +121,7 @@ public data class InstituteInfo(
  *
  * One 'main user' can register multiple 'users' into the account, so this is called 'users' identifier.
  */
+@InternalHcsApi
 @Serializable
 public data class UsersIdentifier(
 	/**
@@ -149,7 +131,7 @@ public data class UsersIdentifier(
 	
 	/**
 	 * The token of main user.
-	 * Can be used to call [validatePassword].
+	 * Can be used to call [findUser].
 	 */
 	@SerialName("token") val token: UsersIdToken,
 	
@@ -171,23 +153,13 @@ public data class UsersIdentifier(
 
 
 /**
- * A class which represents user group.
- * Can be acquired from [getUserGroup].
- */
-public data class UserGroup(
-	val users: List<UserData>
-) {
-	val mainUser: UserData get() = users.first()
-}
-
-
-/**
  * A class that is needed to interact with fundamental apis of hcs.
  * This can be obtained from [getUserGroup].
  *
  * This class contains primitive information about the user; [userCode], [instituteCode] and [token].
  * If you want to know user's information such as name or last survey status, use [UserInfo].
  */
+@InternalHcsApi
 @Serializable
 public data class User(
 	/**
@@ -250,6 +222,7 @@ public data class User(
 )
 
 
+@InternalHcsApi
 public enum class QuickTestResult(public val displayLabel: String) {
 	didNotConduct("실시하지 않음"),
 	negative("음성"),
@@ -264,6 +237,7 @@ public enum class QuickTestResult(public val displayLabel: String) {
  * This is not used to interact with other hcs apis, but contains a lot of useful information, such as [userName],
  * [isHealthy], etc.
  */
+@InternalHcsApi
 @Serializable
 public data class UserInfo(
 	// basic user information

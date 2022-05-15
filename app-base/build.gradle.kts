@@ -29,7 +29,7 @@ dependencies {
 	implementation(projects.api)
 	implementation(projects.utils)
 	
-	implementation("net.gotev:cookie-store:1.4.0")
+	implementation("net.gotev:cookie-store:1.5.0")
 	
 	implementation(libs.coroutinesAndroid)
 	

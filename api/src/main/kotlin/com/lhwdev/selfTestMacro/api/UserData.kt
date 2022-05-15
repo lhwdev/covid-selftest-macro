@@ -4,29 +4,32 @@ import kotlinx.serialization.Serializable
 import java.util.Date
 
 
-/*
- * Most models have a concept of 'persistent' and 'temporary'.
- * All models which is temporary should be only used for limited period, and cannot be serialized.
- * This ensures that one do not put temporary model into database.
- */
+public interface UserModel {
+	public val identifier: String
+	public val name: String
+	public val type: Type
+	public val institute: InstituteData
+	
+	public enum class Type { user, manager }
+	
+	public interface Status : HcsTemporaryModel {
+		public val surveyResult: SurveyResult
+		
+		public class SurveyResult(
+			public val answers: AnswersMap,
+			public val lastSurveyAt: Date
+		)
+	}
+}
 
 
 @Serializable
 public class UserData(
-	public val identifier: String,
-	public val name: String,
-	public val institute: InstituteData
-) : HcsPersistentModel {
-	public class Status(
-		public val survey: SurveyResult
-	)
-	
-	public class SurveyResult(
-		public val survey: AnswersMap,
-		public val lastSurveyAt: Date
-	)
-	
-	
+	public override val identifier: String,
+	public override val name: String,
+	public override val type: UserModel.Type,
+	public override val institute: InstituteData
+) : UserModel, HcsPersistentModel {
 	override fun equals(other: Any?): Boolean = when {
 		this === other -> true
 		other !is UserData -> false

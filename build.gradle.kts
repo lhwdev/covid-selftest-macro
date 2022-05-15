@@ -6,6 +6,8 @@ plugins {
 	kotlin("jvm") version kotlinVersion apply false
 	kotlin("android") version kotlinVersion apply false
 	kotlin("plugin.serialization") version kotlinVersion apply false
+	
+	id("org.jetbrains.compose") version libs.versions.compose apply false
 }
 
 

@@ -1,13 +1,19 @@
 import com.lhwdev.build.*
+import org.jetbrains.compose.compose
 
 plugins {
 	id("com.android.library")
 	kotlin("android")
 	kotlin("plugin.serialization")
+	id("org.jetbrains.compose")
 	
 	id("common-plugin")
 }
 
+
+kotlin {
+	setupCommon()
+}
 
 android {
 	setupCommon()
@@ -15,10 +21,6 @@ android {
 	defaultConfig {
 		minSdk = 21
 		targetSdk = 31
-	}
-	
-	composeOptions {
-		kotlinCompilerExtensionVersion = libs.versions.compose.get()
 	}
 }
 
@@ -38,11 +40,11 @@ dependencies {
 	
 	implementation(libs.immutableCollections)
 	
-	implementation(libs.compose.ui)
-	implementation(libs.compose.uiTooling)
-	implementation(libs.compose.foundation)
-	implementation(libs.compose.foundationLayout)
-	implementation(libs.compose.material)
+	implementation(compose.ui)
+	implementation(compose.uiTooling)
+	implementation(compose.foundation)
+	implementation(compose.foundationLayout)
+	implementation(compose.material)
 	
 	implementation(libs.androidx.activity.compose)
 	

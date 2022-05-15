@@ -4,6 +4,8 @@ import com.android.build.api.dsl.CommonExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.kotlin.dsl.invoke
+import org.jetbrains.compose.ComposeBuildConfig
+import org.jetbrains.compose.ComposePlugin
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -16,6 +18,11 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsTargetDsl
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 
+// temporary
+
+val ComposePlugin.Dependencies.foundationLayout
+	get() = "org.jetbrains.compose.foundation:foundation:${ComposeBuildConfig.composeVersion}"
+
 // all common
 
 fun KotlinProjectExtension.setupCommon() {
@@ -25,6 +32,9 @@ fun KotlinProjectExtension.setupCommon() {
 				enableLanguageFeature("InlineClasses")
 				optIn("kotlin.RequiresOptIn")
 				optIn("kotlin.ExperimentalUnsignedTypes")
+				optIn("androidx.compose.material.ExperimentalMaterialApi")
+				optIn("androidx.compose.ui.ExperimentalComposeUiApi")
+				optIn("androidx.compose.animation.ExperimentalAnimationApi")
 			}
 		}
 		
@@ -129,26 +139,9 @@ fun KotlinMultiplatformExtension.setupJs(
 fun CommonExtension<*, *, *, *>.setupCommon() {
 	compileSdk = 31
 	
-	buildFeatures {
-		compose = true
-	}
-	
 	compileOptions {
 		sourceCompatibility = JavaVersion.VERSION_1_8
 		targetCompatibility = JavaVersion.VERSION_1_8
-	}
-	
-	(this as org.gradle.api.plugins.ExtensionAware).extensions.configure<KotlinJvmOptions>("kotlinOptions") {
-		freeCompilerArgs = freeCompilerArgs + listOf(
-			"-Xjvm-default=compatibility",
-			"-Xopt-in=" + listOf(
-				"kotlin.RequiresOptIn",
-				"androidx.compose.material.ExperimentalMaterialApi",
-				"androidx.compose.ui.ExperimentalComposeUiApi",
-				"androidx.compose.animation.ExperimentalAnimationApi"
-			).joinToString(separator = ",")
-		)
-		jvmTarget = "1.8"
 	}
 }
 

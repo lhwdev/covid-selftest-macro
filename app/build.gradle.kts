@@ -1,9 +1,11 @@
 import com.lhwdev.build.*
+import org.jetbrains.compose.compose
 
 plugins {
 	id("com.android.application")
 	kotlin("android")
 	kotlin("plugin.serialization")
+	id("org.jetbrains.compose")
 	
 	id("app.cash.licensee") version "1.2.0"
 	
@@ -32,26 +34,9 @@ tasks.register<Copy>("updateLicenses") {
 	rename { "open_source_license.json" }
 }
 
-// tasks.named("licenseeStableRelease") {
-// 	val dummyForLicensee = configurations.create("dummyForLicensee") {
-// 		isCanBeConsumed = false
-// 	}
-//	
-// 	// var configuration: Configuration by Delegates.notNull()
-// 	@Suppress("UNCHECKED_CAST")
-// 	val configuration = this::class.memberProperties.find { it.name == "configuration" }!!
-// 		as KMutableProperty1<Task, Configuration>
-// 	configuration.isAccessible = true
-//	
-// 	// fun setClasspath(configuration: Configuration, usage: String)
-// 	val setClasspath = this::class.memberFunctions.find { it.name == "setClasspath" }!!
-//	
-// 	val last = configuration.get(this)
-// 	val files = dependencies.factory(last.resolve())
-// 	last.dependencies
-//	
-// 	setClasspath.call(this, dummyForLicensee, "android-classes")
-// }
+kotlin {
+	setupCommon()
+}
 
 android {
 	setupCommon()
@@ -102,11 +87,6 @@ android {
 			manifestPlaceholders["appLabel"] = "@string/app_name_dev"
 		}
 	}
-	
-	composeOptions {
-		// kotlinCompilerVersion = "1.5.31"
-		kotlinCompilerExtensionVersion = libs.versions.compose.get()
-	}
 }
 
 
@@ -126,11 +106,11 @@ dependencies {
 	
 	implementation(libs.immutableCollections)
 	
-	implementation(libs.compose.ui)
-	implementation(libs.compose.uiTooling)
-	implementation(libs.compose.foundation)
-	implementation(libs.compose.foundationLayout)
-	implementation(libs.compose.material)
+	implementation(compose.ui)
+	implementation(compose.uiTooling)
+	implementation(compose.foundation)
+	implementation(compose.foundationLayout)
+	implementation(compose.material)
 	
 	implementation(libs.accompanist.systemUiController)
 	implementation(libs.accompanist.pager)

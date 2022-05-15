@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalContracts::class)
-
 package com.lhwdev.selfTestMacro.database
 
 import kotlin.contracts.ExperimentalContracts
@@ -32,7 +30,7 @@ internal val sDbTransaction = ThreadLocal<DbTransaction?>()
 
 inline val currentDbTransaction: DbTransaction? get() = sDbTransaction.get()
 
-
+@OptIn(ExperimentalContracts::class)
 inline fun <R> transactDb(block: () -> R): R {
 	contract { callsInPlace(block, InvocationKind.EXACTLY_ONCE) }
 	

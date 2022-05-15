@@ -26,7 +26,6 @@ android {
 
 
 dependencies {
-	implementation(projects.appModels)
 	implementation(projects.apiBase)
 	implementation(projects.api)
 	implementation(projects.utils)

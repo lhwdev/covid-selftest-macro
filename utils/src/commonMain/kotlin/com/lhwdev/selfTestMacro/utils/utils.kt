@@ -1,6 +1,6 @@
 @file:Suppress("SpellCheckingInspection")
 
-package com.lhwdev.selfTestMacro
+package com.lhwdev.selfTestMacro.utils
 
 
 @PublishedApi

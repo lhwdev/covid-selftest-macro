@@ -8,7 +8,6 @@ import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.core.content.edit
 import com.lhwdev.selfTestMacro.utils.SynchronizedMutableStateImpl
 import com.lhwdev.selfTestMacro.utils.sEmpty
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
@@ -108,7 +107,6 @@ fun PreferenceHolder.preferenceStringSet(
 	write = { pref, value -> pref.edit { putStringSet(key, value) } }
 )
 
-@OptIn(ExperimentalSerializationApi::class)
 fun <T> PreferenceHolder.preferenceSerialized(
 	key: String,
 	serializer: KSerializer<T>,

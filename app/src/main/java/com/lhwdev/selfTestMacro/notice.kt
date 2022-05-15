@@ -8,7 +8,6 @@ import androidx.core.text.HtmlCompat
 import com.lhwdev.selfTestMacro.api.JsonLoose
 import com.lhwdev.selfTestMacro.database.preferenceState
 import com.lhwdev.selfTestMacro.debug.GlobalDebugContext
-import com.lhwdev.selfTestMacro.models.VersionSpec
 import com.lhwdev.selfTestMacro.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

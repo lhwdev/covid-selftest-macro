@@ -92,7 +92,6 @@ android {
 
 dependencies {
 	implementation(projects.appBase)
-	implementation(projects.appModels)
 	implementation(projects.api)
 	implementation(projects.apiBase)
 	implementation(projects.utils)

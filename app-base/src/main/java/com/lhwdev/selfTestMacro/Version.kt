@@ -1,6 +1,5 @@
-package com.lhwdev.selfTestMacro.models
+package com.lhwdev.selfTestMacro
 
-import com.lhwdev.selfTestMacro.splitTwo
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind

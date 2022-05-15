@@ -6,7 +6,6 @@ import androidx.annotation.DrawableRes
 import com.lhwdev.selfTestMacro.database.PreferenceItemState
 import com.lhwdev.selfTestMacro.database.preferenceHolderOf
 import com.lhwdev.selfTestMacro.database.preferenceInt
-import com.lhwdev.selfTestMacro.models.Version
 import java.io.File
 
 

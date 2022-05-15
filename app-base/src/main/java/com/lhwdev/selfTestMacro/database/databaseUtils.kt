@@ -2,53 +2,23 @@ package com.lhwdev.selfTestMacro.database
 
 import android.content.SharedPreferences
 import androidx.compose.runtime.snapshots.SnapshotMutableState
-import androidx.compose.runtime.snapshots.StateRecord
 import androidx.compose.runtime.snapshots.withCurrent
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.core.content.edit
+import com.lhwdev.selfTestMacro.utils.SynchronizedMutableState
 import com.lhwdev.selfTestMacro.utils.SynchronizedMutableStateImpl
-import com.lhwdev.selfTestMacro.utils.sEmpty
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.json.Json
 
 
-interface PreferenceItemState<T> : SnapshotMutableState<T>, PreferenceHolder.Property {
-	fun forceWrite()
-}
+interface PreferenceItemState<T> : SynchronizedMutableState<T>, SnapshotMutableState<T>, PreferenceHolder.Property
 
 
 abstract class PreferenceItemStateImpl<T>(protected val holder: PreferenceHolder, key: String) :
 	SynchronizedMutableStateImpl<T>(structuralEqualityPolicy()), PreferenceItemState<T> {
-	@Suppress("LeakingThis")
-	override var next: StateStateRecord<T> = StateStateRecordImpl(this)
-	
 	override fun onPropertyUpdated() {
 		next.withCurrent { it.emptyCache() }
-	}
-	
-	override fun forceWrite() {
-		next.withCurrent { it.apply() }
-	}
-	
-	override fun prependStateRecord(value: StateRecord) {
-		@Suppress("UNCHECKED_CAST")
-		next = value as StateStateRecord<T>
-	}
-	
-	abstract fun read(): T
-	abstract fun write(value: T)
-	
-	private class StateStateRecordImpl<T>(val state: PreferenceItemStateImpl<T>, cache: Any? = sEmpty) :
-		StateStateRecord<T>(cache) {
-		override fun create(): StateRecord = StateStateRecordImpl(state, cache)
-		
-		override fun read(): T = state.read()
-		
-		override fun write(value: T) {
-			state.write(value)
-			cache = value // previously cleared by onPropertyUpdated -> it.emptyCache
-		}
 	}
 }
 

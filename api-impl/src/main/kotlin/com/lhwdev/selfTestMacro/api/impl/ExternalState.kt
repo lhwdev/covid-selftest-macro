@@ -1,36 +1,11 @@
 package com.lhwdev.selfTestMacro.api.impl
 
+import com.lhwdev.selfTestMacro.utils.SynchronizedStateImpl
 
-abstract class ExternalState<T> :
-	SynchronizedMutableStateImpl<T>(structuralEqualityPolicy()), PreferenceItemState<T> {
-	@Suppress("LeakingThis")
-	override var next: StateStateRecord<T> = StateStateRecordImpl(this)
+
+public class ExternalState<out T>(private val readBlock: () -> T) : SynchronizedStateImpl<T>() {
+	override fun read(): T = readBlock()
 	
-	override fun onPropertyUpdated() {
-		next.withCurrent { it.emptyCache() }
-	}
-	
-	override fun forceWrite() {
-		next.withCurrent { it.apply() }
-	}
-	
-	override fun prependStateRecord(value: StateRecord) {
-		@Suppress("UNCHECKED_CAST")
-		next = value as StateStateRecord<T>
-	}
-	
-	abstract fun read(): T
-	abstract fun write(value: T)
-	
-	private class StateStateRecordImpl<T>(val state: PreferenceItemStateImpl<T>, cache: Any? = sEmpty) :
-		StateStateRecord<T>(cache) {
-		override fun create(): StateRecord = StateStateRecordImpl(state, cache)
-		
-		override fun read(): T = state.read()
-		
-		override fun write(value: T) {
-			state.write(value)
-			cache = value // previously cleared by onPropertyUpdated -> it.emptyCache
-		}
-	}
+	public val cache: T?
+		get() = next.currentCacheOrNull
 }

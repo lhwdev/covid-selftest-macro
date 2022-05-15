@@ -1,6 +1,6 @@
 package com.lhwdev.selfTestMacro.utils
 
-import androidx.compose.runtime.SnapshotMutationPolicy
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.*
 
 
@@ -10,47 +10,36 @@ val sEmpty = object : Any() {
 
 private val sApplyObserverHandle = Snapshot.registerApplyObserver { modified, _ ->
 	modified.forEach {
-		if(it is SynchronizedMutableStateImpl<*>) {
+		if(it is SynchronizedMutableStateBase<*>) {
 			it.apply()
 		}
 	}
 }
 
-/**
- * A single value holder whose reads and writes are observed by Compose, and the value is synchronized to
- * external sources.
- * Write operation is done only if the value is written on global snapshot.
- *
- * Additionally, writes to it are transacted as part of the [Snapshot] system.
- *
- * @param policy a policy to control how changes are handled in a mutable snapshot.
- *
- * @see SnapshotMutationPolicy
- */
-abstract class SynchronizedMutableStateImpl<T>(override val policy: SnapshotMutationPolicy<T>) :
-	StateObject, SnapshotMutableState<T> {
-	init {
-		sApplyObserverHandle
-	}
-	
-	@Suppress("UNCHECKED_CAST")
-	final override var value: T
+
+@Stable
+interface SynchronizedState<out T> : State<T> {
+	fun forceRead(): T
+}
+
+@Stable
+interface SynchronizedMutableState<T> : SynchronizedState<T>, MutableState<T> {
+	fun forceWrite()
+}
+
+abstract class SynchronizedStateBase<out T>(val policy: SnapshotMutationPolicy<@UnsafeVariance T>) :
+	SynchronizedState<T>, StateObject {
+	override val value: T
 		get() = next.readable(this).value
-		set(value) = next.withCurrent {
-			if(!policy.equivalent(it.value, value)) {
-				next.writable(this) { this.value = value }
-			}
-		}
-	
-	fun apply() {
-		next.withCurrent { it.apply() }
-	}
-	
 	
 	protected abstract val next: StateStateRecord<T>
 	
 	final override val firstStateRecord: StateRecord
 		get() = next
+	
+	override fun forceRead(): T {
+		return next.readable(this).forceRead()
+	}
 	
 	@Suppress("UNCHECKED_CAST")
 	final override fun mergeRecords(
@@ -84,7 +73,7 @@ abstract class SynchronizedMutableStateImpl<T>(override val policy: SnapshotMuta
 		"SynchronizedState(value=${it.value})@${hashCode()}"
 	}
 	
-	protected abstract class StateStateRecord<T>(protected var cache: Any? = sEmpty) : StateRecord() {
+	abstract class StateStateRecord<out T>(protected var cache: Any? = sEmpty) : StateRecord() {
 		override fun assign(value: StateRecord) {
 			@Suppress("UNCHECKED_CAST")
 			value as StateStateRecord<T>
@@ -93,27 +82,30 @@ abstract class SynchronizedMutableStateImpl<T>(override val policy: SnapshotMuta
 		}
 		
 		abstract fun read(): T
-		abstract fun write(value: T)
+		
+		var currentCache: Any?
+			get() = synchronized(this) { cache }
+			set(value) = synchronized(this) { cache = value }
+		
+		@Suppress("UNCHECKED_CAST")
+		val currentCacheOrNull: T?
+			get() = currentCache.let { if(it == sEmpty) null else it as T }
 		
 		fun emptyCache() {
-			cache = sEmpty
-		}
-		
-		fun apply() {
-			if(cache == sEmpty) return
-			
-			// Is there better way to do this?
-			if(Snapshot.current == Snapshot.global { Snapshot.current }) {
-				@Suppress("UNCHECKED_CAST")
-				write(cache as T)
+			synchronized(this) {
+				cache = sEmpty
 			}
 		}
 		
-		var value: T
-			get() = if(cache != sEmpty) {
-				@Suppress("UNCHECKED_CAST")
-				cache as T
-			} else synchronized(this) {
+		fun forceRead(): T {
+			emptyCache()
+			return value
+		}
+		
+		open fun apply() {}
+		
+		var value: @UnsafeVariance T // `@UnsafeVariance`: should be writable even if variance is out
+			get() = synchronized(this) {
 				if(cache != sEmpty) { // double check
 					@Suppress("UNCHECKED_CAST")
 					cache as T
@@ -141,9 +133,7 @@ abstract class SynchronizedMutableStateImpl<T>(override val policy: SnapshotMuta
 	 * foo == 123 // get
 	 * ```
 	 */
-	final override operator fun component1(): T = value
-	
-	final override operator fun component2(): (T) -> Unit = { value = it }
+	operator fun component1(): T = value
 	
 	/**
 	 * A function used by the debugger to display the value of the current value of the mutable
@@ -153,4 +143,115 @@ abstract class SynchronizedMutableStateImpl<T>(override val policy: SnapshotMuta
 	val debuggerDisplayValue: T
 		@JvmName("getDebuggerDisplayValue")
 		get() = next.withCurrent { it.value }
+}
+
+
+/**
+ * A single value holder whose reads and writes are observed by Compose, and the value is synchronized to
+ * external sources.
+ * Write operation is done only if the value is written on global snapshot.
+ *
+ * Additionally, writes to it are transacted as part of the [Snapshot] system.
+ *
+ * @param policy a policy to control how changes are handled in a mutable snapshot.
+ *
+ * @see SnapshotMutationPolicy
+ */
+abstract class SynchronizedMutableStateBase<T>(policy: SnapshotMutationPolicy<T>) :
+	SynchronizedMutableState<T>, SynchronizedStateBase<T>(policy), SnapshotMutableState<T> {
+	init {
+		sApplyObserverHandle // initialize observer handle, so that this is notified when applied
+	}
+	
+	override var value: T
+		get() = super.value
+		set(value) = next.withCurrent {
+			if(!policy.equivalent(it.value, value)) {
+				next.writable(this) { this.value = value }
+			}
+		}
+	
+	abstract override val next: MutableStateStateRecord<T>
+	
+	internal fun apply() {
+		forceWrite()
+	}
+	
+	override fun forceWrite() {
+		next.withCurrent { it.apply() }
+	}
+	
+	
+	abstract class MutableStateStateRecord<T>(cache: Any?) : StateStateRecord<T>(cache) {
+		abstract fun write(value: T)
+		
+		override fun apply() {
+			super.apply()
+			val currentCache = synchronized(this) { cache }
+			
+			if(currentCache == sEmpty) return
+			
+			// Is there better way to do this?
+			if(Snapshot.current == Snapshot.global { Snapshot.current }) {
+				@Suppress("UNCHECKED_CAST")
+				write(cache as T)
+			}
+			
+		}
+	}
+	
+	final override operator fun component2(): (T) -> Unit = { value = it }
+}
+
+
+abstract class SynchronizedStateImpl<out T>(policy: SnapshotMutationPolicy<T> = structuralEqualityPolicy()) :
+	SynchronizedStateBase<T>(policy) {
+	@Suppress("LeakingThis")
+	override var next: StateStateRecord<@UnsafeVariance T> = StateStateRecordImpl(this)
+	
+	override fun prependStateRecord(value: StateRecord) {
+		@Suppress("UNCHECKED_CAST")
+		next = value as StateStateRecord<T>
+	}
+	
+	protected abstract fun read(): T
+	
+	internal open class StateStateRecordImpl<out T>(val state: SynchronizedStateImpl<T>, cache: Any? = sEmpty) :
+		StateStateRecord<T>(cache) {
+		override fun create(): StateRecord = StateStateRecordImpl(state, synchronized(this) { cache })
+		
+		override fun read(): T = state.read()
+	}
+}
+
+abstract class SynchronizedMutableStateImpl<T>(policy: SnapshotMutationPolicy<T> = structuralEqualityPolicy()) :
+	SynchronizedMutableStateBase<T>(policy) {
+	@Suppress("LeakingThis")
+	override var next: MutableStateStateRecord<T> = MutableStateStateRecordImpl(this)
+	
+	override fun forceWrite() {
+		next.withCurrent { it.apply() }
+	}
+	
+	override fun prependStateRecord(value: StateRecord) {
+		@Suppress("UNCHECKED_CAST")
+		next = value as MutableStateStateRecord<T>
+	}
+	
+	protected abstract fun read(): T
+	protected abstract fun write(value: T)
+	
+	private class MutableStateStateRecordImpl<T>(val state: SynchronizedMutableStateImpl<T>, cache: Any? = sEmpty) :
+		MutableStateStateRecord<T>(cache) {
+		override fun create(): StateRecord = MutableStateStateRecordImpl(state, synchronized(this) { cache })
+		
+		override fun read(): T = state.read()
+		
+		override fun write(value: T) {
+			state.write(value)
+			synchronized(this) {
+				cache = value // maybe previously cleared
+			}
+		}
+	}
 }

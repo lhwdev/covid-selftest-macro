@@ -78,23 +78,19 @@ abstract class SynchronizedStateBase<out T>(val policy: SnapshotMutationPolicy<@
 			@Suppress("UNCHECKED_CAST")
 			value as StateStateRecord<T>
 			
-			this.value = value.value
+			synchronized(this) {
+				cache = value.cache
+			}
 		}
 		
 		abstract fun read(): T
 		
-		var currentCache: Any?
-			get() = synchronized(this) { cache }
-			set(value) = synchronized(this) { cache = value }
-		
 		@Suppress("UNCHECKED_CAST")
 		val currentCacheOrNull: T?
-			get() = currentCache.let { if(it == sEmpty) null else it as T }
+			get() = cache.let { if(it == sEmpty) null else it as T }
 		
 		fun emptyCache() {
-			synchronized(this) {
-				cache = sEmpty
-			}
+			synchronized(this) { cache = sEmpty }
 		}
 		
 		fun forceRead(): T {
@@ -105,21 +101,26 @@ abstract class SynchronizedStateBase<out T>(val policy: SnapshotMutationPolicy<@
 		open fun apply() {}
 		
 		var value: @UnsafeVariance T // `@UnsafeVariance`: should be writable even if variance is out
-			get() = synchronized(this) {
-				if(cache != sEmpty) {
+			get() {
+				val current = cache
+				return if(current != sEmpty) {
 					@Suppress("UNCHECKED_CAST")
-					cache as T
-				} else {
+					current as T
+				} else synchronized(this) {
 					val new = read()
 					cache = new
 					new
 				}
 			}
-			set(value) = synchronized(this) {
-				if(cache != value) {
-					cache = value
-					apply()
+			set(value) {
+				var applied = false
+				synchronized(this) {
+					if(cache != value) {
+						cache = value
+						applied = true
+					}
 				}
+				apply()
 			}
 	}
 	
@@ -187,14 +188,14 @@ abstract class SynchronizedMutableStateBase<T>(policy: SnapshotMutationPolicy<T>
 		
 		override fun apply() {
 			super.apply()
-			val currentCache = currentCache
+			val current = cache
 			
-			if(currentCache == sEmpty) return
+			if(current == sEmpty) return
 			
 			// Is there better way to do this?
 			if(Snapshot.current == Snapshot.global { Snapshot.current }) {
 				@Suppress("UNCHECKED_CAST")
-				write(currentCache as T)
+				write(current as T)
 			}
 			
 		}
@@ -218,7 +219,7 @@ abstract class SynchronizedStateImpl<out T>(policy: SnapshotMutationPolicy<T> = 
 	
 	internal open class StateStateRecordImpl<out T>(val state: SynchronizedStateImpl<T>, cache: Any? = sEmpty) :
 		StateStateRecord<T>(cache) {
-		override fun create(): StateRecord = StateStateRecordImpl(state, currentCache)
+		override fun create(): StateRecord = StateStateRecordImpl(state, cache)
 		
 		override fun read(): T = state.read()
 	}
@@ -243,13 +244,15 @@ abstract class SynchronizedMutableStateImpl<T>(policy: SnapshotMutationPolicy<T>
 	
 	private class MutableStateStateRecordImpl<T>(val state: SynchronizedMutableStateImpl<T>, cache: Any? = sEmpty) :
 		MutableStateStateRecord<T>(cache) {
-		override fun create(): StateRecord = MutableStateStateRecordImpl(state, currentCache)
+		override fun create(): StateRecord = MutableStateStateRecordImpl(state, cache)
 		
 		override fun read(): T = state.read()
 		
 		override fun write(value: T) {
 			state.write(value)
-			currentCache = value // maybe previously cleared
+			synchronized(this) {
+				cache = value // maybe previously cleared
+			}
 		}
 	}
 }

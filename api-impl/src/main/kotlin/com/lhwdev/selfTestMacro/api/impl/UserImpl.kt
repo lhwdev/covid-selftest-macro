@@ -1,10 +1,10 @@
 package com.lhwdev.selfTestMacro.api.impl
 
 import com.lhwdev.selfTestMacro.api.*
-import com.lhwdev.selfTestMacro.api.impl.raw.HcsSession
-import com.lhwdev.selfTestMacro.api.impl.raw.UserInfo
-import com.lhwdev.selfTestMacro.api.impl.raw.getUserInfo
+import com.lhwdev.selfTestMacro.api.User
+import com.lhwdev.selfTestMacro.api.impl.raw.*
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 
@@ -42,9 +42,23 @@ public class UserImpl(
 		}
 	}
 	
-	override suspend fun registerSurvey(answers: AnswersMap): RegisterSurveyResult {
-		mStatus.overrideNow(
+	@OptIn(DangerousHcsApi::class)
+	override suspend fun registerSurvey(answers: AnswersMap): UserModel.Status.SurveyResult {
+		val apiResult = session.registerSurvey(
+			token = userToken,
+			name = name,
+			answers = answers,
+			// deviceUuid = ""
+		)
+		val registerAt = try {
+			lastSurveyFormat.parse(apiResult.registerAt)
+		} catch(th: Throwable) {
+			Date()
+		}
 		
+		return UserModel.Status.SurveyResult(
+			answers = answers,
+			lastSurveyAt = registerAt
 		)
 	}
 }

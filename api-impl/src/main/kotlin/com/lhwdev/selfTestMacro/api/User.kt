@@ -1,9 +1,0 @@
-package com.lhwdev.selfTestMacro.api
-
-import com.lhwdev.selfTestMacro.api.impl.ExternalState
-
-public interface User {
-	public val status: ExternalState<UserModel.Status>
-	
-	public suspend fun registerSurvey(answers: AnswersMap): RegisterSurveyResult
-}

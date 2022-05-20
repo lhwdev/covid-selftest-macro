@@ -30,7 +30,7 @@ public data class SurveyResult(
 public suspend fun HcsSession.registerSurvey(
 	token: String,
 	name: String,
-	answer: AnswersMap,
+	answers: AnswersMap,
 	deviceUuid: String = ""
 ): SurveyResult = fetch(
 	requestUrl["/registerServey"],
@@ -39,19 +39,19 @@ public suspend fun HcsSession.registerSurvey(
 		"Authorization" to token
 	),
 	body = Bodies.jsonObject {
-		"rspns00" set answer.isHealthy
+		"rspns00" set answers.isHealthy
 		
-		"rspns01" set if(answer.suspicious) "2" else "1"
+		"rspns01" set if(answers.suspicious) "2" else "1"
 		
-		"rspns02" setNullable "1".takeIf { answer.quickTest == Question.QuickTest.Data.didNotConduct }
+		"rspns02" setNullable "1".takeIf { answers.quickTest == Question.QuickTest.Data.didNotConduct }
 		
-		"rspns07" setNullable when(answer.quickTest) {
+		"rspns07" setNullable when(answers.quickTest) {
 			Question.QuickTest.Data.didNotConduct -> null
 			Question.QuickTest.Data.negative -> "0"
 			Question.QuickTest.Data.positive -> "1"
 		}
 		
-		"rspns02" set if(answer.waitingResult) "0" else "1"
+		"rspns02" set if(answers.waitingResult) "0" else "1"
 		
 		"upperToken" set token
 		"upperUserNameEncpt" set name

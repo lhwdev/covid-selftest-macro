@@ -4,10 +4,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.*
 
 
-val sEmpty = object : Any() {
-	override fun toString(): String = "sEmpty"
-}
-
 private val sApplyObserverHandle = Snapshot.registerApplyObserver { modified, _ ->
 	modified.forEach {
 		if(it is SynchronizedMutableStateBase<*>) {

@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro.api.impl
+package com.lhwdev.selfTestMacro.api
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,16 +49,11 @@ public abstract class MappedExternalState<F : Any, T : Any>(private val original
 		return value
 	}
 	
-	public fun overrideNow(value: T?) {
-		from = original.cache
-		mCache = value
-	}
-	
 	override suspend fun get(): T = cache ?: fetch()
 }
 
 public inline fun <T : Any, R : Any> ExternalState<T>.map(
 	crossinline block: (T, update: suspend () -> R) -> R
-): MappedExternalState<T, R> = object : MappedExternalState<T, R>(original = this) {
+): ExternalState<T, R> = object : MappedExternalState<T, R>(original = this) {
 	override fun map(value: T): R = block(value) { fetch() }
 }

@@ -117,42 +117,6 @@ public data class InstituteInfo(
  * usersId token --(validatePassword)--> users token(temporary) --(selectUserGroup)--> user token
  */
 
-/**
- * The identifier of the user.
- * This class can be obtained from [findUser].
- *
- * One 'main user' can register multiple 'users' into the account, so this is called 'users' identifier.
- */
-@InternalHcsApi
-@Serializable
-public data class UsersIdentifier(
-	/**
-	 * The name of main user.
-	 */
-	@SerialName("userName") val mainUserName: String,
-	
-	/**
-	 * The token of main user.
-	 * Can be used to call [findUser].
-	 */
-	@SerialName("token") val token: UsersIdToken,
-	
-	@Serializable(with = YesNoSerializer::class)
-	@SerialName("stdntYn") val isStudent: Boolean,
-	
-	@Serializable(with = YesNoSerializer::class)
-	@SerialName("admnYn") val isAdmin: Boolean,
-	
-	/**
-	 * Whether the user agreed with the [privacy policy](https://hcs.eduro.go.kr/agreement).
-	 *
-	 * If this is false, you should redirect user to link above and agree with it.
-	 * You can also use [updateAgreement] but be sure to inform the user.
-	 */
-	@Serializable(with = YesNoSerializer::class)
-	@SerialName("pInfAgrmYn") val agreement: Boolean
-)
-
 
 /**
  * A class that is needed to interact with fundamental apis of hcs.

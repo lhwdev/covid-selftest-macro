@@ -82,3 +82,16 @@ public sealed class InstituteData : InstituteModel, HcsPersistentModel {
 	
 	override fun hashCode(): Int = identifier.hashCode()
 }
+
+
+public interface Institute : InstituteModel {
+	public suspend fun login(
+		name: String,
+		birthday: String,
+		password: String
+	): LoginResult
+	
+	public sealed class LoginResult {
+		public class Success(public val userGroup: UserGroup) : LoginResult()
+	}
+}

@@ -12,9 +12,11 @@ import java.util.Locale
 private val lastSurveyFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.US)
 
 
+@Suppress("MemberVisibilityCanBePrivate")
 @OptIn(UnstableHcsApi::class, InternalHcsApi::class)
-public class UserImpl(
+public class UserImpl @InternalHcsApi constructor(
 	public val data: UserData,
+	override val institute: InstituteImpl,
 	private val session: HcsSession,
 	private val userToken: String
 ) : User, UserModel by data {

@@ -54,6 +54,6 @@ public abstract class MappedExternalState<F : Any, T : Any>(private val original
 
 public inline fun <T : Any, R : Any> ExternalState<T>.map(
 	crossinline block: (T, update: suspend () -> R) -> R
-): ExternalState<T, R> = object : MappedExternalState<T, R>(original = this) {
+): ExternalState<R> = object : MappedExternalState<T, R>(original = this) {
 	override fun map(value: T): R = block(value) { fetch() }
 }

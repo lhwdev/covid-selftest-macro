@@ -131,6 +131,15 @@
       ```json5
       {"statusCode":1101}
       ```
+    
+    * `<SearchKey>`가 만료되었을 경우
+      ```json5
+      {
+        "isError": true,
+        "message": "학교 찾기 후 입력시간이 초과되었습니다"
+      }
+      ```
+    
     * 비밀번호가 틀릴 경우
       ```json5
       {
@@ -143,6 +152,7 @@
         }
       }
       ```
+      
   - 헤더
     - `Set-Cookie: _JSESSIONID=...`
 
@@ -150,6 +160,22 @@
     - 1000: 비밀번호를 5회 틀림
     - 1001: 비밀번호가 맞지 않음
     - 1003: 비밀번호가 초기화됨
+
+### 로그인 정보가 남아있는 상태에서 다시 로그인
+
+* 주소: HTTP POST, `시도 교육청 url/v2/validatePassword`
+* 헤더:
+  - `Content-Type: application/json;charset=UTF-8`
+  - Authorization: **UsersToken**
+* 입력: json (findUser이랑 일부분 공유)
+  ```json5
+  {
+    "deviceUuid": "", // 기기 uuid를 넣어도 됨
+    "makeSession": true,
+    "password": "<transkey>"
+  }
+  ```
+* 결과: findUser이랑 유사함
 
 ### 비밀번호 존재 유무 확인
 

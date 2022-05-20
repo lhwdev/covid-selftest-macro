@@ -166,7 +166,7 @@
 * 주소: HTTP POST, `시도 교육청 url/v2/validatePassword`
 * 헤더:
   - `Content-Type: application/json;charset=UTF-8`
-  - Authorization: **UsersToken**
+  - Authorization: **UsersToken** (기존에 발급받은 UsersToken)
 * 입력: json (findUser이랑 일부분 공유)
   ```json5
   {
@@ -175,7 +175,8 @@
     "password": "<transkey>"
   }
   ```
-* 결과: findUser이랑 유사함
+* 결과: findUser이랑 유사함, 새로운 UsersToken을 발급받음
+  그런데 이걸 굳이 쓸 필요가..? 토큰 유효기간이 짧은가..?
 
 ### 비밀번호 존재 유무 확인
 

@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import java.util.Date
 
 
-public interface UserModel {
+public interface UserModel : HcsPersistentModel {
 	public val identifier: String
 	public val name: String
 	public val type: Type
@@ -29,7 +29,7 @@ public class UserData(
 	public override val name: String,
 	public override val type: UserModel.Type,
 	public override val institute: InstituteData
-) : UserModel, HcsPersistentModel {
+) : UserModel {
 	override fun equals(other: Any?): Boolean = when {
 		this === other -> true
 		other !is UserData -> false

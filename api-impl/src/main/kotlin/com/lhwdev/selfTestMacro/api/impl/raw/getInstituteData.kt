@@ -7,6 +7,7 @@ import com.lhwdev.fetch.sDefaultFakeHeader
 import com.lhwdev.selfTestMacro.api.InstituteData
 import com.lhwdev.selfTestMacro.api.InstituteModel
 import com.lhwdev.selfTestMacro.api.InternalHcsApi
+import com.lhwdev.selfTestMacro.api.LifecycleValue
 import com.lhwdev.selfTestMacro.sCommonUrl
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
@@ -52,7 +53,12 @@ public suspend fun HcsSession.searchSchool(
 			region = region ?: info.schoolRegion?.let { apiRegion ->
 				InstituteModel.School.Region.values().find { it.code == apiRegion }
 			} ?: error("could not find region for ${info.name}")
-		).also { it.internalVerificationToken = InstituteData.InternalSearchKey(result.searchKey) }
+		).also {
+			it.internalVerificationToken = with(LifecycleValue) {
+				// searchKey is known to be expired in 2 minute
+				InstituteData.InternalSearchKey(result.searchKey).expiresIn(millis = 2 * 60 * 1000)
+			}
+		}
 	}
 }
 

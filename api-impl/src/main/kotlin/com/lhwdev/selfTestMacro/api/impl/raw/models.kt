@@ -224,13 +224,6 @@ public data class User(
 )
 
 
-@InternalHcsApi
-public enum class QuickTestResult(public val displayLabel: String) {
-	didNotConduct("실시하지 않음"),
-	negative("음성"),
-	positive("양성")
-}
-
 
 /**
  * The class that contains detailed information about user.

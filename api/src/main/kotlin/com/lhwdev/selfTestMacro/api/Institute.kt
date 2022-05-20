@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
 
-public interface InstituteModel {
+public interface InstituteModel : HcsPersistentModel {
 	public enum class Type(public val displayName: String) {
 		school("학교"),
 		university("대학교"),
@@ -55,7 +55,7 @@ public interface InstituteModel {
 
 
 @Serializable
-public sealed class InstituteData : InstituteModel, HcsPersistentModel {
+public sealed class InstituteData : InstituteModel {
 	@InternalHcsApi
 	@Serializable
 	public class InternalSearchKey(public val token: String)
@@ -74,7 +74,7 @@ public sealed class InstituteData : InstituteModel, HcsPersistentModel {
 		
 		@InternalHcsApi
 		@Transient
-		public var internalVerificationToken: InternalSearchKey? = null
+		public var internalVerificationToken: LifecycleValue<InternalSearchKey> = LifecycleValue.empty()
 	}
 	
 	

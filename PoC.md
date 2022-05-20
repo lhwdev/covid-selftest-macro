@@ -127,17 +127,22 @@
     }
     ```
   - 실패 시: json
-    ```json5
-    {
-      "isError": true,
-      "statusCode": 252, // 숫자
-      "errorCode": 1001, // 오류 코드: 하단 표 참고
-      "data": {
-        "failCnt": 1, // 비밀번호 틀린 횟수
-        "canInitPassword": false // 비밀번호 초기화 가능 여부
+    * 사용자 정보(이름, 생년월일)이 틀릴 결루
+      ```json5
+      {"statusCode":1101}
+      ```
+    * 비밀번호가 틀릴 경우
+      ```json5
+      {
+        "isError": true,
+        "statusCode": 252, // 숫자
+        "errorCode": 1001, // 오류 코드: 하단 표 참고
+        "data": {
+          "failCnt": 1, // 비밀번호 틀린 횟수
+          "canInitPassword": false // 비밀번호 초기화 가능 여부
+        }
       }
-    }
-    ```
+      ```
   - 헤더
     - `Set-Cookie: _JSESSIONID=...`
 

@@ -1,4 +1,11 @@
 package com.lhwdev.selfTestMacro.api
 
 
-interface UserGroup
+public interface UserGroupModel : HcsPersistentModel {
+	public val mainUser: UserModel
+	
+	public val users: List<User>
+}
+
+
+public interface UserGroup

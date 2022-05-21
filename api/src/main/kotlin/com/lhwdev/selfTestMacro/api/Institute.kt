@@ -93,5 +93,11 @@ public interface Institute : InstituteModel {
 	
 	public sealed class LoginResult {
 		public class Success(public val userGroup: UserGroup) : LoginResult()
+		
+		public sealed class Failed(
+			public val throwable: Throwable
+		) : LoginResult() {
+			public enum class Reason { wrongUserInfo, wrongPassword, }
+		}
 	}
 }

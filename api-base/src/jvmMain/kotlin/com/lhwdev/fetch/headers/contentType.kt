@@ -4,7 +4,7 @@ import com.lhwdev.fetch.FetchHeader
 import com.lhwdev.fetch.FetchHeaderKey
 import com.lhwdev.fetch.FetchHeaders
 import com.lhwdev.fetch.MutableFetchHeaders
-import com.lhwdev.selfTestMacro.splitTwo
+import com.lhwdev.selfTestMacro.utils.splitTwo
 import java.nio.charset.Charset
 
 

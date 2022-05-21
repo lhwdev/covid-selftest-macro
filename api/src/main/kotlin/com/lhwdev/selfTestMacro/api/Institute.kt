@@ -13,10 +13,14 @@ public interface InstituteModel : HcsPersistentModel {
 		office("회사")
 	}
 	
+	
 	public val identifier: String
 	public val name: String
 	public val type: Type
 	public val address: String
+	
+	public fun toData(): InstituteData
+	
 	
 	public interface School : InstituteModel {
 		public val level: Level
@@ -60,6 +64,12 @@ public sealed class InstituteData : InstituteModel {
 	@Serializable
 	public class InternalSearchKey(public val token: String)
 	
+	
+	@InternalHcsApi
+	@Transient
+	public var internalVerificationToken: LifecycleValue<InternalSearchKey> = LifecycleValue.empty()
+	
+	
 	@Serializable
 	@SerialName("school")
 	public class School(
@@ -72,9 +82,7 @@ public sealed class InstituteData : InstituteModel {
 	) : InstituteData(), InstituteModel.School {
 		override val type: InstituteModel.Type get() = InstituteModel.Type.school
 		
-		@InternalHcsApi
-		@Transient
-		public var internalVerificationToken: LifecycleValue<InternalSearchKey> = LifecycleValue.empty()
+		override fun toData(): School = this
 	}
 	
 	
@@ -91,13 +99,14 @@ public interface Institute : InstituteModel {
 		password: String
 	): LoginResult
 	
+	
 	public sealed class LoginResult {
 		public class Success(public val userGroup: UserGroup) : LoginResult()
 		
 		public sealed class Failed(
 			public val throwable: Throwable
 		) : LoginResult() {
-			public enum class Reason { wrongUserInfo, wrongPassword, }
+			public enum class Reason { wrongUserInfo, wrongPassword, unknown }
 		}
 	}
 }

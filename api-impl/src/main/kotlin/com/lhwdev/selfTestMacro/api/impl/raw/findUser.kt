@@ -93,11 +93,18 @@ public suspend fun HcsSession.findUser(
 			"searchKey" set searchKey.token
 			"loginType" set loginType.name
 		}
-	).getText()
+	)
+	val text = result.getText()
+	
+	// In case of search key expiration:
+	// {
+	//   "isError": true,
+	//   "message": "학교 찾기 후 입력시간이 초과되었습니다"
+	// }
 	
 	return try {
-		JsonLoose.decodeFromString(PasswordResult.Success.serializer(), result)
+		JsonLoose.decodeFromString(PasswordResult.Success.serializer(), text)
 	} catch(e: Throwable) {
-		JsonLoose.decodeFromString(PasswordResult.Failed.serializer(), result)
+		JsonLoose.decodeFromString(PasswordResult.Failed.serializer(), text)
 	}
 }

@@ -1,6 +1,7 @@
 package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.http.Session
+import com.lhwdev.selfTestMacro.api.CovidHcsApi
 import java.net.URL
 
 
@@ -25,4 +26,6 @@ public interface HcsSession : Session {
 	public val requestUrl: URL get() = URL("https://$requestUrlBody")
 	
 	public var clientVersion: String
+	
+	public val api: CovidHcsApi
 }

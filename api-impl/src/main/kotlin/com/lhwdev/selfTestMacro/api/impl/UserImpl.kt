@@ -15,7 +15,7 @@ private val lastSurveyFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Lo
 @Suppress("MemberVisibilityCanBePrivate")
 @OptIn(UnstableHcsApi::class, InternalHcsApi::class)
 public class UserImpl @InternalHcsApi constructor(
-	public val data: UserData,
+	private val data: UserData,
 	override val institute: InstituteImpl,
 	private val session: HcsSession,
 	private val userToken: String
@@ -27,6 +27,8 @@ public class UserImpl @InternalHcsApi constructor(
 	public override val status: ExternalState<UserModel.Status> get() = mStatus
 	private val mStatus = userInfo.map<UserInfo, UserModel.Status> { value, updater ->
 		object : UserModel.Status {
+			override val agreement: Boolean = value.agreement
+			override val newNotificationCount: Int = value.newNoticeCount
 			override val surveyResult = try {
 				UserModel.Status.SurveyResult(
 					answers = AnswersMap(

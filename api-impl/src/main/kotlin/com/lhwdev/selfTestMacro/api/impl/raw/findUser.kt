@@ -68,7 +68,7 @@ public suspend fun HcsSession.findUser(
 	instituteCode: String,
 	name: String,
 	birthday: String,
-	loginType: LoginType,
+	loginType: ApiLoginType,
 	searchKey: InstituteData.InternalSearchKey,
 	deviceUuid: String = "",
 	pageNumber: Int? = null

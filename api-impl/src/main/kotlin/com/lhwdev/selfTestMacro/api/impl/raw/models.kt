@@ -1,12 +1,10 @@
 @file:Suppress("SpellCheckingInspection")
-@file:OptIn(ExperimentalSerializationApi::class)
 
 package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.selfTestMacro.api.InternalHcsApi
 import com.lhwdev.selfTestMacro.api.Question
 import com.lhwdev.selfTestMacro.api.UnstableHcsApi
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -14,18 +12,18 @@ import java.net.URL
 
 
 @InternalHcsApi
-public enum class InstituteType(public val displayName: String, public val loginType: LoginType) {
-	school("학교", LoginType.school),
-	university("대학교", LoginType.univ),
-	academy("학원", LoginType.office),
-	office("회사", LoginType.office)
+public enum class ApiInstituteType(public val displayName: String, public val loginType: ApiLoginType) {
+	school("학교", ApiLoginType.school),
+	university("대학교", ApiLoginType.univ),
+	academy("학원", ApiLoginType.office),
+	office("회사", ApiLoginType.office)
 }
 
 
 /**
  * The type of login that is used in [findUser].
  */
-public enum class LoginType {
+public enum class ApiLoginType {
 	/**
 	 * From school by [searchSchool].
 	 */
@@ -42,13 +40,6 @@ public enum class LoginType {
 	office
 }
 
-/**
- * The level of school.
- * 유치원, 초등학교, 중학교, 고등학교. (대학교: seperate institute type)
- */
-public enum class SchoolLevel {
-	pre, elementary, middle, high
-}
 
 /**
  * The information of institute that can be obtained from [searchSchool], [searchUniversity], [searchOffice],
@@ -58,7 +49,7 @@ public enum class SchoolLevel {
  */
 @InternalHcsApi
 @Serializable
-public data class InstituteInfo(
+public data class ApiInstituteInfo(
 	@SerialName("insttClsfCode") val type: String,
 	
 	/**
@@ -86,7 +77,7 @@ public data class InstituteInfo(
 	@SerialName("addres") val address: String,
 	
 	/**
-	 * The level of the school if the [type] is [InstituteType.school].
+	 * The level of the school if the [type] is [ApiInstituteType.school].
 	 */
 	@SerialName("schulKndScCode") val schoolLevel: String? = null,
 	
@@ -123,19 +114,19 @@ public data class InstituteInfo(
  * This can be obtained from [getUserGroup].
  *
  * This class contains primitive information about the user; [userCode], [instituteCode] and [token].
- * If you want to know user's information such as name or last survey status, use [UserInfo].
+ * If you want to know user's information such as name or last survey status, use [ApiUserInfo].
  */
 @InternalHcsApi
 @Serializable
-public data class User(
+public data class ApiUser(
 	/**
-	 * The identifier of user. This seems to unique in one [institute][InstituteInfo].
+	 * The identifier of user. This seems to unique in one [institute][ApiInstituteInfo].
 	 */
 	@SerialName("userPNo") val userCode: String,
 	
 	/**
 	 * The code of institute.
-	 * @see [InstituteInfo.code]
+	 * @see [ApiInstituteInfo.code]
 	 */
 	@SerialName("orgCode") val instituteCode: String,
 	
@@ -147,14 +138,14 @@ public data class User(
 	
 	/**
 	 * The name of user, if present.
-	 * Normally you don't need to interact with this, as does `hcs.eduro.go.kr`. Instead, use [UserInfo].
+	 * Normally you don't need to interact with this, as does `hcs.eduro.go.kr`. Instead, use [ApiUserInfo].
 	 *
 	 * If [isOther] is true, this is null.
 	 */
 	@SerialName("userNameEncpt") val name: String? = null,
 	
 	/**
-	 * @see [InstituteInfo.requestUrlBody]
+	 * @see [ApiInstituteInfo.requestUrlBody]
 	 */
 	@SerialName("atptOfcdcConctUrl") val requestUrlBody: String,
 	
@@ -170,7 +161,7 @@ public data class User(
 	
 	/**
 	 * Whether the user is student.
-	 * Normally you don't need to interact with this, as does `hcs.eduro.go.kr`. Instead, use [UserInfo].
+	 * Normally you don't need to interact with this, as does `hcs.eduro.go.kr`. Instead, use [ApiUserInfo].
 	 *
 	 * If [isOther] is true, this is null.
 	 */
@@ -179,14 +170,13 @@ public data class User(
 	
 	/**
 	 * Whether the user is manager.
-	 * Normally you don't need to interact with this, as does `hcs.eduro.go.kr`. Instead, use [UserInfo].
+	 * Normally you don't need to interact with this, as does `hcs.eduro.go.kr`. Instead, use [ApiUserInfo].
 	 *
 	 * If [isOther] is true, this is null.
 	 */
 	@Serializable(with = YesNoSerializer::class)
 	@SerialName("mngrYn") val isManager: Boolean? = null
 )
-
 
 
 /**
@@ -198,12 +188,12 @@ public data class User(
  */
 @InternalHcsApi
 @Serializable
-public data class UserInfo(
+public data class ApiUserInfo(
 	// basic user information
 	
 	/**
 	 * The name of user.
-	 * [UserData] also has [name][UserData.name] property, but that is not ensured to exist as if [UserData.isOther] is true,
+	 * [ApiUser] also has [name][ApiUser.name] property, but that is not ensured to exist as if [UserData.isOther] is true,
 	 * it becomes null.
 	 */
 	@SerialName("userName") val userName: String,
@@ -236,6 +226,20 @@ public data class UserInfo(
 	val rspns02: String? = null,
 	val rspns03: String? = null,
 	val rspns07: String? = null,
+	
+	// user type
+	@Serializable(with = YesNoSerializer::class)
+	@SerialName("admnYn") val isAdmin: Boolean,
+	
+	@Serializable(with = YesNoSerializer::class)
+	@SerialName("mngrClassYn") val isClassManager: Boolean,
+	
+	@Serializable(with = YesNoSerializer::class)
+	@SerialName("mngrDeptYn") val isDepartmentManager: Boolean,
+	
+	@Serializable(with = YesNoSerializer::class)
+	@SerialName("stdntYn") val isStudent: Boolean,
+	
 	
 	// etc
 	@SerialName("newNoticeCount") val newNoticeCount: Int,
@@ -272,14 +276,15 @@ public data class UserInfo(
 		}
 	
 	@Transient
-	private var mInstituteStub: InstituteInfo? = null
-	public val instituteStub: InstituteInfo
+	private var mInstituteStub: ApiInstituteInfo? = null
+	public val instituteStub: ApiInstituteInfo
 		get() = mInstituteStub ?: run {
-			val stub = InstituteInfo(
-				type = instituteType,
+			val stub = ApiInstituteInfo(
+				type = instituteClassifierCode,
 				name = instituteName,
 				englishName = instituteName,
-				code = instituteCode,
+				persistentCode = instituteCode,
+				vertificationCode = "",
 				address = "???",
 				requestUrlBody = instituteRequestUrlBody
 			)
@@ -289,12 +294,12 @@ public data class UserInfo(
 	
 	// see getInstituteData.kt
 	@Transient
-	public val instituteType: InstituteType = when { // TODO: needs verification
-		instituteClassifierCode == "5" -> InstituteType.school
-		instituteClassifierCode == "7" -> InstituteType.university
-		instituteRegionCode != null && instituteSigCode != null -> InstituteType.academy
-		instituteRegionCode != null -> InstituteType.school
-		else -> InstituteType.office
+	public val instituteType: ApiInstituteType = when { // TODO: needs verification
+		instituteClassifierCode == "5" -> ApiInstituteType.school
+		instituteClassifierCode == "7" -> ApiInstituteType.university
+		instituteRegionCode != null && instituteSigCode != null -> ApiInstituteType.academy
+		instituteRegionCode != null -> ApiInstituteType.school
+		else -> ApiInstituteType.office
 	}
 	
 	public fun toUserInfoString(): String = "$userName($instituteName)"

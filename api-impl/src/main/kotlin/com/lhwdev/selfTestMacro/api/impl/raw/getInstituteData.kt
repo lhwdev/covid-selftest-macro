@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
 @InternalHcsApi
 @Serializable
 public class ApiSearchResult(
-	@SerialName("schulList") public val instituteList: List<InstituteInfo>,
+	@SerialName("schulList") public val instituteList: List<ApiInstituteInfo>,
 	
 	@SerialName("key") public val searchKey: String,
 	

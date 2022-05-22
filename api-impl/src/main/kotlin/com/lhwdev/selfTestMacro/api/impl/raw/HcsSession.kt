@@ -13,7 +13,7 @@ public interface HcsSession : Session {
 	 *
 	 * Normally form of `???hcs.eduro.go.kr` where `???` comes the code of Ministry of Education, i.e., 'sen', 'dge'.
 	 *
-	 * @see InstituteInfo.requestUrlBody
+	 * @see ApiInstituteInfo.requestUrlBody
 	 */
 	public val requestUrlBody: String
 	

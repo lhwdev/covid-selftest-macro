@@ -28,7 +28,7 @@ public data class SurveyResult(
 @DangerousHcsApi
 @OptIn(UnstableHcsApi::class)
 public suspend fun HcsSession.registerSurvey(
-	token: String,
+	token: UserToken,
 	name: String,
 	answers: AnswersMap,
 	deviceUuid: String = ""
@@ -36,7 +36,7 @@ public suspend fun HcsSession.registerSurvey(
 	requestUrl["/registerServey"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
-		"Authorization" to token
+		"Authorization" to token.token
 	),
 	body = Bodies.jsonObject {
 		"rspns00" set answers.isHealthy
@@ -53,7 +53,7 @@ public suspend fun HcsSession.registerSurvey(
 		
 		"rspns02" set if(answers.waitingResult) "0" else "1"
 		
-		"upperToken" set token
+		"upperToken" set token.token
 		"upperUserNameEncpt" set name
 		"clientVersion" set clientVersion
 		"deviceUuid" set deviceUuid

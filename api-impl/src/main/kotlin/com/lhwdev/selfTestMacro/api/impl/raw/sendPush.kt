@@ -24,7 +24,7 @@ import com.lhwdev.fetch.sDefaultFakeHeader
  * Note: make sure to get users token in 'right' way and inform user before calling this
  */
 @DangerousHcsApi
-public suspend fun Session.sendPushNotification(institute: InstituteInfo, token: UsersToken) {
+public suspend fun Session.sendPushNotification(institute: ApiInstituteInfo, token: UsersToken) {
 	fetch(
 		institute.requestUrl["/push"],
 		method = HttpMethod.post,

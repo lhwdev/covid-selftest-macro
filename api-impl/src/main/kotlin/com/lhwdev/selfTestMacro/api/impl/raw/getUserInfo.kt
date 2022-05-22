@@ -15,15 +15,13 @@ import com.lhwdev.selfTestMacro.toJsonLoose
 public suspend fun HcsSession.getUserInfo(
 	instituteCode: String,
 	userCode: String,
-	token: String
-): UserInfo = fetch(
+	token: UserToken
+): ApiUserInfo = fetch(
 	requestUrl["/v2/getUserInfo"],
 	method = HttpMethod.post,
-	headers = sDefaultFakeHeader + mapOf(
-		"Authorization" to token
-	),
+	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),
 	body = Bodies.jsonObject {
 		"orgCode" set instituteCode
 		"userPNo" set userCode
 	}
-).toJsonLoose(UserInfo.serializer())
+).toJsonLoose(ApiUserInfo.serializer())

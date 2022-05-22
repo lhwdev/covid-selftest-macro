@@ -1,9 +1,6 @@
 package com.lhwdev.selfTestMacro.api.impl
 
-import com.lhwdev.selfTestMacro.api.Institute
-import com.lhwdev.selfTestMacro.api.InstituteData
-import com.lhwdev.selfTestMacro.api.InstituteModel
-import com.lhwdev.selfTestMacro.api.InternalHcsApi
+import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.api.impl.raw.*
 
 
@@ -25,25 +22,84 @@ internal suspend fun HcsSession.getInternalVerificationToken(data: InstituteData
 
 @OptIn(InternalHcsApi::class)
 public class InstituteImpl(
-	private val data: InstituteData,
+	private var data: InstituteData,
 	private val session: HcsSession
-) : Institute, InstituteModel by data {
-	override suspend fun login(name: String, birthday: String, password: String): Institute.LoginResult {
+) : Institute {
+	private val userGroups = mutableMapOf<UserGroupModel.MainUser, UserGroupImpl>()
+	
+	override val identifier: String get() = data.identifier
+	override val name: String get() = data.name
+	override val type: InstituteModel.Type get() = data.type
+	override val address: String? get() = data.address
+	
+	override fun toData(): InstituteData = data
+	
+	internal suspend fun getUserGroupData(
+		mainUser: UserGroupModel.MainUser,
+		token: UsersToken
+	): Pair<UserGroupData, List<UserToken>> {
+		val group = session.getUserGroup(token)
+		val users = group.map { user ->
+			val info = session.getUserInfo(user.instituteCode, user.userCode, user.token)
+			
+			UserData(
+				identifier = user.userCode,
+				name = info.userName,
+				type = when {
+					info.isAdmin -> UserModel.Type.admin
+					info.isClassManager || info.isDepartmentManager -> UserModel.Type.manager
+					info.isStudent -> UserModel.Type.user
+					else -> {
+						println("InstituteImpl.getUserGroupData: no else")
+						UserModel.Type.user
+					}
+				},
+				institute = when(info.instituteType) {
+					ApiInstituteType.school -> InstituteData.School(
+						identifier = info.instituteCode,
+						name = info.instituteName,
+						address = null,
+						level = null,
+						region = InstituteModel.School.Region.values().find { it.code == info.instituteRegionCode }
+							?: run {
+								println("InstituteImpl.getUserGroupData: unknown region ${info.instituteRegionCode}")
+								InstituteModel.School.Region.seoul // random value?
+							}
+					)
+					ApiInstituteType.university -> TODO()
+					ApiInstituteType.academy -> TODO()
+					ApiInstituteType.office -> TODO()
+				}
+			)
+		}
+		val tokens = group.map { it.token }
+		return UserGroupData(mainUser = mainUser, users = users) to tokens
+	}
+	
+	override suspend fun getUserGroup(
+		mainUser: UserGroupModel.MainUser,
+		forceLogin: Boolean
+	): Institute.LoginResult {
+		val previous = userGroups[mainUser]
+		if(previous != null) {
+			if()
+		}
+		
 		val result = session.findUser(
-			password = password,
+			password = mainUser.password,
 			instituteCode = identifier,
-			name = name,
-			birthday = birthday,
+			name = mainUser.name,
+			birthday = mainUser.birthday,
 			loginType = when(type) {
-				InstituteModel.Type.school -> LoginType.school
-				InstituteModel.Type.university -> LoginType.univ
-				InstituteModel.Type.academy, InstituteModel.Type.office -> LoginType.office
+				InstituteModel.Type.school -> ApiLoginType.school
+				InstituteModel.Type.university -> ApiLoginType.univ
+				InstituteModel.Type.academy, InstituteModel.Type.office -> ApiLoginType.office
 			},
 			searchKey = session.getInternalVerificationToken(data)
 		)
 		
 		return when(result) {
-			is PasswordResult.Success -> Institute.LoginResult.Success()
+			is PasswordResult.Success -> UserGroupData(result.)
 			is PasswordResult.Failed -> TODO()
 		}
 	}

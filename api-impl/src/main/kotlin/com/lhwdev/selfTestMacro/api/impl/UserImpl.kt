@@ -1,7 +1,6 @@
 package com.lhwdev.selfTestMacro.api.impl
 
 import com.lhwdev.selfTestMacro.api.*
-import com.lhwdev.selfTestMacro.api.User
 import com.lhwdev.selfTestMacro.api.impl.raw.*
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -15,17 +14,30 @@ private val lastSurveyFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Lo
 @Suppress("MemberVisibilityCanBePrivate")
 @OptIn(UnstableHcsApi::class, InternalHcsApi::class)
 public class UserImpl @InternalHcsApi constructor(
-	private val data: UserData,
-	override val institute: InstituteImpl,
+	private var data: UserData,
+	override val userGroup: UserGroup,
+	override val institute: Institute,
 	private val session: HcsSession,
-	private val userToken: String
-) : User, UserModel by data {
-	private val userInfo = ExternalStateImpl<UserInfo> {
-		session.getUserInfo(data.institute.identifier, data.identifier, userToken)
+	private var token: LifecycleValue<UserToken>
+) : User {
+	override val identifier: String get() = data.identifier
+	
+	override val name: String get() = data.name
+	
+	override val type: UserModel.Type get() = data.type
+	
+	override fun toData(): UserData = data
+	
+	
+	private suspend fun getToken(): UserToken = token.getOrDefault body@{
+		userGroup.
 	}
 	
-	public override val status: ExternalState<UserModel.Status> get() = mStatus
-	private val mStatus = userInfo.map<UserInfo, UserModel.Status> { value, updater ->
+	private val userInfo = LazyExternalStateImpl<ApiUserInfo> {
+		session.getUserInfo(data.institute.identifier, data.identifier, getToken())
+	}
+	
+	public override val status: LazyExternalState<UserModel.Status> = userInfo.map { value, updater ->
 		object : UserModel.Status {
 			override val agreement: Boolean = value.agreement
 			override val newNotificationCount: Int = value.newNoticeCount
@@ -49,7 +61,7 @@ public class UserImpl @InternalHcsApi constructor(
 	@OptIn(DangerousHcsApi::class)
 	override suspend fun registerSurvey(answers: AnswersMap): UserModel.Status.SurveyResult {
 		val apiResult = session.registerSurvey(
-			token = userToken,
+			token = getToken(),
 			name = name,
 			answers = answers,
 			// deviceUuid = ""

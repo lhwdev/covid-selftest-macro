@@ -1,7 +1,5 @@
 package com.lhwdev.selfTestMacro.api
 
-import kotlin.reflect.KProperty
-
 
 public class LifecycleValue<T> private constructor(value: T?, public val expiresAt: Long) {
 	public companion object {
@@ -22,9 +20,11 @@ public class LifecycleValue<T> private constructor(value: T?, public val expires
 		get() = if(expiresAt > System.currentTimeMillis()) {
 			mValue
 		} else {
-			mValue = null
-			null
+			null // warning: leakage? IDK
 		}
 	
-	public operator fun getValue(receiver: Any?, property: KProperty<*>): T? = value
+	public val unsafeValue: T? = mValue
 }
+
+
+public inline fun <T> LifecycleValue<T>.getOrDefault(defaultBlock: () -> T): T = value ?: defaultBlock()

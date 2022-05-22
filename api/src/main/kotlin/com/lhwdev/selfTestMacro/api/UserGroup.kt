@@ -1,12 +1,25 @@
 package com.lhwdev.selfTestMacro.api
 
+import kotlinx.serialization.Serializable
+
 
 public interface UserGroupModel : HcsPersistentModel {
-	public val status: ExternalState<Status>
+	@Serializable
+	public class MainUser(
+		public val name: String,
+		public val birthday: String,
+		public val password: String
+	)
 	
-	public val mainUser: UserModel
 	
-	public val users: List<User>
+	public val mainUser: MainUser
+	
+	public val mainUserModel: UserModel get() = users[0]
+	
+	/**
+	 * `users[0]` is expected to be equal to [mainUser].
+	 */
+	public val users: List<UserModel>
 	
 	
 	public interface Status : HcsTemporaryModel {
@@ -15,4 +28,27 @@ public interface UserGroupModel : HcsPersistentModel {
 }
 
 
-public interface UserGroup
+@Serializable
+public class UserGroupData(
+	public override val mainUser: UserGroupModel.MainUser,
+	public override val users: List<UserData>
+) : UserGroupModel {
+	override fun equals(other: Any?): Boolean = when {
+		this === other -> true
+		other !is UserGroupData -> false
+		else -> users == other.users
+	}
+	
+	override fun hashCode(): Int = users.hashCode()
+	
+}
+
+
+public interface UserGroup : UserGroupModel {
+	override val mainUserModel: User get() = users[0]
+	
+	public override val users: List<User>
+	
+	
+	public val status: LazyExternalState<UserGroupModel.Status>
+}

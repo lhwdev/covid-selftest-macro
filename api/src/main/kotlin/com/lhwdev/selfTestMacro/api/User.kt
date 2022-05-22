@@ -5,10 +5,12 @@ import java.util.Date
 
 
 public interface UserModel : HcsPersistentModel {
-	public enum class Type { user, manager }
+	public enum class Type { user, manager, admin }
 	
 	public val identifier: String
+	
 	public val name: String
+	
 	public val type: Type
 	public val institute: InstituteModel
 	
@@ -32,7 +34,9 @@ public interface UserModel : HcsPersistentModel {
 @Serializable
 public class UserData(
 	public override val identifier: String,
+	
 	public override val name: String,
+	
 	public override val type: UserModel.Type,
 	public override val institute: InstituteData
 ) : UserModel {
@@ -53,6 +57,7 @@ public class UserData(
 
 
 public interface User : UserModel {
+	public val userGroup: UserGroup
 	public override val institute: Institute
 	
 	public val status: ExternalState<UserModel.Status>

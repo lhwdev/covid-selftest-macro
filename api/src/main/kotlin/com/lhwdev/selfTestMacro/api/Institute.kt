@@ -17,13 +17,13 @@ public interface InstituteModel : HcsPersistentModel {
 	public val identifier: String
 	public val name: String
 	public val type: Type
-	public val address: String
+	public val address: String? // this is nullable as this cannot be got from /v2/getUserInfo
 	
 	public fun toData(): InstituteData
 	
 	
 	public interface School : InstituteModel {
-		public val level: Level
+		public val level: Level? // this is nullable as this cannot be got from /v2/getUserInfo
 		public val region: Region
 		
 		public enum class Level(public val code: Int, public val label: String) {
@@ -75,9 +75,9 @@ public sealed class InstituteData : InstituteModel {
 	public class School(
 		public override val identifier: String,
 		public override val name: String,
-		public override val address: String,
+		public override val address: String?,
 		
-		public override val level: InstituteModel.School.Level,
+		public override val level: InstituteModel.School.Level?,
 		public override val region: InstituteModel.School.Region
 	) : InstituteData(), InstituteModel.School {
 		override val type: InstituteModel.Type get() = InstituteModel.Type.school
@@ -93,10 +93,9 @@ public sealed class InstituteData : InstituteModel {
 
 
 public interface Institute : InstituteModel {
-	public suspend fun login(
-		name: String,
-		birthday: String,
-		password: String
+	public suspend fun getUserGroup(
+		mainUser: UserGroupModel.MainUser,
+		forceLogin: Boolean = false
 	): LoginResult
 	
 	

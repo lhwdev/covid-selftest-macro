@@ -3,40 +3,58 @@ package com.lhwdev.selfTestMacro.api
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.lhwdev.selfTestMacro.utils.sEmpty
 
 
-public interface ExternalState<out T : Any> {
-	public val cache: T?
+public interface ExternalState<out T, out Cache> where T : Cache {
+	public val cache: Cache
 	
 	public suspend fun fetch(): T
 	
 	public suspend fun get(): T
 }
 
-public class ExternalStateImpl<out T : Any>(
+public interface LazyExternalState<out T> : ExternalState<T, T?>
+
+public interface DefaultExternalState<out T> : ExternalState<T, T>
+
+public class LazyExternalStateImpl<out T : Any>(
+	initialValue: T? = null,
 	private val readBlock: suspend (update: suspend () -> T) -> T
-) : ExternalState<T> {
-	public var mCache: @UnsafeVariance T? by mutableStateOf(null)
-	
-	override val cache: T?
-		@Suppress("UNCHECKED_CAST")
-		get() = if(mCache == sEmpty) null else mCache as T
+) : LazyExternalState<T> {
+	override var cache: @UnsafeVariance T? by mutableStateOf(initialValue)
+		private set
 	
 	override suspend fun fetch(): T {
 		val value = readBlock { fetch() }
-		mCache = value
+		cache = value
 		return value
 	}
 	
 	override suspend fun get(): T = cache ?: fetch()
 }
 
-public abstract class MappedExternalState<F : Any, T : Any>(private val original: ExternalState<F>) : ExternalState<T> {
+public class DefaultExternalStateImpl<out T>(
+	initialValue: T,
+	private val readBlock: suspend (update: suspend () -> T) -> T
+) : DefaultExternalState<T> {
+	override var cache: @UnsafeVariance T by mutableStateOf(initialValue)
+		private set
+	
+	override suspend fun fetch(): T {
+		val value = readBlock { fetch() }
+		cache = value
+		return value
+	}
+	
+	override suspend fun get(): T = cache ?: fetch()
+}
+
+public abstract class MappedExternalState<F : FC, FC, T>(private val original: ExternalState<F, FC>) :
+	LazyExternalState<T> {
 	private var from: F? = null
 	private var mCache: T? = null
 	
-	override val cache: T?
+	public override val cache: T?
 		get() = mCache.takeIf { original.cache == from }
 	
 	protected abstract fun map(value: F): T
@@ -52,8 +70,8 @@ public abstract class MappedExternalState<F : Any, T : Any>(private val original
 	override suspend fun get(): T = cache ?: fetch()
 }
 
-public inline fun <T : Any, R : Any> ExternalState<T>.map(
+public inline fun <T : C, C, R> ExternalState<T, C>.map(
 	crossinline block: (T, update: suspend () -> R) -> R
-): ExternalState<R> = object : MappedExternalState<T, R>(original = this) {
+): LazyExternalState<R> = object : MappedExternalState<T, C, R>(original = this) {
 	override fun map(value: T): R = block(value) { fetch() }
 }

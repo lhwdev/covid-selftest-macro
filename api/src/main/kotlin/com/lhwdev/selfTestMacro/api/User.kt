@@ -1,5 +1,6 @@
 package com.lhwdev.selfTestMacro.api
 
+import com.lhwdev.selfTestMacro.utils.NullableSuspendState
 import kotlinx.serialization.Serializable
 import java.util.Date
 
@@ -60,7 +61,7 @@ public interface User : UserModel {
 	public val userGroup: UserGroup
 	public override val institute: Institute
 	
-	public val status: ExternalState<UserModel.Status>
+	public val status: NullableSuspendState<UserModel.Status>
 	
 	public suspend fun registerSurvey(answers: AnswersMap): UserModel.Status.SurveyResult
 }

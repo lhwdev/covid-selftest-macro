@@ -23,7 +23,7 @@ dependencies {
 	implementation(projects.transkey)
 	implementation(projects.utils)
 	
-	implementation(libs.coroutinesAndroid)
+	implementation(libs.coroutinesCore)
 	
 	implementation(libs.serializationCore)
 	implementation(libs.serializationJson)

@@ -1,8 +1,11 @@
 package com.lhwdev.build
 
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.gradle.BaseExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.compose.ComposeBuildConfig
 import org.jetbrains.compose.ComposePlugin
@@ -13,6 +16,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaTarget
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsTargetDsl
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
@@ -145,27 +149,27 @@ fun CommonExtension<*, *, *, *>.setupCommon() {
 	}
 }
 
-// fun KotlinMultiplatformExtension.setupAndroid(
-// 	project: Project,
-// 	name: String = "android",
-// 	init: (KotlinSetup<KotlinAndroidTarget>.() -> Unit)? = null
-// ): KotlinAndroidTarget {
-// 	val target = android(name) {
-// 		compilations.all {
-// 			kotlinOptions.jvmTarget = "1.8"
-// 		}
-// 	}
-//
-// 	setupJvmCommon(name)
-// 	init?.invoke(KotlinSetup(target, name, sourceSets))
-//
-// 	project.extensions.getByType<BaseExtension>().sourceSets.all {
-// 		val directory = "src/$name${this.name.firstToUpperCase()}"
-// 		setRoot(directory)
-// 	}
-//
-// 	return target
-// }
+fun KotlinMultiplatformExtension.setupAndroid(
+	project: Project,
+	name: String = "android",
+	init: (KotlinSetup<KotlinAndroidTarget>.() -> Unit)? = null
+): KotlinAndroidTarget {
+	val target = android(name) {
+		compilations.all {
+			kotlinOptions.jvmTarget = "1.8"
+		}
+	}
+	
+	setupJvmCommon(name)
+	init?.invoke(KotlinSetup(target, name, sourceSets))
+	
+	project.extensions.getByType<BaseExtension>().sourceSets.all {
+		val directory = "src/$name${this.name.firstToUpperCase()}"
+		setRoot(directory)
+	}
+	
+	return target
+}
 
 
 private fun String.firstToUpperCase() = replaceRange(0, 1, first().toUpperCase().toString())
@@ -179,6 +183,24 @@ class KotlinSetup<Target : KotlinTarget>(
 	val name: String?,
 	val sourceSet: NamedDomainObjectContainer<KotlinSourceSet>
 ) {
+	fun dependsOn(target: KotlinTarget) {
+		sourceSet {
+			val targetSourceSet = getByName(sourceSetNameFor(target.targetName, "main"))
+			
+			getByName(sourceSetNameFor(name, "main"))
+				.dependsOn(targetSourceSet)
+		}
+	}
+	
+	fun dependsOnCommon() {
+		sourceSet {
+			val targetSourceSet = getByName("commonmain")
+			
+			getByName(sourceSetNameFor(name, "main"))
+				.dependsOn(targetSourceSet)
+		}
+	}
+	
 	fun target(block: Target.() -> Unit) {
 		target.block()
 	}

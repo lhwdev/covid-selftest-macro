@@ -2,6 +2,9 @@ package com.lhwdev.selfTestMacro.api.impl
 
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.api.impl.raw.*
+import com.lhwdev.selfTestMacro.api.utils.LazyExternalState
+import com.lhwdev.selfTestMacro.api.utils.LazyExternalStateImpl
+import com.lhwdev.selfTestMacro.api.utils.map
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

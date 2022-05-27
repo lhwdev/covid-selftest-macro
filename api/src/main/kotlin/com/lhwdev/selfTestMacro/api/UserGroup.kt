@@ -1,5 +1,6 @@
 package com.lhwdev.selfTestMacro.api
 
+import com.lhwdev.selfTestMacro.utils.NullableSuspendState
 import kotlinx.serialization.Serializable
 
 
@@ -50,5 +51,5 @@ public interface UserGroup : UserGroupModel {
 	public override val users: List<User>
 	
 	
-	public val status: LazyExternalState<UserGroupModel.Status>
+	public val status: NullableSuspendState<UserGroupModel.Status>
 }

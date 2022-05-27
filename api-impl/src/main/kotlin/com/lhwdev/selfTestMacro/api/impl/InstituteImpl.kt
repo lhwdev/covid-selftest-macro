@@ -82,7 +82,7 @@ public class InstituteImpl(
 	): Institute.LoginResult {
 		val previous = userGroups[mainUser]
 		if(previous != null) {
-			if()
+			if(previous.apiGroup)
 		}
 		
 		val result = session.findUser(

@@ -1,4 +1,4 @@
-package com.lhwdev.selfTestMacro.api
+package com.lhwdev.selfTestMacro.api.utils
 
 
 public class LifecycleValue<T> private constructor(value: T?, public val expiresAt: Long) {
@@ -14,10 +14,12 @@ public class LifecycleValue<T> private constructor(value: T?, public val expires
 	}
 	
 	
-	private var mValue: T? = value
+	private val mValue: T? = value
+	
+	public val expired: Boolean get() = expiresAt > System.currentTimeMillis()
 	
 	public val value: T?
-		get() = if(expiresAt > System.currentTimeMillis()) {
+		get() = if(expired) {
 			mValue
 		} else {
 			null // warning: leakage? IDK

@@ -1,12 +1,12 @@
 # Versions for the whole project.
 
 [versions]
-kotlin = "1.6.10" # also in includeBuild/build.gradle.kts
+kotlin = "1.6.21"
 coroutine = "1.6.0"
 serialization = "1.3.2"
 androidGradle = "7.0.0" # also in settings.gradle.kts
 
-compose = "1.1.1" # Compose MPP version, living in bleeding edge: needed to use WindowInsets api
+compose = "1.2.0-alpha01-dev679" # Compose MPP version
 accompanist = "0.24.6-alpha" # aligned with compose version
 
 [plugins]

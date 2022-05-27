@@ -19,7 +19,6 @@ dependencies {
 	
 	implementation(libs.serializationCore)
 	implementation(libs.serializationJson)
-	implementation(libs.serializationJson)
 	
 	implementation(compose.runtime)
 }

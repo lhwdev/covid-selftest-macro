@@ -12,15 +12,17 @@ plugins {
 
 
 kotlin {
-	setupJvm()
+	setupJvm {
+		dependencies {
+			implementation(libs.coroutinesCore)
+		}
+	}
 	
 	dependencies {
-		implementation(libs.coroutinesAndroid)
+		implementation(libs.coroutinesCore)
 		
 		implementation(libs.serializationCore)
 		implementation(libs.serializationJson)
-		
-		implementation(libs.immutableCollections)
 		
 		api(compose.runtime)
 	}

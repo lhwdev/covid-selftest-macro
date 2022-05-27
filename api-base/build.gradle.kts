@@ -1,3 +1,5 @@
+import com.lhwdev.build.*
+
 plugins {
 	id("com.android.library")
 	kotlin("multiplatform")
@@ -14,32 +16,23 @@ android {
 }
 
 kotlin {
-	android("android")
-	jvm("desktop")
+	val jvm = setupJvm("jvm") {
+		dependsOnCommon()
+	}
+	setupAndroid(project, "android") {
+		dependsOn(jvm)
+	}
+	setupJvm("desktop") {
+		dependsOn(jvm)
+	}
 	
-	sourceSets {
-		val commonMain by getting {
-			dependencies {
-				implementation(projects.utils)
-				
-				implementation(libs.coroutinesAndroid)
-				
-				implementation(libs.serializationCore)
-				implementation(libs.serializationJson)
-			}
-		}
+	
+	dependencies {
+		implementation(projects.utils)
 		
-		register("jvmMain")
-		val jvmMain by getting {
-			dependsOn(commonMain)
-		}
+		implementation(libs.coroutinesCore)
 		
-		val androidMain by getting {
-			dependsOn(jvmMain)
-		}
-		
-		val desktopMain by getting {
-			dependsOn(jvmMain)
-		}
+		implementation(libs.serializationCore)
+		implementation(libs.serializationJson)
 	}
 }

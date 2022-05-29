@@ -5,45 +5,44 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 
-interface CachedSuspendState<out Get : Cache, out Cache> {
-	val cache: Cache
+interface CachedSuspendState<out T> {
+	val cache: T?
 	
-	suspend fun get(): Get
+	suspend fun get(): T
 	
-	suspend fun refresh(): Get
+	suspend fun refresh(): T
 }
 
-interface NullableSuspendState<T : Any> : CachedSuspendState<T, T?>
-
-interface PresentSuspendState<T> : CachedSuspendState<T, T>
+interface PresentCachedSuspendState<out T> : CachedSuspendState<T> {
+	override val cache: T
+}
 
 
 /**
  * Note that there is no guarantee about what the dispatcher is.
  * You may have to specify it by yourself.
  */
-abstract class CachedSuspendStateBase<Get : Cache, Cache, GetIntermediate> :
-	CachedSuspendState<Get, Cache>, StateObject {
-	protected abstract suspend fun readValue(): GetIntermediate
+abstract class CachedSuspendStateBase<T, Intermediate> : CachedSuspendState<T>, StateObject {
+	protected abstract suspend fun readValue(): Intermediate
 	
 	
-	protected abstract var next: CachedStateRecord<Get, Cache, GetIntermediate>
+	protected abstract var next: CachedStateRecord<T, Intermediate>
 	
 	final override val firstStateRecord: StateRecord
 		get() = next
 	
 	final override fun prependStateRecord(value: StateRecord) {
 		@Suppress("UNCHECKED_CAST")
-		next = value as CachedStateRecord<Get, Cache, GetIntermediate>
+		next = value as CachedStateRecord<T, Intermediate>
 	}
 	
 	
-	final override val cache: Cache
+	override val cache: T?
 		get() = next.readable(this).getCache()
 	
 	private val mutex = Mutex() // write mutex
 	
-	final override suspend fun get(): Get {
+	final override suspend fun get(): T {
 		val currentCache = next.readable(this).getCachedValue()
 		return if(currentCache is Optional.Present) {
 			currentCache.value
@@ -52,21 +51,20 @@ abstract class CachedSuspendStateBase<Get : Cache, Cache, GetIntermediate> :
 		}
 	}
 	
-	final override suspend fun refresh(): Get = mutex.withLock {
+	final override suspend fun refresh(): T = mutex.withLock {
 		val intermediate = readValue()
 		
-		val actual = next.writable(this) {
+		next.writable(this) {
 			setCache(intermediate)
 		}
-		actual
 	}
 	
-	abstract class CachedStateRecord<Get : Cache, Cache, GetIntermediate> : StateRecord() {
-		abstract fun setCache(value: GetIntermediate): Get
+	abstract class CachedStateRecord<T, Intermediate> : StateRecord() {
+		abstract fun setCache(value: Intermediate): T
 		
-		abstract fun getCache(): Cache
+		abstract fun getCache(): T?
 		
-		abstract fun getCachedValue(): Optional<Get>
+		abstract fun getCachedValue(): Optional<T>
 	}
 	
 	override fun toString(): String = next.withCurrent {
@@ -79,33 +77,62 @@ abstract class CachedSuspendStateBase<Get : Cache, Cache, GetIntermediate> :
 	 * state object without triggering read observers.
 	 */
 	@Suppress("unused")
-	val debuggerDisplayValue: Cache
+	val debuggerDisplayValue: T?
 		@JvmName("getDebuggerDisplayValue")
 		get() = next.withCurrent { it }.getCache()
 }
 
 
-abstract class SimpleCachedSuspendState<Get : Cache, Cache>(initialCache: Cache) :
-	CachedSuspendStateBase<Get, Cache, Get>() {
-	override var next: CachedStateRecord<Get, Cache, Get> = SimpleCachedStateRecord(initialCache)
+abstract class SimpleCachedSuspendState<T>(initialCache: T?) : CachedSuspendStateBase<T, T>() {
+	override var next: CachedStateRecord<T, T> = SimpleCachedStateRecord(initialCache)
 	
-	protected abstract fun asCache(cache: Cache): Optional<Get>
+	abstract fun asValue(cache: T?): Optional<T>
 	
 	
-	private inner class SimpleCachedStateRecord(var currentCache: Cache) :
-		CachedStateRecord<Get, Cache, Get>() {
+	private inner class SimpleCachedStateRecord(var currentCache: T?) :
+		CachedStateRecord<T, T>() {
 		
 		override fun assign(value: StateRecord) {
 			@Suppress("UNCHECKED_CAST")
-			currentCache = (value as SimpleCachedSuspendState<Get, Cache>.SimpleCachedStateRecord).currentCache
+			currentCache = (value as SimpleCachedSuspendState<T>.SimpleCachedStateRecord).currentCache
 		}
 		
 		override fun create(): StateRecord = SimpleCachedStateRecord(currentCache)
 		
-		override fun getCache(): Cache = currentCache
-		override fun getCachedValue(): Optional<Get> = asCache(currentCache)
+		override fun getCache(): T? = currentCache
+		override fun getCachedValue(): Optional<T> = asValue(currentCache)
 		
-		override fun setCache(value: Get): Get {
+		override fun setCache(value: T): T {
+			currentCache = value
+			return value
+		}
+	}
+}
+
+abstract class SimpleCachedSuspendState2<T>(initialCache: T) : CachedSuspendStateBase<T, T>() {
+	
+	override val cache: T
+		get() = (next.readable(this) as SimpleCachedStateRecord).getCache()
+	
+	override var next: CachedStateRecord<T, T> = SimpleCachedStateRecord(initialCache)
+	
+	abstract fun asValue(cache: T): Optional<T>
+	
+	
+	private inner class SimpleCachedStateRecord(var currentCache: T) :
+		CachedStateRecord<T, T>() {
+		
+		override fun assign(value: StateRecord) {
+			@Suppress("UNCHECKED_CAST")
+			currentCache = (value as SimpleCachedSuspendState2<T>.SimpleCachedStateRecord).currentCache
+		}
+		
+		override fun create(): StateRecord = SimpleCachedStateRecord(currentCache)
+		
+		override fun getCache(): T = currentCache
+		override fun getCachedValue(): Optional<T> = asValue(currentCache)
+		
+		override fun setCache(value: T): T {
 			currentCache = value
 			return value
 		}
@@ -113,22 +140,73 @@ abstract class SimpleCachedSuspendState<Get : Cache, Cache>(initialCache: Cache)
 }
 
 
-inline fun <T : Any> NullableSuspendState(
-	initialCache: T?,
+inline fun <T : Any> CachedSuspendState(
+	initialCache: T? = null,
 	crossinline block: suspend () -> T
-): NullableSuspendState<T> =
-	object : SimpleCachedSuspendState<T, T?>(initialCache), NullableSuspendState<T> {
-		override suspend fun readValue(): T = block()
-		override fun asCache(cache: T?): Optional<T> = Optional.nullable(cache)
-	}
+): CachedSuspendState<T> = object : SimpleCachedSuspendState<T>(initialCache) {
+	override suspend fun readValue(): T = block()
+	override fun asValue(cache: T?): Optional<T> = Optional.nullable(cache)
+}
 
-inline fun <T> PresentSuspendState(
+@Suppress("UNCHECKED_CAST")
+inline fun <T> PresentCachedSuspendState(
 	initialCache: T,
 	crossinline block: suspend () -> T
-): PresentSuspendState<T> =
-	object : SimpleCachedSuspendState<T, T>(initialCache), PresentSuspendState<T> {
-		override suspend fun readValue(): T = block()
-		override fun asCache(cache: T): Optional<T> = Optional.of(cache)
+): PresentCachedSuspendState<T> = object : SimpleCachedSuspendState<T>(initialCache), PresentCachedSuspendState<T> {
+	override val cache: T
+		get() = super.cache as T
+	
+	override suspend fun readValue(): T = block()
+	override fun asValue(cache: T?): Optional<T> = Optional.of(cache as T)
+}
+
+
+@PublishedApi
+internal abstract class MappedCachedSuspendState<From : Any, To : Any>(
+	private val from: CachedSuspendState<From>
+) : CachedSuspendState<To> {
+	private var currentCache: Pair<From, To>? = null
+	
+	abstract fun map(value: From): To
+	
+	private fun mapAndCache(from: From): To {
+		val value = map(from)
+		currentCache = from to value
+		return value
 	}
+	
+	override val cache: To?
+		get() {
+			val current = from.cache
+			val currentCache = currentCache
+			
+			return if(currentCache != null && currentCache.first == current) {
+				currentCache.second
+			} else {
+				if(current != null) {
+					mapAndCache(current)
+				} else {
+					null
+				}
+			}
+		}
+	
+	override suspend fun get(): To = mapAndCache(from.get())
+	
+	override suspend fun refresh(): To = mapAndCache(from.refresh())
+}
 
+inline fun <From : Any, To : Any> CachedSuspendState<From>.map(
+	crossinline block: (From, refresh: suspend () -> To) -> To
+): CachedSuspendState<To> = object : MappedCachedSuspendState<From, To>(this) {
+	override fun map(value: From): To = block(value) { refresh() }
+}
 
+@Suppress("UNCHECKED_CAST")
+inline fun <From : Any, To : Any> PresentCachedSuspendState<From>.map(
+	crossinline block: (From, refresh: suspend () -> To) -> To
+): PresentCachedSuspendState<To> = object : MappedCachedSuspendState<From, To>(this), PresentCachedSuspendState<To> {
+	override val cache: To get() = super.cache as To
+	
+	override fun map(value: From): To = block(value) { refresh() }
+}

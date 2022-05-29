@@ -1,6 +1,6 @@
 package com.lhwdev.selfTestMacro.api
 
-import com.lhwdev.selfTestMacro.utils.NullableSuspendState
+import com.lhwdev.selfTestMacro.utils.CachedSuspendState
 import kotlinx.serialization.Serializable
 
 
@@ -51,5 +51,5 @@ public interface UserGroup : UserGroupModel {
 	public override val users: List<User>
 	
 	
-	public val status: NullableSuspendState<UserGroupModel.Status>
+	public val status: CachedSuspendState<UserGroupModel.Status>
 }

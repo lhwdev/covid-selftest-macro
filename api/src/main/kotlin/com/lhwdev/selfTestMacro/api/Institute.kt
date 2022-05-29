@@ -1,5 +1,6 @@
 package com.lhwdev.selfTestMacro.api
 
+import com.lhwdev.selfTestMacro.api.utils.LifecycleValue
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

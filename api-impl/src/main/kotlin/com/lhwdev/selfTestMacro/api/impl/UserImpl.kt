@@ -2,9 +2,10 @@ package com.lhwdev.selfTestMacro.api.impl
 
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.api.impl.raw.*
-import com.lhwdev.selfTestMacro.api.utils.LazyExternalState
-import com.lhwdev.selfTestMacro.api.utils.LazyExternalStateImpl
-import com.lhwdev.selfTestMacro.api.utils.map
+import com.lhwdev.selfTestMacro.api.utils.LifecycleValue
+import com.lhwdev.selfTestMacro.api.utils.getOrDefault
+import com.lhwdev.selfTestMacro.utils.CachedSuspendState
+import com.lhwdev.selfTestMacro.utils.map
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -36,11 +37,11 @@ public class UserImpl @InternalHcsApi constructor(
 		userGroup.
 	}
 	
-	private val userInfo = LazyExternalStateImpl<ApiUserInfo> {
+	private val userInfo = CachedSuspendState {
 		session.getUserInfo(data.institute.identifier, data.identifier, getToken())
 	}
 	
-	public override val status: LazyExternalState<UserModel.Status> = userInfo.map { value, updater ->
+	public override val status: CachedSuspendState<UserModel.Status> = userInfo.map { value, refresh ->
 		object : UserModel.Status {
 			override val agreement: Boolean = value.agreement
 			override val newNotificationCount: Int = value.newNoticeCount
@@ -57,7 +58,7 @@ public class UserImpl @InternalHcsApi constructor(
 				null
 			}
 			
-			override suspend fun update(): HcsTemporaryModel = updater()
+			override suspend fun update(): HcsTemporaryModel = refresh()
 		}
 	}
 	

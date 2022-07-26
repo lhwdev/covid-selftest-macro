@@ -113,7 +113,7 @@ fun EditUsers() {
 									block()
 								}
 								SimpleIconButton(
-									icon = R.drawable.ic_more_vert_24, contentDescription = "더브기",
+									icon = R.drawable.ic_more_vert_24, contentDescription = "더보기",
 									onClick = { moreActions = true }
 								)
 								

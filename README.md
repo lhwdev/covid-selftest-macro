@@ -53,3 +53,5 @@
 ```sh
 gh release list | sed 's/|/ /' | awk '{print $1, $8}' | while read -r line; do gh release delete -y "$line"; done
 ```
+
++++ 뭐냐 왜 wsl 맛갔지 저거 파워셸용으로 바꾸기 싫은데

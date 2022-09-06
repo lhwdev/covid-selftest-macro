@@ -57,8 +57,12 @@ public class UserData(
 }
 
 
-public interface User : UserModel {
+public interface User : UserModel, HcsLiveModel {
+	public class Token(public val token: String)
+	
+	
 	public val userGroup: UserGroup
+	
 	public override val institute: Institute
 	
 	public val status: CachedSuspendState<UserModel.Status>

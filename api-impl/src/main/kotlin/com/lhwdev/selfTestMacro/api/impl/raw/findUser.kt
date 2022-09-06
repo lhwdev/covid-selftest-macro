@@ -4,6 +4,7 @@ import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.selfTestMacro.api.InstituteData
 import com.lhwdev.selfTestMacro.api.InternalHcsApi
+import com.lhwdev.selfTestMacro.api.UserGroup
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -13,7 +14,7 @@ public sealed class PasswordResult {
 	
 	@Serializable
 	public data class Success(
-		val token: UsersToken,
+		val token: String,
 		
 		@SerialName("pInfAgrmYn")
 		@Serializable(YesNoSerializer::class) val agreement: Boolean

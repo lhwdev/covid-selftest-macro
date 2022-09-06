@@ -8,12 +8,13 @@ import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.jsonObject
 import com.lhwdev.fetch.sDefaultFakeHeader
 import com.lhwdev.selfTestMacro.api.InternalHcsApi
+import com.lhwdev.selfTestMacro.api.UserGroup
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.builtins.ListSerializer
 
 
 @InternalHcsApi
-public suspend fun HcsSession.getUserGroup(token: UsersToken): List<ApiUser> = fetch(
+public suspend fun HcsSession.getUserGroup(token: UserGroup.Token): List<ApiUser> = fetch(
 	requestUrl["/v2/selectUserGroup"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token),

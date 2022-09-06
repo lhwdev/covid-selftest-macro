@@ -8,6 +8,7 @@ import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.json
 import com.lhwdev.fetch.sDefaultFakeHeader
 import com.lhwdev.io.decodeBase64
+import com.lhwdev.selfTestMacro.api.User
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -51,7 +52,7 @@ public data class ClassInfo(
 	@SerialName("classCode") val classCode: String
 )
 
-public suspend fun HcsSession.getClassList(token: UserToken): ClassList = fetch(
+public suspend fun HcsSession.getClassList(token: User.Token): ClassList = fetch(
 	requestUrl["/joinClassList"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token)
@@ -103,7 +104,7 @@ public data class ClassSurveyStudentStatus(
 	@SerialName("deviceUuidYn") @Serializable(YesNoSerializer::class) val installedOfficalApp: Boolean
 )
 
-public suspend fun HcsSession.getClassSurveyStatus(token: UserToken, classInfo: ClassInfo): ClassSurveyStatus = fetch(
+public suspend fun HcsSession.getClassSurveyStatus(token: User.Token, classInfo: ClassInfo): ClassSurveyStatus = fetch(
 	requestUrl["/join"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf(
@@ -142,7 +143,7 @@ public data class ClassSurveyStudentStatusDetail(
 }
 
 public suspend fun HcsSession.getStudentSurveyStatusDetail(
-	token: UserToken, student: ClassSurveyStudentStatus
+	token: User.Token, student: ClassSurveyStudentStatus
 ): ClassSurveyStudentStatusDetail = fetch(
 	requestUrl["/joinDetail"],
 	method = HttpMethod.post,

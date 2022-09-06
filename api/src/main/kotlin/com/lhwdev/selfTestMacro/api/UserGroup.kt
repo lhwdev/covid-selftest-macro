@@ -22,6 +22,8 @@ public interface UserGroupModel : HcsPersistentModel {
 	 */
 	public val users: List<UserModel>
 	
+	public fun toData(): UserGroupData
+	
 	
 	public interface Status : HcsTemporaryModel {
 		public val agreement: Boolean
@@ -34,6 +36,8 @@ public class UserGroupData(
 	public override val mainUser: UserGroupModel.MainUser,
 	public override val users: List<UserData>
 ) : UserGroupModel {
+	override fun toData(): UserGroupData = this
+	
 	override fun equals(other: Any?): Boolean = when {
 		this === other -> true
 		other !is UserGroupData -> false
@@ -41,15 +45,24 @@ public class UserGroupData(
 	}
 	
 	override fun hashCode(): Int = users.hashCode()
-	
 }
 
 
-public interface UserGroup : UserGroupModel {
+public interface UserGroup : UserGroupModel, HcsLiveModel {
+	public class Token(public val token: String)
+	
+	
 	override val mainUserModel: User get() = users[0]
 	
 	public override val users: List<User>
 	
 	
 	public val status: CachedSuspendState<UserGroupModel.Status>
+	
+	
+	public suspend fun updateAgreement(): Boolean
+	
+	public suspend fun registerPassword(password: String)
+	
+	public suspend fun changePassword(oldPassword: String, newPassword: String)
 }

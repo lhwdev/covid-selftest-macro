@@ -6,6 +6,7 @@ import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.http.Session
 import com.lhwdev.fetch.jsonObject
 import com.lhwdev.fetch.sDefaultFakeHeader
+import com.lhwdev.selfTestMacro.api.UserGroup
 
 
 // setSender: function (e) {
@@ -24,7 +25,7 @@ import com.lhwdev.fetch.sDefaultFakeHeader
  * Note: make sure to get users token in 'right' way and inform user before calling this
  */
 @DangerousHcsApi
-public suspend fun Session.sendPushNotification(institute: ApiInstituteInfo, token: UsersToken) {
+public suspend fun Session.sendPushNotification(institute: ApiInstituteInfo, token: UserGroup.Token) {
 	fetch(
 		institute.requestUrl["/push"],
 		method = HttpMethod.post,

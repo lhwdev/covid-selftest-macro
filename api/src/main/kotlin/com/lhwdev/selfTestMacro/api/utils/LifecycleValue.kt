@@ -1,5 +1,7 @@
 package com.lhwdev.selfTestMacro.api.utils
 
+import kotlin.math.max
+
 
 public class LifecycleValue<T> private constructor(value: T?, public val expiresAt: Long) {
 	public companion object {
@@ -9,8 +11,11 @@ public class LifecycleValue<T> private constructor(value: T?, public val expires
 		public fun <T> T.expiresAt(millis: Long): LifecycleValue<T> =
 			LifecycleValue(value = this, expiresAt = millis)
 		
-		public fun <T> T.expiresIn(millis: Long): LifecycleValue<T> =
-			LifecycleValue(value = this, expiresAt = System.currentTimeMillis() + millis)
+		public fun <T> T.expiresIn(millis: Long): LifecycleValue<T> = // max: possible overflow
+			LifecycleValue(value = this, expiresAt = max(millis, System.currentTimeMillis() + millis))
+		
+		public fun <T> T.infinite(): LifecycleValue<T> =
+			LifecycleValue(value = this, expiresAt = Long.MAX_VALUE)
 	}
 	
 	

@@ -8,6 +8,7 @@ import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.jsonObject
 import com.lhwdev.fetch.sDefaultFakeHeader
 import com.lhwdev.selfTestMacro.api.InternalHcsApi
+import com.lhwdev.selfTestMacro.api.User
 import com.lhwdev.selfTestMacro.toJsonLoose
 
 
@@ -15,7 +16,7 @@ import com.lhwdev.selfTestMacro.toJsonLoose
 public suspend fun HcsSession.getUserInfo(
 	instituteCode: String,
 	userCode: String,
-	token: UserToken
+	token: User.Token
 ): ApiUserInfo = fetch(
 	requestUrl["/v2/getUserInfo"],
 	method = HttpMethod.post,

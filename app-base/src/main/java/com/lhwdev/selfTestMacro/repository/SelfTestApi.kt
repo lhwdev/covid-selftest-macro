@@ -19,7 +19,7 @@ interface SelfTestApi {
 	) : SelfTestManager.SelfTestSession {
 		override var clientVersion: String = ""
 		
-		var token: UsersToken? = null
+		var token: UserGroup.Token? = null
 		
 		override suspend fun fetch(
 			url: URL,
@@ -59,7 +59,7 @@ interface SelfTestApi {
 	suspend fun getUserGroup(
 		session: SelfTestManager.SelfTestSession,
 		institute: InstituteInfo,
-		token: UsersToken
+		token: UserGroup.Token
 	): UserGroup
 	
 	suspend fun getUserInfo(

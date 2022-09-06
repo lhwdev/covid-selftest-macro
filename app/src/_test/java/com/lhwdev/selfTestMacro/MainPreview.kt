@@ -25,14 +25,14 @@ fun PreviewStubState(statusBar: Boolean = false, content: @Composable () -> Unit
 				
 				val userA = DbUser(
 					id = 0,
-					user = User(name = "홍길동", userCode = "D01234567", token = UserToken("userA")),
+					user = User(name = "홍길동", userCode = "D01234567", token = User.Token("userA")),
 					instituteName = "어느고등학교",
 					instituteType = InstituteType.school,
 					userGroupId = 10
 				)
 				val userB = DbUser(
 					id = 1,
-					user = User(name = "김철수", userCode = "D01234568", token = UserToken("userB")),
+					user = User(name = "김철수", userCode = "D01234568", token = User.Token("userB")),
 					instituteName = "어느고등학교",
 					instituteType = InstituteType.school,
 					userGroupId = 11

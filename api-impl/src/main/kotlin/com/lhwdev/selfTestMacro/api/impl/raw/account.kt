@@ -2,11 +2,13 @@ package com.lhwdev.selfTestMacro.api.impl.raw
 
 import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpMethod
+import com.lhwdev.selfTestMacro.api.User
+import com.lhwdev.selfTestMacro.api.UserGroup
 
 
 // you must inform user when using this api: https://hcs.eduro.go.kr/agreement
 @DangerousHcsApi
-public suspend fun HcsSession.updateAgreement(token: UsersIdToken) {
+public suspend fun HcsSession.updateAgreement(token: User.Token) {
 	fetch(
 		requestUrl["/v2/updatePInfAgrmYn"],
 		method = HttpMethod.post,
@@ -16,17 +18,17 @@ public suspend fun HcsSession.updateAgreement(token: UsersIdToken) {
 }
 
 
-public suspend fun HcsSession.hasPassword(token: UsersIdToken): Boolean = fetch(
+public suspend fun HcsSession.hasPassword(token: User.Token): Boolean = fetch(
 	requestUrl["/v2/hasPassword"],
 	method = HttpMethod.post,
 	headers = sDefaultFakeHeader + mapOf("Authorization" to token.token)
 ).getText().toBooleanStrict()
 
 public suspend fun HcsSession.registerPassword(
-	token: UsersIdToken,
+	token: User.Token,
 	password: String,
 	deviceUuid: String = "",
-	upperUserToken: UsersToken? = null
+	upperUserToken: UserGroup.Token? = null
 ): Boolean = fetch(
 	requestUrl["/v2/registerPassword"],
 	method = HttpMethod.post,
@@ -43,7 +45,7 @@ public enum class ChangePasswordResult { success, lastNotMatched, wrongNewPasswo
 
 @DangerousHcsApi
 public suspend fun HcsSession.changePassword(
-	token: UsersToken,
+	token: UserGroup.Token,
 	lastPassword: String,
 	newPassword: String
 ): ChangePasswordResult {

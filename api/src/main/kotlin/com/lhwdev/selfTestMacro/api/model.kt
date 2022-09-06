@@ -15,3 +15,8 @@ public interface HcsPersistentModel : HcsModel
 public interface HcsTemporaryModel : HcsModel {
 	public suspend fun update(): HcsTemporaryModel
 }
+
+
+public interface HcsLiveModel : HcsModel {
+	public suspend fun refresh()
+}

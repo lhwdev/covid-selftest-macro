@@ -3,12 +3,13 @@ package com.lhwdev.selfTestMacro.api.impl.raw
 import com.lhwdev.fetch.*
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.selfTestMacro.api.InternalHcsApi
+import com.lhwdev.selfTestMacro.api.UserGroup
 
 
 @Suppress("SpellCheckingInspection")
 @InternalHcsApi
 public suspend fun HcsSession.validatePassword(
-	previousToken: UsersToken,
+	previousToken: UserGroup.Token,
 	password: String,
 	deviceUuid: String = ""
 ): PasswordResult {

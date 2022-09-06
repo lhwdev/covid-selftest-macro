@@ -11,13 +11,7 @@ plugins {
 }
 
 
-kotlin {
-	setupCommon()
-}
-
 android {
-	setupCommon()
-	
 	defaultConfig {
 		minSdk = 21
 		targetSdk = 31

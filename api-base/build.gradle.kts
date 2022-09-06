@@ -15,24 +15,20 @@ android {
 	}
 }
 
-kotlin {
-	val jvm = setupJvm("jvm") {
-		dependsOnCommon()
-	}
-	setupAndroid(project, "android") {
-		dependsOn(jvm)
-	}
-	setupJvm("desktop") {
-		dependsOn(jvm)
-	}
-	
-	
-	dependencies {
-		implementation(projects.utils)
+commonConfig {
+	kotlin {
+		val jvm = intermediate("jvm") { dependsOn(common) }
 		
-		implementation(libs.coroutinesCore)
+		android("android") { dependsOn(jvm) }
+		jvm("desktop") { dependsOn(jvm) }
 		
-		implementation(libs.serializationCore)
-		implementation(libs.serializationJson)
+		dependencies {
+			implementation(projects.utils)
+			
+			implementation(libs.coroutinesCore)
+			
+			implementation(libs.serializationCore)
+			implementation(libs.serializationJson)
+		}
 	}
 }

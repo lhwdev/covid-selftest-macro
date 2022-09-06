@@ -53,7 +53,7 @@ abstract class SelfTestApiMain : SelfTestApi {
 	override suspend fun getUserGroup(
 		session: SelfTestManager.SelfTestSession,
 		institute: InstituteInfo,
-		token: UsersToken
+		token: UserGroup.Token
 	): UserGroup = session.getUserGroup(
 		institute = institute,
 		token = token

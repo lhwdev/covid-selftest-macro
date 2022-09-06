@@ -2,6 +2,7 @@ package com.lhwdev.selfTestMacro.api.impl
 
 import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.api.impl.raw.*
+import com.lhwdev.selfTestMacro.api.utils.LifecycleValue
 
 
 @InternalHcsApi
@@ -11,7 +12,7 @@ internal suspend fun HcsSession.getInternalVerificationToken(data: InstituteData
 	println("InstituteImpl.kt/getInternalVerificationToken: time >= 2m (-> expired), retrying to get search key")
 	
 	val findResult = when(data) {
-		is InstituteData.School -> searchSchool(level = data.level, region = data.region, name = data.name)
+		is InstituteData.School -> searchSchool(level = data.level!!, region = data.region, name = data.name)
 	}
 	val newData = findResult
 		.singleOrNull { it.name == data.name && it.identifier == data.identifier }
@@ -25,7 +26,8 @@ public class InstituteImpl(
 	private var data: InstituteData,
 	private val session: HcsSession
 ) : Institute {
-	private val userGroups = mutableMapOf<UserGroupModel.MainUser, UserGroupImpl>()
+	private val userGroups: MutableMap<UserGroupModel.MainUser, UserGroup> = mutableMapOf()
+	override val userGroupsCache: Map<UserGroupModel.MainUser, UserGroup> get() = userGroups
 	
 	override val identifier: String get() = data.identifier
 	override val name: String get() = data.name
@@ -36,11 +38,11 @@ public class InstituteImpl(
 	
 	internal suspend fun getUserGroupData(
 		mainUser: UserGroupModel.MainUser,
-		token: UsersToken
-	): Pair<UserGroupData, List<UserToken>> {
+		token: UserGroup.Token
+	): Pair<UserGroupData, List<User.Token>> {
 		val group = session.getUserGroup(token)
 		val users = group.map { user ->
-			val info = session.getUserInfo(user.instituteCode, user.userCode, user.token)
+			val info = session.getUserInfo(user.instituteCode, user.userCode, User.Token(user.token))
 			
 			UserData(
 				identifier = user.userCode,
@@ -64,7 +66,8 @@ public class InstituteImpl(
 							?: run {
 								println("InstituteImpl.getUserGroupData: unknown region ${info.instituteRegionCode}")
 								InstituteModel.School.Region.seoul // random value?
-							}
+							},
+						complete = false
 					)
 					ApiInstituteType.university -> TODO()
 					ApiInstituteType.academy -> TODO()
@@ -72,8 +75,20 @@ public class InstituteImpl(
 				}
 			)
 		}
-		val tokens = group.map { it.token }
+		val tokens = group.map { User.Token(it.token) }
 		return UserGroupData(mainUser = mainUser, users = users) to tokens
+	}
+	
+	override fun createUserGroup(
+		data: UserGroupData,
+		token: LifecycleValue<UserGroup.Token>?
+	): UserGroup = userGroups.getOrPut(data.mainUser) {
+		UserGroupImpl(
+			data = data.toData(),
+			mainUserInstitute = this,
+			session = session,
+			token = token ?: LifecycleValue.empty()
+		)
 	}
 	
 	override suspend fun getUserGroup(
@@ -82,7 +97,10 @@ public class InstituteImpl(
 	): Institute.LoginResult {
 		val previous = userGroups[mainUser]
 		if(previous != null) {
-			if(previous.apiGroup)
+			if(forceLogin) {
+				previous.refresh()
+			}
+			return Institute.LoginResult.Success(previous)
 		}
 		
 		val result = session.findUser(
@@ -99,8 +117,32 @@ public class InstituteImpl(
 		)
 		
 		return when(result) {
-			is PasswordResult.Success -> UserGroupData(result.)
+			is PasswordResult.Success -> {
+				val token = UserGroup.Token(result.token)
+				val data = UserGroupData(
+					mainUser = mainUser,
+					users = fetchUserGroupUsers(mainUser, token)
+				)
+				val userGroup = createUserGroup(
+					data = data,
+					token = with(LifecycleValue) { token.expiresIn(millis = 1000000000000 /* IDK */) }
+				)
+				
+				Institute.LoginResult.Success(userGroup)
+			}
 			is PasswordResult.Failed -> TODO()
 		}
+	}
+	
+	public suspend fun fetchUserGroupUsers(
+		mainUser: UserGroupModel.MainUser,
+		token: UserGroup.Token
+	): List<UserData> {
+		val result = session.getUserGroup(token = token)
+		result[0]
+	}
+	
+	override suspend fun refresh() {
+		TODO()
 	}
 }

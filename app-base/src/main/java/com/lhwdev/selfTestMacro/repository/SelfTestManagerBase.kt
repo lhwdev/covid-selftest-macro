@@ -5,7 +5,7 @@ import com.lhwdev.fetch.http.Session
 import com.lhwdev.selfTestMacro.api.InstituteInfo
 import com.lhwdev.selfTestMacro.api.PasswordResult
 import com.lhwdev.selfTestMacro.api.User
-import com.lhwdev.selfTestMacro.api.UsersToken
+import com.lhwdev.selfTestMacro.api.UserGroup
 import com.lhwdev.selfTestMacro.database.DbUser
 import com.lhwdev.selfTestMacro.database.DbUserGroup
 import com.lhwdev.selfTestMacro.tryAtMost
@@ -91,7 +91,7 @@ abstract class SelfTestManagerBase : SelfTestManager {
 		session.token
 	}
 	
-	protected suspend fun ensureSessionAuthorized(group: DbUserGroup): Pair<SelfTestApi.AuthorizedSession, UsersToken> {
+	protected suspend fun ensureSessionAuthorized(group: DbUserGroup): Pair<SelfTestApi.AuthorizedSession, UserGroup.Token> {
 		val session = getAuthSession(group)
 		val token = authorizeSession(session, group)
 		if(token == null) {

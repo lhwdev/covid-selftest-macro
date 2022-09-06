@@ -7,6 +7,6 @@ import org.gradle.api.Project
 @Suppress("unused")
 class CommonPlugin : Plugin<Project> {
 	override fun apply(target: Project) {
-		// empty stub
+		target.extensions.create("commonConfig", CommonConfig::class.java)
 	}
 }

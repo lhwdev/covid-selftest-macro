@@ -7,10 +7,7 @@ import com.lhwdev.fetch.get
 import com.lhwdev.fetch.http.HttpMethod
 import com.lhwdev.fetch.jsonObject
 import com.lhwdev.fetch.sDefaultFakeHeader
-import com.lhwdev.selfTestMacro.api.AnswersMap
-import com.lhwdev.selfTestMacro.api.InternalHcsApi
-import com.lhwdev.selfTestMacro.api.Question
-import com.lhwdev.selfTestMacro.api.UnstableHcsApi
+import com.lhwdev.selfTestMacro.api.*
 import com.lhwdev.selfTestMacro.toJsonLoose
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -28,7 +25,7 @@ public data class SurveyResult(
 @DangerousHcsApi
 @OptIn(UnstableHcsApi::class)
 public suspend fun HcsSession.registerSurvey(
-	token: UserToken,
+	token: User.Token,
 	name: String,
 	answers: AnswersMap,
 	deviceUuid: String = ""

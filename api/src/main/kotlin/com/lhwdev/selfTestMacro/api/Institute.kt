@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
 
+public interface SimpleInstitute
+
+
 public interface InstituteModel : HcsPersistentModel {
 	public enum class Type(public val displayName: String) {
 		school("학교"),
@@ -66,6 +69,8 @@ public sealed class InstituteData : InstituteModel {
 	public class InternalSearchKey(public val token: String)
 	
 	
+	public abstract val complete: Boolean
+	
 	@InternalHcsApi
 	@Transient
 	public var internalVerificationToken: LifecycleValue<InternalSearchKey> = LifecycleValue.empty()
@@ -79,7 +84,9 @@ public sealed class InstituteData : InstituteModel {
 		public override val address: String?,
 		
 		public override val level: InstituteModel.School.Level?,
-		public override val region: InstituteModel.School.Region
+		public override val region: InstituteModel.School.Region,
+		
+		public override val complete: Boolean = true
 	) : InstituteData(), InstituteModel.School {
 		override val type: InstituteModel.Type get() = InstituteModel.Type.school
 		
@@ -93,7 +100,11 @@ public sealed class InstituteData : InstituteModel {
 }
 
 
-public interface Institute : InstituteModel {
+public interface Institute : InstituteModel, HcsLiveModel {
+	public val userGroupsCache: Map<UserGroupModel.MainUser, UserGroup>
+	
+	public fun createUserGroup(data: UserGroupData, token: LifecycleValue<UserGroup.Token>?): UserGroup
+	
 	public suspend fun getUserGroup(
 		mainUser: UserGroupModel.MainUser,
 		forceLogin: Boolean = false

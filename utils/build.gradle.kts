@@ -11,19 +11,21 @@ plugins {
 
 
 
-kotlin {
-	setupJvm {
+commonConfig {
+	kotlin {
+		jvm {
+			dependencies {
+				implementation(libs.coroutinesCore)
+			}
+		}
+		
 		dependencies {
 			implementation(libs.coroutinesCore)
+			
+			implementation(libs.serializationCore)
+			implementation(libs.serializationJson)
+			
+			api(compose.runtime)
 		}
-	}
-	
-	dependencies {
-		implementation(libs.coroutinesCore)
-		
-		implementation(libs.serializationCore)
-		implementation(libs.serializationJson)
-		
-		api(compose.runtime)
 	}
 }

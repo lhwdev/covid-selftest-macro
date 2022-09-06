@@ -34,13 +34,7 @@ tasks.register<Copy>("updateLicenses") {
 	rename { "open_source_license.json" }
 }
 
-kotlin {
-	setupCommon()
-}
-
 android {
-	setupCommon()
-	
 	defaultConfig {
 		applicationId = "com.lhwdev.selfTestMacro"
 		minSdk = 21

@@ -1,3 +1,3 @@
-# 자가진단 api 구현체
+# 🚧 자가진단 api 구현체
 
-api 폴더와 [api-model](../api-model)에는 
+정상적으로 작동하는 api 구현체를 보려면 v1.10 같은 식의 release tag의 코드를 보세요.

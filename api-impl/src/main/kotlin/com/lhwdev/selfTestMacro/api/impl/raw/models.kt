@@ -5,6 +5,7 @@ package com.lhwdev.selfTestMacro.api.impl.raw
 import com.lhwdev.selfTestMacro.api.InternalHcsApi
 import com.lhwdev.selfTestMacro.api.Question
 import com.lhwdev.selfTestMacro.api.UnstableHcsApi
+import com.lhwdev.selfTestMacro.api.User
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -133,7 +134,7 @@ public data class ApiUser(
 	/**
 	 * The token for one user.
 	 */
-	@SerialName("token") val token: UserToken,
+	@SerialName("token") val token: String,
 	
 	
 	/**
@@ -193,7 +194,7 @@ public data class ApiUserInfo(
 	
 	/**
 	 * The name of user.
-	 * [ApiUser] also has [name][ApiUser.name] property, but that is not ensured to exist as if [UserData.isOther] is true,
+	 * [ApiUser] also has [name][ApiUser.name] property, but that is not ensured to exist as if [User.isOther] is true,
 	 * it becomes null.
 	 */
 	@SerialName("userName") val userName: String,

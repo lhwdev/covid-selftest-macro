@@ -14,7 +14,6 @@ plugins {
 
 kotlin {
 	explicitApi()
-	setup()
 }
 
 dependencies {

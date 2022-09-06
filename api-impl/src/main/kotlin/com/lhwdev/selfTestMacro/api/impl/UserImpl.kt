@@ -22,7 +22,7 @@ public class UserImpl @InternalHcsApi constructor(
 	override val userGroup: UserGroup,
 	override val institute: Institute,
 	private val session: HcsSession,
-	private var token: LifecycleValue<UserToken>
+	private var token: LifecycleValue<User.Token>
 ) : User {
 	override val identifier: String get() = data.identifier
 	
@@ -33,7 +33,7 @@ public class UserImpl @InternalHcsApi constructor(
 	override fun toData(): UserData = data
 	
 	
-	private suspend fun getToken(): UserToken = token.getOrDefault body@{
+	private suspend fun getToken(): User.Token = token.getOrDefault body@{
 		userGroup.
 	}
 	

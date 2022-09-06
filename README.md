@@ -46,5 +46,10 @@
 설마 앱 파일들을 내리려면 Releases에 있는 apk 파일들 하나하나 다 내려야 하나요 너무 귀찮은데
 '그냥 놔둘테니까 받지 마세요'라 하면 안되나
 
-+ 구글링한 결과: Q:'과거의 Release들을 어떻게 지우나요?' -> A:'지우지 마세요' ...
+\+ 구글링한 결과: Q:'과거의 Release들을 어떻게 지우나요?' -> A:'지우지 마세요' ...
 진짜 `gh list releases | 대충 처리 | delete`해야 하나
+
+++ 오...
+```sh
+gh release list | sed 's/|/ /' | awk '{print $1, $8}' | while read -r line; do gh release delete -y "$line"; done
+```

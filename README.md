@@ -10,17 +10,7 @@
 
 ### [**📎 앱 다운로드 받기**](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)  
 - [개인정보 처리 방침](PRIVACY_POLICY.md)
-- 이 앱을 공유할 때는 위 링크보다 이 사이트의 주소를 공유해주세요. (위의 링크는 바뀔 수도)  
-- 자가진단 사이트의 구조가 바뀌어서 앱이 작동하지 않거나 업데이트가 있을 때 알림을 받으려면 [디스코드 서버](https://discord.io/hcs-macro)에 들어오세요.  
-
-**최근 교육청에서 자가진단 매크로를 단속하고 있으며, 저도 이 앱을 내리라는 내용의 메일을 받았습니다.**
-제가 받은 이메일 원문은 [이 링크에서 다운받으세요](docs/email-hcs.eml).
-[어떤 일이 일어났는지는 이 문서를 참고하세요.](docs/2022-selftest-santinization-whats-up.md)
-
-오류가 생기면 보통 몇 시간 안에 패치합니다.  
-제작자 자신이 쓸려고 만든 앱이고 제작자의 지인들도 쓰고 있답니다.  
-공식 사이트의 api 구조가 바뀌면 작동하지 않게 될 수 있습니다.
-그런 경우 업데이트가 나오면 디스코드 서버에 공지할 겁니다.
+- 이 앱을 공유할 때는 위 링크보다 이 사이트의 주소를 공유해주세요. (위의 링크는 바뀔 수도)   
 
 참고: **새 학년이 시작될 때는 공식 앱이나 사이트에서 약관에 동의해야 합니다.**  
 [iOS 사용자 분의 경우 이걸 써주세요.](https://github.com/ChemistryX/self-diagnosis-ios-shortcuts)  
@@ -44,8 +34,6 @@
 ## 개발 중(아직 구현되지 않은 것):
 - [x] 범위 내 랜덤 시간 기능
 - [x] 여러 명 그룹 기능
-
-자세한 개발 목표/현황은 [디스코드 방의 이 채널](https://discord.gg/eEWNsFAYPT)을 봐주세요.
 
 ## 개발자 분들을 위한 설명
 
@@ -75,15 +63,6 @@
 ```shell
 git clone --recurse-submodules https://github.com/lhwdev/covid-selftest-macro
 ```
-
-이미 파이썬으로 만들어진 자가진단 구현체가 있었는데 타노스돼서
-[제가 만든 organization에 올려놓고 유지보수하려 합니다](https://github.com/covid-hcs/hcskr_python).
-
-## 연락 & 버그 제보
-
-[디스코드 서버](https://discord.gg/a2hNMF39AC): 업데이트 공지나 버그 제보  
-[깃허브 커뮤니티](https://github.com/lhwdev/covid-selftest-macro/discussions)  
-개인 이메일: lhwdev6@outlook.com (최대한 버그가 있어서 작동하던 앱이 작동하지 않게 된 경우에만 보내주세요)
 
 ## 오픈소스 라이센스 & 기타
 

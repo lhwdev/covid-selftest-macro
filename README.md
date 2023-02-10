@@ -1,4 +1,8 @@
 # 코로나19 자가진단 매크로 앱 (안드로이드 전용)
+
+저는 고등학교를 졸업한 관계로 모든 유지보수를 그만두기로 했습니다. 2023년에도 자가진단을 할지는 잘 모르겠네요.
+다만 먼 미래에 '내가 이런 짓을 했었지?' 하고 되돌아볼 수 있도록 남겨놓으려 합니다.
+
 [![Download](https://img.shields.io/github/downloads/lhwdev/covid-selftest-macro/latest/total?label=%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C%20%EB%B0%9B%EA%B8%B0&style=for-the-badge)](https://github.com/lhwdev/covid-selftest-macro/releases/latest/download/app-release.apk)
 [![Discord](https://img.shields.io/discord/868429217740783637?label=%EA%B3%B5%EC%8B%9D%20%EB%94%94%EC%BD%94%EB%B0%A9&style=for-the-badge&color=5865F2)](https://discord.io/hcs-macro)
 [![Email](https://img.shields.io/badge/%EC%9D%B4%EB%A9%94%EC%9D%BC-%EA%B0%9C%EC%9D%B8-orange?style=for-the-badge)](mailto:lhwdev6@outlook.com)
